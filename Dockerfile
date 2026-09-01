@@ -1,39 +1,43 @@
 # ==========================================
 # 4-EVER / 2DATE - ATELIER NUPCIAL SAAS
-# High Performance Multi-stage Dockerfile
+# Production Dockerfile for Coolify & Docker
 # ==========================================
 
-# 1. Base stage with Corepack & Alpine dependencies
-FROM node:22-alpine AS base
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9 --activate
-RUN apk add --no-cache libc6-compat
+# 1. Base / Dependencies & Build Stage (Node 22 LTS Alpine)
+FROM node:22-alpine AS builder
 
-# 2. Dependencies stage (installs all deps for build)
-FROM base AS deps
 WORKDIR /app
+
+# Install pnpm 9 and build tools
+RUN npm install -g pnpm@9
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Copy package definitions
 COPY package.json pnpm-lock.yaml ./
-# Explicitly allow devDependencies during install
+
+# Ensure devDependencies are installed for building Vite & Tailwind
 ENV NODE_ENV=development
 RUN pnpm install --frozen-lockfile
 
-# 3. Builder stage
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy application source code and static assets
 COPY . .
-ENV NODE_ENV=production
+
+# Generate all public web assets & compile production bundle
 RUN pnpm build
 
-# 4. Production Runner stage
+# 2. Production Runner Stage (Node 22 LTS Alpine)
 FROM node:22-alpine AS runner
+
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV SQL_DB_NAME=2date_db
 
-# Create non-root system user & uploads volume
+# Install pnpm 9 in runner
+RUN npm install -g pnpm@9
+
+# Create non-root system user & directories
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser && \
     mkdir -p /app/uploads && \
@@ -41,27 +45,28 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Install only production dependencies
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && corepack prepare pnpm@9 --activate && \
-    pnpm install --prod --frozen-lockfile && \
-    rm -rf /root/.local /root/.cache /root/.pnpm-store
+RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 
-# Copy build artifacts and static assets
+# Copy built application and client assets from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/Logo.webp ./Logo.webp
 COPY --from=builder /app/Logo.png ./Logo.png
 
-# Set ownership
+# Ensure permissions
 RUN chown -R appuser:nodejs /app
 
 USER appuser
 
+# Expose web server port
 EXPOSE 3000
 
+# Persistent volume for audio, covers, and guest uploads
 VOLUME ["/app/uploads"]
 
-# Fast startup healthcheck
+# Health check endpoint
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1
 
+# Start the application server
 CMD ["node", "dist/server.cjs"]
