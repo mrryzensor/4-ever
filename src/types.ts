@@ -134,6 +134,9 @@ export interface WeddingSettings {
   showVideoMemories?: boolean; // Recuerdos en video
   showGuestbook?: boolean; // Libro de firmas y deseos
   showHotels?: boolean; // Hospedaje y hoteles recomendados
+  showTips?: boolean; // Tips & Recomendaciones para invitados
+  tipsTitle?: string; // Título de la sección de tips
+  tipsList?: WeddingTipItem[] | string; // Lista de tips configurables
   showRsvpSection?: boolean; // Confirmación de asistencia
   // Bank Account & Transfer Quick Settings (Perú & Latam)
   bankName?: string;
@@ -175,6 +178,12 @@ export interface ItineraryItem {
   title: string;
   desc: string;
   icon: string;
+}
+
+export interface WeddingTipItem {
+  icon?: string;
+  title: string;
+  desc: string;
 }
 
 export interface GiftRegistryItem {

@@ -15,7 +15,10 @@ import {
   Phone,
   Mail,
   User,
-  CalendarCheck
+  CalendarCheck,
+  Plus,
+  Minus,
+  ChevronDown,
 } from 'lucide-react';
 import { Guest, WeddingSettings } from '../types.ts';
 import { DEMO_GUESTS } from '../data/demoGuests.ts';
@@ -72,6 +75,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [message, setMessage] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [showExtraDetails, setShowExtraDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -504,9 +508,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               {status === 'confirmed' && (
                 <div className="space-y-6 pt-2 animate-fadeIn">
                   
-                  {/* Passes Counter Selector */}
-                  <div className="p-5 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                  {/* Passes Counter Selector - Ultra-Responsive Layout */}
+                  <div className="p-4 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex-1">
                       <span className={`text-sm sm:text-base font-bold block ${activeTheme.textPrimaryClass}`}>
                         Número de Asistentes
                       </span>
@@ -517,24 +521,49 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl p-1.5 self-start sm:self-auto">
-                      {Array.from({ length: maxSelectablePasses }).map((_, idx) => {
-                        const num = idx + 1;
-                        return (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => handlePassesChange(num)}
-                            className={`w-9 h-9 rounded-lg font-bold text-sm transition-all cursor-pointer ${
-                              confirmedPasses === num
-                                ? 'bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 shadow-xs'
-                                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        );
-                      })}
+                    <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl p-1.5 shadow-2xs">
+                      {/* Stepper Minus */}
+                      <button
+                        type="button"
+                        onClick={() => handlePassesChange(Math.max(1, confirmedPasses - 1))}
+                        disabled={confirmedPasses <= 1}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="Disminuir asistentes"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+
+                      {/* Number Pills */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {Array.from({ length: maxSelectablePasses }).map((_, idx) => {
+                          const num = idx + 1;
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => handlePassesChange(num)}
+                              className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-xl font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center ${
+                                confirmedPasses === num
+                                  ? 'bg-amber-500 text-stone-950 font-bold shadow-xs scale-105'
+                                  : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Stepper Plus */}
+                      <button
+                        type="button"
+                        onClick={() => handlePassesChange(Math.min(maxSelectablePasses, confirmedPasses + 1))}
+                        disabled={confirmedPasses >= maxSelectablePasses}
+                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        title="Aumentar asistentes"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
@@ -558,84 +587,113 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       </div>
                     </div>
                   )}
-
-                  {/* Dietary & DJ Song Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                        <Utensils className="w-4 h-4 text-amber-700 shrink-0" />
-                        Restricciones Alimentarias (Opcional)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej. Vegetariano, celíaco, alergia a frutos secos..."
-                        value={dietary}
-                        onChange={(e) => setDietary(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
-                      />
-                    </div>
-
-                    <div>
-                      <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                        <Music className="w-4 h-4 text-amber-700 shrink-0" />
-                        Canción para la Fiesta (DJ)
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej. Vivir Mi Vida - Marc Anthony"
-                        value={song}
-                        onChange={(e) => setSong(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
 
-              {/* 4. Dedication message for couple */}
-              <div>
-                <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                  <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
-                  Mensaje o Dedicatoria para los Novios
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Escribe unas palabras de felicitación o buenos deseos..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"
-                />
-              </div>
+              {/* 4. OPTIONAL DETAILS ACCORDION TOGGLE (Restricciones, Canción DJ, Dedicatoria, Teléfono, Correo) */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowExtraDetails(!showExtraDetails)}
+                  className={`w-full p-4 rounded-2xl border flex items-center justify-between text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    showExtraDetails
+                      ? isDark ? 'bg-stone-800 text-stone-100 border-stone-700' : 'bg-amber-50/80 text-amber-950 border-amber-300'
+                      : isDark ? 'bg-stone-900/60 text-stone-300 border-stone-800 hover:text-white' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>
+                      {showExtraDetails
+                        ? 'Ocultar detalles opcionales (Mensaje, Canción, Menú, Contacto)'
+                        : 'Añadir detalles opcionales (Mensaje, Canción DJ, Menú especial o Contacto)'}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showExtraDetails ? 'rotate-180' : ''}`} />
+                </button>
 
-              {/* 5. Contact Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                    <Phone className="w-4 h-4 text-amber-700 shrink-0" />
-                    Teléfono / WhatsApp
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="Ej. +51 987 654 321"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
-                  />
-                </div>
+                {/* Collapsible Content */}
+                {showExtraDetails && (
+                  <div className="mt-4 space-y-6 p-5 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 animate-fadeIn">
+                    
+                    {/* Dietary & DJ Song Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                          <Utensils className="w-4 h-4 text-amber-700 shrink-0" />
+                          Restricciones Alimentarias (Opcional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Vegetariano, celíaco, alergia..."
+                          value={dietary}
+                          onChange={(e) => setDietary(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
 
-                <div>
-                  <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                    <Mail className="w-4 h-4 text-amber-700 shrink-0" />
-                    Correo Electrónico (Opcional)
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="correo@ejemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
-                  />
-                </div>
+                      <div>
+                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                          <Music className="w-4 h-4 text-amber-700 shrink-0" />
+                          Canción para la Fiesta (DJ)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Vivir Mi Vida - Marc Anthony"
+                          value={song}
+                          onChange={(e) => setSong(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Dedication message for couple */}
+                    <div>
+                      <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                        <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
+                        Mensaje o Dedicatoria para los Novios
+                      </label>
+                      <textarea
+                        rows={3}
+                        placeholder="Escribe unas palabras de felicitación o buenos deseos..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"
+                      />
+                    </div>
+
+                    {/* Contact Info */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                          <Phone className="w-4 h-4 text-amber-700 shrink-0" />
+                          Teléfono / WhatsApp
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="Ej. +51 987 654 321"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                          <Mail className="w-4 h-4 text-amber-700 shrink-0" />
+                          Correo Electrónico (Opcional)
+                        </label>
+                        <input
+                          type="email"
+                          placeholder="correo@ejemplo.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Submit CTA */}

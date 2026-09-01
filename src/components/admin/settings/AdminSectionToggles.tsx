@@ -10,6 +10,7 @@ import {
   Film,
   MessageSquareHeart,
   CheckCircle,
+  Lightbulb,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
 
@@ -295,6 +296,33 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
             </div>
             <p className="text-[10px] text-[#7D8C7A] mt-0.5 leading-snug">
               Formulario interactivo de pases y confirmación.
+            </p>
+          </div>
+        </label>
+
+        {/* 9. Tips & Recomendaciones */}
+        <label
+          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+            settings.showTips !== false
+              ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
+              : 'bg-white border-[#E5E2D0] opacity-60 hover:opacity-100'
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={settings.showTips !== false}
+            onChange={(e) =>
+              onChange({ showTips: e.target.checked })
+            }
+            className="mt-0.5 w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer shrink-0"
+          />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-[#5A5A40]" />
+              <span className="text-xs font-bold text-[#1a1a1a]">Tips & Recomendaciones</span>
+            </div>
+            <p className="text-[10px] text-[#7D8C7A] mt-0.5 leading-snug">
+              Sugerencias de puntualidad, valet, niños y guía de eventos.
             </p>
           </div>
         </label>

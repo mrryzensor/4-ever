@@ -343,21 +343,18 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
-          isDark
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${isDark
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
             : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
-        }`}>
+          }`}>
           <AnimatedCameraLens className="w-10 h-10" />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
-          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
-        }`}>
+        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+          }`}>
           Sesión de Fotos & Recuerdos
         </span>
-        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
-          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
-        }`}>
+        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+          }`}>
           Nuestra Galería de Fotos
         </h2>
         <StyleSpecificDivider
@@ -365,9 +362,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${
-          isDark ? 'text-stone-300' : 'text-stone-600'
-        }`}>
+        <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'
+          }`}>
           Desliza o usa los botones para revivir nuestras sesiones y momentos favoritos juntos.
         </p>
 
@@ -376,16 +372,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mt-6 max-w-lg mx-auto rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs border ${
-              isDark
+            className={`mt-6 max-w-lg mx-auto rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs border ${isDark
                 ? 'bg-[#282B25] border-[#C5A059]/40 text-stone-100'
                 : 'bg-amber-50/90 border-amber-300/80 text-amber-950'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-3 text-left">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                isDark ? 'bg-[#C5A059]/20 text-[#C5A059]' : 'bg-amber-200/80 text-amber-900'
-              }`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-[#C5A059]/20 text-[#C5A059]' : 'bg-amber-200/80 text-amber-900'
+                }`}>
                 <Globe className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -401,11 +395,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               href={effectiveAlbumUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-xs transition-colors ${
-                isDark
+              className={`px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-xs transition-colors ${isDark
                   ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
                   : 'bg-amber-800 hover:bg-amber-900 text-amber-50'
-              }`}
+                }`}
             >
               <span>Abrir Álbum</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -421,11 +414,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <span>Cargando fotos de la galería...</span>
         </div>
       ) : photos.length === 0 ? (
-        <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${
-          isDark
+        <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${isDark
             ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
             : 'bg-white/70 border-[#E5E2D0] text-stone-800'
-        }`}>
+          }`}>
           <Camera className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
           <h4 className={`text-base font-serif font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
             Galería en preparación
@@ -438,11 +430,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               href={effectiveAlbumUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-medium shadow-xs transition-colors ${
-                isDark
+              className={`mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-medium shadow-xs transition-colors ${isDark
                   ? 'bg-[#C5A059] text-stone-950 font-bold hover:bg-[#d8b46d]'
                   : 'bg-[#5A5A40] text-white hover:bg-[#484833]'
-              }`}
+                }`}
             >
               <span>Ver Álbum en la Nube</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -453,7 +444,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         <div className="max-w-4xl mx-auto">
           {/* Main Hero Slider Frame */}
           <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-stone-950 aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] border border-[#E5E2D0]/40 group select-none">
-            
+
             {/* Current Photo Slide with AnimatePresence */}
             <AnimatePresence mode="wait">
               {currentCarouselPhoto && (
@@ -479,7 +470,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <span className="text-[11px] uppercase font-bold tracking-widest bg-black/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-amber-200">
                         {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
                       </span>
-                      
+
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -557,13 +548,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   key={photo.id}
                   type="button"
                   onClick={() => setCarouselIndex(idx)}
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${
-                    idx === carouselIndex
+                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex
                       ? isDark
                         ? 'border-[#C5A059] ring-2 ring-[#C5A059]/40 scale-105 opacity-100 shadow-md'
                         : 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 opacity-100 shadow-md'
                       : 'border-transparent opacity-45 hover:opacity-85 hover:scale-100'
-                  }`}
+                    }`}
                 >
                   <img
                     src={photo.url}
@@ -581,11 +571,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             <button
               type="button"
               onClick={() => setActivePhotoIndex(carouselIndex)}
-              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                isDark
+              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
                   ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
                   : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
-              }`}
+                }`}
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>Ver en pantalla completa</span>
@@ -594,20 +583,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             <button
               type="button"
               onClick={() => setShowUploadModal(true)}
-              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                isDark
+              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
                   ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                   : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
-              }`}
+                }`}
             >
               <Camera className="w-4 h-4" />
               <span>Compartir una Foto</span>
             </button>
           </div>
 
-          <p className={`mt-2 text-[11px] text-center font-serif italic ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-            Tip: Puedes presionar <strong>Ctrl+V</strong> en cualquier momento para pegar una foto copiada.
-          </p>
         </div>
       )}
 
@@ -661,11 +646,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   const file = e.dataTransfer.files?.[0];
                   if (file) processGuestPhotoFile(file);
                 }}
-                className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer ${
-                  isDraggingPhoto
+                className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer ${isDraggingPhoto
                     ? 'border-amber-400 bg-amber-500/10 scale-102'
                     : 'border-stone-700 bg-stone-950/60 hover:border-amber-400/60'
-                }`}
+                  }`}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {isUploadingPhoto ? (
@@ -838,8 +822,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             type="button"
                             onClick={() => setActivePhotoIndex(idx)}
                             className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === activePhotoIndex
-                                ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100'
-                                : 'border-transparent opacity-40 hover:opacity-80'
+                              ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100'
+                              : 'border-transparent opacity-40 hover:opacity-80'
                               }`}
                           >
                             <img src={p.url} alt="Miniatura" className="w-full h-full object-cover" />
@@ -851,7 +835,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                   {/* Sidebar Info, Likes & Interactive Comments Panel */}
                   <div className="w-full lg:w-[440px] flex flex-col justify-between bg-stone-900/95 text-stone-100 border-t lg:border-t-0 lg:border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
-                    
+
                     {/* Header & Photo Title - With clean spacing from close button */}
                     <div className="p-5 sm:p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0 relative">
                       <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1 rounded-full inline-block mb-2.5">
@@ -917,24 +901,22 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                     {/* Write Comment Box & Like Bar - Larger Inputs & Clearer Controls */}
                     <div className="p-4 sm:p-6 bg-stone-950/95 border-t border-stone-800 shrink-0 space-y-3.5">
-                      
+
                       {/* Action Bar (Like + Download) */}
                       <div className="flex items-center justify-between gap-3">
                         <button
                           type="button"
                           onClick={() => handleLike(activePhoto.id)}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${
-                            likedPhotoIds.includes(activePhoto.id)
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${likedPhotoIds.includes(activePhoto.id)
                               ? 'bg-rose-950/60 border-rose-600 text-rose-200'
                               : 'bg-stone-800 hover:bg-rose-950/40 text-stone-100 hover:text-rose-300 border-stone-700'
-                          }`}
+                            }`}
                         >
                           <Heart
-                            className={`w-4 h-4 shrink-0 transition-transform ${
-                              likedPhotoIds.includes(activePhoto.id)
+                            className={`w-4 h-4 shrink-0 transition-transform ${likedPhotoIds.includes(activePhoto.id)
                                 ? 'fill-rose-500 text-rose-500 scale-110'
                                 : 'fill-rose-500 text-rose-500'
-                            }`}
+                              }`}
                           />
                           <span>
                             {activePhoto.likesCount} {activePhoto.likesCount === 1 ? 'Me gusta' : 'Me gusta'}

@@ -820,7 +820,7 @@ export default function App() {
         }}
       />
 
-      {/* Hero / Main Envelope Section - Full Viewport Landing Flow */}
+      {/* Hero / Main Envelope Section - Full Viewport Landing Flow with Fused Interactive Details */}
       <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
         {/* 1. Portada, sobre interactivo y Sección de Detalles Fusionada (Ceremonia, Fiesta, Itinerario, DressCode, Regalos con detalles inline) */}
         <EnvelopeCard
@@ -834,7 +834,7 @@ export default function App() {
           }}
         />
 
-        {/* 6. Galería Interactiva de Fotos (Subida AVIF 95% + Enlaces externos) */}
+        {/* 2. Galería Interactiva de Fotos (Subida AVIF 95% + Enlaces externos) */}
         {settings.showPhotoGallery !== false && (
           <PhotoGallery
             weddingId={settings.id}

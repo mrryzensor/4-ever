@@ -111,6 +111,9 @@ export async function autoMigrateDatabase() {
           show_video_memories BOOLEAN DEFAULT true,
           show_guestbook BOOLEAN DEFAULT true,
           show_hotels BOOLEAN DEFAULT false,
+          show_tips BOOLEAN DEFAULT true,
+          tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados',
+          tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]',
           show_rsvp_section BOOLEAN DEFAULT true,
           bank_name TEXT DEFAULT 'BBVA',
           bank_beneficiary TEXT DEFAULT 'Sofía Martínez / Alejandro Ruiz',
@@ -128,6 +131,9 @@ export async function autoMigrateDatabase() {
           contact_email TEXT DEFAULT 'boda.sofyale@gmail.com',
           updated_at TIMESTAMP DEFAULT NOW()
         );
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_tips BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (
