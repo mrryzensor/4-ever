@@ -55,6 +55,7 @@ import {
 } from './src/db/queries.ts';
 import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
+import { formatHeroDate } from './src/lib/dateFormatters.ts';
 
 // Setup uploads volume storage directory (compatible with Docker volumes and local env)
 const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
@@ -1056,24 +1057,36 @@ async function startServer() {
         }
 
         const coupleNames = wedding?.coupleNames || 'Nuestra Boda';
-        const eventDate = wedding?.eventDate || '2026-11-28';
+        const formattedDate = formatHeroDate(
+          wedding?.eventDate || '2026-11-28',
+          wedding?.heroDateFormat || 'literal-short',
+          wedding?.heroCustomDateText
+        );
         const venue = wedding?.ceremonyVenue || wedding?.receptionVenue || 'Nuestra Celebración';
+        const cityOrAddress = wedding?.receptionAddress || wedding?.ceremonyAddress || '';
+        const welcomeSubtitle = wedding?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.';
 
-        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}&t=${encodeURIComponent(eventDate)}`;
+        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}&t=${encodeURIComponent(wedding?.eventDate || '2026-11-28')}`;
 
-        title = guest?.name
-          ? `💌 ¡${guest.name}, estás invitado a la Boda de ${coupleNames}!`
-          : `💍 Boda de ${coupleNames} — Invitación de Boda`;
+        // Dynamic Title for social sharing (WhatsApp, Facebook, iMessage, Twitter/X)
+        const guestName = guest?.name || guest?.fullName;
+        if (guestName) {
+          title = `💌 ¡${guestName}, tienes una invitación para la Boda de ${coupleNames}!`;
+        } else {
+          title = `💍 Boda de ${coupleNames} — Invitación Oficial`;
+        }
 
-        description = `Acompáñanos a celebrar nuestra boda este ${eventDate}. Lugar: ${venue}. Toca aquí para ver todos los detalles y confirmar tu asistencia.`;
-        ogImageAlt = `Invitación de Boda de ${coupleNames}`;
+        // Dynamic Subtitle / Description with event date, venue, city & personalized welcome
+        const locationPart = cityOrAddress ? `${venue} (${cityOrAddress})` : venue;
+        description = `${welcomeSubtitle} • ${formattedDate} en ${locationPart}. Toca aquí para ver itinerario, mapa y confirmar tu asistencia.`;
+        ogImageAlt = `Invitación de Boda de ${coupleNames} - ${formattedDate}`;
       }
 
       const dynamicTags = `
     <!-- Dynamic Social Media & WhatsApp Rich Previews -->
     <title>${title}</title>
     <meta name="description" content="${description}" />
-    <meta property="og:site_name" content="Atelier Nupcial Digital" />
+    <meta property="og:site_name" content="Boda de ${wedding?.coupleNames || 'Sofía & Alejandro'}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />

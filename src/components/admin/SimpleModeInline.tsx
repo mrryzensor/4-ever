@@ -21,6 +21,7 @@ import {
   ExternalLink,
   ImageIcon,
   Palette,
+  Clipboard,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../types.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../lib/mediaOptimizer.ts';
@@ -151,9 +152,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   }, [activeStep, settings.id]);
 
   // Handle Cover Photo Upload with client-side AVIF 95% compression
-  const handleCoverPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processCoverFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
 
     try {
       setIsOptimizingCover(true);
@@ -205,6 +205,61 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
       setIsOptimizingCover(false);
     }
   };
+
+  const handleCoverPhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processCoverFile(file);
+    }
+  };
+
+  // Global paste handler for images when SimpleMode is open
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      // If user is pasting into a text input or textarea, let default behavior handle text
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        // If there's an image file in the clipboard, intercept and upload
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            const file = items[i].getAsFile();
+            if (file) {
+              e.preventDefault();
+              if (activeStep === 'galeria') {
+                processGalleryFiles([file]);
+              } else {
+                processCoverFile(file);
+              }
+              break;
+            }
+          }
+        }
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            if (activeStep === 'galeria') {
+              processGalleryFiles([file]);
+            } else {
+              processCoverFile(file);
+            }
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [activeStep]);
 
   // Handle Gallery Photo Upload for the Couple (Single or Batch up to 10 photos + Drag & Drop)
   const processGalleryFiles = async (files: FileList | File[]) => {
@@ -554,7 +609,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </div>
 
                 <div className="sm:col-span-8 space-y-2.5">
-                  <label className="block w-full py-3 px-4 rounded-xl bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] hover:border-[#5A5A40] text-[#5A5A40] font-semibold text-xs text-center cursor-pointer transition-all shadow-2xs">
+                  <label className="block w-full py-3.5 px-4 rounded-xl bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] hover:border-[#5A5A40] text-[#5A5A40] font-semibold text-xs text-center cursor-pointer transition-all shadow-2xs group">
                     <input
                       type="file"
                       accept="image/*"
@@ -562,9 +617,15 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                       disabled={isOptimizingCover}
                       className="hidden"
                     />
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="w-4 h-4 text-[#5A5A40]" />
-                      <span>Subir foto desde celular o computadora (Auto-AVIF)</span>
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className="flex items-center gap-2">
+                        <Upload className="w-4 h-4 text-[#5A5A40] group-hover:scale-110 transition-transform" />
+                        <span>Subir foto desde dispositivo (Auto-AVIF)</span>
+                      </div>
+                      <span className="text-[11px] text-[#7D8C7A] font-normal flex items-center gap-1">
+                        <Clipboard className="w-3 h-3 text-[#7D8C7A]" />
+                        o pega directamente con <strong>Ctrl+V</strong>
+                      </span>
                     </div>
                   </label>
 
@@ -1131,16 +1192,20 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                       <p className="text-xs font-bold text-stone-800">
                         {isDraggingGallery
                           ? '¡Suelta tus fotos aquí para subirlas!'
-                          : 'Arrastra y suelta aquí hasta 10 fotos o haz clic para seleccionar'}
+                          : 'Arrastra y suelta, pega (Ctrl+V) o haz clic para seleccionar fotos'}
                       </p>
                       <p className="text-[11px] text-stone-500 mt-0.5">
-                        Formatos JPG, PNG, WEBP, HEIC. Se optimizarán automáticamente en formato <span className="font-semibold text-emerald-800">AVIF al 95%</span> para máxima velocidad de carga.
+                        Formatos JPG, PNG, WEBP, HEIC. También puedes <strong className="text-stone-700">pegar imágenes directamente con Ctrl+V</strong>. Se optimizarán automáticamente en <span className="font-semibold text-emerald-800">AVIF al 95%</span>.
                       </p>
                     </div>
-                    <div className="pt-1">
+                    <div className="pt-1 flex items-center justify-center gap-2">
                       <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#5A5A40] hover:bg-[#484833] text-white text-xs font-semibold shadow-xs transition-all">
                         <Plus className="w-3.5 h-3.5" />
-                        <span>Seleccionar Fotos (Hasta 10)</span>
+                        <span>Seleccionar Fotos</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-stone-100 text-stone-700 border border-stone-300 text-xs font-mono font-medium shadow-2xs">
+                        <Clipboard className="w-3 h-3 text-[#5A5A40]" />
+                        <span>Ctrl+V para Pegar</span>
                       </span>
                     </div>
                   </label>

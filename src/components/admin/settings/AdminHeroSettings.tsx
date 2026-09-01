@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Sparkles,
   Image as ImageIcon,
@@ -9,6 +9,7 @@ import {
   Zap,
   CheckCircle2,
   Loader2,
+  Clipboard,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
@@ -29,11 +30,12 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const [heroUploadMessage, setHeroUploadMessage] = useState<string | null>(null);
   const [heroOptimizationStats, setHeroOptimizationStats] = useState<ImageOptimizationResult | null>(null);
+  const [isDraggingHero, setIsDraggingHero] = useState(false);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
+  const heroDropZoneRef = useRef<HTMLDivElement>(null);
 
-  const handleHeroFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processHeroFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
 
     try {
       setUploadingHeroImage(true);
@@ -89,6 +91,78 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
     }
   };
 
+  const handleHeroFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processHeroFile(file);
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingHero(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingHero(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingHero(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      await processHeroFile(file);
+    }
+  };
+
+  // Clipboard Paste listener when dropzone or window has focus
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          await processHeroFile(file);
+          break;
+        }
+      }
+    }
+  };
+
+  // Also support global paste when container is active
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      // Don't intercept paste in text inputs or textareas unless it's an image
+      const activeEl = document.activeElement;
+      const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
+      
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            processHeroFile(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* ==================================================================== */}
@@ -143,8 +217,20 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             )}
           </div>
 
-          {/* Dropzone / Upload Box */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          {/* Dropzone / Upload Box with Drag & Drop and Direct Paste (Ctrl+V) */}
+          <div
+            ref={heroDropZoneRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onPaste={handlePaste}
+            tabIndex={0}
+            className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-3 sm:p-4 rounded-3xl border-2 transition-all outline-none ${
+              isDraggingHero
+                ? 'border-[#5A5A40] bg-[#5A5A40]/10 scale-[1.01]'
+                : 'border-transparent bg-transparent'
+            }`}
+          >
             {/* Photo Preview Thumbnail */}
             <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-[#E5E2D0] bg-stone-900 aspect-3/4 max-h-56 flex items-center justify-center shadow-xs">
               {settings.coverPhoto ? (
@@ -187,20 +273,26 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 type="button"
                 onClick={() => heroFileInputRef.current?.click()}
                 disabled={uploadingHeroImage}
-                className="w-full py-3.5 px-4 rounded-2xl bg-white border-2 border-dashed border-[#7D8C7A]/60 hover:border-[#5A5A40] hover:bg-[#F0EEDC] text-[#5A5A40] font-semibold text-xs flex flex-col sm:flex-row items-center justify-center gap-2 cursor-pointer transition-all shadow-xs"
+                className="w-full py-4 px-4 rounded-2xl bg-white border-2 border-dashed border-[#7D8C7A]/60 hover:border-[#5A5A40] hover:bg-[#F0EEDC] text-[#5A5A40] font-semibold text-xs flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs group"
               >
                 {uploadingHeroImage ? (
-                  <>
+                  <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 text-[#5A5A40] animate-spin" />
                     <span>Optimizando a formato AVIF & guardando...</span>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4 text-[#5A5A40] shrink-0" />
-                    <span>Cargar foto desde tu dispositivo o celular</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Zap className="w-2.5 h-2.5" /> AVIF 95%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-[#5A5A40] shrink-0 group-hover:scale-110 transition-transform" />
+                      <span>Arrastra o selecciona foto desde tu dispositivo</span>
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5" /> AVIF 95%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#7D8C7A]">
+                      <Clipboard className="w-3 h-3 text-[#7D8C7A]" />
+                      <span>o pega una imagen copiada directamente presionando <strong>Ctrl+V</strong></span>
+                    </div>
                   </>
                 )}
               </button>

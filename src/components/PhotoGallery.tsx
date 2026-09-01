@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -16,10 +16,15 @@ import {
   Send,
   User,
   Trash2,
+  Upload,
+  Plus,
+  Clipboard,
+  CheckCircle2,
 } from 'lucide-react';
 import { GalleryPhoto, PhotoComment, WeddingSettings } from '../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
+import { optimizeImageClient } from '../lib/mediaOptimizer.ts';
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -193,6 +198,128 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       setIsSubmittingComment(false);
     }
   };
+
+  // Guest photo upload state & handlers (with AVIF 95% + Paste + Drag & Drop support)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadCaption, setUploadCaption] = useState('');
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const processGuestPhotoFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+
+    try {
+      setIsUploadingPhoto(true);
+      setUploadMessage('Optimizando fotografía a formato AVIF (95% compresión)...');
+
+      const optimized = await optimizeImageClient(file, {
+        maxDimension: 1920,
+        quality: 0.72,
+        preferredFormat: 'avif',
+      });
+
+      setUploadMessage('Subiendo fotografía optimizada...');
+      const formData = new FormData();
+      formData.append('file', optimized.file);
+
+      let finalUrl = '';
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        finalUrl = uploadData.url;
+      } else {
+        finalUrl = URL.createObjectURL(optimized.file);
+      }
+
+      setUploadMessage('Registrando en la galería...');
+      const payload = {
+        weddingId,
+        url: finalUrl,
+        caption: uploadCaption.trim() || 'Recuerdo compartido',
+        authorName: authorInputName.trim() || guestName || 'Invitado Especial',
+        guestCode: guestCode || null,
+        likesCount: 0,
+        type: 'photo',
+      };
+
+      const saveRes = await fetch('/api/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const newPhoto = await saveRes.json();
+      if (newPhoto && newPhoto.id) {
+        setPhotos((prev) => [newPhoto, ...prev]);
+        setUploadMessage('¡Fotografía añadida a la galería con éxito!');
+        setTimeout(() => {
+          setUploadMessage(null);
+          setShowUploadModal(false);
+          setUploadCaption('');
+        }, 1500);
+      }
+    } catch (err) {
+      console.error('Error uploading guest photo:', err);
+      setUploadMessage('Error al subir la fotografía. Por favor intenta de nuevo.');
+      setTimeout(() => setUploadMessage(null), 3000);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processGuestPhotoFile(file);
+    }
+  };
+
+  // Clipboard paste listener in PhotoGallery
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      // If user is typing in a text input or textarea, don't capture unless it's an image file
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            const file = items[i].getAsFile();
+            if (file) {
+              e.preventDefault();
+              setShowUploadModal(true);
+              processGuestPhotoFile(file);
+              break;
+            }
+          }
+        }
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          const file = items[i].getAsFile();
+          if (file) {
+            e.preventDefault();
+            setShowUploadModal(true);
+            processGuestPhotoFile(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [weddingId, authorInputName, guestName, guestCode, uploadCaption]);
 
   const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
   const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
@@ -449,23 +576,156 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             </div>
           )}
 
-          {/* Inline Action Indicator */}
-          <div className="mt-4 text-center">
+          {/* Inline Action Indicator & Upload Photo Button */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => setActivePhotoIndex(carouselIndex)}
-              className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-serif font-semibold border transition-all cursor-pointer hover:scale-105 ${
+              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${
                 isDark
                   ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
-                  : 'bg-white/80 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
+                  : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Ver en modo pantalla completa y dejar dedicatoria</span>
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>Ver en pantalla completa</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowUploadModal(true)}
+              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                isDark
+                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                  : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+              }`}
+            >
+              <Camera className="w-4 h-4" />
+              <span>Compartir una Foto</span>
             </button>
           </div>
+
+          <p className={`mt-2 text-[11px] text-center font-serif italic ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+            Tip: Puedes presionar <strong>Ctrl+V</strong> en cualquier momento para pegar una foto copiada.
+          </p>
         </div>
       )}
+
+      {/* Guest Photo Upload Modal */}
+      <AnimatePresence>
+        {showUploadModal && (
+          <div className="fixed inset-0 z-[99990] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md bg-stone-900 border border-stone-700 rounded-3xl p-6 text-stone-100 shadow-2xl relative space-y-4"
+            >
+              <button
+                type="button"
+                onClick={() => setShowUploadModal(false)}
+                className="absolute top-4 right-4 text-stone-400 hover:text-white p-1 rounded-full bg-stone-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-2.5 border-b border-stone-800 pb-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-white">Subir Foto a la Galería</h3>
+                  <p className="text-xs text-stone-400">Comparte tu recuerdo con los novios</p>
+                </div>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
+              {/* Drag and Drop Zone */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDraggingPhoto(true);
+                }}
+                onDragLeave={() => setIsDraggingPhoto(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingPhoto(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) processGuestPhotoFile(file);
+                }}
+                className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer ${
+                  isDraggingPhoto
+                    ? 'border-amber-400 bg-amber-500/10 scale-102'
+                    : 'border-stone-700 bg-stone-950/60 hover:border-amber-400/60'
+                }`}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {isUploadingPhoto ? (
+                  <div className="py-4 space-y-2 flex flex-col items-center justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+                    <p className="text-xs font-medium text-amber-200">{uploadMessage}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 text-amber-400 mx-auto" />
+                    <p className="text-xs font-semibold text-stone-200">
+                      Arrastra tu foto aquí o haz clic para buscarla
+                    </p>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-800 border border-stone-700 text-[11px] text-stone-300 font-mono">
+                      <Clipboard className="w-3 h-3 text-amber-400" />
+                      <span>o pega directamente con <strong>Ctrl+V</strong></span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Caption & Name Inputs */}
+              <div className="space-y-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                    Tu nombre:
+                  </label>
+                  <input
+                    type="text"
+                    value={authorInputName}
+                    onChange={(e) => setAuthorInputName(e.target.value)}
+                    placeholder="Ej. Familia Gómez"
+                    className="w-full px-3.5 py-2 rounded-xl bg-stone-950 border border-stone-700 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-300 mb-1">
+                    Pie de foto o dedicatoria (opcional):
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadCaption}
+                    onChange={(e) => setUploadCaption(e.target.value)}
+                    placeholder="Ej. ¡Felicidades a los novios! / Momento inolvidable"
+                    className="w-full px-3.5 py-2 rounded-xl bg-stone-950 border border-stone-700 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-400"
+                  />
+                </div>
+              </div>
+
+              {uploadMessage && !isUploadingPhoto && (
+                <div className="bg-emerald-950/60 border border-emerald-600/80 rounded-xl p-3 flex items-center gap-2 text-xs text-emerald-200">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{uploadMessage}</span>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox Modal rendered via React Portal directly to body (Guarantees top stacking context above all headers) */}
       {typeof document !== 'undefined' &&

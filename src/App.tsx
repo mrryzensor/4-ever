@@ -253,6 +253,23 @@ export default function App() {
     }
   }, [settings?.cardStyle]);
 
+  // Update dynamic browser tab title & client meta description
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (currentView === 'landing') {
+      document.title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
+    } else if (currentView === 'admin' || currentView === 'dashboard') {
+      document.title = `Panel de Administración — Boda de ${settings?.coupleNames || 'los Novios'}`;
+    } else {
+      const coupleNames = settings?.coupleNames || 'Sofía & Alejandro';
+      if (activeGuest?.fullName) {
+        document.title = `💌 ¡${activeGuest.fullName}, invitación a la Boda de ${coupleNames}!`;
+      } else {
+        document.title = `💍 Boda de ${coupleNames} — Invitación Oficial`;
+      }
+    }
+  }, [currentView, settings?.coupleNames, activeGuest?.fullName]);
+
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement) {
