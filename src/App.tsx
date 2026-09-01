@@ -62,12 +62,50 @@ export default function App() {
   const getPathSlug = () => {
     if (typeof window === 'undefined') return null;
     const segments = window.location.pathname.split('/').filter(Boolean);
-    const reserved = ['api', 'uploads', 'src', 'assets', 'admin', 'dashboard', 'ceo', 'landing'];
+    const reserved = [
+      'api', 'uploads', 'src', 'assets', 'admin', 'dashboard', 'ceo', 'landing',
+      'login', 'register', 'ingresar', 'registro', 'signin', 'signup'
+    ];
     if (segments.length === 1 && !reserved.includes(segments[0].toLowerCase())) {
       return decodeURIComponent(segments[0]);
     }
     return null;
   };
+
+  // Helper to detect if URL points directly to login or register
+  const getInitialAuth = (): { isOpen: boolean; mode: 'login' | 'register' } => {
+    if (typeof window === 'undefined') return { isOpen: false, mode: 'register' };
+    const pathname = window.location.pathname.toLowerCase();
+    const search = new URLSearchParams(window.location.search);
+    const authQuery = search.get('auth') || search.get('mode');
+    const hash = window.location.hash.toLowerCase();
+
+    if (
+      pathname === '/login' ||
+      pathname === '/ingresar' ||
+      pathname === '/signin' ||
+      authQuery === 'login' ||
+      authQuery === 'ingresar' ||
+      hash === '#login'
+    ) {
+      return { isOpen: true, mode: 'login' };
+    }
+
+    if (
+      pathname === '/register' ||
+      pathname === '/registro' ||
+      pathname === '/signup' ||
+      authQuery === 'register' ||
+      authQuery === 'registro' ||
+      hash === '#register'
+    ) {
+      return { isOpen: true, mode: 'register' };
+    }
+
+    return { isOpen: false, mode: 'register' };
+  };
+
+  const initialAuth = getInitialAuth();
 
   // Navigation & View state
   const [currentView, setCurrentView] = useState<AppView>(() => {
@@ -94,9 +132,32 @@ export default function App() {
       return null;
     }
   });
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('register');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(initialAuth.isOpen);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>(initialAuth.mode);
   const [authSelectedPlan, setAuthSelectedPlan] = useState<PlanId>('atelier');
+
+  // Open & Close Auth with URL history updates
+  const openAuth = (mode: 'login' | 'register', plan?: PlanId) => {
+    setAuthModalMode(mode);
+    if (plan) setAuthSelectedPlan(plan);
+    setIsAuthModalOpen(true);
+    if (typeof window !== 'undefined') {
+      const targetPath = mode === 'login' ? '/login' : '/register';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ authMode: mode }, '', targetPath);
+      }
+    }
+  };
+
+  const closeAuth = () => {
+    setIsAuthModalOpen(false);
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname.toLowerCase();
+      if (['/login', '/register', '/ingresar', '/registro', '/signin', '/signup'].includes(currentPath)) {
+        window.history.pushState(null, '', '/');
+      }
+    }
+  };
 
   // Active Wedding State
   const [settings, setSettings] = useState<WeddingSettings>(() => {
@@ -122,6 +183,32 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHostPill, setShowHostPill] = useState(true);
   const [isViewingDemo, setIsViewingDemo] = useState(false);
+
+  // Listen to popstate and url changes for direct login/register routing
+  useEffect(() => {
+    const handleUrlAuthChange = () => {
+      if (typeof window === 'undefined') return;
+      const pathname = window.location.pathname.toLowerCase();
+      const search = new URLSearchParams(window.location.search);
+      const authQuery = search.get('auth') || search.get('mode');
+      const hash = window.location.hash.toLowerCase();
+
+      if (['/login', '/ingresar', '/signin'].includes(pathname) || authQuery === 'login' || hash === '#login') {
+        setAuthModalMode('login');
+        setIsAuthModalOpen(true);
+      } else if (['/register', '/registro', '/signup'].includes(pathname) || authQuery === 'register' || hash === '#register') {
+        setAuthModalMode('register');
+        setIsAuthModalOpen(true);
+      }
+    };
+
+    window.addEventListener('popstate', handleUrlAuthChange);
+    window.addEventListener('hashchange', handleUrlAuthChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlAuthChange);
+      window.removeEventListener('hashchange', handleUrlAuthChange);
+    };
+  }, []);
 
   // Monitor browser fullscreen change events
   useEffect(() => {
@@ -415,11 +502,7 @@ export default function App() {
           user={currentUser}
           isLoggedIn={!!currentUser}
           userEmail={currentUser?.email}
-          onOpenAuth={(mode, plan) => {
-            setAuthModalMode(mode);
-            if (plan) setAuthSelectedPlan(plan);
-            setIsAuthModalOpen(true);
-          }}
+          onOpenAuth={(mode, plan) => openAuth(mode, plan)}
           onOpenDashboard={() => {
             if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
               setCurrentView('ceo');
@@ -460,7 +543,7 @@ export default function App() {
 
         <AuthModal
           isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
+          onClose={closeAuth}
           initialMode={authModalMode}
           selectedPlan={authSelectedPlan}
           onAuthSuccess={handleAuthSuccess}
@@ -493,7 +576,7 @@ export default function App() {
           />
           <AuthModal
             isOpen={isAuthModalOpen}
-            onClose={() => setIsAuthModalOpen(false)}
+            onClose={closeAuth}
             initialMode="login"
             onAuthSuccess={handleAuthSuccess}
           />
@@ -514,7 +597,7 @@ export default function App() {
         />
         <AuthModal
           isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
+          onClose={closeAuth}
           initialMode="register"
           onAuthSuccess={handleAuthSuccess}
         />
@@ -607,10 +690,9 @@ export default function App() {
           }}
           onChooseDesign={(chosenStyle) => {
             setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
-            setAuthSelectedPlan('atelier');
-            setAuthModalMode('register');
-            setIsAuthModalOpen(true);
+            openAuth('register', 'atelier');
           }}
+          onOpenLogin={() => openAuth('login')}
           onBackToLanding={() => {
             setIsViewingDemo(false);
             setCurrentView('landing');
@@ -808,7 +890,7 @@ export default function App() {
       {/* Auth Modal for Choosing Design or Logging in */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={closeAuth}
         initialMode={authModalMode}
         selectedPlan={authSelectedPlan}
         onAuthSuccess={handleAuthSuccess}

@@ -16,6 +16,7 @@ interface DemoStyleBarProps {
   currentStyle: CardStyleId;
   onSelectStyle: (style: CardStyleId) => void;
   onChooseDesign: (style: CardStyleId) => void;
+  onOpenLogin?: () => void;
   onBackToLanding: () => void;
 }
 
@@ -90,6 +91,7 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
   currentStyle,
   onSelectStyle,
   onChooseDesign,
+  onOpenLogin,
   onBackToLanding,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -158,8 +160,18 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
           })}
         </div>
 
-        {/* Right Side: Main CTA to choose this design */}
-        <div className="w-full md:w-auto flex items-center justify-end gap-2 pt-1 md:pt-0">
+        {/* Right Side: Iniciar Sesión link & Main CTA to choose this design */}
+        <div className="w-full md:w-auto flex items-center justify-end gap-2.5 pt-1 md:pt-0">
+          {onOpenLogin && (
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="px-3.5 py-1.5 text-xs text-stone-300 hover:text-white font-serif transition-colors cursor-pointer hover:underline"
+            >
+              Iniciar Sesión
+            </button>
+          )}
+
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
