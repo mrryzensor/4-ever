@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import {
   CreditCard,
   Building2,
@@ -49,10 +50,11 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="mesa-de-regalos">
-      <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
+      <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
           isDark
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
@@ -81,9 +83,67 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
           {settings.giftRegistryMessage ||
             'El mejor regalo es tu presencia en nuestro gran día. Si deseas tener un detalle con nosotros para nuestro nuevo hogar o luna de miel, ponemos a tu disposición las siguientes opciones:'}
         </p>
+
+        {/* Quick Summary Preview (when collapsed) */}
+        {!isExpanded && (
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-lg mx-auto">
+            {hasDirectBankSettings && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border shadow-xs ${
+                isDark ? 'bg-[#282B25] border-[#5A5A40] text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+              }`}>
+                <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+                <span>{settings.bankName || 'Transferencia Bancaria'}</span>
+              </span>
+            )}
+            {settings.enableEnvelopeGift !== false && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border shadow-xs ${
+                isDark ? 'bg-[#282B25] border-[#5A5A40] text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+              }`}>
+                <Mail className="w-3.5 h-3.5 text-rose-400" />
+                <span>Lluvia de Sobres</span>
+              </span>
+            )}
+            {registryItems.map((item, idx) => (
+              <span key={idx} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border shadow-xs ${
+                isDark ? 'bg-[#282B25] border-[#5A5A40] text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+              }`}>
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{item.storeName || item.title || 'Mesa Online'}</span>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Inline Toggle Button */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              isDark
+                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+            }`}
+          >
+            <span>{isExpanded ? 'Ocultar Opciones y Cuentas' : 'Ver Cuentas y Opciones de Regalo'}</span>
+            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Expandable options grid */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? 'auto' : 0,
+          opacity: isExpanded ? 1 : 0,
+        }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="overflow-hidden"
+      >
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
         {/* ==================================================================== */}
         {/* DIRECT BANK ACCOUNT CARD (If configured in Settings) */}
         {/* ==================================================================== */}
@@ -579,6 +639,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
           </div>
         )}
       </div>
+      </motion.div>
     </section>
   );
 };

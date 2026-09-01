@@ -83,10 +83,11 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
 
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="libro-firmas">
-      <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
+      <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
           isDark
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
@@ -114,9 +115,47 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         }`}>
           Déjanos tus mejores deseos y bendiciones para esta nueva aventura que comenzamos juntos.
         </p>
+
+        {/* Wishes count and prompt when collapsed */}
+        {!isExpanded && (
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <span className={`text-xs font-serif ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+              {wishes.length > 0
+                ? `✨ ${wishes.length} ${wishes.length === 1 ? 'mensaje publicado' : 'mensajes publicados'} de familiares y amigos`
+                : 'Sé el primero en dejar una dedicatoria a los novios'}
+            </span>
+          </div>
+        )}
+
+        {/* Inline Toggle Button */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              isDark
+                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+            }`}
+          >
+            <span>{isExpanded ? 'Ocultar Libro de Firmas' : 'Ver y Dejar Felicitaciones'}</span>
+            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? 'auto' : 0,
+          opacity: isExpanded ? 1 : 0,
+        }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="overflow-hidden"
+      >
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
         {/* Form to leave wish */}
         <div className={`lg:col-span-1 backdrop-blur-sm rounded-3xl p-8 border shadow-sm h-fit ${
           isDark
@@ -273,6 +312,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
           )}
         </div>
       </div>
+      </motion.div>
     </section>
   );
 };

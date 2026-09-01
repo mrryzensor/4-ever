@@ -37,6 +37,7 @@ const getIcon = (iconName: string) => {
 };
 
 export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) => {
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const showItinerary = settings.showItinerary !== false;
 
   if (!showItinerary) {
@@ -53,11 +54,14 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
 
+  // In compact preview, show the first 2-3 key highlights or summary badges
+  const previewItems = itineraryList.slice(0, 3);
+  const hasMore = itineraryList.length > 3;
+
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="itinerario">
-      {/* Itinerary Timeline Block */}
       {/* Section Title */}
-      <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
+      <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
           isDark
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
@@ -85,92 +89,149 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
         }`}>
           Te compartimos los horarios y momentos clave para que no te pierdas ningún detalle.
         </p>
-      </div>
 
-      {/* Itinerary Timeline */}
-      <div className="relative max-w-4xl mx-auto my-12">
-        {/* Central timeline line */}
-        <div className={`absolute left-6 sm:left-1/2 top-4 bottom-4 w-0.5 sm:-translate-x-1/2 ${
-          isDark
-            ? 'bg-gradient-to-b from-[#C5A059]/30 via-[#C5A059]/50 to-[#C5A059]/30'
-            : 'bg-gradient-to-b from-[#7D8C7A]/30 via-[#5A5A40]/40 to-[#7D8C7A]/30'
-        }`} />
-
-        <div className="space-y-10">
-          {itineraryList.map((item, index) => {
-            const isEven = index % 2 === 0;
-            return (
-              <div
-                key={index}
-                className={`relative flex items-center ${
-                  isEven ? 'sm:flex-row-reverse' : 'sm:flex-row'
-                } flex-row`}
+        {/* Inline Quick Summary Chips when collapsed */}
+        {!isExpanded && itineraryList.length > 0 && (
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+            {previewItems.map((item, idx) => (
+              <span
+                key={idx}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-xs transition-transform hover:scale-105 ${
+                  isDark
+                    ? 'bg-[#282B25] border-[#5A5A40] text-stone-200'
+                    : 'bg-white/85 border-[#E5E2D0] text-[#3D3D2C]'
+                }`}
               >
-                {/* Timeline Icon Node with Animated SVG halo */}
-                <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 w-14 h-14 flex items-center justify-center z-10">
-                  <motion.svg
-                    viewBox="0 0 60 60"
-                    className="absolute inset-0 w-full h-full pointer-events-none"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 12 + index * 2, repeat: Infinity, ease: 'linear' }}
-                  >
-                    <circle
-                      cx="30"
-                      cy="30"
-                      r="27"
-                      stroke={isDark ? '#C5A059' : '#D4A373'}
-                      strokeWidth="1.5"
-                      strokeDasharray="4 4"
-                      fill="none"
-                      opacity="0.8"
-                    />
-                  </motion.svg>
-                  <div className={`w-11 h-11 rounded-full aspect-square shrink-0 circle-node flex items-center justify-center shadow-lg border-2 ${
-                    isDark
-                      ? 'bg-[#C5A059] text-stone-950 border-[#1F211D]'
-                      : 'bg-[#5A5A40] text-[#FDFCF0] border-white'
-                  }`}>
-                    {getIcon(item.icon)}
-                  </div>
-                </div>
+                <span className={`font-mono font-bold text-[11px] ${isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'}`}>
+                  {item.time}
+                </span>
+                <span className="text-stone-400">•</span>
+                <span>{item.title}</span>
+              </span>
+            ))}
+            {hasMore && (
+              <span className={`text-xs px-2.5 py-1 rounded-full border border-dashed ${
+                isDark ? 'border-[#5A5A40] text-stone-400' : 'border-[#E5E2D0] text-stone-500'
+              }`}>
+                +{itineraryList.length - 3} momentos más
+              </span>
+            )}
+          </div>
+        )}
 
-                {/* Content Card */}
-                <div
-                  className={`ml-16 sm:ml-0 sm:w-1/2 ${
-                    isEven ? 'sm:pl-12' : 'sm:pr-12'
-                  } w-full`}
-                >
-                  <div className={`p-6 rounded-3xl backdrop-blur-sm border shadow-sm hover:shadow-md transition-all ${
-                    isDark
-                      ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
-                      : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
-                        isDark
-                          ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
-                          : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
-                      }`}>
-                        {item.time} hrs
-                      </span>
-                    </div>
-                    <h4 className={`text-lg font-serif font-bold mt-1 ${
-                      isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
-                    }`}>
-                      {item.title}
-                    </h4>
-                    <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
-                      isDark ? 'text-stone-300' : 'text-stone-600'
-                    }`}>
-                      {item.desc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Toggle Button for More Details */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              isDark
+                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+            }`}
+          >
+            <span>{isExpanded ? 'Ver Menos Detalles' : 'Ver Itinerario Completo'}</span>
+            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* Itinerary Timeline - Expands / Collapses smoothly */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? 'auto' : 0,
+          opacity: isExpanded ? 1 : 0,
+        }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="overflow-hidden"
+      >
+        <div className="relative max-w-4xl mx-auto my-6 sm:my-8 pt-4">
+          {/* Central timeline line */}
+          <div className={`absolute left-6 sm:left-1/2 top-4 bottom-4 w-0.5 sm:-translate-x-1/2 ${
+            isDark
+              ? 'bg-gradient-to-b from-[#C5A059]/30 via-[#C5A059]/50 to-[#C5A059]/30'
+              : 'bg-gradient-to-b from-[#7D8C7A]/30 via-[#5A5A40]/40 to-[#7D8C7A]/30'
+          }`} />
+
+          <div className="space-y-10">
+            {itineraryList.map((item, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <div
+                  key={index}
+                  className={`relative flex items-center ${
+                    isEven ? 'sm:flex-row-reverse' : 'sm:flex-row'
+                  } flex-row`}
+                >
+                  {/* Timeline Icon Node with Animated SVG halo */}
+                  <div className="absolute left-6 sm:left-1/2 -translate-x-1/2 w-14 h-14 flex items-center justify-center z-10">
+                    <motion.svg
+                      viewBox="0 0 60 60"
+                      className="absolute inset-0 w-full h-full pointer-events-none"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 12 + index * 2, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <circle
+                        cx="30"
+                        cy="30"
+                        r="27"
+                        stroke={isDark ? '#C5A059' : '#D4A373'}
+                        strokeWidth="1.5"
+                        strokeDasharray="4 4"
+                        fill="none"
+                        opacity="0.8"
+                      />
+                    </motion.svg>
+                    <div className={`w-11 h-11 rounded-full aspect-square shrink-0 circle-node flex items-center justify-center shadow-lg border-2 ${
+                      isDark
+                        ? 'bg-[#C5A059] text-stone-950 border-[#1F211D]'
+                        : 'bg-[#5A5A40] text-[#FDFCF0] border-white'
+                    }`}>
+                      {getIcon(item.icon)}
+                    </div>
+                  </div>
+
+                  {/* Content Card */}
+                  <div
+                    className={`ml-16 sm:ml-0 sm:w-1/2 ${
+                      isEven ? 'sm:pl-12' : 'sm:pr-12'
+                    } w-full`}
+                  >
+                    <div className={`p-6 rounded-3xl backdrop-blur-sm border shadow-sm hover:shadow-md transition-all ${
+                      isDark
+                        ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
+                        : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+                    }`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
+                          isDark
+                            ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
+                            : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
+                        }`}>
+                          {item.time} hrs
+                        </span>
+                      </div>
+                      <h4 className={`text-lg font-serif font-bold mt-1 ${
+                        isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+                      }`}>
+                        {item.title}
+                      </h4>
+                      <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
+                        isDark ? 'text-stone-300' : 'text-stone-600'
+                      }`}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
     </section>
   );
 };

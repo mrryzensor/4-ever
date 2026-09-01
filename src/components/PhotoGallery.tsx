@@ -198,6 +198,20 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
 
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  const handlePrevCarousel = () => {
+    if (photos.length === 0) return;
+    setCarouselIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+  };
+
+  const handleNextCarousel = () => {
+    if (photos.length === 0) return;
+    setCarouselIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+  };
+
+  const currentCarouselPhoto = photos[carouselIndex] || photos[0];
+
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
@@ -226,7 +240,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          Una selección especial de nuestras fotografías favoritas y sesión preboda para compartir con ustedes.
+          Desliza o usa los botones para revivir nuestras sesiones y momentos favoritos juntos.
         </p>
 
         {/* External Cloud Album Banner (Google Photos, Apple Photos, Drive, etc.) */}
@@ -272,7 +286,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         )}
       </div>
 
-      {/* Gallery Grid */}
+      {/* Interactive Carousel Slider Container */}
       {loading ? (
         <div className={`py-20 text-center text-sm flex items-center justify-center gap-2 ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
           <Loader2 className={`w-4 h-4 animate-spin ${isDark ? 'text-[#C5A059]' : 'text-amber-700'}`} />
@@ -308,55 +322,151 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           )}
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 space-y-6">
-          {photos.map((photo, index) => (
-            <motion.div
-              layout
-              key={photo.id}
-              onClick={() => setActivePhotoIndex(index)}
-              className="break-inside-avoid relative group rounded-2xl overflow-hidden shadow-xs bg-stone-900 cursor-pointer border border-[#E5E2D0] hover:shadow-xl transition-all duration-300"
+        <div className="max-w-4xl mx-auto">
+          {/* Main Hero Slider Frame */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-stone-950 aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] border border-[#E5E2D0]/40 group select-none">
+            
+            {/* Current Photo Slide with AnimatePresence */}
+            <AnimatePresence mode="wait">
+              {currentCarouselPhoto && (
+                <motion.div
+                  key={currentCarouselPhoto.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.35, ease: 'easeOut' }}
+                  onClick={() => setActivePhotoIndex(carouselIndex)}
+                  className="w-full h-full cursor-pointer relative"
+                >
+                  <img
+                    src={currentCarouselPhoto.url}
+                    alt={currentCarouselPhoto.caption || 'Foto de boda'}
+                    className="w-full h-full object-contain sm:object-cover bg-stone-950 transition-transform duration-700 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
+
+                  {/* Gradient Overlay at bottom for caption and badges */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
+                    <div className="flex justify-between items-center pointer-events-auto">
+                      <span className="text-[11px] uppercase font-bold tracking-widest bg-black/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-amber-200">
+                        {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
+                      </span>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => handleLike(currentCarouselPhoto.id, e)}
+                          className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md hover:bg-rose-600/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer"
+                        >
+                          <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
+                          <span>{currentCarouselPhoto.likesCount}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActivePhotoIndex(carouselIndex)}
+                          className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md hover:bg-amber-500/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer"
+                          title="Ver en pantalla completa con comentarios"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                          <span className="hidden sm:inline">Comentar / Ampliar</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pointer-events-auto">
+                      {currentCarouselPhoto.caption && (
+                        <p className="text-sm sm:text-base font-serif font-medium text-stone-100 mb-1 drop-shadow-md">
+                          {currentCarouselPhoto.caption}
+                        </p>
+                      )}
+                      <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
+                        {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Left Carousel Navigation Button */}
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={handlePrevCarousel}
+                className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                title="Foto anterior"
+              >
+                <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 -translate-x-0.5" />
+              </button>
+            )}
+
+            {/* Right Carousel Navigation Button */}
+            {photos.length > 1 && (
+              <button
+                type="button"
+                onClick={handleNextCarousel}
+                className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                title="Siguiente foto"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 translate-x-0.5" />
+              </button>
+            )}
+
+            {/* Slide Index Pill */}
+            <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
+              <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
+              <span className="text-stone-500">/</span>
+              <span>{photos.length}</span>
+            </div>
+          </div>
+
+          {/* Horizontal Thumbnails Strip Slider */}
+          {photos.length > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-2 no-scrollbar">
+              {photos.map((photo, idx) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => setCarouselIndex(idx)}
+                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${
+                    idx === carouselIndex
+                      ? isDark
+                        ? 'border-[#C5A059] ring-2 ring-[#C5A059]/40 scale-105 opacity-100 shadow-md'
+                        : 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 opacity-100 shadow-md'
+                      : 'border-transparent opacity-45 hover:opacity-85 hover:scale-100'
+                  }`}
+                >
+                  <img
+                    src={photo.url}
+                    alt="Miniatura"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Inline Action Indicator */}
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setActivePhotoIndex(carouselIndex)}
+              className={`inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-serif font-semibold border transition-all cursor-pointer hover:scale-105 ${
+                isDark
+                  ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
+                  : 'bg-white/80 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
+              }`}
             >
-              <img
-                src={photo.url}
-                alt={photo.caption || 'Foto de boda'}
-                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-                referrerPolicy="no-referrer"
-              />
-
-              {/* Overlay with details */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-4 text-white">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] uppercase font-semibold tracking-wider bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-white">
-                    {photo.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => handleLike(photo.id, e)}
-                    className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-rose-600/80 text-white transition-colors flex items-center gap-1.5 text-xs shrink-0"
-                  >
-                    <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
-                    <span>{photo.likesCount}</span>
-                  </button>
-                </div>
-
-                <div>
-                  {photo.caption && (
-                    <p className="text-xs font-medium line-clamp-2 text-stone-100 mb-1">
-                      {photo.caption}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-amber-200/90 font-serif">
-                    {photo.authorName ? `Fotografía: ${photo.authorName}` : 'Recuerdos de los novios'}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Ver en modo pantalla completa y dejar dedicatoria</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Lightbox Modal - Full Viewport Interactive Carousel */}
+      {/* Lightbox Modal - Full Viewport Interactive Carousel (Highest z-index above demo header) */}
       <AnimatePresence>
         {activePhoto && (
           <motion.div
@@ -364,7 +474,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActivePhotoIndex(null)}
-            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
+            className="fixed inset-0 z-[9995] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
           >
             <div
               onClick={(e) => e.stopPropagation()}

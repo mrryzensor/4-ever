@@ -853,6 +853,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
   }
 
   // Active preview states
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState<number>(0);
   const [activeWomanOutfit, setActiveWomanOutfit] = useState<'long-gown' | 'cocktail' | 'jumpsuit' | 'boho'>(
     settings.dressCodeWomanOutfit || 'long-gown'
@@ -875,8 +876,8 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
   const womenDesc =
     settings.dressCodeWomenDescription ||
     (dressCodeTitle.toLowerCase().includes('playa') || dressCodeTitle.toLowerCase().includes('guayabera')
-      ? 'Vestido largo o midi en telas vaporosas, lino o seda con estampados sutiles o colores lisos. Calzado: tacón corrido o cuña para jardín/playa.'
-      : dressCodeTitle.toLowerCase().includes('cóctel') || dressCodeTitle.toLowerCase().includes('cocktail')
+      ? 'Vestido largo o midi en telas frescas y vaporosas (lino, gasa, seda), tonos alegres o pastel y calzado cómodo para arena o jardín.'
+      : dressCodeTitle.toLowerCase().includes('coctel') || dressCodeTitle.toLowerCase().includes('cocktail')
       ? 'Vestido a la rodilla, midi elegante o enterizo sofisticado (jumpsuit de fiesta) con accesorios distinguidos y zapatillas.'
       : 'Vestido largo de noche o gala en telas finas (satén, crepé, seda). Evitar tonos blancos, marfil o perla reservados para la novia.');
 
@@ -902,7 +903,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
       <div className="max-w-5xl mx-auto text-center">
         
         {/* Section Header */}
-        <div className="mb-10 sm:mb-12">
+        <div className="mb-8 sm:mb-10">
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
             isDark
               ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
@@ -942,12 +943,58 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
               "{dressCodeDesc}"
             </p>
           )}
+
+          {/* Color palette pills summary (when collapsed) */}
+          {!isExpanded && paletteList.length > 0 && (
+            <div className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto">
+              <span className={`text-xs font-mono ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                Paleta sugerida:
+              </span>
+              <div className="flex items-center gap-1.5 p-1.5 rounded-full border bg-black/10 backdrop-blur-xs">
+                {paletteList.map((hex, idx) => (
+                  <span
+                    key={idx}
+                    className="w-5 h-5 rounded-full shadow-xs border border-white/40"
+                    style={{ backgroundColor: hex }}
+                    title={hex}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Inline Toggle Button for Simulator and Full Details */}
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+                isDark
+                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                  : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+              }`}
+            >
+              <span>{isExpanded ? 'Ocultar Simulador y Guía' : 'Ver Simulador de Atuendos y Guía'}</span>
+              <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* ============================================================== */}
         {/* INTERACTIVE FASHION MOCKUP CARD (CABALLERO & DAMA VISUALIZER) */}
         {/* ============================================================== */}
-        <div className={`backdrop-blur-md rounded-3xl sm:rounded-[36px] p-6 sm:p-10 border shadow-xl max-w-4xl mx-auto my-8 text-left relative overflow-hidden ${
+        <motion.div
+          initial={false}
+          animate={{
+            height: isExpanded ? 'auto' : 0,
+            opacity: isExpanded ? 1 : 0,
+          }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          className="overflow-hidden"
+        >
+        <div className={`backdrop-blur-md rounded-3xl sm:rounded-[36px] p-6 sm:p-10 border shadow-xl max-w-4xl mx-auto my-4 text-left relative overflow-hidden ${
           isDark
             ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
             : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C]'
@@ -1215,6 +1262,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             </p>
           </div>
         </div>
+        </motion.div>
 
       </div>
     </section>

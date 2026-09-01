@@ -97,11 +97,12 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="ubicaciones">
       {/* Section Title Header */}
-      <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
+      <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
           isDark
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
@@ -129,10 +130,78 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         }`}>
           Te facilitamos los mapas interactivos y rutas guiadas por Google Maps para acompañarnos puntualmente en cada momento.
         </p>
+
+        {/* Quick Venue Cards Preview (when collapsed) */}
+        {!isExpanded && (
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-left">
+            <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
+              isDark ? 'bg-[#282B25]/90 border-[#5A5A40]' : 'bg-white/90 border-[#E5E2D0]'
+            }`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#1F211D] text-[#C5A059]' : 'bg-[#FAF9F0] text-[#5A5A40]'
+              }`}>
+                <MapPin className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#7D8C7A] block">
+                  Ceremonia • {settings.ceremonyTime || '17:00'} hrs
+                </span>
+                <p className={`text-xs font-serif font-bold truncate ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
+                  {settings.ceremonyVenue || 'Parroquia Principal'}
+                </p>
+              </div>
+            </div>
+
+            <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
+              isDark ? 'bg-[#282B25]/90 border-[#5A5A40]' : 'bg-white/90 border-[#E5E2D0]'
+            }`}>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#1F211D] text-[#C5A059]' : 'bg-[#FAF9F0] text-[#5A5A40]'
+              }`}>
+                <MapPin className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-[#7D8C7A] block">
+                  Recepción • {settings.receptionTime || '19:30'} hrs
+                </span>
+                <p className={`text-xs font-serif font-bold truncate ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
+                  {settings.receptionVenue || 'Hacienda / Salón'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toggle Button for Maps and Full Details */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              isDark
+                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+            }`}
+          >
+            <span>{isExpanded ? 'Ocultar Mapas y Rutas' : 'Ver Mapas y Cómo Llegar'}</span>
+            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Grid: Ceremonia & Recepción Cards with Google Maps */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Main Grid: Ceremonia & Recepción Cards with Google Maps (Collapsible) */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? 'auto' : 0,
+          opacity: isExpanded ? 1 : 0,
+        }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="overflow-hidden"
+      >
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
         {/* ==================================================================== */}
         {/* CARD 1: CEREMONIA RELIGIOSA / CIVIL */}
         {/* ==================================================================== */}
@@ -413,6 +482,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
           </div>
         </div>
       </div>
+      </motion.div>
     </section>
   );
 };

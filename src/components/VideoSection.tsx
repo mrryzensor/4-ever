@@ -169,6 +169,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="videos">
@@ -201,8 +202,37 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           Revive el Save The Date, la propuesta de matrimonio y los mensajes más emotivos de nuestros seres queridos.
         </p>
 
-        {isAdmin && (
-          <div className="mt-8 flex justify-center">
+        {/* Video count / summary preview when collapsed */}
+        {!isExpanded && (
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <span className={`text-xs font-serif ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+              {videos.length > 0
+                ? `🎬 ${videos.length} ${videos.length === 1 ? 'video disponible' : 'videos disponibles'}`
+                : 'Videos y recuerdos especiales'}
+            </span>
+          </div>
+        )}
+
+        {/* Inline Toggle Button */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              isDark
+                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+            }`}
+          >
+            <span>{isExpanded ? 'Ocultar Videos' : 'Ver Galería de Videos'}</span>
+            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              ▼
+            </span>
+          </button>
+        </div>
+
+        {isAdmin && isExpanded && (
+          <div className="mt-6 flex justify-center">
             <button
               onClick={() => setShowAddModal(true)}
               className={`px-6 py-3 rounded-full text-xs font-serif font-semibold shadow-md flex items-center gap-2 cursor-pointer transition-colors ${
@@ -219,7 +249,16 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto">
+      <motion.div
+        initial={false}
+        animate={{
+          height: isExpanded ? 'auto' : 0,
+          opacity: isExpanded ? 1 : 0,
+        }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="overflow-hidden"
+      >
+      <div className="max-w-7xl mx-auto pt-4">
         {loading ? (
           <div className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
             Cargando videos...
@@ -291,6 +330,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           </div>
         )}
       </div>
+      </motion.div>
 
       {/* Add Video Modal */}
       {showAddModal && (
