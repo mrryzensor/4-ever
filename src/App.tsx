@@ -822,7 +822,7 @@ export default function App() {
 
       {/* Hero / Main Envelope Section - Full Viewport Landing Flow */}
       <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
-        {/* 1. Portada y sobre interactivo */}
+        {/* 1. Portada, sobre interactivo y Sección de Detalles Fusionada (Ceremonia, Fiesta, Itinerario, DressCode, Regalos con detalles inline) */}
         <EnvelopeCard
           settings={settings}
           guest={activeGuest}
@@ -833,26 +833,6 @@ export default function App() {
             }
           }}
         />
-
-        {/* 2. Itinerario */}
-        {settings.showItinerary !== false && (
-          <ItinerarySection settings={settings} />
-        )}
-
-        {/* 3. Cómo llegar / Ubicaciones & Maps */}
-        {settings.showLocations !== false && (
-          <LocationsSection settings={settings} />
-        )}
-
-        {/* 4. Código de Vestimenta */}
-        {settings.showDressCode !== false && (
-          <DressCodeSection settings={settings} />
-        )}
-
-        {/* 5. Regalos & Cuentas Bancarias */}
-        {settings.showGiftRegistry !== false && (
-          <GiftRegistrySection settings={settings} />
-        )}
 
         {/* 6. Galería Interactiva de Fotos (Subida AVIF 95% + Enlaces externos) */}
         {settings.showPhotoGallery !== false && (
