@@ -9,10 +9,12 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9 --activate
 RUN apk add --no-cache libc6-compat
 
-# 2. Dependencies stage (cached independently)
+# 2. Dependencies stage (installs all deps for build)
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
+# Explicitly allow devDependencies during install
+ENV NODE_ENV=development
 RUN pnpm install --frozen-lockfile
 
 # 3. Builder stage
