@@ -170,9 +170,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleCopyLink = (slug: string, weddingId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}/?w=${slug || weddingId}`;
+    const url = slug ? `${window.location.origin}/${slug}` : `${window.location.origin}/?w=${weddingId}`;
     navigator.clipboard.writeText(url);
-    setCopiedSlug(slug);
+    setCopiedSlug(slug || String(weddingId));
     toast.success('Enlace de invitación copiado al portapapeles', 'Enlace Copiado');
     setTimeout(() => setCopiedSlug(null), 3000);
   };

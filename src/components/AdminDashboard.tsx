@@ -170,8 +170,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const getWhatsAppLink = (guest: Guest) => {
-    const weddingKey = settings.slug || settings.id || 1;
-    const inviteUrl = `${window.location.origin}/?w=${encodeURIComponent(weddingKey)}&code=${encodeURIComponent(guest.accessCode)}`;
+    const inviteUrl = settings.slug 
+      ? `${window.location.origin}/${encodeURIComponent(settings.slug)}?code=${encodeURIComponent(guest.accessCode)}`
+      : `${window.location.origin}/?w=${encodeURIComponent(settings.id || 1)}&code=${encodeURIComponent(guest.accessCode)}`;
     const text = `¡Hola ${guest.fullName}! ✨ Con inmensa alegría queremos invitarte a nuestra boda (${settings.coupleNames}). Puedes consultar tu invitación personal y confirmar tu asistencia en el siguiente enlace: ${inviteUrl} (Tu código: ${guest.accessCode}). ¡Esperamos contar con tu compañía! 💕`;
     return `https://wa.me/${
       guest.phone ? guest.phone.replace(/[^0-9]/g, '') : ''
@@ -179,7 +180,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   const handleCopyInvitationLink = () => {
-    const url = `${window.location.origin}/?w=${settings.slug || settings.id}`;
+    const url = settings.slug 
+      ? `${window.location.origin}/${settings.slug}`
+      : `${window.location.origin}/?w=${settings.id || 1}`;
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);

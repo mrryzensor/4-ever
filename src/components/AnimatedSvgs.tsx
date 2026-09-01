@@ -160,156 +160,254 @@ export const AnimatedFloralDivider: React.FC<{ className?: string; color?: strin
 };
 
 /**
- * Animated Interlocking Wedding Rings with Diamond Sparkle & Converging Animation
+ * Animated Permanently Interlocking Wedding Rings with Intense Shimmer & Sparkle Effects
  */
 export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string }> = ({
-  className = 'w-24 h-16',
+  className = 'w-28 h-20',
 }) => {
   return (
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
-      <svg viewBox="0 0 160 90" className="w-full h-full overflow-visible">
+      <svg viewBox="0 0 160 85" className="w-full h-full overflow-visible">
         <defs>
           <linearGradient id="goldRing1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFF2B2" />
-            <stop offset="25%" stopColor="#F5D77F" />
-            <stop offset="55%" stopColor="#D4A373" />
-            <stop offset="80%" stopColor="#AA7A44" />
-            <stop offset="100%" stopColor="#7E562A" />
+            <stop offset="0%" stopColor="#FFF7C2" />
+            <stop offset="20%" stopColor="#F5D77F" />
+            <stop offset="45%" stopColor="#E5B25D" />
+            <stop offset="70%" stopColor="#AA7A44" />
+            <stop offset="90%" stopColor="#FDE68A" />
+            <stop offset="100%" stopColor="#8C5E28" />
           </linearGradient>
           <linearGradient id="goldRing2" x1="100%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FFF2B2" />
-            <stop offset="30%" stopColor="#F5D77F" />
-            <stop offset="60%" stopColor="#D4A373" />
-            <stop offset="85%" stopColor="#AA7A44" />
-            <stop offset="100%" stopColor="#7E562A" />
+            <stop offset="0%" stopColor="#FFF7C2" />
+            <stop offset="25%" stopColor="#F5D77F" />
+            <stop offset="50%" stopColor="#E5B25D" />
+            <stop offset="75%" stopColor="#AA7A44" />
+            <stop offset="92%" stopColor="#FDE68A" />
+            <stop offset="100%" stopColor="#8C5E28" />
           </linearGradient>
           <linearGradient id="diamondShine" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFFFFF" />
-            <stop offset="50%" stopColor="#EAF7FF" />
-            <stop offset="100%" stopColor="#BCE3EB" />
+            <stop offset="35%" stopColor="#E0F2FE" />
+            <stop offset="70%" stopColor="#BAE6FD" />
+            <stop offset="100%" stopColor="#7DD3FC" />
           </linearGradient>
-          <filter id="ringGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="3" stdDeviation="3" floodColor="#D4A373" floodOpacity="0.3" />
+          <filter id="intenseRingGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#E5B25D" floodOpacity="0.45" />
           </filter>
         </defs>
 
-        {/* Ring 1 (Left - Band) Converging into center */}
+        {/* Global Floating & Heartbeat Pulse */}
         <motion.g
           animate={{
-            x: [-24, 0, -24],
-            rotate: [-18, -6, -18],
-            y: [-1, 1, -1],
+            y: [-2, 2, -2],
+            scale: [1, 1.03, 0.99, 1.02, 1],
           }}
           transition={{
-            duration: 3.6,
+            duration: 3,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          style={{ transformOrigin: '65px 48px' }}
+          style={{ transformOrigin: '76px 45px' }}
         >
-          {/* Outer Ring */}
-          <ellipse
-            cx="65"
-            cy="48"
-            rx="24"
+          {/* Subtle Golden Aura Behind United Rings */}
+          <motion.ellipse
+            cx="76"
+            cy="46"
+            rx="42"
             ry="24"
-            stroke="url(#goldRing1)"
-            strokeWidth="5"
-            fill="none"
-            filter="url(#ringGlow)"
-          />
-          {/* Inner Highlight Ring */}
-          <ellipse
-            cx="65"
-            cy="48"
-            rx="21.5"
-            ry="21.5"
-            stroke="#FFF5D6"
-            strokeWidth="0.8"
-            strokeOpacity="0.85"
-            fill="none"
-          />
-        </motion.g>
-
-        {/* Ring 2 (Right - Solitaire with Diamond) Converging into center */}
-        <motion.g
-          animate={{
-            x: [24, 0, 24],
-            rotate: [18, 6, 18],
-            y: [1, -1, 1],
-          }}
-          transition={{
-            duration: 3.6,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          style={{ transformOrigin: '95px 48px' }}
-        >
-          {/* Outer Ring */}
-          <ellipse
-            cx="95"
-            cy="48"
-            rx="24"
-            ry="24"
-            stroke="url(#goldRing2)"
-            strokeWidth="5"
-            fill="none"
-            filter="url(#ringGlow)"
-          />
-          {/* Inner Highlight Ring */}
-          <ellipse
-            cx="95"
-            cy="48"
-            rx="21.5"
-            ry="21.5"
-            stroke="#FFF5D6"
-            strokeWidth="0.8"
-            strokeOpacity="0.85"
-            fill="none"
+            fill="#FDE68A"
+            opacity={0.15}
+            animate={{
+              scale: [0.95, 1.15, 0.95],
+              opacity: [0.12, 0.28, 0.12],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            filter="url(#intenseRingGlow)"
+            style={{ transformOrigin: '76px 46px' }}
           />
 
-          {/* Solitaire Diamond Mount */}
+          {/* Ring 1 (Left - Band) Permanently Interlocked */}
           <motion.g
-            animate={{ scale: [0.9, 1.2, 0.9] }}
-            transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformOrigin: '95px 24px' }}
+            animate={{
+              rotate: [-5, 6, -3, 5, -5],
+            }}
+            transition={{
+              duration: 2.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{ transformOrigin: '62px 46px' }}
           >
-            {/* Prongs & Base */}
-            <path
-              d="M92 24 L95 27 L98 24 L95 29 Z"
-              fill="#D4A373"
-              stroke="#AA7A44"
-              strokeWidth="0.5"
+            {/* Outer Ring */}
+            <ellipse
+              cx="62"
+              cy="46"
+              rx="23"
+              ry="23"
+              stroke="url(#goldRing1)"
+              strokeWidth="5.5"
+              fill="none"
+              filter="url(#intenseRingGlow)"
             />
-            {/* Diamond Gemstone */}
-            <polygon
-              points="95,14 103,22 95,29 87,22"
-              fill="url(#diamondShine)"
-              stroke="#76B5C5"
-              strokeWidth="0.8"
+            {/* Inner Shimmer Reflection */}
+            <ellipse
+              cx="62"
+              cy="46"
+              rx="20.5"
+              ry="20.5"
+              stroke="#FFFDF0"
+              strokeWidth="1"
+              strokeOpacity="0.9"
+              fill="none"
             />
-            {/* Diamond Facet lines */}
-            <line x1="95" y1="14" x2="95" y2="29" stroke="#FFF" strokeWidth="0.6" strokeOpacity="0.9" />
-            <line x1="87" y1="22" x2="103" y2="22" stroke="#FFF" strokeWidth="0.6" strokeOpacity="0.9" />
-
-            {/* Sparkle Glints (Synchronized with interlocking union) */}
-            <motion.path
-              d="M95 9 L95 19 M90 14 L100 14"
-              stroke="#FFFFFF"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              animate={{ opacity: [0.05, 1, 0.05], scale: [0.5, 1.4, 0.5] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ transformOrigin: '95px 14px' }}
-            />
+            {/* Dynamic Light Sweep */}
             <motion.circle
-              cx="95"
-              cy="14"
-              r="1.5"
+              cx="45"
+              cy="32"
+              r="2.5"
               fill="#FFFFFF"
-              animate={{ opacity: [0.2, 1, 0.2] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+              animate={{
+                opacity: [0.2, 1, 0.2],
+                scale: [0.8, 1.4, 0.8],
+              }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
             />
+          </motion.g>
+
+          {/* Ring 2 (Right - Solitaire with Diamond) Permanently Interlocked */}
+          <motion.g
+            animate={{
+              rotate: [5, -6, 3, -5, 5],
+            }}
+            transition={{
+              duration: 2.8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{ transformOrigin: '90px 46px' }}
+          >
+            {/* Outer Ring */}
+            <ellipse
+              cx="90"
+              cy="46"
+              rx="23"
+              ry="23"
+              stroke="url(#goldRing2)"
+              strokeWidth="5.5"
+              fill="none"
+              filter="url(#intenseRingGlow)"
+            />
+            {/* Inner Shimmer Reflection */}
+            <ellipse
+              cx="90"
+              cy="46"
+              rx="20.5"
+              ry="20.5"
+              stroke="#FFFDF0"
+              strokeWidth="1"
+              strokeOpacity="0.9"
+              fill="none"
+            />
+
+            {/* Solitaire Diamond Mount */}
+            <g>
+              {/* Prongs */}
+              <path
+                d="M87 23 L90 26 L93 23 L90 28 Z"
+                fill="#E5B25D"
+                stroke="#926227"
+                strokeWidth="0.6"
+              />
+              {/* Diamond Gemstone */}
+              <polygon
+                points="90,12 99,21 90,28 81,21"
+                fill="url(#diamondShine)"
+                stroke="#38BDF8"
+                strokeWidth="0.9"
+                filter="drop-shadow(0 0 4px rgba(56, 189, 248, 0.6))"
+              />
+              {/* Diamond Facet lines */}
+              <line x1="90" y1="12" x2="90" y2="28" stroke="#FFFFFF" strokeWidth="0.8" strokeOpacity="0.95" />
+              <line x1="81" y1="21" x2="99" y2="21" stroke="#FFFFFF" strokeWidth="0.8" strokeOpacity="0.95" />
+              <line x1="85" y1="16" x2="95" y2="25" stroke="#FFFFFF" strokeWidth="0.5" strokeOpacity="0.75" />
+              <line x1="95" y1="16" x2="85" y2="25" stroke="#FFFFFF" strokeWidth="0.5" strokeOpacity="0.75" />
+
+              {/* Main Diamond Super Starburst */}
+              <motion.g
+                animate={{
+                  scale: [0.7, 1.45, 0.8, 1.3, 0.7],
+                  rotate: [0, 90, 180, 270, 360],
+                  opacity: [0.6, 1, 0.5, 1, 0.6],
+                }}
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                style={{ transformOrigin: '90px 12px' }}
+              >
+                <path
+                  d="M90 3 L90 21 M81 12 L99 12"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M84 6 L96 18 M96 6 L84 18"
+                  stroke="#E0F2FE"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                />
+                <circle cx="90" cy="12" r="2" fill="#FFFFFF" />
+              </motion.g>
+
+              {/* Secondary Sparkle Glint */}
+              <motion.path
+                d="M97 18 L97 24 M94 21 L100 21"
+                stroke="#FFFFFF"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                animate={{
+                  scale: [0, 1.2, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: 0.6,
+                }}
+                style={{ transformOrigin: '97px 21px' }}
+              />
+
+              {/* Third Sparkle on Interlock point */}
+              <motion.path
+                d="M76 36 L76 42 M73 39 L79 39"
+                stroke="#FFF7C2"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                animate={{
+                  scale: [0, 1.3, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 1.6,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: 0.2,
+                }}
+                style={{ transformOrigin: '76px 39px' }}
+              />
+            </g>
           </motion.g>
         </motion.g>
       </svg>

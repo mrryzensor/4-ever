@@ -56,6 +56,17 @@ import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 type AppView = 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
 
 export default function App() {
+  // Helper to extract path slug e.g. "/bodasergioylore" -> "bodasergioylore"
+  const getPathSlug = () => {
+    if (typeof window === 'undefined') return null;
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    const reserved = ['api', 'uploads', 'src', 'assets', 'admin', 'dashboard', 'ceo', 'landing'];
+    if (segments.length === 1 && !reserved.includes(segments[0].toLowerCase())) {
+      return decodeURIComponent(segments[0]);
+    }
+    return null;
+  };
+
   // Navigation & View state
   const [currentView, setCurrentView] = useState<AppView>(() => {
     if (typeof window !== 'undefined') {
@@ -64,6 +75,9 @@ export default function App() {
       if (mode === 'admin') return 'admin';
       if (mode === 'dashboard') return 'dashboard';
       if (mode === 'ceo') return 'ceo';
+
+      const pathSlug = getPathSlug();
+      if (pathSlug) return 'invitation';
     }
     return 'landing';
   });
@@ -152,7 +166,7 @@ export default function App() {
   useEffect(() => {
     const search = window.location.search;
     const params = new URLSearchParams(search);
-    let weddingParam = params.get('w') || params.get('wedding');
+    let weddingParam = params.get('w') || params.get('wedding') || getPathSlug();
     let guestCode = params.get('code');
     const modeParam = params.get('mode');
 
@@ -238,7 +252,7 @@ export default function App() {
         setLoadingWedding(true);
         const search = window.location.search;
         const params = new URLSearchParams(search);
-        let weddingParam = params.get('w') || params.get('wedding');
+        let weddingParam = params.get('w') || params.get('wedding') || getPathSlug();
         let guestCode = params.get('code');
 
         if (!weddingParam) {

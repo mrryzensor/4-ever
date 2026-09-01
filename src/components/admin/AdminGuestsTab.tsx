@@ -290,8 +290,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
     if (!guest.phone) return '#';
     const cleanPhone = guest.phone.replace(/[^0-9+]/g, '');
     const currentUrl = window.location.origin;
-    const weddingKey = settings.slug || settings.id || 1;
-    const directInvitationUrl = `${currentUrl}/?w=${encodeURIComponent(weddingKey)}&code=${encodeURIComponent(guest.accessCode)}`;
+    const directInvitationUrl = settings.slug
+      ? `${currentUrl}/${encodeURIComponent(settings.slug)}?code=${encodeURIComponent(guest.accessCode)}`
+      : `${currentUrl}/?w=${encodeURIComponent(settings.id || 1)}&code=${encodeURIComponent(guest.accessCode)}`;
     const msg = encodeURIComponent(
       `¡Hola ${guest.fullName}! Nos hace inmensa ilusión invitarte a nuestra boda. Puedes ver todos los detalles y confirmar tus pases (${guest.allocatedPasses}) directamente aquí: ${directInvitationUrl}`
     );
@@ -300,8 +301,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
 
   const copyGuestInvitationLink = (guest: Guest) => {
     const currentUrl = window.location.origin;
-    const weddingKey = settings.slug || settings.id || 1;
-    const link = `${currentUrl}/?w=${encodeURIComponent(weddingKey)}&code=${encodeURIComponent(guest.accessCode)}`;
+    const link = settings.slug
+      ? `${currentUrl}/${encodeURIComponent(settings.slug)}?code=${encodeURIComponent(guest.accessCode)}`
+      : `${currentUrl}/?w=${encodeURIComponent(settings.id || 1)}&code=${encodeURIComponent(guest.accessCode)}`;
     navigator.clipboard.writeText(link);
     toast.success(`Enlace de invitación de "${guest.fullName}" copiado al portapapeles`, 'Enlace Copiado');
   };

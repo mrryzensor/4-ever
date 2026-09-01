@@ -382,7 +382,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       {/* 2. INVITATION DETAILS SECTION - Seamless Continuous Page */}
       <section
         id="detalles-boda"
-        className="relative z-10 w-full pt-24 sm:pt-32 md:pt-40 pb-10 sm:pb-14 px-4 sm:px-8 md:px-12 lg:px-16"
+        className="relative z-10 w-full pt-8 sm:pt-10 md:pt-12 pb-10 sm:pb-14 px-4 sm:px-8 md:px-12 lg:px-16"
         style={{ backgroundColor: theme.bgHex }}
       >
         {/* FIXDATE-STYLE ANIMATED WAVE TRANSITION DIVIDER (Half in Hero, Half in Details Section) */}
@@ -396,16 +396,16 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         <div className="max-w-6xl mx-auto text-center">
           
           {/* Section Header: Story & Quote Banner */}
-          <div className="mb-8 sm:mb-10 flex flex-col items-center">
-            {/* Large Animated Wedding Rings SVG with Converging Rings Effect */}
+          <div className="mb-6 sm:mb-8 flex flex-col items-center">
+            {/* Large Animated Wedding Rings SVG - Permanently United & Intense Shimmer */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="mb-4 sm:mb-6 mt-2 overflow-visible"
+              transition={{ duration: 0.6 }}
+              className="mb-3 sm:mb-4 overflow-visible"
             >
-              <AnimatedWeddingRings className="w-32 h-20 sm:w-40 sm:h-24 md:w-52 md:h-32 mx-auto" />
+              <AnimatedWeddingRings className="w-28 h-16 sm:w-36 sm:h-20 md:w-44 md:h-24 mx-auto" />
             </motion.div>
 
             <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-4 ${theme.accentClass}`}>

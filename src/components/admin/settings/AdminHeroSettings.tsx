@@ -500,11 +500,11 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           )}
         </div>
 
-        {/* 3. Nombres de los Contrayentes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#E5E2D0]">
+        {/* 3. Nombres de los Contrayentes & Enlace Personalizado /slug */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E5E2D0]">
           <div>
             <label className="text-xs font-bold text-[#1a1a1a] block mb-1">
-              3. Nombres de los Contrayentes (Hero):
+              3. Nombres de los Novios:
             </label>
             <input
               type="text"
@@ -516,13 +516,39 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
             />
             <span className="text-[10px] text-[#7D8C7A] mt-1 block">
-              Ejemplo: <em>Sofía & Alejandro</em> o <em>Isaac & Nuria</em>
+              Ejemplo: <em>Sofía & Alejandro</em> o <em>Sergio & Lore</em>
             </span>
           </div>
 
           <div>
             <label className="text-xs font-bold text-[#1a1a1a] block mb-1">
-              Fecha del Evento (Selector de Calendario):
+              Enlace / URL Personalizada (Slug):
+            </label>
+            <div className="relative flex items-center">
+              <span className="absolute left-3 text-xs font-mono text-stone-400 select-none">
+                /
+              </span>
+              <input
+                type="text"
+                value={settings.slug || ''}
+                onChange={(e) => {
+                  const cleaned = e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-_]/g, '');
+                  onChange({ slug: cleaned });
+                }}
+                placeholder="bodasergioylore"
+                className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl pl-6 pr-3.5 py-2.5 text-xs text-[#3D3D3D] font-mono focus:outline-none focus:border-[#5A5A40]"
+              />
+            </div>
+            <span className="text-[10px] text-[#7D8C7A] mt-1 block">
+              Enlace directo: <em>/{settings.slug || 'bodasergioylore'}</em>
+            </span>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#1a1a1a] block mb-1">
+              Fecha del Evento:
             </label>
             <input
               type="date"
@@ -533,7 +559,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
             />
             <span className="text-[10px] text-[#7D8C7A] mt-1 block">
-              Al cambiarla, se actualiza automáticamente el formato elegido arriba.
+              Al cambiarla, se actualiza el formato elegido arriba.
             </span>
           </div>
         </div>

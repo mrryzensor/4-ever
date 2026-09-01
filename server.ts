@@ -746,14 +746,32 @@ async function startServer() {
   // Helper function to inject Open Graph meta tags into index.html for WhatsApp/Facebook/Twitter/etc.
   const injectSocialMeta = async (rawHtml: string, req: express.Request): Promise<string> => {
     try {
-      const weddingParam = (req.query.wedding || req.query.w || '').toString();
+      // Extract custom slug from path e.g. "/bodasergioylore" -> "bodasergioylore"
+      const pathParts = req.path.split('/').filter(Boolean);
+      const reservedPaths = [
+        'api', 'uploads', 'src', 'assets', '@vite', '@fs', '@id', 'node_modules',
+        'favicon.ico', 'favicon.png', 'favicon-32x32.png', 'apple-touch-icon.png',
+        'Logo.webp', 'Logo.png', 'og-landing.png', 'og-landing.webp', 'icon-192.png',
+        'icon-512.png', 'manifest.json', 'robots.txt', 'index.html'
+      ];
+      const pathSlug = (pathParts.length === 1 && !reservedPaths.includes(pathParts[0].toLowerCase()))
+        ? pathParts[0]
+        : '';
+
+      const weddingParam = (req.query.wedding || req.query.w || pathSlug || '').toString();
       const guestCodeParam = (req.query.guest || req.query.g || req.query.code || '').toString();
-      const isLandingRequest = !weddingParam && !guestCodeParam && (req.path === '/' || req.path === '/index.html' || req.query.mode === 'landing');
 
       // Determine public host URL
       const host = req.get('x-forwarded-host') || req.get('host') || `localhost:${PORT}`;
       const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
       const baseUrl = `${protocol}://${host}`;
+
+      let wedding = null;
+      if (weddingParam) {
+        wedding = await getWeddingSettings(weddingParam);
+      }
+
+      const isLandingRequest = !weddingParam && !guestCodeParam && (req.path === '/' || req.path === '/index.html' || req.query.mode === 'landing');
 
       let title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
       let description = 'Crea y comparte tu invitación de boda digital de lujo con música personalizada, confirmación de asistencia RSVP en tiempo real, itinerario interactivo y galería de fotos colaborativa.';
@@ -761,7 +779,6 @@ async function startServer() {
       let ogImageAlt = 'Atelier Nupcial Digital - Invitaciones de Boda Elegantes & RSVP';
 
       if (!isLandingRequest) {
-        let wedding = await getWeddingSettings(weddingParam || undefined);
         if (!wedding) {
           wedding = await getWeddingSettings();
         }
