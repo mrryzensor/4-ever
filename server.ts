@@ -47,7 +47,7 @@ import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 
 // Setup uploads volume storage directory (compatible with Docker volumes and local env)
-const uploadsDir = path.join(process.cwd(), 'uploads');
+const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
