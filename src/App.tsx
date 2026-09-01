@@ -47,11 +47,13 @@ import {
   AnimatedWeddingRings,
 } from './components/AnimatedSvgs.tsx';
 import { AuthModal } from './components/AuthModal.tsx';
+import { DemoStyleBar } from './components/DemoStyleBar.tsx';
 import { ToastContainer } from './components/ToastContainer.tsx';
 import { toast } from './lib/toast.ts';
 import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
+import { CardStyle } from './types.ts';
 
 type AppView = 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
 
@@ -119,6 +121,7 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHostPill, setShowHostPill] = useState(true);
+  const [isViewingDemo, setIsViewingDemo] = useState(false);
 
   // Monitor browser fullscreen change events
   useEffect(() => {
@@ -358,6 +361,7 @@ export default function App() {
   };
 
   const handleSelectWedding = (weddingId: number, mode: 'invitation' | 'admin') => {
+    setIsViewingDemo(false);
     setCurrentWeddingId(weddingId);
     setCurrentView(mode === 'admin' ? 'admin' : 'invitation');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -434,6 +438,7 @@ export default function App() {
           }}
           onExploreDemo={(style) => {
             setCurrentWeddingId(1);
+            setIsViewingDemo(true);
             if (style && settings) {
               setSettings({ ...settings, cardStyle: style });
             }
@@ -443,6 +448,7 @@ export default function App() {
           }}
           onViewDemo={(style) => {
             setCurrentWeddingId(1);
+            setIsViewingDemo(true);
             if (style && settings) {
               setSettings({ ...settings, cardStyle: style });
             }
@@ -584,14 +590,37 @@ export default function App() {
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
+  const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === 1 && !getPathSlug())) && !isPreviewEmbed;
 
   return (
     <div
       className={`min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
       style={{ backgroundColor: activeTheme.bgHex }}
     >
+      {/* Interactive Demo Style Selector Bar in Demo Mode */}
+      {isDemoMode && (
+        <DemoStyleBar
+          currentStyle={settings.cardStyle}
+          onSelectStyle={(newStyle) => {
+            setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
+            toast.info(`Diseño cambiado a ${CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo Actualizado');
+          }}
+          onChooseDesign={(chosenStyle) => {
+            setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
+            setAuthSelectedPlan('atelier');
+            setAuthModalMode('register');
+            setIsAuthModalOpen(true);
+          }}
+          onBackToLanding={() => {
+            setIsViewingDemo(false);
+            setCurrentView('landing');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      )}
+
       {/* Floating Single Clean Fullscreen Control (Top Right, away from audio player) */}
-      {!isPreviewEmbed && (
+      {!isPreviewEmbed && !isDemoMode && (
         <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
           {currentUser && (
             <button
@@ -634,7 +663,7 @@ export default function App() {
         audioUrl={settings?.audioUrl}
         songTitle={settings?.audioTitle || 'Nuestra Canción'}
         artistName={settings?.coupleNames || 'Música de Boda'}
-        isAdmin={Boolean(currentUser)}
+        isAdmin={!isDemoMode && Boolean(currentUser)}
         onUpdateSettings={handleUpdateSettings}
         onAudioUpdated={(newUrl, newTitle) => {
           handleUpdateSettings({
@@ -692,7 +721,7 @@ export default function App() {
         {settings.showVideoMemories === true && (
           <VideoSection
             weddingId={settings.id}
-            isAdmin={Boolean(currentUser)}
+            isAdmin={!isDemoMode && Boolean(currentUser)}
             cardStyle={settings.cardStyle}
           />
         )}
@@ -775,6 +804,15 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* Auth Modal for Choosing Design or Logging in */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+        selectedPlan={authSelectedPlan}
+        onAuthSuccess={handleAuthSuccess}
+      />
 
       {/* Global Toast Notifications */}
       <ToastContainer />
