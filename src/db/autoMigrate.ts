@@ -33,12 +33,16 @@ export async function autoMigrateDatabase() {
           id SERIAL PRIMARY KEY,
           uid TEXT NOT NULL UNIQUE,
           email TEXT NOT NULL,
+          password TEXT,
           name TEXT,
-          role TEXT DEFAULT 'admin',
+          role TEXT DEFAULT 'couple',
           plan TEXT DEFAULT 'free',
+          agency_name TEXT,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS agency_name TEXT;
 
         -- 2. Wedding Settings Table
         CREATE TABLE IF NOT EXISTS wedding_settings (

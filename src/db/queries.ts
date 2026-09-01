@@ -583,66 +583,113 @@ export async function updateWeddingSettings(
   return newWedding;
 }
 
-// 2. User Profiles
-export async function getOrCreateUser(uid: string, email: string, name?: string) {
-  const isDaviexCeo = email?.toLowerCase().trim() === 'daviex14@gmail.com' || uid === 'ceo-daviex';
-  const defaultRole = isDaviexCeo ? 'ceo' : 'couple';
-  const defaultPlan = isDaviexCeo ? 'ceo_unlimited' : 'free';
-  const defaultName = isDaviexCeo ? 'Daviex (CEO & Fundador)' : (name || 'Organizador de Boda');
+// 2. User Profiles & Auth
+export async function registerOrUpdateUser(params: {
+  uid: string;
+  email: string;
+  password?: string;
+  name?: string;
+  role?: string;
+  plan?: string;
+  agencyName?: string;
+}) {
+  const { uid, email, password, name, role = 'couple', plan = 'atelier', agencyName } = params;
+  const isDaviexCeo = email?.toLowerCase().trim() === 'daviex14@gmail.com' || uid === 'ceo-daviex' || uid === 'ceo-daviex-master' || role === 'ceo';
+  const defaultRole = isDaviexCeo ? 'ceo' : role;
+  const defaultPlan = isDaviexCeo ? 'ceo_unlimited' : plan;
+  const defaultName = isDaviexCeo ? 'Daviex (CEO Master)' : (name || 'Usuario Atelier');
 
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
       const existing = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
       if (existing.length > 0) {
+        const updatePayload: any = {
+          email: email || existing[0].email,
+          name: defaultName,
+          role: defaultRole,
+          plan: defaultPlan,
+          agencyName: agencyName !== undefined ? agencyName : existing[0].agencyName,
+          updatedAt: new Date(),
+        };
+        if (password) {
+          updatePayload.password = password;
+        }
         const updated = await db
           .update(users)
-          .set({ 
-            email: email || existing[0].email, 
-            name: isDaviexCeo ? 'Daviex (CEO & Fundador)' : (name || existing[0].name),
-            role: isDaviexCeo ? 'ceo' : existing[0].role,
-            plan: isDaviexCeo ? 'ceo_unlimited' : existing[0].plan,
-            updatedAt: new Date() 
-          })
+          .set(updatePayload)
           .where(eq(users.uid, uid))
           .returning();
         return updated[0];
       }
+
       const inserted = await db.insert(users).values({
         uid,
         email: email || (isDaviexCeo ? 'daviex14@gmail.com' : 'usuario@ejemplo.com'),
+        password: password || null,
         name: defaultName,
         role: defaultRole,
         plan: defaultPlan,
+        agencyName: agencyName || null,
       }).returning();
       return inserted[0];
     }
   } catch (err) {
-    console.warn('User sync fallback to memory');
+    console.warn('registerOrUpdateUser fallback to memory');
   }
 
   let found = memoryState.users.find((u) => u.uid === uid || (email && u.email?.toLowerCase() === email.toLowerCase()));
   if (found) {
     found.email = email || found.email;
-    found.name = isDaviexCeo ? 'Daviex (CEO & Fundador)' : (name || found.name);
-    if (isDaviexCeo) {
-      found.role = 'ceo';
-      found.plan = 'ceo_unlimited';
-    }
+    found.name = defaultName;
+    found.role = defaultRole;
+    found.plan = defaultPlan;
+    if (agencyName !== undefined) found.agencyName = agencyName;
+    if (password) found.password = password;
     found.updatedAt = new Date();
     return found;
   }
+
   const newUser = {
     id: memoryState.users.length + 1,
     uid,
     email: email || (isDaviexCeo ? 'daviex14@gmail.com' : 'usuario@ejemplo.com'),
+    password: password || null,
     name: defaultName,
     role: defaultRole,
     plan: defaultPlan,
+    agencyName: agencyName || null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
   memoryState.users.push(newUser);
   return newUser;
+}
+
+export async function verifyDatabaseUserCredentials(email: string, password: string) {
+  const cleanEmail = email.trim().toLowerCase();
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const list = await db.select().from(users).where(eq(users.email, cleanEmail)).limit(1);
+      if (list.length > 0) {
+        const user = list[0];
+        if (user.password && user.password === password) {
+          return user;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('verifyDatabaseUserCredentials fallback to memory');
+  }
+
+  const found = memoryState.users.find((u) => u.email?.toLowerCase() === cleanEmail);
+  if (found && found.password && found.password === password) {
+    return found;
+  }
+  return null;
+}
+
+export async function getOrCreateUser(uid: string, email: string, name?: string) {
+  return registerOrUpdateUser({ uid, email, name });
 }
 
 export async function getUserProfile(uid: string) {

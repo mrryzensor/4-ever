@@ -1,14 +1,16 @@
 import { boolean, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Users table (Firebase Auth linked)
+// Users table (Firebase Auth or Local Auth linked)
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  uid: text('uid').notNull().unique(), // Firebase Auth UID
+  uid: text('uid').notNull().unique(), // Auth UID
   email: text('email').notNull(),
+  password: text('password'),
   name: text('name'),
-  role: text('role').default('admin'),
-  plan: text('plan').default('free'), // 'free', 'atelier', 'elite'
+  role: text('role').default('couple'), // 'ceo', 'wedding_planner', 'couple', 'admin'
+  plan: text('plan').default('free'), // 'free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'
+  agencyName: text('agency_name'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

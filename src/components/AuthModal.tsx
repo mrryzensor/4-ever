@@ -80,84 +80,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setLoading(true);
 
     try {
-      const cleanEmail = email.trim().toLowerCase() || 'usuario@weddingatelier.com';
-      const cleanName = name.trim() || 'Novia/Novio';
-      const isCeoAccount = cleanEmail === 'daviex14@gmail.com';
-      const determinedRole: UserRole = isCeoAccount ? 'ceo' : (chosenPlan.startsWith('planner_') || roleSelection === 'wedding_planner' ? 'wedding_planner' : 'couple');
-      const determinedPlan: PlanId = isCeoAccount ? 'ceo_unlimited' : chosenPlan;
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPass = password.trim();
 
-      const generatedUid = isCeoAccount ? 'ceo-daviex-master' : ('usr-' + btoa(cleanEmail).substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x'));
-
-      // Fetch or sync user profile
-      const res = await fetch(`/api/user/profile?uid=${encodeURIComponent(generatedUid)}&email=${encodeURIComponent(cleanEmail)}&name=${encodeURIComponent(cleanName)}`);
-
-      let profile: UserProfile;
-      if (res.ok) {
-        const data = await res.json();
-        if (mode === 'register' && determinedPlan !== 'free') {
-          await fetch('/api/user/plan', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: data.uid || generatedUid, plan: determinedPlan }),
-          });
-        }
-        profile = {
-          uid: data.uid || generatedUid,
-          email: cleanEmail,
-          name: cleanName,
-          role: data.role || determinedRole,
-          plan: data.plan || determinedPlan,
-          agencyName: agencyName || data.agencyName,
-        };
-      } else {
-        profile = {
-          uid: generatedUid,
-          email: cleanEmail,
-          name: cleanName,
-          role: determinedRole,
-          plan: determinedPlan,
-          agencyName: agencyName || undefined,
-        };
+      if (!cleanEmail || !cleanPass) {
+        setError('Por favor completa tu correo y contraseña.');
+        setLoading(false);
+        return;
       }
 
-      localStorage.setItem('wedding_user', JSON.stringify(profile));
-      localStorage.setItem('atelier_user_session', JSON.stringify(profile));
+      if (mode === 'login') {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: cleanPass }),
+        });
 
-      notifySuccess(profile, false);
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Correo o contraseña incorrectos. Por favor verifica tus credenciales.');
+          return;
+        }
+
+        const profile: UserProfile = data.user;
+        localStorage.setItem('wedding_user', JSON.stringify(profile));
+        localStorage.setItem('atelier_user_session', JSON.stringify(profile));
+        notifySuccess(profile, false);
+      } else {
+        const cleanName = name.trim() || 'Novia/Novio';
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: cleanEmail,
+            password: cleanPass,
+            name: cleanName,
+            role: roleSelection,
+            plan: chosenPlan,
+            agencyName: roleSelection === 'wedding_planner' ? (agencyName.trim() || undefined) : undefined,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Ocurrió un error al registrar la cuenta. Inténtalo de nuevo.');
+          return;
+        }
+
+        const profile: UserProfile = data.user;
+        localStorage.setItem('wedding_user', JSON.stringify(profile));
+        localStorage.setItem('atelier_user_session', JSON.stringify(profile));
+        notifySuccess(profile, false);
+      }
     } catch (err: any) {
-      console.warn('Auth fallback:', err);
-      const isCeoAccount = email.trim().toLowerCase() === 'daviex14@gmail.com';
-      const determinedRole: UserRole = isCeoAccount ? 'ceo' : (chosenPlan.startsWith('planner_') || roleSelection === 'wedding_planner' ? 'wedding_planner' : 'couple');
-      const determinedPlan: PlanId = isCeoAccount ? 'ceo_unlimited' : chosenPlan;
-
-      const fallbackUser: UserProfile = {
-        uid: isCeoAccount ? 'ceo-daviex-master' : ('usr-' + Date.now()),
-        email: email || 'demo@weddingatelier.com',
-        name: name || 'Usuario Atelier',
-        role: determinedRole,
-        plan: determinedPlan,
-        agencyName: agencyName || undefined,
-      };
-      localStorage.setItem('wedding_user', JSON.stringify(fallbackUser));
-      localStorage.setItem('atelier_user_session', JSON.stringify(fallbackUser));
-      notifySuccess(fallbackUser, false);
+      console.error('Auth error:', err);
+      setError('Error de conexión con el servidor. Por favor verifica tu red e inténtalo nuevamente.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickLogin = (role: UserRole, plan: PlanId, customEmail: string, customName: string, agency?: string) => {
-    const profile: UserProfile = {
-      uid: role === 'ceo' ? 'ceo-daviex-master' : role === 'wedding_planner' ? 'wp-valeria-01' : 'demo-user-master',
-      email: customEmail,
-      name: customName,
-      role: role,
-      plan: plan,
-      agencyName: agency,
-    };
-    localStorage.setItem('wedding_user', JSON.stringify(profile));
-    localStorage.setItem('atelier_user_session', JSON.stringify(profile));
-    notifySuccess(profile, false);
   };
 
   return (
@@ -451,54 +431,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </form>
               </div>
 
-              {/* Direct Roles Quick Access Demo Panel */}
-              <div className="pt-6 mt-6 border-t border-stone-200">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-500 mb-3 text-center sm:text-left">
-                  Acceso Rápido por Perfil (Demostración & Pruebas)
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('ceo', 'ceo_unlimited', 'daviex14@gmail.com', 'Daviex (CEO)')}
-                    className="p-3.5 bg-stone-950 hover:bg-stone-800 text-amber-300 border border-amber-500/40 rounded-2xl text-xs font-bold transition-all flex flex-col justify-between gap-2 shadow-xs cursor-pointer text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Crown className="w-4 h-4 fill-amber-400 text-amber-400" />
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-mono">
-                        Master
-                      </span>
-                    </div>
-                    <span className="font-serif text-xs">👑 CEO Master</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('wedding_planner', 'planner_pro', 'planner@atelier.com', 'Valeria Mendoza', 'Valeria Events Atelier')}
-                    className="p-3.5 bg-amber-50/80 hover:bg-amber-100/80 text-amber-950 border border-amber-200/80 rounded-2xl text-xs font-bold transition-all flex flex-col justify-between gap-2 shadow-xs cursor-pointer text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Briefcase className="w-4 h-4 text-amber-800" />
-                      <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-mono">
-                        Agencia
-                      </span>
-                    </div>
-                    <span className="font-serif text-xs">💼 Wedding Planner</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('couple', 'atelier', 'novios@weddingatelier.com', 'Sofía & Alejandro')}
-                    className="p-3.5 bg-white hover:bg-stone-50 text-stone-800 border border-stone-200 rounded-2xl text-xs font-bold transition-all flex flex-col justify-between gap-2 shadow-xs cursor-pointer text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />
-                      <span className="text-[10px] text-stone-500 font-mono">
-                        Novios
-                      </span>
-                    </div>
-                    <span className="font-serif text-xs">💖 Pareja de Novios</span>
-                  </button>
+              {/* Security note footer */}
+              <div className="pt-6 mt-6 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
+                <div className="flex items-center gap-1.5 text-stone-500">
+                  <ShieldCheck className="w-4 h-4 text-[#5A5A40]" />
+                  <span>Acceso seguro cifrado de extremo a extremo.</span>
                 </div>
+                <span className="font-mono text-[11px] text-stone-400">Atelier ID Auth</span>
               </div>
             </div>
           </div>

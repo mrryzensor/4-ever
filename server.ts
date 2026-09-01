@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -33,6 +34,8 @@ import {
   getWishes,
   addWish,
   getOrCreateUser,
+  registerOrUpdateUser,
+  verifyDatabaseUserCredentials,
   seedInitialData,
   getCeoGlobalStats,
   getAllUsersForCeo,
@@ -90,6 +93,170 @@ async function startServer() {
   // Health check
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // ----------------------------------------------------
+  // ENVIRONMENT CREDENTIALS FOR FIXED PROFILES
+  // ----------------------------------------------------
+  const CEO_EMAIL = (process.env.CEO_EMAIL || process.env.ADMIN_EMAIL || 'daviex14@gmail.com').toLowerCase().trim();
+  const CEO_PASSWORD = process.env.CEO_PASSWORD || process.env.ADMIN_PASSWORD || 'MasterCEO2026!';
+  const CEO_NAME = process.env.CEO_NAME || 'Daviex (CEO Master)';
+
+  const PLANNER_EMAIL = (process.env.PLANNER_EMAIL || 'planner@atelier.com').toLowerCase().trim();
+  const PLANNER_PASSWORD = process.env.PLANNER_PASSWORD || 'PlannerPro2026!';
+  const PLANNER_NAME = process.env.PLANNER_NAME || 'Valeria Mendoza';
+  const PLANNER_AGENCY = process.env.PLANNER_AGENCY || 'Valeria Events Atelier';
+
+  const COUPLE_EMAIL = (process.env.COUPLE_EMAIL || 'novios@weddingatelier.com').toLowerCase().trim();
+  const COUPLE_PASSWORD = process.env.COUPLE_PASSWORD || 'Novios2026!';
+  const COUPLE_NAME = process.env.COUPLE_NAME || 'Sofía & Alejandro';
+
+  // ----------------------------------------------------
+  // AUTHENTICATION API ENDPOINTS
+  // ----------------------------------------------------
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Por favor ingresa tu correo y contraseña.' });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPass = String(password).trim();
+
+      // 1. Check Master CEO profile
+      if (cleanEmail === CEO_EMAIL && cleanPass === CEO_PASSWORD) {
+        const user = await registerOrUpdateUser({
+          uid: 'ceo-daviex-master',
+          email: CEO_EMAIL,
+          name: CEO_NAME,
+          role: 'ceo',
+          plan: 'ceo_unlimited',
+        });
+        return res.json({
+          success: true,
+          user: {
+            uid: user.uid || 'ceo-daviex-master',
+            email: CEO_EMAIL,
+            name: user.name || CEO_NAME,
+            role: 'ceo',
+            plan: 'ceo_unlimited',
+          },
+        });
+      }
+
+      // 2. Check Wedding Planner profile
+      if (cleanEmail === PLANNER_EMAIL && cleanPass === PLANNER_PASSWORD) {
+        const user = await registerOrUpdateUser({
+          uid: 'wp-valeria-01',
+          email: PLANNER_EMAIL,
+          name: PLANNER_NAME,
+          role: 'wedding_planner',
+          plan: 'planner_pro',
+          agencyName: PLANNER_AGENCY,
+        });
+        return res.json({
+          success: true,
+          user: {
+            uid: user.uid || 'wp-valeria-01',
+            email: PLANNER_EMAIL,
+            name: user.name || PLANNER_NAME,
+            role: 'wedding_planner',
+            plan: 'planner_pro',
+            agencyName: user.agencyName || PLANNER_AGENCY,
+          },
+        });
+      }
+
+      // 3. Check Couple profile
+      if (cleanEmail === COUPLE_EMAIL && cleanPass === COUPLE_PASSWORD) {
+        const user = await registerOrUpdateUser({
+          uid: 'demo-user-master',
+          email: COUPLE_EMAIL,
+          name: COUPLE_NAME,
+          role: 'couple',
+          plan: 'atelier',
+        });
+        return res.json({
+          success: true,
+          user: {
+            uid: user.uid || 'demo-user-master',
+            email: COUPLE_EMAIL,
+            name: user.name || COUPLE_NAME,
+            role: 'couple',
+            plan: 'atelier',
+          },
+        });
+      }
+
+      // 4. Check Database / registered users
+      const dbUser = await verifyDatabaseUserCredentials(cleanEmail, cleanPass);
+      if (dbUser) {
+        return res.json({
+          success: true,
+          user: {
+            uid: dbUser.uid,
+            email: dbUser.email,
+            name: dbUser.name,
+            role: dbUser.role || 'couple',
+            plan: dbUser.plan || 'atelier',
+            agencyName: dbUser.agencyName || undefined,
+          },
+        });
+      }
+
+      return res.status(401).json({
+        error: 'Credenciales inválidas. Verifica tu correo y contraseña.',
+      });
+    } catch (error: any) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: error.message || 'Error en el servidor al autenticar.' });
+    }
+  });
+
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const { email, password, name, role, plan, agencyName } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Correo y contraseña son requeridos para el registro.' });
+      }
+
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPass = String(password).trim();
+      const cleanName = (name || 'Novia/Novio').trim();
+
+      const isCeo = cleanEmail === CEO_EMAIL;
+      const determinedRole = isCeo ? 'ceo' : (role || (plan?.startsWith('planner_') ? 'wedding_planner' : 'couple'));
+      const determinedPlan = isCeo ? 'ceo_unlimited' : (plan || 'atelier');
+      const generatedUid = isCeo
+        ? 'ceo-daviex-master'
+        : ('usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x'));
+
+      const user = await registerOrUpdateUser({
+        uid: generatedUid,
+        email: cleanEmail,
+        password: cleanPass,
+        name: cleanName,
+        role: determinedRole,
+        plan: determinedPlan,
+        agencyName: agencyName || undefined,
+      });
+
+      return res.json({
+        success: true,
+        user: {
+          uid: user.uid || generatedUid,
+          email: cleanEmail,
+          name: user.name || cleanName,
+          role: user.role || determinedRole,
+          plan: user.plan || determinedPlan,
+          agencyName: user.agencyName || agencyName || undefined,
+        },
+      });
+    } catch (error: any) {
+      console.error('Register error:', error);
+      res.status(500).json({ error: error.message || 'Error al registrar usuario.' });
+    }
   });
 
   // 0. User Profile & Multi-tenant Workspace endpoints
