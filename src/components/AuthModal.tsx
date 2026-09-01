@@ -96,9 +96,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           body: JSON.stringify({ email: cleanEmail, password: cleanPass }),
         });
 
-        const data = await res.json();
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+
         if (!res.ok) {
-          setError(data.error || 'Correo o contraseña incorrectos. Por favor verifica tus credenciales.');
+          if (res.status === 404) {
+            setError('El endpoint de autenticación no fue encontrado (404). Por favor reinicia tu servidor de desarrollo (pnpm dev) para cargar las nuevas rutas.');
+          } else {
+            setError(data.error || 'Correo o contraseña incorrectos. Por favor verifica tus credenciales.');
+          }
           return;
         }
 
@@ -121,9 +131,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }),
         });
 
-        const data = await res.json();
+        let data: any = {};
+        try {
+          data = await res.json();
+        } catch {
+          data = {};
+        }
+
         if (!res.ok) {
-          setError(data.error || 'Ocurrió un error al registrar la cuenta. Inténtalo de nuevo.');
+          if (res.status === 404) {
+            setError('El endpoint de registro no fue encontrado (404). Por favor reinicia tu servidor de desarrollo (pnpm dev).');
+          } else {
+            setError(data.error || 'Ocurrió un error al registrar la cuenta. Inténtalo de nuevo.');
+          }
           return;
         }
 
