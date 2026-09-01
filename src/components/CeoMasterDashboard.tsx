@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Crown,
@@ -30,11 +30,25 @@ import {
   Tag,
   Share2,
   Filter,
-  Check
+  Check,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Edit3,
+  FileSpreadsheet,
+  CheckSquare,
+  Square,
+  MinusSquare,
+  Lock,
+  UserPlus,
+  X
 } from 'lucide-react';
-import { UserProfile, PlanId, CardStyle, UserRole } from '../types.ts';
+import { UserProfile, PlanId, CardStyle, UserRole, PlanDetails } from '../types.ts';
 import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
+import { ExcelUserImportModal } from './admin/ExcelUserImportModal.tsx';
+import { UserEditModal } from './admin/UserEditModal.tsx';
+import { PlanEditorModal } from './admin/PlanEditorModal.tsx';
 import { toast } from '../lib/toast.ts';
 
 interface CeoMasterDashboardProps {
@@ -100,16 +114,45 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   const [stats, setStats] = useState<CeoStats | null>(null);
   const [weddings, setWeddings] = useState<GlobalWedding[]>([]);
   const [users, setUsers] = useState<GlobalUser[]>([]);
+  const [plans, setPlans] = useState<PlanDetails[]>(SUBSCRIPTION_PLANS);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Search & Filters
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [weddingSearchTerm, setWeddingSearchTerm] = useState('');
   const [weddingFilterStatus, setWeddingFilterStatus] = useState<string>('all');
   
-  // Modals
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
+  const [userPlanFilter, setUserPlanFilter] = useState<string>('all');
+  const [userViewMode, setUserViewMode] = useState<'table' | 'cards'>('table');
+
+  // Sorting for users table
+  const [userSortField, setUserSortField] = useState<'name' | 'email' | 'role' | 'plan' | 'weddingsCount' | 'createdAt'>('createdAt');
+  const [userSortOrder, setUserSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Bulk user selection
+  const [selectedUserUids, setSelectedUserUids] = useState<Set<string>>(new Set());
+  const [bulkTargetPlan, setBulkTargetPlan] = useState<PlanId>('atelier');
+  const [bulkTargetRole, setBulkTargetRole] = useState<UserRole>('wedding_planner');
+  const [isBulkOperating, setIsBulkOperating] = useState(false);
+  
+  // Modals state
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [selectedWeddingToTransfer, setSelectedWeddingToTransfer] = useState<GlobalWedding | null>(null);
   const [newOwnerUid, setNewOwnerUid] = useState('');
   const [isCreatingWeddingModal, setIsCreatingWeddingModal] = useState(false);
   
+  const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
+  const [selectedUserToEdit, setSelectedUserToEdit] = useState<GlobalUser | null>(null);
+  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
+
+  const [isPlanEditorModalOpen, setIsPlanEditorModalOpen] = useState(false);
+  const [selectedPlanToEdit, setSelectedPlanToEdit] = useState<PlanDetails | null>(null);
+  
+  const [userToDelete, setUserToDelete] = useState<GlobalUser | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
   // New Wedding Form by CEO
   const [createForUid, setCreateForUid] = useState(currentUser.uid);
   const [newCoupleNames, setNewCoupleNames] = useState('');
@@ -123,15 +166,17 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   const fetchCeoData = async () => {
     try {
       setLoading(true);
-      const [statsRes, usersRes, weddingsRes] = await Promise.all([
+      const [statsRes, usersRes, weddingsRes, plansRes] = await Promise.all([
         fetch('/api/admin/ceo/stats'),
         fetch('/api/admin/ceo/users'),
         fetch('/api/admin/ceo/all-weddings'),
+        fetch('/api/plans'),
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
       if (usersRes.ok) setUsers(await usersRes.json());
       if (weddingsRes.ok) setWeddings(await weddingsRes.json());
+      if (plansRes.ok) setPlans(await plansRes.json());
     } catch (err) {
       console.error('Error loading CEO data:', err);
     } finally {
@@ -142,7 +187,6 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   useEffect(() => {
     fetchCeoData();
   }, []);
-
   const handleUpdateUserRole = async (uid: string, role: string) => {
     try {
       const res = await fetch(`/api/admin/ceo/users/${uid}/role`, {
@@ -151,12 +195,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         body: JSON.stringify({ role }),
       });
       if (res.ok) {
-        setActionSuccessMessage(`Rol de usuario actualizado a "${role}".`);
-        setTimeout(() => setActionSuccessMessage(null), 3000);
+        toast.success(`Rol de usuario actualizado a "${role}".`, 'Rol Actualizado');
         fetchCeoData();
       }
     } catch (err) {
       console.error('Error updating role:', err);
+      toast.error('Error al actualizar rol');
     }
   };
 
@@ -168,16 +212,119 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         body: JSON.stringify({ plan }),
       });
       if (res.ok) {
-        setActionSuccessMessage(`Plan actualizado exitosamente.`);
-        setTimeout(() => setActionSuccessMessage(null), 3000);
+        toast.success(`Plan actualizado exitosamente.`, 'Plan Actualizado');
         fetchCeoData();
       }
     } catch (err) {
       console.error('Error updating plan:', err);
+      toast.error('Error al actualizar plan');
     }
   };
 
-  // Delete Confirmation Modal
+  // Bulk user operations
+  const handleBulkUpdatePlan = async () => {
+    if (selectedUserUids.size === 0) return;
+    setIsBulkOperating(true);
+    try {
+      const res = await fetch('/api/admin/ceo/users/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uids: Array.from(selectedUserUids),
+          action: 'plan',
+          value: bulkTargetPlan,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Se actualizó el plan a ${selectedUserUids.size} usuarios seleccionados.`, 'Actualización Masiva');
+        setSelectedUserUids(new Set());
+        fetchCeoData();
+      } else {
+        toast.error('Error al actualizar usuarios.');
+      }
+    } catch {
+      toast.error('Error de conexión.');
+    } finally {
+      setIsBulkOperating(false);
+    }
+  };
+
+  const handleBulkUpdateRole = async () => {
+    if (selectedUserUids.size === 0) return;
+    setIsBulkOperating(true);
+    try {
+      const res = await fetch('/api/admin/ceo/users/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uids: Array.from(selectedUserUids),
+          action: 'role',
+          value: bulkTargetRole,
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Se actualizó el rol a ${selectedUserUids.size} usuarios seleccionados.`, 'Actualización Masiva');
+        setSelectedUserUids(new Set());
+        fetchCeoData();
+      } else {
+        toast.error('Error al actualizar roles.');
+      }
+    } catch {
+      toast.error('Error de conexión.');
+    } finally {
+      setIsBulkOperating(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUserUids.size === 0) return;
+    if (!confirm(`¿Estás seguro de eliminar permanentemente a los ${selectedUserUids.size} usuarios seleccionados?`)) return;
+    setIsBulkOperating(true);
+    try {
+      const res = await fetch('/api/admin/ceo/users/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uids: Array.from(selectedUserUids),
+          action: 'delete',
+        }),
+      });
+      if (res.ok) {
+        toast.success(`Se eliminaron los usuarios seleccionados.`, 'Usuarios Eliminados');
+        setSelectedUserUids(new Set());
+        fetchCeoData();
+      } else {
+        toast.error('Error al eliminar usuarios.');
+      }
+    } catch {
+      toast.error('Error de conexión.');
+    } finally {
+      setIsBulkOperating(false);
+    }
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeletingUser(true);
+    try {
+      const res = await fetch(`/api/admin/ceo/users/${userToDelete.uid}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success(`Usuario "${userToDelete.name}" (${userToDelete.email}) eliminado.`, 'Usuario Eliminado');
+        setUserToDelete(null);
+        fetchCeoData();
+      } else {
+        toast.error('No se pudo eliminar el usuario.');
+      }
+    } catch {
+      toast.error('Error al eliminar usuario.');
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
+  // Delete Wedding Confirmation Modal
   const [weddingToDelete, setWeddingToDelete] = useState<{ id: number; coupleNames: string } | null>(null);
   const [isDeletingWedding, setIsDeletingWedding] = useState(false);
 
@@ -229,12 +376,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
       if (res.ok) {
         setIsTransferModalOpen(false);
         setSelectedWeddingToTransfer(null);
-        setActionSuccessMessage('Propiedad transferida exitosamente.');
-        setTimeout(() => setActionSuccessMessage(null), 3000);
+        toast.success('Propiedad de boda transferida exitosamente.', 'Transferencia Exitosa');
         fetchCeoData();
       }
     } catch (err) {
       console.error('Error transferring ownership:', err);
+      toast.error('Error al transferir la propiedad');
     } finally {
       setSubmittingAction(false);
     }
@@ -260,61 +407,169 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
       });
 
       if (res.ok) {
-        const created = await res.json();
         setIsCreatingWeddingModal(false);
         setNewCoupleNames('');
-        setActionSuccessMessage(`Boda "${newCoupleNames}" creada exitosamente.`);
-        setTimeout(() => setActionSuccessMessage(null), 3000);
+        toast.success(`Boda "${newCoupleNames}" creada exitosamente.`, 'Boda Creada');
         await fetchCeoData();
       }
     } catch (err) {
       console.error('Error creating wedding:', err);
+      toast.error('Error al crear la boda');
     } finally {
       setSubmittingAction(false);
     }
   };
 
-  const filteredWeddings = weddings.filter((w) => {
-    const matchesSearch =
-      w.coupleNames?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.ownerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.ownerEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.slug?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (weddingFilterStatus === 'all') return matchesSearch;
-    return matchesSearch && (w.status === weddingFilterStatus || (!w.status && weddingFilterStatus === 'active'));
-  });
+  // Filtered & Sorted Weddings
+  const filteredWeddings = useMemo(() => {
+    const search = (weddingSearchTerm || globalSearchTerm).toLowerCase().trim();
+    return weddings.filter((w) => {
+      const matchesSearch =
+        !search ||
+        w.coupleNames?.toLowerCase().includes(search) ||
+        w.ownerName?.toLowerCase().includes(search) ||
+        w.ownerEmail?.toLowerCase().includes(search) ||
+        w.slug?.toLowerCase().includes(search);
 
-  const weddingPlannersList = users.filter(
-    (u) => u.role === 'wedding_planner' || u.plan?.startsWith('planner_')
-  );
+      if (weddingFilterStatus === 'all') return matchesSearch;
+      return matchesSearch && (w.status === weddingFilterStatus || (!w.status && weddingFilterStatus === 'active'));
+    });
+  }, [weddings, weddingSearchTerm, globalSearchTerm, weddingFilterStatus]);
+
+  // Filtered & Sorted Users
+  const filteredAndSortedUsers = useMemo(() => {
+    const search = (userSearchTerm || globalSearchTerm).toLowerCase().trim();
+    let result = users.filter((u) => {
+      const matchesSearch =
+        !search ||
+        u.name?.toLowerCase().includes(search) ||
+        u.email?.toLowerCase().includes(search) ||
+        u.agencyName?.toLowerCase().includes(search) ||
+        u.phone?.toLowerCase().includes(search) ||
+        u.role?.toLowerCase().includes(search) ||
+        u.plan?.toLowerCase().includes(search) ||
+        u.uid?.toLowerCase().includes(search);
+
+      const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+      const matchesPlan = userPlanFilter === 'all' || u.plan === userPlanFilter;
+
+      return matchesSearch && matchesRole && matchesPlan;
+    });
+
+    result.sort((a, b) => {
+      let aVal: any = (a as any)[userSortField] || '';
+      let bVal: any = (b as any)[userSortField] || '';
+
+      if (userSortField === 'createdAt') {
+        aVal = new Date(a.createdAt || 0).getTime();
+        bVal = new Date(b.createdAt || 0).getTime();
+      } else if (userSortField === 'weddingsCount') {
+        aVal = a.weddingsCount || 0;
+        bVal = b.weddingsCount || 0;
+      } else {
+        aVal = String(aVal).toLowerCase();
+        bVal = String(bVal).toLowerCase();
+      }
+
+      if (aVal < bVal) return userSortOrder === 'asc' ? -1 : 1;
+      if (aVal > bVal) return userSortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [users, userSearchTerm, globalSearchTerm, userRoleFilter, userPlanFilter, userSortField, userSortOrder]);
+
+  const weddingPlannersList = useMemo(() => {
+    return users.filter((u) => u.role === 'wedding_planner' || u.plan?.startsWith('planner_'));
+  }, [users]);
+
+  // Handle table header sorting toggle
+  const handleSort = (field: 'name' | 'email' | 'role' | 'plan' | 'weddingsCount' | 'createdAt') => {
+    if (userSortField === field) {
+      setUserSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setUserSortField(field);
+      setUserSortOrder('asc');
+    }
+  };
+
+  // Toggle selection for single user
+  const toggleUserSelection = (uid: string) => {
+    const next = new Set(selectedUserUids);
+    if (next.has(uid)) {
+      next.delete(uid);
+    } else {
+      next.add(uid);
+    }
+    setSelectedUserUids(next);
+  };
+
+  // Toggle select all visible users
+  const isAllVisibleSelected =
+    filteredAndSortedUsers.length > 0 &&
+    filteredAndSortedUsers.every((u) => selectedUserUids.has(u.uid));
+
+  const isSomeVisibleSelected =
+    filteredAndSortedUsers.some((u) => selectedUserUids.has(u.uid)) && !isAllVisibleSelected;
+
+  const toggleSelectAllVisible = () => {
+    if (isAllVisibleSelected) {
+      const next = new Set(selectedUserUids);
+      filteredAndSortedUsers.forEach((u) => next.delete(u.uid));
+      setSelectedUserUids(next);
+    } else {
+      const next = new Set(selectedUserUids);
+      filteredAndSortedUsers.forEach((u) => next.add(u.uid));
+      setSelectedUserUids(next);
+    }
+  };
 
   return (
     <div id="ceo-master-dashboard" className="min-h-screen bg-stone-950 text-stone-100 font-sans selection:bg-amber-500/30 selection:text-amber-200">
       {/* Top CEO Master Navbar */}
       <header className="sticky top-0 z-40 bg-stone-900/90 backdrop-blur-md border-b border-amber-500/20 shadow-xl">
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-stone-950 shadow-lg shadow-amber-500/20 ring-2 ring-amber-400/40">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 h-20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-700 flex items-center justify-center text-stone-950 shadow-lg shadow-amber-500/20 ring-2 ring-amber-400/40 shrink-0">
               <Crown className="w-6 h-6 fill-current" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">
+                <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-white truncate">
                   CEO Master Control Center
                 </span>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+                <span className="hidden sm:inline px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-[10px] font-bold text-amber-400 uppercase tracking-wider shrink-0">
                   Modo Dios / God Mode
                 </span>
               </div>
-              <p className="text-xs text-stone-400 font-mono">
+              <p className="text-xs text-stone-400 font-mono truncate">
                 Daviex • daviex14@gmail.com • Control Absoluto de Plataforma
               </p>
             </div>
           </div>
 
+          {/* Global Multi-Token Search Bar */}
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-4 relative">
+            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Búsqueda global (usuarios, bodas, correos, planes)..."
+              value={globalSearchTerm}
+              onChange={(e) => setGlobalSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 text-xs bg-stone-950/90 border border-stone-700 rounded-full text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-500 shadow-inner"
+            />
+            {globalSearchTerm && (
+              <button
+                onClick={() => setGlobalSearchTerm('')}
+                className="absolute right-3 top-2.5 text-stone-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
           {/* Action buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               onClick={() => fetchCeoData()}
               className="p-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 transition-colors cursor-pointer"
@@ -325,10 +580,11 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
             <button
               onClick={onBackToUserDashboard}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-2 shadow-md shadow-amber-500/10 transition-all cursor-pointer"
+              className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-md shadow-amber-500/10 transition-all cursor-pointer"
             >
-              <Layers className="w-4 h-4" />
-              <span>Vista Wedding Planner / Parejas</span>
+              <Layers className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Vista Wedding Planner / Parejas</span>
+              <span className="sm:hidden">Panel</span>
             </button>
 
             <button
@@ -345,7 +601,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 flex space-x-1 border-t border-stone-800 overflow-x-auto">
           <button
             onClick={() => setActiveTab('metrics')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
               activeTab === 'metrics'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
@@ -357,7 +613,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('weddings')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
               activeTab === 'weddings'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
@@ -369,7 +625,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('planners')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
               activeTab === 'planners'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
@@ -381,7 +637,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('plans')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
               activeTab === 'plans'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
@@ -392,14 +648,6 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
           </button>
         </div>
       </header>
-
-      {/* Action Success Toast */}
-      {actionSuccessMessage && (
-        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl bg-emerald-950 border border-emerald-500/50 text-emerald-200 shadow-2xl flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span className="text-sm font-medium">{actionSuccessMessage}</span>
-        </div>
-      )}
 
       {/* Main Container */}
       <main className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8">
@@ -499,7 +747,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                {SUBSCRIPTION_PLANS.map((plan) => {
+                {plans.map((plan) => {
                   const count = users.filter((u) => u.plan === plan.id).length;
                   return (
                     <div key={plan.id} className="p-4 rounded-2xl bg-stone-950 border border-stone-800/80">
@@ -553,8 +801,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 <input
                   type="text"
                   placeholder="Buscar por novios, organizador, slug..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={weddingSearchTerm}
+                  onChange={(e) => setWeddingSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs bg-stone-950 border border-stone-700 rounded-xl text-stone-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
@@ -598,73 +846,66 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                             {wedding.coupleNames}
                           </div>
                           <div className="text-[11px] text-stone-400 font-mono flex items-center gap-1.5">
-                            <span className="text-amber-400">ID #{wedding.id}</span>
+                            <span className="text-amber-400 font-bold">#{wedding.id}</span>
                             <span>•</span>
                             <span className="text-stone-500">/{wedding.slug}</span>
                           </div>
                         </td>
 
                         <td className="py-4 px-5">
-                          <div className="font-medium text-stone-200">
-                            {wedding.ownerName || 'Organizador'}
+                          <div className="font-semibold text-stone-200">
+                            {wedding.ownerName}
                           </div>
-                          <div className="text-[11px] text-stone-400 flex items-center gap-1">
-                            <Mail className="w-3 h-3 text-stone-500" />
-                            <span>{wedding.ownerEmail || 'Sin email'}</span>
+                          <div className="text-[11px] text-stone-400 font-mono">
+                            {wedding.ownerEmail}
                           </div>
-                          {wedding.clientEmail && (
-                            <div className="text-[10px] text-amber-300/80 mt-0.5">
-                              Cliente: {wedding.clientEmail}
-                            </div>
-                          )}
                         </td>
 
                         <td className="py-4 px-5">
-                          <div className="text-stone-300 flex items-center gap-1.5 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-stone-500" />
-                            <span>{wedding.eventDate?.substring(0, 10)}</span>
+                          <div className="text-stone-200">
+                            {wedding.eventDate ? String(wedding.eventDate).substring(0, 10) : 'Por definir'}
                           </div>
-                          <div className="text-[10px] text-stone-400 uppercase mt-0.5">
-                            Estilo: <span className="text-amber-400 font-semibold">{wedding.cardStyle}</span>
-                          </div>
+                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-stone-800 text-[10px] font-mono text-amber-300 border border-stone-700">
+                            {wedding.cardStyle}
+                          </span>
                         </td>
 
                         <td className="py-4 px-5">
                           <div className="font-semibold text-stone-200">
-                            {wedding.confirmedGuests || 0} / {wedding.totalGuests || 0} confirmados
+                            {wedding.confirmedGuests} / {wedding.totalGuests} confirmados
                           </div>
-                          <div className="text-[10px] text-stone-400">
-                            {(wedding.totalGuests || 0) === 0 ? 'Sin invitados cargados' : 'Lista activa'}
+                          <div className="text-[11px] text-stone-500">
+                            Invitados en lista
                           </div>
                         </td>
 
                         <td className="py-4 px-5">
                           <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            wedding.status === 'planning'
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              : wedding.status === 'completed'
-                              ? 'bg-stone-700/40 text-stone-400'
-                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            wedding.status === 'active' || wedding.isPublished
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                           }`}>
-                            {wedding.status === 'planning' ? 'En Planeación' : wedding.status === 'completed' ? 'Concluida' : 'Activa'}
+                            {wedding.status || (wedding.isPublished ? 'Activa' : 'Borrador')}
                           </span>
                         </td>
 
                         <td className="py-4 px-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {/* Open live invitation */}
-                            <button
-                              onClick={() => onSelectWedding(wedding.id, 'invitation')}
-                              className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white border border-stone-700 transition-colors"
-                              title="Ver Invitación en Vivo"
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Open Public URL */}
+                            <a
+                              href={`/${wedding.slug || `?wedding=${wedding.id}`}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
+                              title="Ver invitación pública"
                             >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
 
-                            {/* Open Admin Atelier Editor */}
+                            {/* Open in Admin Mode */}
                             <button
                               onClick={() => onSelectWedding(wedding.id, 'admin')}
-                              className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/30 font-bold transition-all flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/30 font-bold transition-all flex items-center gap-1 cursor-pointer"
                               title="Administrar en Atelier"
                             >
                               <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -678,7 +919,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                                 setNewOwnerUid(wedding.ownerUid);
                                 setIsTransferModalOpen(true);
                               }}
-                              className="p-2 rounded-lg bg-stone-800 hover:bg-blue-950 hover:text-blue-300 border border-stone-700 text-stone-400 transition-colors"
+                              className="p-2 rounded-lg bg-stone-800 hover:bg-blue-950 hover:text-blue-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
                               title="Transferir a otro Wedding Planner / Dueño"
                             >
                               <UserCheck className="w-4 h-4" />
@@ -688,7 +929,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                             {wedding.id !== 1 && (
                               <button
                                 onClick={() => handleDeleteWedding(wedding.id, wedding.coupleNames)}
-                                className="p-2 rounded-lg bg-stone-800 hover:bg-rose-950 hover:text-rose-300 border border-stone-700 text-stone-400 transition-colors"
+                                className="p-2 rounded-lg bg-stone-800 hover:bg-rose-950 hover:text-rose-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
                                 title="Eliminar boda definitivamente"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -708,173 +949,568 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         {/* TAB 3: WEDDING PLANNERS & USERS MASTER DIRECTORY */}
         {activeTab === 'planners' && (
           <div className="space-y-6 animate-fadeIn">
-            <div className="bg-stone-900 p-6 rounded-3xl border border-stone-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {/* Header & Controls */}
+            <div className="bg-stone-900 p-6 sm:p-8 rounded-3xl border border-stone-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div>
-                <h2 className="font-serif text-xl font-bold text-white mb-1 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-amber-400" />
-                  <span>Directorio de Wedding Planners & Usuarios Registrados</span>
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                  <Briefcase className="w-6 h-6 text-amber-400" />
+                  <span>Directorio Maestro de Usuarios & Wedding Planners</span>
                 </h2>
-                <p className="text-xs text-stone-400">
-                  Administra roles de usuarios, asigna planes ilimitados o cambia permisos en tiempo real.
+                <p className="text-xs sm:text-sm text-stone-400">
+                  Busca, edita, crea cuentas individuales, importa masivamente desde Excel o actualiza planes en bloque.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-xl bg-stone-800 text-stone-300 text-xs font-semibold border border-stone-700">
-                  Total Registrados: <strong className="text-amber-400">{users.length}</strong>
-                </span>
+              <div className="flex items-center flex-wrap gap-2.5">
+                <button
+                  onClick={() => setIsExcelImportModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-500/5"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Cargar desde Excel</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedUserToEdit(null);
+                    setIsUserEditModalOpen(true);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-amber-500/10 transition-all cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Nuevo Usuario</span>
+                </button>
               </div>
             </div>
 
-            {/* Users Grid / Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {users.map((u) => {
-                const isCeoUser = u.role === 'ceo' || u.email === 'daviex14@gmail.com';
-                const isPlanner = u.role === 'wedding_planner' || u.plan?.startsWith('planner_');
+            {/* Live Search & Filter Bar */}
+            <div className="bg-stone-900/70 p-4 rounded-2xl border border-stone-800 flex flex-col lg:flex-row items-center justify-between gap-4">
+              <div className="relative w-full lg:w-96">
+                <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-stone-500" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, correo, agencia, teléfono, rol o plan..."
+                  value={userSearchTerm}
+                  onChange={(e) => setUserSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-xs bg-stone-950 border border-stone-700 rounded-xl text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-500"
+                />
+              </div>
 
-                return (
-                  <div
-                    key={u.id || u.uid}
-                    className={`p-6 rounded-3xl border transition-all flex flex-col justify-between ${
-                      isCeoUser
-                        ? 'bg-gradient-to-b from-stone-900 to-amber-950/30 border-amber-500/50 shadow-lg shadow-amber-500/10'
-                        : isPlanner
-                        ? 'bg-stone-900 border-amber-500/20'
-                        : 'bg-stone-900/80 border-stone-800'
+              <div className="flex items-center flex-wrap gap-3 w-full lg:w-auto justify-end">
+                {/* Filter Role */}
+                <div className="flex items-center gap-1.5 text-xs text-stone-400">
+                  <span>Rol:</span>
+                  <select
+                    value={userRoleFilter}
+                    onChange={(e) => setUserRoleFilter(e.target.value)}
+                    className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="all">Todos los Roles</option>
+                    <option value="wedding_planner">Wedding Planners</option>
+                    <option value="couple">Parejas</option>
+                    <option value="ceo">CEO Master</option>
+                  </select>
+                </div>
+
+                {/* Filter Plan */}
+                <div className="flex items-center gap-1.5 text-xs text-stone-400">
+                  <span>Plan:</span>
+                  <select
+                    value={userPlanFilter}
+                    onChange={(e) => setUserPlanFilter(e.target.value)}
+                    className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="all">Todos los Planes</option>
+                    <option value="free">Esencial ($0)</option>
+                    <option value="atelier">Atelier Romance ($29)</option>
+                    <option value="elite">Élite Gran Boda ($59)</option>
+                    <option value="planner_starter">Planner Studio ($89)</option>
+                    <option value="planner_pro">Planner Agencia ($179)</option>
+                    <option value="ceo_unlimited">CEO Ilimitado</option>
+                  </select>
+                </div>
+
+                {/* Toggle View Mode */}
+                <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs">
+                  <button
+                    onClick={() => setUserViewMode('table')}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                      userViewMode === 'table' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-serif font-bold text-base ${
-                            isCeoUser
-                              ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-400/50'
-                              : isPlanner
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'bg-stone-800 text-stone-300'
-                          }`}>
-                            {isCeoUser ? <Crown className="w-5 h-5" /> : (u.name ? u.name[0] : 'U')}
+                    Tabla Detallada
+                  </button>
+                  <button
+                    onClick={() => setUserViewMode('cards')}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+                      userViewMode === 'cards' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    Tarjetas
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky Bulk Actions Toolbar */}
+            {selectedUserUids.size > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="sticky top-24 z-30 p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/50 backdrop-blur-xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+                  <strong className="text-amber-300 font-bold">
+                    {selectedUserUids.size} {selectedUserUids.size === 1 ? 'usuario seleccionado' : 'usuarios seleccionados'}
+                  </strong>
+                  <button
+                    onClick={() => setSelectedUserUids(new Set())}
+                    className="text-stone-400 hover:text-white underline ml-2 cursor-pointer"
+                  >
+                    Desmarcar todos
+                  </button>
+                </div>
+
+                <div className="flex items-center flex-wrap gap-2.5">
+                  {/* Bulk Plan Change */}
+                  <div className="flex items-center gap-1.5 bg-stone-950/80 p-1.5 rounded-xl border border-stone-700">
+                    <span className="text-[11px] text-stone-400 pl-1">Plan:</span>
+                    <select
+                      value={bulkTargetPlan}
+                      onChange={(e) => setBulkTargetPlan(e.target.value as PlanId)}
+                      className="text-xs bg-transparent border-none text-stone-200 focus:outline-none font-medium"
+                    >
+                      <option value="free">Esencial ($0)</option>
+                      <option value="atelier">Atelier Romance ($29)</option>
+                      <option value="elite">Élite Gran Boda ($59)</option>
+                      <option value="planner_starter">Planner Studio ($89)</option>
+                      <option value="planner_pro">Planner Agencia ($179)</option>
+                      <option value="ceo_unlimited">CEO Ilimitado</option>
+                    </select>
+                    <button
+                      onClick={handleBulkUpdatePlan}
+                      disabled={isBulkOperating}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-[11px] cursor-pointer"
+                    >
+                      Aplicar Plan
+                    </button>
+                  </div>
+
+                  {/* Bulk Role Change */}
+                  <div className="flex items-center gap-1.5 bg-stone-950/80 p-1.5 rounded-xl border border-stone-700">
+                    <span className="text-[11px] text-stone-400 pl-1">Rol:</span>
+                    <select
+                      value={bulkTargetRole}
+                      onChange={(e) => setBulkTargetRole(e.target.value as UserRole)}
+                      className="text-xs bg-transparent border-none text-stone-200 focus:outline-none font-medium"
+                    >
+                      <option value="couple">Pareja</option>
+                      <option value="wedding_planner">Wedding Planner</option>
+                      <option value="ceo">CEO</option>
+                    </select>
+                    <button
+                      onClick={handleBulkUpdateRole}
+                      disabled={isBulkOperating}
+                      className="px-2.5 py-1 rounded-lg bg-blue-500 hover:bg-blue-400 text-stone-950 font-bold text-[11px] cursor-pointer"
+                    >
+                      Aplicar Rol
+                    </button>
+                  </div>
+
+                  {/* Bulk Delete */}
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={isBulkOperating}
+                    className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar Seleccionados</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* TABULAR DETAILED VIEW */}
+            {userViewMode === 'table' && (
+              <div className="bg-stone-900 rounded-3xl border border-stone-800 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-stone-300">
+                    <thead className="bg-stone-950 text-stone-400 uppercase tracking-wider font-semibold text-[10px] border-b border-stone-800 select-none">
+                      <tr>
+                        {/* Select All Checkbox */}
+                        <th className="py-4 px-4 w-12 text-center">
+                          <button
+                            type="button"
+                            onClick={toggleSelectAllVisible}
+                            className="p-1 text-amber-400 hover:text-amber-300 cursor-pointer"
+                            title={isAllVisibleSelected ? 'Desmarcar todos' : 'Seleccionar todos los visibles'}
+                          >
+                            {isAllVisibleSelected ? (
+                              <CheckSquare className="w-4 h-4" />
+                            ) : isSomeVisibleSelected ? (
+                              <MinusSquare className="w-4 h-4" />
+                            ) : (
+                              <Square className="w-4 h-4 text-stone-600" />
+                            )}
+                          </button>
+                        </th>
+
+                        {/* Sortable: Name */}
+                        <th
+                          className="py-4 px-4 cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleSort('name')}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Usuario / Titular</span>
+                            {userSortField === 'name' ? (
+                              userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-stone-600" />
+                            )}
                           </div>
-                          <div>
-                            <h3 className="font-serif font-bold text-stone-100 text-base leading-tight">
-                              {u.name || 'Usuario'}
-                            </h3>
-                            <div className="text-xs text-stone-400 font-mono">
-                              {u.email}
+                        </th>
+
+                        {/* Sortable: Email */}
+                        <th
+                          className="py-4 px-4 cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleSort('email')}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Correo & Contacto</span>
+                            {userSortField === 'email' ? (
+                              userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-stone-600" />
+                            )}
+                          </div>
+                        </th>
+
+                        {/* Sortable: Role */}
+                        <th
+                          className="py-4 px-4 cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleSort('role')}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Rol de Cuenta</span>
+                            {userSortField === 'role' ? (
+                              userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-stone-600" />
+                            )}
+                          </div>
+                        </th>
+
+                        {/* Sortable: Plan */}
+                        <th
+                          className="py-4 px-4 cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleSort('plan')}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Plan Actual</span>
+                            {userSortField === 'plan' ? (
+                              userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-stone-600" />
+                            )}
+                          </div>
+                        </th>
+
+                        {/* Sortable: Weddings */}
+                        <th
+                          className="py-4 px-4 cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleSort('weddingsCount')}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span>Bodas</span>
+                            {userSortField === 'weddingsCount' ? (
+                              userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <ArrowUpDown className="w-3 h-3 text-stone-600" />
+                            )}
+                          </div>
+                        </th>
+
+                        {/* Actions */}
+                        <th className="py-4 px-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-stone-800">
+                      {filteredAndSortedUsers.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-stone-500">
+                            No se encontraron usuarios con los criterios de búsqueda actuales.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredAndSortedUsers.map((u) => {
+                          const isSelected = selectedUserUids.has(u.uid);
+                          const isCeo = u.role === 'ceo' || u.email === 'daviex14@gmail.com';
+                          const isPlanner = u.role === 'wedding_planner' || u.plan?.startsWith('planner_');
+
+                          return (
+                            <tr
+                              key={u.uid}
+                              className={`transition-colors ${
+                                isSelected ? 'bg-amber-500/10' : 'hover:bg-stone-800/50'
+                              }`}
+                            >
+                              {/* Row Checkbox */}
+                              <td className="py-3 px-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleUserSelection(u.uid)}
+                                  className="p-1 text-amber-400 hover:text-amber-300 cursor-pointer"
+                                >
+                                  {isSelected ? (
+                                    <CheckSquare className="w-4 h-4" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-stone-600" />
+                                  )}
+                                </button>
+                              </td>
+
+                              {/* Name & Agency */}
+                              <td className="py-3 px-4">
+                                <div className="font-serif font-bold text-stone-100 text-sm flex items-center gap-2">
+                                  <span>{u.name || 'Usuario'}</span>
+                                  {isCeo && <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                                </div>
+                                {u.agencyName ? (
+                                  <div className="text-[11px] text-amber-400 font-medium truncate max-w-[200px]">
+                                    {u.agencyName}
+                                  </div>
+                                ) : (
+                                  <div className="text-[10px] font-mono text-stone-500">
+                                    UID: {u.uid}
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Email & Phone */}
+                              <td className="py-3 px-4">
+                                <div className="font-mono text-xs text-stone-300">
+                                  {u.email}
+                                </div>
+                                {u.phone && (
+                                  <div className="text-[10px] text-stone-500 font-mono">
+                                    {u.phone}
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Role Selector in place */}
+                              <td className="py-3 px-4">
+                                <select
+                                  value={u.role}
+                                  onChange={(e) => handleUpdateUserRole(u.uid, e.target.value)}
+                                  className={`text-[11px] font-bold rounded-lg px-2.5 py-1 border uppercase tracking-wider focus:outline-none ${
+                                    isCeo
+                                      ? 'bg-amber-400 text-stone-950 border-amber-400'
+                                      : isPlanner
+                                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                      : 'bg-stone-800 text-stone-300 border-stone-700'
+                                  }`}
+                                >
+                                  <option value="couple">PAREJA</option>
+                                  <option value="wedding_planner">PLANNER</option>
+                                  <option value="ceo">CEO MASTER</option>
+                                </select>
+                              </td>
+
+                              {/* Plan Selector in place */}
+                              <td className="py-3 px-4">
+                                <select
+                                  value={u.plan}
+                                  onChange={(e) => handleUpdateUserPlan(u.uid, e.target.value as PlanId)}
+                                  className="text-xs bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1 text-amber-300 focus:outline-none focus:border-amber-500 font-medium"
+                                >
+                                  <option value="free">Esencial ($0)</option>
+                                  <option value="atelier">Atelier ($29)</option>
+                                  <option value="elite">Élite ($59)</option>
+                                  <option value="planner_starter">Studio ($89)</option>
+                                  <option value="planner_pro">Agencia ($179)</option>
+                                  <option value="ceo_unlimited">CEO Ilimitado</option>
+                                </select>
+                              </td>
+
+                              {/* Weddings Count */}
+                              <td className="py-3 px-4">
+                                <span className="font-bold text-stone-200">
+                                  {u.weddingsCount || 0}
+                                </span>
+                                <span className="text-[10px] text-stone-500 ml-1">
+                                  {u.weddingsCount === 1 ? 'boda' : 'bodas'}
+                                </span>
+                              </td>
+
+                              {/* Action Buttons */}
+                              <td className="py-3 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedUserToEdit(u);
+                                      setIsUserEditModalOpen(true);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors cursor-pointer"
+                                    title="Editar datos de usuario"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {!isCeo && (
+                                    <button
+                                      onClick={() => setUserToDelete(u)}
+                                      className="p-1.5 rounded-lg bg-stone-800 hover:bg-rose-950 hover:text-rose-300 text-stone-400 transition-colors cursor-pointer"
+                                      title="Eliminar usuario"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* CARDS GRID VIEW */}
+            {userViewMode === 'cards' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredAndSortedUsers.map((u) => {
+                  const isCeoUser = u.role === 'ceo' || u.email === 'daviex14@gmail.com';
+                  const isPlanner = u.role === 'wedding_planner' || u.plan?.startsWith('planner_');
+
+                  return (
+                    <div
+                      key={u.uid}
+                      className={`p-6 rounded-3xl border transition-all flex flex-col justify-between ${
+                        isCeoUser
+                          ? 'bg-gradient-to-b from-stone-900 to-amber-950/30 border-amber-500/50 shadow-lg shadow-amber-500/10'
+                          : isPlanner
+                          ? 'bg-stone-900 border-amber-500/20'
+                          : 'bg-stone-900/80 border-stone-800'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-serif font-bold text-base ${
+                              isCeoUser
+                                ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-400/50'
+                                : isPlanner
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'bg-stone-800 text-stone-300'
+                            }`}>
+                              {isCeoUser ? <Crown className="w-5 h-5" /> : (u.name ? u.name[0] : 'U')}
+                            </div>
+                            <div>
+                              <h3 className="font-serif font-bold text-stone-100 text-base leading-tight">
+                                {u.name || 'Usuario'}
+                              </h3>
+                              <div className="text-xs text-stone-400 font-mono">
+                                {u.email}
+                              </div>
                             </div>
                           </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setSelectedUserToEdit(u);
+                                setIsUserEditModalOpen(true);
+                              }}
+                              className="p-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 cursor-pointer"
+                              title="Editar usuario"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            {!isCeoUser && (
+                              <button
+                                onClick={() => setUserToDelete(u)}
+                                className="p-1.5 rounded-lg bg-stone-800 hover:bg-rose-950 text-stone-400 hover:text-rose-300 cursor-pointer"
+                                title="Eliminar usuario"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          isCeoUser
-                            ? 'bg-amber-400 text-stone-950 font-black'
-                            : isPlanner
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            : 'bg-stone-800 text-stone-400'
-                        }`}>
-                          {isCeoUser ? 'CEO' : isPlanner ? 'Planner' : 'Pareja'}
-                        </span>
+                        {u.agencyName && (
+                          <div className="mb-3 px-3 py-1.5 rounded-xl bg-stone-950/80 border border-stone-800 text-xs text-stone-300 flex items-center gap-2">
+                            <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span className="truncate">{u.agencyName}</span>
+                          </div>
+                        )}
+
+                        <div className="space-y-2 text-xs text-stone-400 mb-6">
+                          <div className="flex justify-between py-1 border-b border-stone-800/80">
+                            <span>Bodas Gestionadas:</span>
+                            <strong className="text-stone-200">{u.weddingsCount || 0} bodas</strong>
+                          </div>
+                          <div className="flex justify-between py-1 border-b border-stone-800/80">
+                            <span>UID de Cuenta:</span>
+                            <span className="font-mono text-[10px] text-stone-500">{u.uid}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      {u.agencyName && (
-                        <div className="mb-3 px-3 py-1.5 rounded-xl bg-stone-950/80 border border-stone-800 text-xs text-stone-300 flex items-center gap-2">
-                          <Briefcase className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          <span className="truncate">{u.agencyName}</span>
-                        </div>
-                      )}
-
-                      <div className="space-y-2 text-xs text-stone-400 mb-6">
-                        <div className="flex justify-between py-1 border-b border-stone-800/80">
-                          <span>Bodas Gestionadas:</span>
-                          <strong className="text-stone-200">{u.weddingsCount || 0} bodas</strong>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-stone-800/80">
-                          <span>UID de Cuenta:</span>
-                          <span className="font-mono text-[10px] text-stone-500">{u.uid}</span>
+                      {/* CEO Modification Controls */}
+                      <div className="pt-4 border-t border-stone-800/80 space-y-3">
+                        <div>
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+                            Modificar Plan:
+                          </label>
+                          <select
+                            value={u.plan}
+                            onChange={(e) => handleUpdateUserPlan(u.uid, e.target.value as PlanId)}
+                            className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
+                          >
+                            <option value="free">Plan Esencial ($0 USD)</option>
+                            <option value="atelier">Plan Atelier Romance ($29 USD)</option>
+                            <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
+                            <option value="planner_starter">Planner Studio 5 Bodas ($89 USD)</option>
+                            <option value="planner_pro">Planner Agencia Ilimitado ($179 USD)</option>
+                            <option value="ceo_unlimited">CEO Maestro Ilimitado</option>
+                          </select>
                         </div>
                       </div>
                     </div>
-
-                    {/* CEO Modification Controls */}
-                    <div className="pt-4 border-t border-stone-800/80 space-y-3">
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                          Modificar Plan:
-                        </label>
-                        <select
-                          value={u.plan}
-                          onChange={(e) => handleUpdateUserPlan(u.uid, e.target.value as PlanId)}
-                          className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
-                        >
-                          <option value="free">Plan Esencial ($0 USD)</option>
-                          <option value="atelier">Plan Atelier Romance ($29 USD)</option>
-                          <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
-                          <option value="planner_starter">Planner Studio 5 Bodas ($89 USD)</option>
-                          <option value="planner_pro">Planner Agencia Ilimitado ($179 USD)</option>
-                          <option value="ceo_unlimited">CEO Maestro Ilimitado</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                          Modificar Rol:
-                        </label>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleUpdateUserRole(u.uid, 'wedding_planner')}
-                            className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                              u.role === 'wedding_planner'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                                : 'bg-stone-950 text-stone-400 border-stone-800 hover:text-stone-200'
-                            }`}
-                          >
-                            Planner
-                          </button>
-                          <button
-                            onClick={() => handleUpdateUserRole(u.uid, 'couple')}
-                            className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                              u.role === 'couple'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                                : 'bg-stone-950 text-stone-400 border-stone-800 hover:text-stone-200'
-                            }`}
-                          >
-                            Pareja
-                          </button>
-                          <button
-                            onClick={() => handleUpdateUserRole(u.uid, 'ceo')}
-                            className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold border transition-all ${
-                              u.role === 'ceo'
-                                ? 'bg-amber-400 text-stone-950 font-bold'
-                                : 'bg-stone-950 text-stone-400 border-stone-800 hover:text-stone-200'
-                            }`}
-                          >
-                            CEO
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* TAB 4: PRICING & BENEFIT CONFIGURATION */}
         {activeTab === 'plans' && (
           <div className="space-y-8 animate-fadeIn">
-            <div className="bg-stone-900 p-6 sm:p-8 rounded-3xl border border-stone-800">
-              <h2 className="font-serif text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                <Crown className="w-6 h-6 text-amber-400" />
-                <span>Estructura de Tarifas & Planes Disponibles en la Plataforma</span>
-              </h2>
-              <p className="text-stone-400 text-sm">
-                Configuración de límites y características activas para Novios y Wedding Planners profesionales.
-              </p>
+            <div className="bg-stone-900 p-6 sm:p-8 rounded-3xl border border-stone-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                  <Crown className="w-6 h-6 text-amber-400" />
+                  <span>Estructura de Tarifas & Planes Disponibles en la Plataforma</span>
+                </h2>
+                <p className="text-stone-400 text-sm">
+                  Configuración editable de precios, límites y características activas para Novios y Wedding Planners profesionales.
+                </p>
+              </div>
+
+              <div className="text-xs text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/30 px-3.5 py-2 rounded-xl">
+                ✨ Los cambios se reflejan en tiempo real en la landing y registro
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {SUBSCRIPTION_PLANS.map((plan) => (
+              {plans.map((plan) => (
                 <div
                   key={plan.id}
                   className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${
@@ -921,8 +1557,21 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-stone-800 text-xs text-stone-400 font-mono">
-                    Capacidad: <strong className="text-white">{plan.maxWeddings === 'unlimited' ? 'Bodas Ilimitadas' : `${plan.maxWeddings} Bodas`}</strong>
+                  <div className="pt-6 border-t border-stone-800 flex items-center justify-between">
+                    <span className="text-xs text-stone-400 font-mono">
+                      {plan.maxWeddings === 'unlimited' ? 'Bodas Ilimitadas' : `${plan.maxWeddings} Bodas`}
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        setSelectedPlanToEdit(plan);
+                        setIsPlanEditorModalOpen(true);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/10"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Editar Plan</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -930,6 +1579,42 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
           </div>
         )}
       </main>
+
+      {/* MODAL: EXCEL / CLIPBOARD USER IMPORT */}
+      <ExcelUserImportModal
+        isOpen={isExcelImportModalOpen}
+        onClose={() => setIsExcelImportModalOpen(false)}
+        onSuccess={fetchCeoData}
+      />
+
+      {/* MODAL: USER EDIT / CREATE */}
+      <UserEditModal
+        isOpen={isUserEditModalOpen}
+        onClose={() => setIsUserEditModalOpen(false)}
+        user={selectedUserToEdit}
+        onSuccess={fetchCeoData}
+      />
+
+      {/* MODAL: PLAN & PRICING EDITOR */}
+      <PlanEditorModal
+        isOpen={isPlanEditorModalOpen}
+        onClose={() => setIsPlanEditorModalOpen(false)}
+        plan={selectedPlanToEdit}
+        onSuccess={fetchCeoData}
+      />
+
+      {/* MODAL: CONFIRM USER DELETION */}
+      <ConfirmModal
+        isOpen={Boolean(userToDelete)}
+        title="¿Eliminar Usuario de la Plataforma?"
+        message={`¿Confirmas la eliminación permanente del usuario "${userToDelete?.name}" (${userToDelete?.email})?\nEsta acción es irreversible.`}
+        confirmText="Eliminar Usuario"
+        cancelText="Cancelar"
+        variant="danger"
+        isLoading={isDeletingUser}
+        onConfirm={confirmDeleteUser}
+        onCancel={() => setUserToDelete(null)}
+      />
 
       {/* MODAL: TRANSFER WEDDING OWNERSHIP */}
       <AnimatePresence>
@@ -957,7 +1642,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 </div>
                 <button
                   onClick={() => setIsTransferModalOpen(false)}
-                  className="text-stone-400 hover:text-white"
+                  className="text-stone-400 hover:text-white cursor-pointer"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>
@@ -990,7 +1675,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsTransferModalOpen(false)}
-                    className="px-4 py-2 text-xs font-medium text-stone-400 hover:text-white"
+                    className="px-4 py-2 text-xs font-medium text-stone-400 hover:text-white cursor-pointer"
                   >
                     Cancelar
                   </button>
@@ -1034,7 +1719,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 </div>
                 <button
                   onClick={() => setIsCreatingWeddingModal(false)}
-                  className="text-stone-400 hover:text-white"
+                  className="text-stone-400 hover:text-white cursor-pointer"
                 >
                   <XCircle className="w-5 h-5" />
                 </button>
@@ -1133,7 +1818,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsCreatingWeddingModal(false)}
-                    className="px-4 py-2 text-xs font-medium text-stone-400 hover:text-white"
+                    className="px-4 py-2 text-xs font-medium text-stone-400 hover:text-white cursor-pointer"
                   >
                     Cancelar
                   </button>

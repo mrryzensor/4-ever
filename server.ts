@@ -42,6 +42,13 @@ import {
   getAllWeddingsForCeo,
   updateUserRoleByCeo,
   updateUserPlanByCeo,
+  updateUserByCeo,
+  createUserByCeo,
+  bulkImportUsersByCeo,
+  bulkUpdateUsersByCeo,
+  deleteUserByCeo,
+  getCustomPlans,
+  updateCustomPlan,
   transferWeddingOwnership,
   deleteWeddingByCeo,
   updateWeddingStatus,
@@ -355,6 +362,98 @@ async function startServer() {
     } catch (error: any) {
       console.error('Failed to update user plan by CEO:', error);
       res.status(500).json({ error: error.message || 'Error updating user plan' });
+    }
+  });
+
+  app.post('/api/admin/ceo/users/update', async (req, res) => {
+    try {
+      const { uid, ...data } = req.body;
+      if (!uid) {
+        return res.status(400).json({ error: 'UID de usuario es requerido' });
+      }
+      const updated = await updateUserByCeo(uid, data);
+      res.json({ success: true, user: updated });
+    } catch (error: any) {
+      console.error('Failed to update user by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error actualizando usuario' });
+    }
+  });
+
+  app.post('/api/admin/ceo/users/create', async (req, res) => {
+    try {
+      const { name, email, password, role, plan, agencyName, phone } = req.body;
+      if (!email || !email.includes('@')) {
+        return res.status(400).json({ error: 'Correo electrónico válido es requerido' });
+      }
+      const created = await createUserByCeo({ name, email, password, role, plan, agencyName, phone });
+      res.status(201).json({ success: true, user: created });
+    } catch (error: any) {
+      console.error('Failed to create user by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error creando usuario' });
+    }
+  });
+
+  app.post('/api/admin/ceo/users/bulk-import', async (req, res) => {
+    try {
+      const { users: userList, defaultPlan, defaultRole } = req.body;
+      if (!Array.isArray(userList) || userList.length === 0) {
+        return res.status(400).json({ error: 'Lista de usuarios a importar requerida' });
+      }
+      const result = await bulkImportUsersByCeo(userList, { defaultPlan, defaultRole });
+      res.status(201).json({ success: true, ...result });
+    } catch (error: any) {
+      console.error('Failed to bulk import users by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error en importación masiva de usuarios' });
+    }
+  });
+
+  app.post('/api/admin/ceo/users/bulk-update', async (req, res) => {
+    try {
+      const { uids, action, value } = req.body;
+      if (!Array.isArray(uids) || uids.length === 0 || !action) {
+        return res.status(400).json({ error: 'Parámetros uids y action son requeridos' });
+      }
+      const result = await bulkUpdateUsersByCeo(uids, action, value);
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      console.error('Failed to bulk update users by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error en actualización masiva de usuarios' });
+    }
+  });
+
+  app.delete('/api/admin/ceo/users/:uid', async (req, res) => {
+    try {
+      const { uid } = req.params;
+      const result = await deleteUserByCeo(uid);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Failed to delete user by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error eliminando usuario' });
+    }
+  });
+
+  // Plans & Pricing API
+  app.get('/api/plans', async (_req, res) => {
+    try {
+      const plans = await getCustomPlans();
+      res.json(plans);
+    } catch (error: any) {
+      console.error('Failed to get plans:', error);
+      res.status(500).json({ error: error.message || 'Error fetching plans' });
+    }
+  });
+
+  app.post('/api/admin/ceo/plans/update', async (req, res) => {
+    try {
+      const { planId, updates } = req.body;
+      if (!planId || !updates) {
+        return res.status(400).json({ error: 'planId y updates son requeridos' });
+      }
+      const updated = await updateCustomPlan(planId, updates);
+      res.json({ success: true, plan: updated });
+    } catch (error: any) {
+      console.error('Failed to update custom plan by CEO:', error);
+      res.status(500).json({ error: error.message || 'Error updating plan' });
     }
   });
 

@@ -186,64 +186,125 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           <div className="grid grid-cols-1 lg:grid-cols-12 w-full h-full overflow-hidden">
             
-            {/* LEFT COLUMN: BRANDING & HIGHLIGHTS (4.5 / 12 col) */}
-            <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-[#2D2D24] via-[#22221A] to-[#14140F] text-[#FDFCF0] p-8 xl:p-12 flex-col justify-between relative overflow-hidden h-full select-none">
+            {/* LEFT COLUMN: BRANDING & DYNAMIC PLAN HIGHLIGHTS (5 / 12 col) */}
+            <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-br from-[#2D2D24] via-[#22221A] to-[#14140F] text-[#FDFCF0] p-8 xl:p-10 flex-col justify-between relative overflow-hidden h-full select-none">
               {/* Decorative radial glows */}
               <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-24 -mt-24" />
               <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#7D8C7A]/25 rounded-full blur-3xl pointer-events-none -ml-24 -mb-24" />
 
-              {/* Brand Top */}
-              <div className="relative z-10 space-y-6">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shadow-lg">
+              {/* Dynamic Content Container */}
+              <div className="relative z-10 space-y-5 overflow-y-auto pr-1 custom-scrollbar">
+                {/* Brand Header */}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30 flex items-center justify-center shadow-lg shrink-0">
                     {chosenPlan.startsWith('planner_') ? (
-                      <Briefcase className="w-7 h-7" />
+                      <Briefcase className="w-6 h-6" />
                     ) : (
-                      <Heart className="w-7 h-7 text-amber-300 fill-amber-300/30" />
+                      <Heart className="w-6 h-6 text-amber-300 fill-amber-300/30" />
                     )}
                   </div>
                   <div>
-                    <span className="text-[11px] uppercase tracking-[0.3em] text-amber-300/90 font-bold block">
+                    <span className="text-[10px] uppercase tracking-[0.25em] text-amber-300/90 font-bold block">
                       Wedding Atelier
                     </span>
-                    <h3 className="text-2xl font-serif font-bold text-white tracking-wide">
+                    <h3 className="text-xl font-serif font-bold text-white tracking-wide">
                       Invitaciones Digitales
                     </h3>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h4 className="text-3xl xl:text-4xl font-serif text-white leading-tight font-normal">
-                    {mode === 'register'
-                      ? 'La experiencia más elegante para tus invitados.'
-                      : 'Tu Atelier de bodas y eventos en un solo lugar.'}
-                  </h4>
-                  <p className="text-xs xl:text-sm text-stone-300/90 leading-relaxed pt-1">
-                    {mode === 'register'
-                      ? 'Crea invitaciones interactivas de alta fidelidad, con música, mapas guiados, mesa de regalos y RSVP en tiempo real.'
-                      : 'Accede a tu panel para gestionar invitados, pases confirmados y diseño visual en vivo.'}
-                  </p>
-                </div>
+                {mode === 'register' ? (
+                  <motion.div
+                    key={chosenPlan}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-4"
+                  >
+                    {/* Active Plan Banner */}
+                    <div className="p-4 rounded-2xl bg-white/5 border border-amber-500/30 backdrop-blur-xs">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold uppercase tracking-wider">
+                          {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.badge || 'Plan Seleccionado'}
+                        </span>
+                        <span className="text-[10px] text-stone-400 font-mono">
+                          {chosenPlan.startsWith('planner_') ? 'Wedding Planner' : 'Para Novios'}
+                        </span>
+                      </div>
 
-                {/* Key feature pills */}
-                <div className="space-y-3 pt-3">
-                  <div className="flex items-center gap-3 text-xs xl:text-sm text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
-                    <Smartphone className="w-4 h-4 text-amber-300 shrink-0" />
-                    <span>Visualización 100% responsiva y optimizada para móviles.</span>
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <h4 className="text-xl xl:text-2xl font-serif font-bold text-white">
+                          {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.name || 'Plan Esencial'}
+                        </h4>
+                        <span className="text-lg font-serif font-bold text-amber-300">
+                          {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.price}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-stone-300 leading-relaxed">
+                        {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.description}
+                      </p>
+                    </div>
+
+                    {/* Features list of the active plan */}
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300/90 block">
+                        Beneficios incluidos en este plan:
+                      </span>
+                      <div className="space-y-2">
+                        {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.features.map((feat, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2.5 text-xs text-stone-200 bg-white/5 border border-white/5 rounded-xl p-2.5 backdrop-blur-xs"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
+                            <span className="leading-snug">{feat}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Capacity note */}
+                    <div className="text-[11px] text-stone-400 font-mono pt-1">
+                      Capacidad: <strong className="text-white">
+                        {SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.maxWeddings === 'unlimited'
+                          ? 'Bodas y eventos ilimitados'
+                          : `${SUBSCRIPTION_PLANS.find(p => p.id === chosenPlan)?.maxWeddings || 1} Boda`}
+                      </strong>
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Login Mode overview */
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="text-2xl xl:text-3xl font-serif text-white leading-tight font-normal">
+                        Tu Atelier de bodas y eventos en un solo lugar.
+                      </h4>
+                      <p className="text-xs xl:text-sm text-stone-300/90 leading-relaxed">
+                        Accede a tu panel para gestionar invitados, pases confirmados, música, fotos y diseño visual en vivo.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2.5 pt-2">
+                      <div className="flex items-center gap-3 text-xs text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
+                        <Smartphone className="w-4 h-4 text-amber-300 shrink-0" />
+                        <span>Visualización 100% responsiva para móviles.</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
+                        <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0" />
+                        <span>RSVP en tiempo real con buscador inteligente.</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
+                        <Music className="w-4 h-4 text-amber-300 shrink-0" />
+                        <span>Música de fondo, itinerario, fotos y regalos.</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs xl:text-sm text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
-                    <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0" />
-                    <span>RSVP en tiempo real con buscador multi-token inteligente.</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs xl:text-sm text-stone-200 bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-xs">
-                    <Music className="w-4 h-4 text-amber-300 shrink-0" />
-                    <span>Música de fondo, itinerario, fotos y mesa de regalos.</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Bottom Security / Version Tag */}
-              <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-stone-400">
+              <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-stone-400 shrink-0">
                 <div className="flex items-center gap-2 text-amber-300 font-semibold">
                   <ShieldCheck className="w-4 h-4" />
                   <span>Cifrado Seguro SSL</span>

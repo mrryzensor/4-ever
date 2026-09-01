@@ -891,6 +891,132 @@ export async function updateUserPlanByCeo(uid: string, plan: string) {
   return null;
 }
 
+export async function updateUserByCeo(
+  uid: string,
+  data: {
+    name?: string;
+    email?: string;
+    role?: string;
+    plan?: string;
+    agencyName?: string;
+    phone?: string;
+    password?: string;
+  }
+) {
+  let user = memoryState.users.find((u) => u.uid === uid);
+  if (user) {
+    if (data.name !== undefined) user.name = data.name.trim();
+    if (data.email !== undefined) user.email = data.email.trim().toLowerCase();
+    if (data.role !== undefined) user.role = data.role;
+    if (data.plan !== undefined) user.plan = data.plan;
+    if (data.agencyName !== undefined) user.agencyName = data.agencyName;
+    if (data.phone !== undefined) user.phone = data.phone;
+    if (data.password !== undefined && data.password.trim()) user.password = data.password.trim();
+    user.updatedAt = new Date();
+    return user;
+  }
+  return null;
+}
+
+export async function createUserByCeo(data: {
+  name: string;
+  email: string;
+  password?: string;
+  role?: string;
+  plan?: string;
+  agencyName?: string;
+  phone?: string;
+}) {
+  const cleanEmail = data.email.trim().toLowerCase();
+  const existing = memoryState.users.find((u) => u.email === cleanEmail);
+  if (existing) {
+    return updateUserByCeo(existing.uid, data);
+  }
+
+  const generatedUid = 'usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x');
+  const newUser = {
+    id: memoryState.users.length + 1,
+    uid: generatedUid,
+    email: cleanEmail,
+    name: data.name.trim() || 'Usuario',
+    password: data.password?.trim() || 'Atelier2026!',
+    role: data.role || (data.plan?.startsWith('planner_') ? 'wedding_planner' : 'couple'),
+    plan: data.plan || 'atelier',
+    agencyName: data.agencyName || undefined,
+    phone: data.phone || undefined,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  memoryState.users.unshift(newUser);
+  return newUser;
+}
+
+export async function bulkImportUsersByCeo(
+  usersList: Array<{
+    name?: string;
+    email?: string;
+    role?: string;
+    plan?: string;
+    agencyName?: string;
+    phone?: string;
+    password?: string;
+  }>,
+  defaults?: { defaultPlan?: string; defaultRole?: string }
+) {
+  const created: any[] = [];
+  for (const item of usersList) {
+    if (!item.email || !item.email.includes('@')) continue;
+    const user = await createUserByCeo({
+      name: item.name || 'Organizador',
+      email: item.email,
+      password: item.password || 'Atelier2026!',
+      role: item.role || defaults?.defaultRole || (defaults?.defaultPlan?.startsWith('planner_') ? 'wedding_planner' : 'couple'),
+      plan: item.plan || defaults?.defaultPlan || 'atelier',
+      agencyName: item.agencyName,
+      phone: item.phone,
+    });
+    if (user) created.push(user);
+  }
+  return { count: created.length, users: created };
+}
+
+export async function bulkUpdateUsersByCeo(
+  uids: string[],
+  action: 'plan' | 'role' | 'delete',
+  value?: string
+) {
+  if (action === 'delete') {
+    memoryState.users = memoryState.users.filter((u) => !uids.includes(u.uid) || u.role === 'ceo');
+    return { success: true, count: uids.length };
+  }
+
+  let updatedCount = 0;
+  for (const uid of uids) {
+    const user = memoryState.users.find((u) => u.uid === uid);
+    if (!user) continue;
+    if (action === 'plan' && value) {
+      user.plan = value;
+      user.updatedAt = new Date();
+      updatedCount++;
+    } else if (action === 'role' && value) {
+      user.role = value;
+      user.updatedAt = new Date();
+      updatedCount++;
+    }
+  }
+  return { success: true, count: updatedCount };
+}
+
+export async function deleteUserByCeo(uid: string) {
+  const user = memoryState.users.find((u) => u.uid === uid);
+  if (user?.role === 'ceo' || user?.email === 'daviex14@gmail.com') {
+    throw new Error('No es posible eliminar la cuenta principal de CEO.');
+  }
+  memoryState.users = memoryState.users.filter((u) => u.uid !== uid);
+  return { success: true };
+}
+
 export async function transferWeddingOwnership(weddingId: number, newOwnerUid: string) {
   const wedding = memoryState.weddings.find((w) => w.id === weddingId);
   if (wedding) {
@@ -1614,7 +1740,28 @@ export async function addWish(data: typeof guestbookWishes.$inferInsert) {
   return newWish;
 }
 
-// 7. Seed Initial Data
+// 7. Plan Editor & Pricing Config
+import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
+
+let customPlansMemory = [...SUBSCRIPTION_PLANS];
+
+export async function getCustomPlans() {
+  return customPlansMemory;
+}
+
+export async function updateCustomPlan(planId: string, updates: any) {
+  const idx = customPlansMemory.findIndex((p) => p.id === planId);
+  if (idx !== -1) {
+    customPlansMemory[idx] = {
+      ...customPlansMemory[idx],
+      ...updates,
+    };
+    return customPlansMemory[idx];
+  }
+  throw new Error('Plan no encontrado');
+}
+
+// 8. Seed Initial Data
 export async function seedInitialData() {
   try {
     await testDbConnection();
