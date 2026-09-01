@@ -1,0 +1,6 @@
+{
+  "name": "Boda & RSVP - Invitación Digital y Galería",
+  "description": "App de confirmación de invitación a boda en tiempo real con reproductor de audio, personalización de tarjetas, videos interactivos, gestión de invitados y galería colaborativa de fotos.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

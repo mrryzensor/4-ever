@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wedding_rsvp_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - SQL_HOST=db
+      - SQL_DB_NAME=2date_db
+      - SQL_USER=wedding_user
+      - SQL_PASSWORD=wedding_secure_pass_2026
+      - SQL_ADMIN_USER=wedding_user
+      - SQL_ADMIN_PASSWORD=wedding_secure_pass_2026
+    volumes:
+      - wedding_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: wedding_postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: 2date_db
+      POSTGRES_USER: wedding_user
+      POSTGRES_PASSWORD: wedding_secure_pass_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wedding_user -d 2date_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  wedding_uploads:
+    driver: local
+  postgres_data:
+    driver: local

@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@layer base {
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    box-sizing: border-box;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /* Prevent any SVG from squishing, truncating, or disappearing in flex/grid containers */
+  svg {
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: middle;
+    shape-rendering: geometricPrecision;
+    text-rendering: geometricPrecision;
+  }
+
+  /* Ensure standard icons have a healthy minimum readable size */
+  svg.lucide,
+  svg[data-lucide] {
+    min-width: 14px;
+    min-height: 14px;
+    flex-shrink: 0;
+  }
+
+  /* Prevent button and chip content from crushing icons */
+  button svg,
+  a svg,
+  span svg,
+  div svg {
+    flex-shrink: 0;
+  }
+}
+
+/* Strict circular geometry preservation for mobile & desktop */
+/* Guarantees circular cards, wax seals, badges, avatars, swatches & icon containers are ALWAYS perfect circles, never ellipses */
+.rounded-full[class*="w-"][class*="h-"],
+.aspect-square {
+  aspect-ratio: 1 / 1 !important;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* Specific class to lock circular geometry */
+.circle-card,
+.circle-seal,
+.circle-badge,
+.circle-avatar,
+.circle-swatch,
+.circle-node {
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 9999px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Custom smooth transitions for interactive cards and icons */
+.icon-crisp {
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+:root {
+  --scrollbar-track: rgba(229, 226, 208, 0.45);
+  --scrollbar-thumb: rgba(125, 140, 122, 0.7);
+  --scrollbar-thumb-hover: rgba(90, 90, 64, 0.95);
+}
+
+/* Global theme-reactive scrollbars for all standard and custom containers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 1px solid transparent;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Elegant custom scrollbar class for panels, tables and modals */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Canvas dot grid pattern for live invitation preview stage */
+.canvas-grid-pattern {
+  background-color: #F4F2E6;
+  background-image: radial-gradient(#D6D2BD 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+
