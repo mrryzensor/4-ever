@@ -64,12 +64,29 @@ export default function App() {
     const segments = window.location.pathname.split('/').filter(Boolean);
     const reserved = [
       'api', 'uploads', 'src', 'assets', 'admin', 'dashboard', 'ceo', 'landing',
-      'login', 'register', 'ingresar', 'registro', 'signin', 'signup'
+      'login', 'register', 'ingresar', 'registro', 'signin', 'signup',
+      'demo', 'demostracion'
     ];
     if (segments.length === 1 && !reserved.includes(segments[0].toLowerCase())) {
       return decodeURIComponent(segments[0]);
     }
     return null;
+  };
+
+  // Helper to detect if URL points directly to demo
+  const checkIsDemoUrl = () => {
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname.toLowerCase();
+    const search = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.toLowerCase();
+    return (
+      pathname === '/demo' ||
+      pathname === '/demostracion' ||
+      search.get('mode') === 'demo' ||
+      search.get('demo') === 'true' ||
+      search.get('demo') === '1' ||
+      hash === '#demo'
+    );
   };
 
   // Helper to detect if URL points directly to login or register
@@ -110,6 +127,8 @@ export default function App() {
   // Navigation & View state
   const [currentView, setCurrentView] = useState<AppView>(() => {
     if (typeof window !== 'undefined') {
+      if (checkIsDemoUrl()) return 'invitation';
+
       const mode = new URLSearchParams(window.location.search).get('mode');
       if (mode === 'preview_embed' || mode === 'invitation') return 'invitation';
       if (mode === 'admin') return 'admin';
@@ -182,9 +201,9 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHostPill, setShowHostPill] = useState(true);
-  const [isViewingDemo, setIsViewingDemo] = useState(false);
+  const [isViewingDemo, setIsViewingDemo] = useState<boolean>(() => checkIsDemoUrl());
 
-  // Listen to popstate and url changes for direct login/register routing
+  // Listen to popstate and url changes for direct login/register and /demo routing
   useEffect(() => {
     const handleUrlAuthChange = () => {
       if (typeof window === 'undefined') return;
@@ -199,6 +218,10 @@ export default function App() {
       } else if (['/register', '/registro', '/signup'].includes(pathname) || authQuery === 'register' || hash === '#register') {
         setAuthModalMode('register');
         setIsAuthModalOpen(true);
+      } else if (pathname === '/demo' || pathname === '/demostracion' || authQuery === 'demo' || hash === '#demo') {
+        setIsViewingDemo(true);
+        setCurrentWeddingId(1);
+        setCurrentView('invitation');
       }
     };
 
@@ -270,8 +293,14 @@ export default function App() {
       if (wMatch) weddingParam = decodeURIComponent(wMatch[1]);
     }
 
-    // If specific wedding or guest code requested, directly open invitation
-    if (modeParam === 'preview_embed') {
+    // Check if URL is pointing to demo
+    const isDemo = checkIsDemoUrl();
+    if (isDemo) {
+      setCurrentWeddingId(1);
+      setIsViewingDemo(true);
+      setCurrentView('invitation');
+      setLoadingWedding(false);
+    } else if (modeParam === 'preview_embed') {
       setCurrentView('invitation');
       try {
         const saved = sessionStorage.getItem('atelier_live_settings') || localStorage.getItem('atelier_live_settings');
@@ -527,6 +556,9 @@ export default function App() {
             }
             setShowAdminDashboard(false);
             setCurrentView('invitation');
+            if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+              window.history.pushState({ mode: 'demo' }, '', '/demo');
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           onViewDemo={(style) => {
@@ -537,6 +569,9 @@ export default function App() {
             }
             setShowAdminDashboard(false);
             setCurrentView('invitation');
+            if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+              window.history.pushState({ mode: 'demo' }, '', '/demo');
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />
@@ -696,6 +731,12 @@ export default function App() {
           onBackToLanding={() => {
             setIsViewingDemo(false);
             setCurrentView('landing');
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname.toLowerCase();
+              if (currentPath === '/demo' || currentPath === '/demostracion') {
+                window.history.pushState(null, '', '/');
+              }
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         />

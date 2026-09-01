@@ -1018,7 +1018,8 @@ async function startServer() {
         'api', 'uploads', 'src', 'assets', '@vite', '@fs', '@id', 'node_modules',
         'favicon.ico', 'favicon.png', 'favicon-32x32.png', 'apple-touch-icon.png',
         'Logo.webp', 'Logo.png', 'og-landing.png', 'og-landing.webp', 'icon-192.png',
-        'icon-512.png', 'manifest.json', 'robots.txt', 'index.html'
+        'icon-512.png', 'manifest.json', 'robots.txt', 'index.html',
+        'demo', 'demostracion', 'login', 'register', 'ingresar', 'registro', 'signin', 'signup'
       ];
       const pathSlug = (pathParts.length === 1 && !reservedPaths.includes(pathParts[0].toLowerCase()))
         ? pathParts[0]
