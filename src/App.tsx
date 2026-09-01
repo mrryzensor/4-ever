@@ -841,6 +841,8 @@ export default function App() {
             guestName={activeGuest?.fullName}
             guestCode={activeGuest?.accessCode}
             cardStyle={settings.cardStyle}
+            isAdmin={!isDemoMode && Boolean(currentUser)}
+            settings={settings}
           />
         )}
 

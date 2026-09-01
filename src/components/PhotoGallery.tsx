@@ -20,6 +20,8 @@ import {
   Plus,
   Clipboard,
   CheckCircle2,
+  Play,
+  Pause,
 } from 'lucide-react';
 import { GalleryPhoto, PhotoComment, WeddingSettings } from '../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
@@ -34,6 +36,7 @@ interface PhotoGalleryProps {
   externalAlbumUrl?: string;
   externalAlbumTitle?: string;
   externalAlbumType?: string;
+  isAdmin?: boolean;
   settings?: WeddingSettings;
 }
 
@@ -44,6 +47,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   cardStyle = 'classic-gold',
   externalAlbumUrl,
   externalAlbumTitle,
+  isAdmin = false,
   settings,
 }) => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
@@ -57,6 +61,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [authorInputName, setAuthorInputName] = useState(guestName || '');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [likedPhotoIds, setLikedPhotoIds] = useState<number[]>([]);
+  const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
 
   const activePhoto = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
 
@@ -74,6 +79,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         const data = await res.json();
         if (Array.isArray(data)) {
           setComments(data);
+          setPhotoCommentsMap((prev) => ({ ...prev, [activePhoto.id]: data }));
         }
       } catch (err) {
         console.error('Error loading comments:', err);
@@ -84,6 +90,28 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     fetchComments();
   }, [activePhoto?.id, weddingId]);
+
+  // Bulk load comments for all photos to animate during auto-play
+  useEffect(() => {
+    const fetchAllComments = async () => {
+      try {
+        const res = await fetch(`/api/gallery-comments?weddingId=${weddingId}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const map: Record<number, PhotoComment[]> = {};
+          data.forEach((c: PhotoComment) => {
+            if (!map[c.photoId]) map[c.photoId] = [];
+            map[c.photoId].push(c);
+          });
+          setPhotoCommentsMap(map);
+        }
+      } catch (err) {
+        console.error('Error loading all gallery comments:', err);
+      }
+    };
+
+    fetchAllComments();
+  }, [weddingId]);
 
   // Update guest default name if props update
   useEffect(() => {
@@ -327,6 +355,26 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
 
   const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [photoRatios, setPhotoRatios] = useState<Record<number, number>>({});
+
+  // Auto-play timer (slides every 4.5 seconds when active and not hovered)
+  useEffect(() => {
+    if (!isAutoPlay || isHovered || photos.length <= 1 || activePhotoIndex !== null) return;
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isAutoPlay, isHovered, photos.length, activePhotoIndex]);
+
+  const handleImageLoad = (photoId: number, e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    if (img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      setPhotoRatios((prev) => ({ ...prev, [photoId]: ratio }));
+    }
+  };
 
   const handlePrevCarousel = () => {
     if (photos.length === 0) return;
@@ -441,72 +489,133 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           )}
         </div>
       ) : (
-        <div className="max-w-4xl mx-auto">
-          {/* Main Hero Slider Frame */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-stone-950 aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] border border-[#E5E2D0]/40 group select-none">
+        <div className="w-full mx-auto flex flex-col items-center">
+          {(() => {
+            const currentRatio = currentCarouselPhoto ? (photoRatios[currentCarouselPhoto.id] || 1.4) : 1.4;
+            const isPortrait = currentRatio < 0.92;
+            const isSquareOrSoftPortrait = currentRatio >= 0.92 && currentRatio < 1.2;
 
-            {/* Current Photo Slide with AnimatePresence */}
-            <AnimatePresence mode="wait">
-              {currentCarouselPhoto && (
-                <motion.div
-                  key={currentCarouselPhoto.id}
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  onClick={() => setActivePhotoIndex(carouselIndex)}
-                  className="w-full h-full cursor-pointer relative"
-                >
-                  <img
-                    src={currentCarouselPhoto.url}
-                    alt={currentCarouselPhoto.caption || 'Foto de boda'}
-                    className="w-full h-full object-contain sm:object-cover bg-stone-950 transition-transform duration-700 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                  />
+            // Compute ideal aspect ratio container classes based on detected photo geometry
+            const containerClass = isPortrait
+              ? 'max-w-md sm:max-w-lg aspect-[3/4] sm:aspect-[4/5] md:aspect-[9/16] max-h-[82vh]'
+              : isSquareOrSoftPortrait
+              ? 'max-w-xl sm:max-w-2xl aspect-square max-h-[75vh]'
+              : 'w-full max-w-6xl 2xl:max-w-[1500px] aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] max-h-[85vh]';
 
-                  {/* Gradient Overlay at bottom for caption and badges */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
-                    <div className="flex justify-between items-center pointer-events-auto">
-                      <span className="text-[11px] uppercase font-bold tracking-widest bg-black/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-amber-200">
-                        {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
-                      </span>
+            return (
+              <div
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className={`relative w-full rounded-3xl overflow-hidden shadow-2xl bg-stone-950 border border-[#E5E2D0]/40 group select-none transition-all duration-700 ease-in-out ${containerClass}`}
+              >
+                {/* Current Photo Slide with AnimatePresence */}
+                <AnimatePresence mode="wait">
+                  {currentCarouselPhoto && (
+                    <motion.div
+                      key={currentCarouselPhoto.id}
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.45, ease: 'easeInOut' }}
+                      onClick={() => setActivePhotoIndex(carouselIndex)}
+                      className="w-full h-full cursor-pointer relative flex items-center justify-center bg-stone-950"
+                    >
+                      {/* Blurred Ambient Glow Background for aesthetic framing */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-40 scale-110"
+                        style={{ backgroundImage: `url(${currentCarouselPhoto.url})` }}
+                      />
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={(e) => handleLike(currentCarouselPhoto.id, e)}
-                          className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md hover:bg-rose-600/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer"
-                        >
-                          <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
-                          <span>{currentCarouselPhoto.likesCount}</span>
-                        </button>
+                      <img
+                        src={currentCarouselPhoto.url}
+                        alt={currentCarouselPhoto.caption || 'Foto de boda'}
+                        onLoad={(e) => handleImageLoad(currentCarouselPhoto.id, e)}
+                        className="relative z-10 w-full h-full object-contain sm:object-cover transition-transform duration-700 group-hover:scale-103"
+                        referrerPolicy="no-referrer"
+                      />
 
-                        <button
-                          type="button"
-                          onClick={() => setActivePhotoIndex(carouselIndex)}
-                          className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md hover:bg-amber-500/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer"
-                          title="Ver en pantalla completa con comentarios"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                          <span className="hidden sm:inline">Comentar / Ampliar</span>
-                        </button>
+                      {/* Gradient Overlay at bottom for caption, comments and badges */}
+                      <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
+                        {/* Top Action Bar: Likes & Comments count at top-right */}
+                        <div className="flex justify-end items-center pointer-events-auto w-full">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => handleLike(currentCarouselPhoto.id, e)}
+                              className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-rose-600/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer shadow-sm"
+                            >
+                              <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
+                              <span>{currentCarouselPhoto.likesCount}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setActivePhotoIndex(carouselIndex)}
+                              className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-amber-500/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer shadow-sm"
+                              title="Ver en pantalla completa con comentarios"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-amber-300" />
+                              <span>
+                                {(photoCommentsMap[currentCarouselPhoto.id]?.length || 0) > 0
+                                  ? `${photoCommentsMap[currentCarouselPhoto.id].length} Comentarios`
+                                  : 'Comentar'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Bottom Area: Animated Comments + Badge + Caption */}
+                        <div className="space-y-2 pointer-events-auto max-w-2xl">
+                          {photoCommentsMap[currentCarouselPhoto.id] && photoCommentsMap[currentCarouselPhoto.id].length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {photoCommentsMap[currentCarouselPhoto.id].slice(0, 2).map((comm, cIdx) => {
+                                const commentText = (comm && (comm.comment || (comm as any).message)) ? String(comm.comment || (comm as any).message) : '';
+                                if (!commentText) return null;
+                                return (
+                                  <motion.div
+                                    key={comm.id || cIdx}
+                                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    transition={{ duration: 0.45, delay: 0.15 * (cIdx + 1) }}
+                                    className="flex items-start gap-2.5 px-4 py-2.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 text-xs text-stone-200 shadow-2xl max-w-xl"
+                                  >
+                                    <div className="w-6 h-6 rounded-full bg-amber-500/30 text-amber-300 font-bold flex items-center justify-center text-[11px] shrink-0 border border-amber-400/40 mt-0.5">
+                                      {comm.authorName?.charAt(0).toUpperCase() || 'I'}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <span className="font-semibold text-amber-300 mr-1.5">
+                                        {comm.authorName || 'Invitado'}:
+                                      </span>
+                                      <span className="italic text-stone-100 line-clamp-2 leading-snug">
+                                        "{commentText.length > 120 ? commentText.slice(0, 117) + '...' : commentText}"
+                                      </span>
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Category Badge positioned nicely above caption */}
+                          <div className="mb-1.5">
+                            <span className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
+                              {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
+                            </span>
+                          </div>
+
+                          {currentCarouselPhoto.caption && (
+                            <p className="text-sm sm:text-base font-serif font-medium text-stone-100 mb-1 drop-shadow-md">
+                              {currentCarouselPhoto.caption}
+                            </p>
+                          )}
+                          <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
+                            {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="pointer-events-auto">
-                      {currentCarouselPhoto.caption && (
-                        <p className="text-sm sm:text-base font-serif font-medium text-stone-100 mb-1 drop-shadow-md">
-                          {currentCarouselPhoto.caption}
-                        </p>
-                      )}
-                      <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
-                        {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
             {/* Left Carousel Navigation Button */}
             {photos.length > 1 && (
@@ -532,13 +641,45 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               </button>
             )}
 
-            {/* Slide Index Pill */}
-            <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
-              <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
-              <span className="text-stone-500">/</span>
-              <span>{photos.length}</span>
+            {/* Top Bar: Slide Index Pill + Auto-Play Play/Pause Button */}
+            <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+              <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
+                <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
+                <span className="text-stone-500">/</span>
+                <span>{photos.length}</span>
+              </div>
+
+              {photos.length > 1 && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAutoPlay(!isAutoPlay);
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-sans font-medium flex items-center gap-1 backdrop-blur-md border transition-all cursor-pointer ${
+                    isAutoPlay
+                      ? 'bg-amber-500/80 text-stone-950 border-amber-300 shadow-xs'
+                      : 'bg-black/60 text-stone-300 border-white/20 hover:bg-black/80'
+                  }`}
+                  title={isAutoPlay ? 'Pausar pase automático' : 'Activar pase automático'}
+                >
+                  {isAutoPlay ? (
+                    <>
+                      <Pause className="w-3 h-3 fill-current" />
+                      <span className="hidden sm:inline">Auto</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3 h-3 fill-current" />
+                      <span className="hidden sm:inline">Play</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
+        );
+      })()}
 
           {/* Horizontal Thumbnails Strip Slider */}
           {photos.length > 1 && (
@@ -580,17 +721,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <span>Ver en pantalla completa</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setShowUploadModal(true)}
-              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
-                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
-                  : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
-                }`}
-            >
-              <Camera className="w-4 h-4" />
-              <span>Compartir una Foto</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowUploadModal(true)}
+                className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
+                    ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                    : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+                  }`}
+              >
+                <Camera className="w-4 h-4" />
+                <span>Añadir Foto Oficial</span>
+              </button>
+            )}
           </div>
 
         </div>

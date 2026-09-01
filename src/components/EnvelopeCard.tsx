@@ -295,7 +295,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto text-center overflow-visible">
+        <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto text-center overflow-visible">
           {/* Section Header: Story & Quote Banner */}
           <div className="mb-8 sm:mb-12 flex flex-col items-center overflow-visible">
             <motion.div
@@ -333,8 +333,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {/* FUSED INTERACTIVE CARDS GRID - items-start ensures expanding one card only expands that single card without stretching siblings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left my-8 items-start">
             
-            {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze) */}
-            <div className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-lg ${theme.cardBgClass}`}>
+            {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
+            <div
+              onClick={() => toggleSection('ceremony')}
+              className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
+                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              }`}
+            >
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.accentClass}`}>
@@ -362,7 +367,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => toggleSection('ceremony')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSection('ceremony');
+                  }}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
                       ? isDark ? 'bg-[#C5A059] text-stone-950 font-bold' : 'bg-[#5A5A40] text-white'
@@ -379,6 +387,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     href={settings.ceremonyMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:underline"
                     style={{ color: theme.accentColorHex }}
                   >
@@ -395,6 +404,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
                   >
                     <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
@@ -429,11 +439,16 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze) */}
-            <div className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-lg ${theme.cardBgClass}`}>
+            {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
+            <div
+              onClick={() => toggleSection('reception')}
+              className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
+                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              }`}
+            >
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50 group-hover:scale-105 transition-transform">
                     <AnimatedChampagneGlasses className="w-9 h-9" />
                   </div>
                   <span className="text-xs sm:text-sm font-mono font-bold text-amber-900 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-200/70">
@@ -458,7 +473,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => toggleSection('reception')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSection('reception');
+                  }}
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
                       ? 'bg-amber-500 text-stone-950 font-bold border-amber-500'
@@ -475,6 +493,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     href={settings.receptionMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="text-xs sm:text-sm font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1.5 hover:underline"
                   >
                     <Compass className="w-4 h-4 text-amber-600 shrink-0" />
@@ -490,6 +509,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
                   >
                     <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
@@ -522,12 +542,17 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline) */}
+            {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline - Fully Clickable) */}
             {settings.showItinerary !== false && itineraryList.length > 0 && (
-              <div className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-lg ${theme.cardBgClass}`}>
+              <div
+                onClick={() => toggleSection('itinerary')}
+                className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
+                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+                }`}
+              >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${theme.accentClass}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.accentClass}`}>
                       <Clock className="w-6 h-6 shrink-0" />
                     </div>
                     <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
@@ -566,7 +591,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={() => toggleSection('itinerary')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection('itinerary');
+                    }}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'itinerary'
                         ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
@@ -578,41 +606,75 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </button>
                 </div>
 
-                {/* Full Premium Interactive Timeline */}
+                {/* Full Premium Interactive Timeline with Curving Wave Line */}
                 <AnimatePresence>
                   {expandedSection === 'itinerary' && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
+                      onClick={(e) => e.stopPropagation()}
                       className="mt-6 pt-5 border-t border-stone-200/40 dark:border-stone-700/40 space-y-4 overflow-hidden"
                     >
-                      <div className="relative pl-12 sm:pl-14 space-y-6 before:absolute before:left-5 sm:before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-amber-400 before:via-amber-500 before:to-amber-300">
-                        {itineraryList.map((item, idx) => (
-                          <div key={idx} className="relative flex items-start gap-4 group">
-                            {/* Animated SVG ring node with full margins so it never clips */}
-                            <div className="absolute -left-12 sm:-left-14 top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10">
-                              {getItineraryIcon(item.icon)}
-                            </div>
-                            <div className={`p-4 rounded-2xl border flex-1 shadow-xs transition-all hover:scale-[1.01] ${
-                              isDark ? 'bg-stone-900/90 border-stone-700 hover:border-amber-400/50' : 'bg-white border-stone-200 hover:border-amber-300'
-                            }`}>
-                              <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <span className="font-serif font-bold text-base text-stone-900 dark:text-stone-100">
-                                  {item.title}
-                                </span>
-                                <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                  {item.time} hrs
-                                </span>
+                      <div className="relative pl-14 sm:pl-16 space-y-6">
+                        {/* Organic Curving S-Wave SVG Connector */}
+                        <svg
+                          className="absolute left-4 sm:left-5 top-4 bottom-4 w-8 h-[calc(100%-32px)] pointer-events-none"
+                          preserveAspectRatio="none"
+                          viewBox="0 0 30 100"
+                        >
+                          <defs>
+                            <linearGradient id="curveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.9" />
+                              <stop offset="35%" stopColor="#D97706" stopOpacity="0.85" />
+                              <stop offset="70%" stopColor="#FBBF24" stopOpacity="0.95" />
+                              <stop offset="100%" stopColor="#D97706" stopOpacity="0.8" />
+                            </linearGradient>
+                          </defs>
+                          {/* Smooth undulating Bezier curve */}
+                          <path
+                            d="M 15,0 Q 26,12 15,25 T 15,50 T 15,75 T 15,100"
+                            fill="none"
+                            stroke="url(#curveGradient)"
+                            strokeWidth="2.5"
+                            strokeDasharray="4 3"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+
+                        {itineraryList.map((item, idx) => {
+                          // Gentle horizontal oscillation for each node to track the curve
+                          const isOdd = idx % 2 === 1;
+                          return (
+                            <div key={idx} className="relative flex items-start gap-4 group">
+                              {/* Animated SVG ring node with curving horizontal offset */}
+                              <div
+                                className={`absolute top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10 transition-transform duration-300 group-hover:scale-110 ${
+                                  isOdd ? '-left-12 sm:-left-13' : '-left-14 sm:-left-15'
+                                }`}
+                              >
+                                {getItineraryIcon(item.icon)}
                               </div>
-                              {item.desc && (
-                                <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-serif">
-                                  {item.desc}
-                                </p>
-                              )}
+                              <div className={`p-4 rounded-2xl border flex-1 shadow-xs transition-all hover:scale-[1.01] ${
+                                isDark ? 'bg-stone-900/90 border-stone-700 hover:border-amber-400/50' : 'bg-white border-stone-200 hover:border-amber-300'
+                              }`}>
+                                <div className="flex items-center justify-between gap-2 mb-1.5">
+                                  <span className="font-serif font-bold text-base text-stone-900 dark:text-stone-100">
+                                    {item.title}
+                                  </span>
+                                  <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                    {item.time} hrs
+                                  </span>
+                                </div>
+                                {item.desc && (
+                                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-serif">
+                                    {item.desc}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -620,12 +682,17 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </div>
             )}
 
-            {/* 4. MESA DE REGALOS & CUENTAS BANCARIAS (Interactive Card with Copyable Bank Accounts) */}
+            {/* 4. MESA DE REGALOS & CUENTAS BANCARIAS (Interactive Card with Copyable Bank Accounts - Fully Clickable) */}
             {settings.showGiftRegistry !== false && (
-              <div className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-lg ${theme.cardBgClass}`}>
+              <div
+                onClick={() => toggleSection('gifts')}
+                className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
+                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+                }`}
+              >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50 group-hover:scale-105 transition-transform">
                       <AnimatedGiftBox className="w-8 h-8" />
                     </div>
                     <span className="text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900">
@@ -666,7 +733,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
                   <button
                     type="button"
-                    onClick={() => toggleSection('gifts')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection('gifts');
+                    }}
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'gifts'
                         ? 'bg-amber-500 text-stone-950 font-bold'
@@ -768,10 +838,15 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             )}
           </div>
 
-          {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION */}
+          {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION (Fully Clickable) */}
           {settings.showDressCode !== false && (
-            <div className={`rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto my-8 text-center border shadow-md ${theme.cardBgClass}`}>
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ borderColor: theme.accentColorHex }}>
+            <div
+              onClick={() => toggleSection('dresscode')}
+              className={`rounded-3xl p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border shadow-md hover:shadow-xl cursor-pointer select-none transition-all group ${theme.cardBgClass} ${
+                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform" style={{ borderColor: theme.accentColorHex }}>
                 <Shirt className="w-6 h-6" style={{ color: theme.accentColorHex }} />
               </div>
               
@@ -789,7 +864,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
               {/* Suggested Palette Swatches Banner */}
               {paletteList.length > 0 && (
-                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
                   <span className={`text-xs font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                     Paleta de colores sugerida:
                   </span>
@@ -798,7 +873,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedPaletteIndex(idx);
                           if (expandedSection !== 'dresscode') setExpandedSection('dresscode');
                         }}
@@ -818,7 +894,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div className="mt-5 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => toggleSection('dresscode')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSection('dresscode');
+                  }}
                   className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                     expandedSection === 'dresscode'
                       ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
@@ -826,7 +905,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>{expandedSection === 'dresscode' ? 'Ocultar Simulador Visual' : 'Ver Simulador de Atuendos & Colores'}</span>
+                  <span>{expandedSection === 'dresscode' ? 'Ocultar Guía Visual' : 'Ver Guía Visual & Colores'}</span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'dresscode' ? 'rotate-180' : ''}`} />
                 </button>
               </div>
@@ -838,6 +917,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
                   >
                     {/* View Switcher: Pareja / Damas / Caballeros */}
@@ -850,7 +930,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <button
                           key={tab.id}
                           type="button"
-                          onClick={() => setActiveGenderView(tab.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveGenderView(tab.id);
+                          }}
                           className={`px-4 py-1.5 rounded-full text-xs font-serif font-bold transition-all cursor-pointer ${
                             activeGenderView === tab.id
                               ? isDark ? 'bg-amber-400 text-stone-950 shadow-md' : 'bg-[#5A5A40] text-white shadow-md'
@@ -862,7 +945,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center max-w-2xl mx-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center max-w-3xl mx-auto">
                       {/* Woman Mockup */}
                       {(activeGenderView === 'both' || activeGenderView === 'women') && (
                         <div className="flex flex-col items-center">
@@ -877,7 +960,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           <div className="mt-2 flex justify-center">
                             <select
                               value={activeWomanOutfit}
-                              onChange={(e) => setActiveWomanOutfit(e.target.value as any)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                setActiveWomanOutfit(e.target.value as any);
+                              }}
                               className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
                                 isDark
                                   ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
@@ -908,7 +994,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           <div className="mt-2 flex justify-center">
                             <select
                               value={activeManOutfit}
-                              onChange={(e) => setActiveManOutfit(e.target.value as any)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                setActiveManOutfit(e.target.value as any);
+                              }}
                               className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
                                 isDark
                                   ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
@@ -935,7 +1024,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => setSelectedPaletteIndex(idx)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPaletteIndex(idx);
+                            }}
                             className={`w-9 h-9 rounded-xl shadow-md border-2 transition-all cursor-pointer flex items-center justify-center ${
                               selectedPaletteIndex === idx
                                 ? 'scale-115 border-white ring-2 ring-amber-400'
@@ -960,10 +1052,15 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </div>
           )}
 
-          {/* 6. TIPS & RECOMENDACIONES DE LOS NOVIOS (Configurable Interactive Section) */}
+          {/* 6. TIPS & RECOMENDACIONES DE LOS NOVIOS (Configurable Interactive Section - Fully Clickable) */}
           {settings.showTips !== false && tipsList.length > 0 && (
-            <div className={`rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto my-8 text-center border shadow-md ${theme.cardBgClass}`}>
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ borderColor: theme.accentColorHex }}>
+            <div
+              onClick={() => toggleSection('tips')}
+              className={`rounded-3xl p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border shadow-md hover:shadow-xl cursor-pointer select-none transition-all group ${theme.cardBgClass} ${
+                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              }`}
+            >
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform" style={{ borderColor: theme.accentColorHex }}>
                 <Lightbulb className="w-6 h-6" style={{ color: theme.accentColorHex }} />
               </div>
 
@@ -995,7 +1092,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div className="mt-6 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => toggleSection('tips')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleSection('tips');
+                  }}
                   className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                     expandedSection === 'tips'
                       ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
@@ -1015,6 +1115,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

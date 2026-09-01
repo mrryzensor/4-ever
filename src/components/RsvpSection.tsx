@@ -302,7 +302,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
   return (
     <section id="rsvp" className={`w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-12 transition-colors duration-500 ${activeTheme.bgClass}`}>
-      <div className="w-full max-w-4xl mx-auto">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto">
         
         {/* Section Header */}
         <div className="text-center mb-8 sm:mb-10">
