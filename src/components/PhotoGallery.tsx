@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Camera,
@@ -466,278 +467,282 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </div>
       )}
 
-      {/* Lightbox Modal - Full Viewport Interactive Carousel (Highest z-index above demo header) */}
-      <AnimatePresence>
-        {activePhoto && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActivePhotoIndex(null)}
-            className="fixed inset-0 z-[9995] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-[96vw] max-w-7xl h-[94vh] bg-stone-950 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
-            >
-              {/* Close Button Top Right */}
-              <button
-                type="button"
+      {/* Lightbox Modal rendered via React Portal directly to body (Guarantees top stacking context above all headers) */}
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {activePhoto && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 onClick={() => setActivePhotoIndex(null)}
-                className="absolute top-4 right-4 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
-                title="Cerrar galería (Esc)"
+                className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
               >
-                <X className="w-6 h-6" />
-              </button>
-
-              {/* Huge Immersive Photo Carousel Display Area */}
-              <div className="flex-1 bg-black/80 flex flex-col justify-between items-center p-2 sm:p-4 min-h-0 overflow-hidden relative select-none">
-
-                {/* Photo Position Counter at top */}
-                <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2">
-                  <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
-                  <span className="text-stone-500">/</span>
-                  <span>{photos.length}</span>
-                </div>
-
-                {/* Left Carousel Navigation Button */}
-                {photos.length > 1 && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-[96vw] max-w-7xl h-[94vh] bg-stone-950 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
+                >
+                  {/* Close Button Top Right */}
                   <button
                     type="button"
-                    onClick={handlePrevPhoto}
-                    className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                    title="Foto anterior (Flecha Izquierda)"
+                    onClick={() => setActivePhotoIndex(null)}
+                    className="absolute top-4 right-4 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
+                    title="Cerrar galería (Esc)"
                   >
-                    <ChevronLeft className="w-7 h-7 -translate-x-0.5" />
+                    <X className="w-6 h-6" />
                   </button>
-                )}
 
-                {/* Right Carousel Navigation Button */}
-                {photos.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={handleNextPhoto}
-                    className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                    title="Siguiente foto (Flecha Derecha)"
-                  >
-                    <ChevronRight className="w-7 h-7 translate-x-0.5" />
-                  </button>
-                )}
+                  {/* Huge Immersive Photo Carousel Display Area */}
+                  <div className="flex-1 bg-black/80 flex flex-col justify-between items-center p-2 sm:p-4 min-h-0 overflow-hidden relative select-none">
 
-                {/* Main Photo with smooth transition */}
-                <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 relative px-2">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activePhoto.id}
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.25 }}
-                      className="flex flex-col items-center justify-center max-h-[72vh] w-full"
-                    >
-                      <img
-                        src={activePhoto.url}
-                        alt={activePhoto.caption || 'Foto de boda'}
-                        className="max-h-[66vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
-                        referrerPolicy="no-referrer"
-                      />
+                    {/* Photo Position Counter at top */}
+                    <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2">
+                      <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
+                      <span className="text-stone-500">/</span>
+                      <span>{photos.length}</span>
+                    </div>
 
-                      {/* Photo Subtitle (Author & Date underneath the photo) */}
-                      <div className="mt-2.5 flex items-center justify-center gap-3 text-xs text-stone-300 font-serif">
-                        {activePhoto.authorName && (
-                          <span className="text-amber-200/90 italic">
-                            Fotografía por: {activePhoto.authorName}
-                          </span>
-                        )}
-                        {activePhoto.authorName && activePhoto.createdAt && (
-                          <span className="text-stone-600">•</span>
-                        )}
-                        {activePhoto.createdAt && (
-                          <span className="text-stone-400 font-mono text-[11px]">
-                            {new Date(activePhoto.createdAt).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                {/* Bottom Thumbnails Carousel Bar */}
-                {photos.length > 1 && (
-                  <div className="w-full pt-2 flex items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
-                    {photos.map((p, idx) => (
+                    {/* Left Carousel Navigation Button */}
+                    {photos.length > 1 && (
                       <button
-                        key={p.id}
                         type="button"
-                        onClick={() => setActivePhotoIndex(idx)}
-                        className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === activePhotoIndex
-                            ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100'
-                            : 'border-transparent opacity-40 hover:opacity-80'
-                          }`}
+                        onClick={handlePrevPhoto}
+                        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        title="Foto anterior (Flecha Izquierda)"
                       >
-                        <img src={p.url} alt="Miniatura" className="w-full h-full object-cover" />
+                        <ChevronLeft className="w-7 h-7 -translate-x-0.5" />
                       </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    )}
 
-              {/* Sidebar Info, Likes & Interactive Comments Panel */}
-              <div className="w-full lg:w-[420px] flex flex-col justify-between bg-stone-900/95 text-stone-100 border-t lg:border-t-0 lg:border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
-                
-                {/* Header & Photo Title - With clean spacing from close button */}
-                <div className="p-5 sm:p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0 relative">
-                  <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
-                    {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
-                  </span>
-
-                  <h3 className="text-base sm:text-lg font-serif font-semibold text-white leading-snug">
-                    {activePhoto.caption || 'Recuerdo de la Boda'}
-                  </h3>
-                </div>
-
-                {/* Interactive Comments List (Scrollable) */}
-                <div className="flex-1 p-5 sm:p-6 py-3 overflow-y-auto space-y-3 min-h-0 custom-scrollbar">
-                  <div className="flex items-center justify-between text-xs text-stone-400 pb-1 border-b border-stone-800/40">
-                    <div className="flex items-center gap-1.5 font-semibold text-stone-300">
-                      <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Comentarios & Dedicatorias</span>
-                    </div>
-                    <span className="text-[11px] font-mono text-stone-400 bg-stone-800/60 px-2 py-0.5 rounded-full">
-                      {comments.length}
-                    </span>
-                  </div>
-
-                  {loadingComments ? (
-                    <div className="py-6 text-center text-xs text-stone-500 flex items-center justify-center gap-2">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                      <span>Cargando comentarios...</span>
-                    </div>
-                  ) : comments.length === 0 ? (
-                    <div className="py-8 text-center bg-stone-950/40 rounded-2xl border border-dashed border-stone-800 p-4">
-                      <MessageCircle className="w-6 h-6 text-stone-600 mx-auto mb-1.5" />
-                      <p className="text-xs text-stone-400 font-medium">Sé el primero en comentar esta foto</p>
-                      <p className="text-[11px] text-stone-500 mt-0.5">Deja un lindo mensaje o recuerdo para los novios.</p>
-                    </div>
-                  ) : (
-                    comments.map((c) => (
-                      <div
-                        key={c.id}
-                        className="bg-stone-950/60 border border-stone-800/80 rounded-2xl p-3.5 space-y-1 hover:border-stone-700/60 transition-colors animate-in fade-in"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold shrink-0">
-                              {c.guestName.charAt(0).toUpperCase()}
-                            </div>
-                            <span className="text-xs font-semibold text-amber-200 truncate">
-                              {c.guestName}
-                            </span>
-                          </div>
-                          {c.createdAt && (
-                            <span className="text-[10px] text-stone-400 font-mono shrink-0">
-                              {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-stone-300 leading-relaxed pl-6">
-                          {c.message}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Write Comment Box & Like Bar */}
-                <div className="p-4 sm:p-5 bg-stone-950/90 border-t border-stone-800 shrink-0 space-y-3">
-                  
-                  {/* Action Bar (Like + Download) */}
-                  <div className="flex items-center justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleLike(activePhoto.id)}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all cursor-pointer text-xs font-semibold shadow-xs ${
-                        likedPhotoIds.includes(activePhoto.id)
-                          ? 'bg-rose-950/50 border-rose-700/80 text-rose-300'
-                          : 'bg-stone-800 hover:bg-rose-950/30 text-stone-200 hover:text-rose-400 border-stone-700'
-                      }`}
-                    >
-                      <Heart
-                        className={`w-4 h-4 shrink-0 transition-transform ${
-                          likedPhotoIds.includes(activePhoto.id)
-                            ? 'fill-rose-500 text-rose-500 scale-110'
-                            : 'fill-rose-500 text-rose-500'
-                        }`}
-                      />
-                      <span>
-                        {activePhoto.likesCount} {activePhoto.likesCount === 1 ? 'Me gusta' : 'Me gusta'}
-                      </span>
-                    </button>
-
-                    <a
-                      href={activePhoto.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                      className="p-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 transition-colors flex items-center justify-center shadow-xs"
-                      title="Abrir imagen original en alta resolución"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-
-                  {/* Comment Input Form */}
-                  <form onSubmit={handleAddComment} className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <User className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="text"
-                          value={authorInputName}
-                          onChange={(e) => setAuthorInputName(e.target.value)}
-                          placeholder="Tu nombre (ej. Familia Pérez)"
-                          className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newCommentText}
-                        onChange={(e) => setNewCommentText(e.target.value)}
-                        placeholder="Escribe un comentario o felicitación..."
-                        className="flex-1 px-3 py-2 rounded-xl bg-stone-900 border border-stone-700 text-xs text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-                        required
-                      />
+                    {/* Right Carousel Navigation Button */}
+                    {photos.length > 1 && (
                       <button
-                        type="submit"
-                        disabled={isSubmittingComment || !newCommentText.trim()}
-                        className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0"
-                        title="Enviar comentario"
+                        type="button"
+                        onClick={handleNextPhoto}
+                        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        title="Siguiente foto (Flecha Derecha)"
                       >
-                        {isSubmittingComment ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <span>Enviar</span>
-                            <Send className="w-3.5 h-3.5" />
-                          </>
-                        )}
+                        <ChevronRight className="w-7 h-7 translate-x-0.5" />
                       </button>
+                    )}
+
+                    {/* Main Photo with smooth transition */}
+                    <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 relative px-2">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={activePhoto.id}
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ duration: 0.25 }}
+                          className="flex flex-col items-center justify-center max-h-[72vh] w-full"
+                        >
+                          <img
+                            src={activePhoto.url}
+                            alt={activePhoto.caption || 'Foto de boda'}
+                            className="max-h-[66vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
+                            referrerPolicy="no-referrer"
+                          />
+
+                          {/* Photo Subtitle (Author & Date underneath the photo) */}
+                          <div className="mt-2.5 flex items-center justify-center gap-3 text-xs sm:text-sm text-stone-300 font-serif">
+                            {activePhoto.authorName && (
+                              <span className="text-amber-200/90 italic">
+                                Fotografía por: {activePhoto.authorName}
+                              </span>
+                            )}
+                            {activePhoto.authorName && activePhoto.createdAt && (
+                              <span className="text-stone-600">•</span>
+                            )}
+                            {activePhoto.createdAt && (
+                              <span className="text-stone-400 font-mono text-[11px] sm:text-xs">
+                                {new Date(activePhoto.createdAt).toLocaleDateString(undefined, {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
                     </div>
-                  </form>
+
+                    {/* Bottom Thumbnails Carousel Bar */}
+                    {photos.length > 1 && (
+                      <div className="w-full pt-2 flex items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
+                        {photos.map((p, idx) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setActivePhotoIndex(idx)}
+                            className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === activePhotoIndex
+                                ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100'
+                                : 'border-transparent opacity-40 hover:opacity-80'
+                              }`}
+                          >
+                            <img src={p.url} alt="Miniatura" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sidebar Info, Likes & Interactive Comments Panel */}
+                  <div className="w-full lg:w-[440px] flex flex-col justify-between bg-stone-900/95 text-stone-100 border-t lg:border-t-0 lg:border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
+                    
+                    {/* Header & Photo Title - With clean spacing from close button */}
+                    <div className="p-5 sm:p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0 relative">
+                      <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1 rounded-full inline-block mb-2.5">
+                        {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
+                      </span>
+
+                      <h3 className="text-lg sm:text-xl font-serif font-semibold text-white leading-snug">
+                        {activePhoto.caption || 'Recuerdo de la Boda'}
+                      </h3>
+                    </div>
+
+                    {/* Interactive Comments List (Scrollable) */}
+                    <div className="flex-1 p-5 sm:p-6 py-4 overflow-y-auto space-y-3 min-h-0 custom-scrollbar">
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-stone-400 pb-2 border-b border-stone-800/40">
+                        <div className="flex items-center gap-2 font-semibold text-stone-200">
+                          <MessageCircle className="w-4 h-4 text-amber-400" />
+                          <span>Comentarios & Dedicatorias</span>
+                        </div>
+                        <span className="text-xs font-mono font-bold text-amber-300 bg-stone-800/80 px-2.5 py-0.5 rounded-full">
+                          {comments.length}
+                        </span>
+                      </div>
+
+                      {loadingComments ? (
+                        <div className="py-8 text-center text-sm text-stone-500 flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                          <span>Cargando comentarios...</span>
+                        </div>
+                      ) : comments.length === 0 ? (
+                        <div className="py-10 text-center bg-stone-950/40 rounded-2xl border border-dashed border-stone-800 p-5">
+                          <MessageCircle className="w-8 h-8 text-stone-600 mx-auto mb-2" />
+                          <p className="text-sm text-stone-300 font-medium">Sé el primero en comentar esta foto</p>
+                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo para los novios.</p>
+                        </div>
+                      ) : (
+                        comments.map((c) => (
+                          <div
+                            key={c.id}
+                            className="bg-stone-950/70 border border-stone-800/90 rounded-2xl p-4 space-y-1.5 hover:border-stone-700/80 transition-colors animate-in fade-in"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-xs font-bold shrink-0">
+                                  {c.guestName.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="text-sm font-semibold text-amber-200 truncate">
+                                  {c.guestName}
+                                </span>
+                              </div>
+                              {c.createdAt && (
+                                <span className="text-[11px] text-stone-400 font-mono shrink-0">
+                                  {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs sm:text-sm text-stone-200 leading-relaxed pl-8">
+                              {c.message}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Write Comment Box & Like Bar - Larger Inputs & Clearer Controls */}
+                    <div className="p-4 sm:p-6 bg-stone-950/95 border-t border-stone-800 shrink-0 space-y-3.5">
+                      
+                      {/* Action Bar (Like + Download) */}
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleLike(activePhoto.id)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${
+                            likedPhotoIds.includes(activePhoto.id)
+                              ? 'bg-rose-950/60 border-rose-600 text-rose-200'
+                              : 'bg-stone-800 hover:bg-rose-950/40 text-stone-100 hover:text-rose-300 border-stone-700'
+                          }`}
+                        >
+                          <Heart
+                            className={`w-4 h-4 shrink-0 transition-transform ${
+                              likedPhotoIds.includes(activePhoto.id)
+                                ? 'fill-rose-500 text-rose-500 scale-110'
+                                : 'fill-rose-500 text-rose-500'
+                            }`}
+                          />
+                          <span>
+                            {activePhoto.likesCount} {activePhoto.likesCount === 1 ? 'Me gusta' : 'Me gusta'}
+                          </span>
+                        </button>
+
+                        <a
+                          href={activePhoto.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download
+                          className="p-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 transition-colors flex items-center justify-center shadow-sm"
+                          title="Abrir imagen original en alta resolución"
+                        >
+                          <ExternalLink className="w-5 h-5" />
+                        </a>
+                      </div>
+
+                      {/* Comment Input Form - Increased Height & Typography */}
+                      <form onSubmit={handleAddComment} className="space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={authorInputName}
+                              onChange={(e) => setAuthorInputName(e.target.value)}
+                              placeholder="Tu nombre (ej. Familia Pérez)"
+                              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newCommentText}
+                            onChange={(e) => setNewCommentText(e.target.value)}
+                            placeholder="Escribe un comentario o felicitación..."
+                            className="flex-1 px-4 py-3 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                            required
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSubmittingComment || !newCommentText.trim()}
+                            className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-serif font-bold flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 shrink-0"
+                            title="Enviar comentario"
+                          >
+                            {isSubmittingComment ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <span>Enviar</span>
+                                <Send className="w-4 h-4" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </section>
   );
 };
