@@ -902,15 +902,23 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
         
         {/* Section Header */}
         <div className="mb-10 sm:mb-12">
-          <div className="w-14 h-14 rounded-2xl bg-[#5A5A40]/10 text-[#5A5A40] flex items-center justify-center mx-auto mb-3 border border-[#E5E2D0] shadow-xs">
-            <Shirt className="w-7 h-7 shrink-0 text-[#5A5A40]" />
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
+            isDark
+              ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
+              : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
+          }`}>
+            <Shirt className="w-7 h-7 shrink-0" />
           </div>
 
-          <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#7D8C7A] block mb-2">
+          <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+            isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+          }`}>
             Guía de Estilo & Etiqueta
           </span>
 
-          <h2 className="text-3xl sm:text-5xl font-serif text-[#3D3D2C] font-normal">
+          <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
+            isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+          }`}>
             Código de Vestimenta
           </h2>
 
@@ -920,12 +928,16 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             color={activeTheme?.accentColorHex}
           />
 
-          <p className="text-xl sm:text-2xl font-serif italic text-[#5A5A40] font-medium mt-3">
+          <p className={`text-xl sm:text-2xl font-serif italic font-medium mt-3 ${
+            isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
+          }`}>
             {dressCodeTitle}
           </p>
 
           {dressCodeDesc && (
-            <p className="text-sm text-stone-600 max-w-xl mx-auto mt-2 leading-relaxed font-serif">
+            <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif ${
+              isDark ? 'text-stone-300' : 'text-stone-600'
+            }`}>
               "{dressCodeDesc}"
             </p>
           )}
@@ -934,29 +946,43 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
         {/* ============================================================== */}
         {/* INTERACTIVE FASHION MOCKUP CARD (CABALLERO & DAMA VISUALIZER) */}
         {/* ============================================================== */}
-        <div className="bg-white/95 backdrop-blur-md rounded-3xl sm:rounded-[36px] p-6 sm:p-10 border border-[#E5E2D0] shadow-xl max-w-4xl mx-auto my-8 text-left relative overflow-hidden">
+        <div className={`backdrop-blur-md rounded-3xl sm:rounded-[36px] p-6 sm:p-10 border shadow-xl max-w-4xl mx-auto my-8 text-left relative overflow-hidden ${
+          isDark
+            ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
+            : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C]'
+        }`}>
           
           {/* Top Bar: Visualizer Mode & View Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E2D0] pb-5 mb-8">
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-5 mb-8 ${
+            isDark ? 'border-[#5A5A40]/50' : 'border-[#E5E2D0]'
+          }`}>
             <div>
-              <span className="text-xs uppercase tracking-wider font-bold text-[#5A5A40] flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#7D8C7A]" />
+              <span className={`text-xs uppercase tracking-wider font-bold flex items-center gap-2 ${
+                isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
+              }`}>
+                <Sparkles className={`w-4 h-4 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
                 Simulador Visual de Atuendos
               </span>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                 Toca cualquier color de la paleta para ver cómo lucen las prendas en vivo.
               </p>
             </div>
 
             {/* View Selector Tabs */}
-            <div className="flex items-center bg-[#FAF9F0] p-1 rounded-full border border-[#E5E2D0] self-start sm:self-auto">
+            <div className={`flex items-center p-1 rounded-full border self-start sm:self-auto ${
+              isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
+            }`}>
               <button
                 type="button"
                 onClick={() => setActiveGenderView('both')}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   activeGenderView === 'both'
-                    ? 'bg-[#5A5A40] text-white shadow-xs'
-                    : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
+                    ? isDark
+                      ? 'bg-[#C5A059] text-stone-950 font-bold shadow-xs'
+                      : 'bg-[#5A5A40] text-white shadow-xs'
+                    : isDark
+                      ? 'text-stone-400 hover:text-stone-200'
+                      : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
                 }`}
               >
                 Pareja
@@ -966,8 +992,12 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                 onClick={() => setActiveGenderView('women')}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   activeGenderView === 'women'
-                    ? 'bg-[#5A5A40] text-white shadow-xs'
-                    : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
+                    ? isDark
+                      ? 'bg-[#C5A059] text-stone-950 font-bold shadow-xs'
+                      : 'bg-[#5A5A40] text-white shadow-xs'
+                    : isDark
+                      ? 'text-stone-400 hover:text-stone-200'
+                      : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
                 }`}
               >
                 Damas
@@ -977,8 +1007,12 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                 onClick={() => setActiveGenderView('men')}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   activeGenderView === 'men'
-                    ? 'bg-[#5A5A40] text-white shadow-xs'
-                    : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
+                    ? isDark
+                      ? 'bg-[#C5A059] text-stone-950 font-bold shadow-xs'
+                      : 'bg-[#5A5A40] text-white shadow-xs'
+                    : isDark
+                      ? 'text-stone-400 hover:text-stone-200'
+                      : 'text-[#7D8C7A] hover:text-[#1a1a1a]'
                 }`}
               >
                 Caballeros
@@ -992,7 +1026,9 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             {/* Visual Mannequins Container */}
             <div className={`${
               activeGenderView === 'both' ? 'md:col-span-7' : 'md:col-span-6'
-            } bg-[#FAF9F0] rounded-3xl p-6 border border-[#E5E2D0] flex flex-col items-center justify-center relative overflow-hidden shadow-inner`}>
+            } rounded-3xl p-6 border flex flex-col items-center justify-center relative overflow-hidden shadow-inner ${
+              isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
+            }`}>
               
               {/* Radial backdrop highlight */}
               <div
@@ -1024,7 +1060,11 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                       <select
                         value={activeWomanOutfit}
                         onChange={(e) => setActiveWomanOutfit(e.target.value as any)}
-                        className="text-[11px] bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1 text-[#3D3D3D] font-medium shadow-2xs cursor-pointer focus:outline-none focus:border-[#5A5A40]"
+                        className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
+                          isDark
+                            ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
+                            : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
+                        }`}
                       >
                         <option value="long-gown">Gala / Vestido Largo</option>
                         <option value="cocktail">Cóctel / Midi</option>
@@ -1056,7 +1096,11 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                       <select
                         value={activeManOutfit}
                         onChange={(e) => setActiveManOutfit(e.target.value as any)}
-                        className="text-[11px] bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1 text-[#3D3D3D] font-medium shadow-2xs cursor-pointer focus:outline-none focus:border-[#5A5A40]"
+                        className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
+                          isDark
+                            ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
+                            : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
+                        }`}
                       >
                         <option value="suit">Traje Clásico</option>
                         <option value="tuxedo">Esmoquin / Smoking</option>
@@ -1076,8 +1120,10 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
               
               {/* Palette Swatches */}
               <div>
-                <span className="text-xs uppercase font-bold tracking-wider text-[#5A5A40] block mb-2 flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-[#7D8C7A]" />
+                <span className={`text-xs uppercase font-bold tracking-wider block mb-2 flex items-center gap-1.5 ${
+                  isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
+                }`}>
+                  <Palette className={`w-3.5 h-3.5 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
                   Paleta de Colores Sugerida:
                 </span>
                 
@@ -1089,7 +1135,9 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                       onClick={() => setSelectedPaletteIndex(idx)}
                       className={`group relative w-10 h-10 rounded-xl transition-all cursor-pointer flex items-center justify-center shadow-xs ${
                         selectedPaletteIndex === idx
-                          ? 'ring-2 ring-[#5A5A40] ring-offset-2 scale-110'
+                          ? isDark
+                            ? 'ring-2 ring-[#C5A059] ring-offset-2 ring-offset-[#282B25] scale-110'
+                            : 'ring-2 ring-[#5A5A40] ring-offset-2 scale-110'
                           : 'hover:scale-105 opacity-90 hover:opacity-100'
                       }`}
                       style={{ backgroundColor: hex }}
@@ -1106,40 +1154,46 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-stone-500 font-mono">
+                <div className={`flex items-center gap-2 mt-2 text-[11px] font-mono ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                   <span>Color activo:</span>
-                  <span className="font-bold text-[#1a1a1a]">{activePaletteColor}</span>
+                  <span className={`font-bold ${isDark ? 'text-[#C5A059]' : 'text-[#1a1a1a]'}`}>{activePaletteColor}</span>
                 </div>
               </div>
 
               {/* Specific Recommendations for Women */}
-              <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-1">
+              <div className={`p-4 rounded-2xl border space-y-1 ${
+                isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
+              }`}>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
-                  <h4 className="text-xs font-bold text-[#1a1a1a]">{womenTitle}</h4>
+                  <h4 className={`text-xs font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#1a1a1a]'}`}>{womenTitle}</h4>
                 </div>
-                <p className="text-xs text-stone-600 leading-relaxed pl-4">
+                <p className={`text-xs leading-relaxed pl-4 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   {womenDesc}
                 </p>
               </div>
 
               {/* Specific Recommendations for Men */}
-              <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-1">
+              <div className={`p-4 rounded-2xl border space-y-1 ${
+                isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
+              }`}>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
-                  <h4 className="text-xs font-bold text-[#1a1a1a]">{menTitle}</h4>
+                  <h4 className={`text-xs font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#1a1a1a]'}`}>{menTitle}</h4>
                 </div>
-                <p className="text-xs text-stone-600 leading-relaxed pl-4">
+                <p className={`text-xs leading-relaxed pl-4 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   {menDesc}
                 </p>
               </div>
 
               {/* Footwear Note */}
               {settings.dressCodeFootwearNote && (
-                <div className="flex items-start gap-2 p-3 bg-white rounded-xl border border-[#E5E2D0] text-xs text-stone-600">
-                  <Footprints className="w-4 h-4 text-[#7D8C7A] shrink-0 mt-0.5" />
+                <div className={`flex items-start gap-2 p-3 rounded-xl border text-xs ${
+                  isDark ? 'bg-[#1F211D] border-[#5A5A40] text-stone-300' : 'bg-white border-[#E5E2D0] text-stone-600'
+                }`}>
+                  <Footprints className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
                   <span>
-                    <strong className="text-[#1a1a1a] font-semibold">Calzado: </strong>
+                    <strong className={`font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-[#1a1a1a]'}`}>Calzado: </strong>
                     {settings.dressCodeFootwearNote}
                   </span>
                 </div>
@@ -1148,8 +1202,12 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
           </div>
 
           {/* Prohibited Colors Banner (Novia) */}
-          <div className="mt-8 pt-5 border-t border-[#E5E2D0] flex items-start sm:items-center gap-3 text-xs text-amber-900 bg-amber-50/70 p-4 rounded-2xl border border-amber-200/60">
-            <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5 sm:mt-0" />
+          <div className={`mt-8 pt-5 border-t flex items-start sm:items-center gap-3 text-xs p-4 rounded-2xl border ${
+            isDark
+              ? 'border-[#5A5A40]/50 bg-[#1F211D] text-amber-200/90 border-amber-900/40'
+              : 'border-[#E5E2D0] bg-amber-50/70 text-amber-900 border-amber-200/60'
+          }`}>
+            <AlertCircle className={`w-4 h-4 shrink-0 mt-0.5 sm:mt-0 ${isDark ? 'text-[#C5A059]' : 'text-amber-700'}`} />
             <p className="leading-relaxed">
               <strong className="font-bold">Colores Reservados: </strong>
               {prohibitedColors}

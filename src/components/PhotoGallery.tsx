@@ -124,9 +124,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activePhotoIndex, photos.length]);
 
-  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
-  const effectiveAlbumTitle =
-    externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Oficial en la Nube';
 
   const fetchPhotos = async () => {
     try {
@@ -196,24 +193,39 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     }
   };
 
+  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
+  const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
+  const isDark = cardStyle === 'dark-luxury';
+  const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className="w-14 h-14 rounded-2xl bg-[#5A5A40]/10 text-[#5A5A40] flex items-center justify-center mx-auto mb-3 border border-[#E5E2D0]">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
+          isDark
+            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
+            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
+        }`}>
           <AnimatedCameraLens className="w-10 h-10" />
         </div>
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#7D8C7A] block mb-2">
+        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+        }`}>
           Sesión de Fotos & Recuerdos
         </span>
-        <h2 className="text-3xl sm:text-5xl font-serif text-[#3D3D2C] font-normal">
+        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
+          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+        }`}>
           Nuestra Galería de Fotos
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
-          color={CARD_THEMES[cardStyle]?.accentColorHex}
+          color={activeTheme?.accentColorHex}
         />
-        <p className="text-sm text-stone-600 max-w-xl mx-auto mt-2 leading-relaxed font-serif italic">
+        <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${
+          isDark ? 'text-stone-300' : 'text-stone-600'
+        }`}>
           Una selección especial de nuestras fotografías favoritas y sesión preboda para compartir con ustedes.
         </p>
 
@@ -222,17 +234,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-6 max-w-lg mx-auto bg-amber-50/90 border border-amber-300/80 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs"
+            className={`mt-6 max-w-lg mx-auto rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs border ${
+              isDark
+                ? 'bg-[#282B25] border-[#C5A059]/40 text-stone-100'
+                : 'bg-amber-50/90 border-amber-300/80 text-amber-950'
+            }`}
           >
             <div className="flex items-center gap-3 text-left">
-              <div className="w-10 h-10 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center shrink-0">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#C5A059]/20 text-[#C5A059]' : 'bg-amber-200/80 text-amber-900'
+              }`}>
                 <Globe className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-serif font-bold text-amber-950 truncate">
+                <div className={`text-xs font-serif font-bold truncate ${isDark ? 'text-[#FDFCF0]' : 'text-amber-950'}`}>
                   {effectiveAlbumTitle}
                 </div>
-                <div className="text-[11px] text-amber-800/80 truncate">
+                <div className={`text-[11px] truncate ${isDark ? 'text-stone-400' : 'text-amber-800/80'}`}>
                   Álbum oficial en la nube para ver todas las fotos en alta resolución
                 </div>
               </div>
@@ -241,7 +259,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               href={effectiveAlbumUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-amber-800 hover:bg-amber-900 text-amber-50 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-xs transition-colors"
+              className={`px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-xs transition-colors ${
+                isDark
+                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
+                  : 'bg-amber-800 hover:bg-amber-900 text-amber-50'
+              }`}
             >
               <span>Abrir Álbum</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -252,17 +274,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       {/* Gallery Grid */}
       {loading ? (
-        <div className="py-20 text-center text-stone-400 text-sm flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-amber-700" />
+        <div className={`py-20 text-center text-sm flex items-center justify-center gap-2 ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
+          <Loader2 className={`w-4 h-4 animate-spin ${isDark ? 'text-[#C5A059]' : 'text-amber-700'}`} />
           <span>Cargando fotos de la galería...</span>
         </div>
       ) : photos.length === 0 ? (
-        <div className="py-16 text-center bg-white/70 backdrop-blur-sm border border-[#E5E2D0] rounded-3xl p-8 max-w-md mx-auto shadow-xs">
-          <Camera className="w-12 h-12 text-[#7D8C7A]/70 mx-auto mb-3" />
-          <h4 className="text-base font-serif font-semibold text-stone-800">
+        <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${
+          isDark
+            ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
+            : 'bg-white/70 border-[#E5E2D0] text-stone-800'
+        }`}>
+          <Camera className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
+          <h4 className={`text-base font-serif font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
             Galería en preparación
           </h4>
-          <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+          <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
             Las fotografías y momentos oficiales de la boda serán compartidos aquí por los novios.
           </p>
           {effectiveAlbumUrl && (
@@ -270,7 +296,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               href={effectiveAlbumUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#5A5A40] text-white text-xs font-medium shadow-xs hover:bg-[#484833] transition-colors"
+              className={`mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-medium shadow-xs transition-colors ${
+                isDark
+                  ? 'bg-[#C5A059] text-stone-950 font-bold hover:bg-[#d8b46d]'
+                  : 'bg-[#5A5A40] text-white hover:bg-[#484833]'
+              }`}
             >
               <span>Ver Álbum en la Nube</span>
               <ExternalLink className="w-3.5 h-3.5" />

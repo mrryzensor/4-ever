@@ -50,26 +50,39 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
     itineraryList = [];
   }
 
+  const isDark = settings.cardStyle === 'dark-luxury';
+  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="itinerario">
       {/* Itinerary Timeline Block */}
       {/* Section Title */}
       <div className="max-w-4xl mx-auto text-center mb-10 sm:mb-12">
-        <div className="w-14 h-14 rounded-2xl bg-[#5A5A40]/10 text-[#5A5A40] flex items-center justify-center mx-auto mb-3 border border-[#E5E2D0]">
-          <Clock className="w-7 h-7 shrink-0 text-[#5A5A40]" />
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
+          isDark
+            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
+            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
+        }`}>
+          <Clock className="w-7 h-7 shrink-0" />
         </div>
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#7D8C7A] block mb-2">
+        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+        }`}>
           Cronograma del Gran Día
         </span>
-        <h2 className="text-3xl sm:text-5xl font-serif text-[#3D3D2C] font-normal">
+        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
+          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+        }`}>
           Itinerario de la Celebración
         </h2>
         <StyleSpecificDivider
           cardStyle={settings.cardStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
-          color={CARD_THEMES[settings.cardStyle]?.accentColorHex}
+          color={activeTheme?.accentColorHex}
         />
-        <p className="text-sm text-stone-600 max-w-xl mx-auto mt-1">
+        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
+          isDark ? 'text-stone-300' : 'text-stone-600'
+        }`}>
           Te compartimos los horarios y momentos clave para que no te pierdas ningún detalle.
         </p>
       </div>
@@ -77,7 +90,11 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
       {/* Itinerary Timeline */}
       <div className="relative max-w-4xl mx-auto my-12">
         {/* Central timeline line */}
-        <div className="absolute left-6 sm:left-1/2 top-4 bottom-4 w-0.5 bg-gradient-to-b from-[#7D8C7A]/30 via-[#5A5A40]/40 to-[#7D8C7A]/30 sm:-translate-x-1/2" />
+        <div className={`absolute left-6 sm:left-1/2 top-4 bottom-4 w-0.5 sm:-translate-x-1/2 ${
+          isDark
+            ? 'bg-gradient-to-b from-[#C5A059]/30 via-[#C5A059]/50 to-[#C5A059]/30'
+            : 'bg-gradient-to-b from-[#7D8C7A]/30 via-[#5A5A40]/40 to-[#7D8C7A]/30'
+        }`} />
 
         <div className="space-y-10">
           {itineraryList.map((item, index) => {
@@ -101,14 +118,18 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                       cx="30"
                       cy="30"
                       r="27"
-                      stroke="#D4A373"
+                      stroke={isDark ? '#C5A059' : '#D4A373'}
                       strokeWidth="1.5"
                       strokeDasharray="4 4"
                       fill="none"
                       opacity="0.8"
                     />
                   </motion.svg>
-                  <div className="w-11 h-11 rounded-full aspect-square shrink-0 circle-node bg-[#5A5A40] text-[#FDFCF0] flex items-center justify-center shadow-lg border-2 border-white">
+                  <div className={`w-11 h-11 rounded-full aspect-square shrink-0 circle-node flex items-center justify-center shadow-lg border-2 ${
+                    isDark
+                      ? 'bg-[#C5A059] text-stone-950 border-[#1F211D]'
+                      : 'bg-[#5A5A40] text-[#FDFCF0] border-white'
+                  }`}>
                     {getIcon(item.icon)}
                   </div>
                 </div>
@@ -119,16 +140,28 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                     isEven ? 'sm:pl-12' : 'sm:pr-12'
                   } w-full`}
                 >
-                  <div className="p-6 rounded-3xl bg-white/90 backdrop-blur-sm border border-[#E5E2D0] shadow-sm hover:shadow-md transition-all">
+                  <div className={`p-6 rounded-3xl backdrop-blur-sm border shadow-sm hover:shadow-md transition-all ${
+                    isDark
+                      ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
+                      : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+                  }`}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-[#5A5A40] bg-[#FAF9F0] px-3 py-1 rounded-full border border-[#E5E2D0]">
+                      <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
+                        isDark
+                          ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
+                          : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
+                      }`}>
                         {item.time} hrs
                       </span>
                     </div>
-                    <h4 className="text-lg font-serif font-bold text-[#3D3D2C] mt-1">
+                    <h4 className={`text-lg font-serif font-bold mt-1 ${
+                      isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+                    }`}>
                       {item.title}
                     </h4>
-                    <p className="text-xs sm:text-sm text-stone-600 mt-1 leading-relaxed">
+                    <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
+                      isDark ? 'text-stone-300' : 'text-stone-600'
+                    }`}>
                       {item.desc}
                     </p>
                   </div>

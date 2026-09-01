@@ -167,24 +167,37 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     );
   };
 
+  const isDark = cardStyle === 'dark-luxury';
+  const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="videos">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className="w-14 h-14 rounded-2xl bg-[#5A5A40]/10 text-[#5A5A40] flex items-center justify-center mx-auto mb-3 border border-[#E5E2D0]">
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
+          isDark
+            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
+            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
+        }`}>
           <AnimatedFilmReel className="w-10 h-10" />
         </div>
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#7D8C7A] block mb-2">
+        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+        }`}>
           Momentos en Video
         </span>
-        <h2 className="text-3xl sm:text-5xl font-serif text-[#3D3D2C] font-normal">
+        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
+          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
+        }`}>
           Nuestra Historia en Video
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
-          color={CARD_THEMES[cardStyle]?.accentColorHex}
+          color={activeTheme?.accentColorHex}
         />
-        <p className="text-sm text-stone-600 max-w-xl mx-auto mt-1">
+        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
+          isDark ? 'text-stone-300' : 'text-stone-600'
+        }`}>
           Revive el Save The Date, la propuesta de matrimonio y los mensajes más emotivos de nuestros seres queridos.
         </p>
 
@@ -192,10 +205,14 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           <div className="mt-8 flex justify-center">
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-6 py-3 rounded-full bg-[#5A5A40] text-[#FDFCF0] text-xs font-serif font-semibold shadow-md hover:bg-[#484833] flex items-center gap-2 cursor-pointer transition-colors"
+              className={`px-6 py-3 rounded-full text-xs font-serif font-semibold shadow-md flex items-center gap-2 cursor-pointer transition-colors ${
+                isDark
+                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
+                  : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+              }`}
               id="btn-add-video"
             >
-              <Plus className="w-4 h-4 text-amber-300" />
+              <Plus className={`w-4 h-4 ${isDark ? 'text-stone-950' : 'text-amber-300'}`} />
               <span>Agregar Video (YouTube, Instagram, Facebook...)</span>
             </button>
           </div>
@@ -204,16 +221,20 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
       <div className="max-w-7xl mx-auto">
         {loading ? (
-          <div className="py-12 text-center text-stone-400 text-sm">
+          <div className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
             Cargando videos...
           </div>
         ) : videos.length === 0 ? (
-          <div className="py-12 text-center bg-white/60 backdrop-blur-sm border border-dashed border-[#E5E2D0] rounded-3xl p-8 max-w-md mx-auto">
-            <Film className="w-10 h-10 text-[#7D8C7A]/70 mx-auto mb-2" />
-            <h4 className="text-sm font-semibold text-stone-800">
+          <div className={`py-12 text-center backdrop-blur-sm border border-dashed rounded-3xl p-8 max-w-md mx-auto ${
+            isDark
+              ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
+              : 'bg-white/60 border-[#E5E2D0] text-stone-800'
+          }`}>
+            <Film className={`w-10 h-10 mx-auto mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
+            <h4 className={`text-sm font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
               No hay videos agregados todavía
             </h4>
-            <p className="text-xs text-stone-500 mt-1">
+            <p className={`text-xs mt-1 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
               Puedes agregar enlaces de YouTube, Instagram Reels o Facebook.
             </p>
           </div>
@@ -223,25 +244,33 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
               <motion.div
                 layout
                 key={video.id}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 border border-[#E5E2D0] shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className={`backdrop-blur-sm rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
+                  isDark
+                    ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
+                    : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+                }`}
               >
                 {renderEmbed(video)}
 
                 <div className="mt-4 flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF9F0] text-[#5A5A40] border border-[#E5E2D0]">
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full border ${
+                        isDark
+                          ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
+                          : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
+                      }`}>
                         {video.platform}
                       </span>
-                      <span className="text-[11px] text-stone-500">
+                      <span className={`text-[11px] ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                         Por: {video.authorName || 'Novios'}
                       </span>
                     </div>
-                    <h3 className="text-base font-serif font-bold text-[#3D3D2C] mt-1.5">
+                    <h3 className={`text-base font-serif font-bold mt-1.5 ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
                       {video.title}
                     </h3>
                     {video.description && (
-                      <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                      <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                         {video.description}
                       </p>
                     )}
