@@ -223,6 +223,45 @@ export async function autoMigrateDatabase() {
         `);
       }
 
+      // Ensure initial demo gallery photos exist if table is empty
+      const photosCheck = await client.query('SELECT id FROM gallery_photos LIMIT 1');
+      if (photosCheck.rows.length === 0) {
+        await client.query(`
+          INSERT INTO gallery_photos (wedding_id, url, caption, author_name, category, likes_count, approved)
+          VALUES 
+            (1, 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80', 'Nuestra sesión de compromiso al atardecer en el viñedo 🌅💍', 'Sofía & Ale (Novios)', 'preparativos', 24, true),
+            (1, 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=1000&q=80', 'Eligiendo los detalles de las flores y la decoración floral 🌸🌿', 'Sofía (Novia)', 'preparativos', 18, true),
+            (1, 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1000&q=80', 'Los novios compartiendo su primer baile bajo las luces mágicas ✨', 'Carlos Ruiz', 'fiesta', 31, true),
+            (1, 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=1000&q=80', 'El brindis y bendición de los papás con todos los invitados 🥂', 'Mariana Gómez', 'brindis', 15, true),
+            (1, 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1000&q=80', '¡Momento del ramo de novia y photobooth de la fiesta! 💐💃', 'Elena Morales', 'photobooth', 29, true)
+          ON CONFLICT DO NOTHING;
+        `);
+      }
+
+      // Ensure initial demo videos exist if table is empty
+      const videosCheck = await client.query('SELECT id FROM wedding_videos LIMIT 1');
+      if (videosCheck.rows.length === 0) {
+        await client.query(`
+          INSERT INTO wedding_videos (wedding_id, title, platform, video_url, embed_id, description, author_name)
+          VALUES 
+            (1, 'Nuestra Historia de Amor (Save the Date Oficial)', 'youtube', 'https://www.youtube.com/watch?v=kJQP7kiw5Fk', 'kJQP7kiw5Fk', 'Un resumen en video de cómo nos conocimos y el camino hacia nuestro gran día.', 'Sofía & Alejandro'),
+            (1, 'Reel de la pedida de mano sorpresa en la playa', 'instagram', 'https://www.instagram.com/reel/C3_sample', 'C3_sample', 'El momento mágico del "¡Sí, acepto!" en Cancún.', 'Alejandro Ruiz')
+          ON CONFLICT DO NOTHING;
+        `);
+      }
+
+      // Ensure initial demo guestbook wishes exist if table is empty
+      const wishesCheck = await client.query('SELECT id FROM guestbook_wishes LIMIT 1');
+      if (wishesCheck.rows.length === 0) {
+        await client.query(`
+          INSERT INTO guestbook_wishes (wedding_id, guest_name, relationship, message, is_highlighted)
+          VALUES 
+            (1, 'Abuela Carmen', 'Familia de la Novia', 'Mi querida Sofí y Alex, les deseo una vida llena de comprensión, paciencia y mucho amor. Siempre en mis oraciones.', true),
+            (1, 'David & Andrea', 'Padrinos de Velación', '¡Qué honor acompañarlos en esta nueva etapa! Les deseamos lo más hermoso hoy y siempre.', true)
+          ON CONFLICT DO NOTHING;
+        `);
+      }
+
       console.log('✅ PostgreSQL database [2date_db] and all schema tables are ready & up to date.');
       return true;
     } finally {
