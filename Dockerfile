@@ -3,47 +3,47 @@
 # Production Dockerfile for Coolify & Docker
 # ==========================================
 
-# 1. Base / Dependencies & Build Stage
-FROM node:20-alpine AS builder
+# 1. Base / Dependencies & Build Stage (Node 22 LTS Alpine)
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm & necessary build tools
-RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN apk add --no-cache libc6-compat
+# Install pnpm 9 and build tools
+RUN npm install -g pnpm@9
+RUN apk add --no-cache libc6-compat python3 make g++
 
-# Copy dependency definitions
+# Copy package definitions
 COPY package.json pnpm-lock.yaml ./
 
-# Install all dependencies (including devDependencies needed for build)
+# Ensure devDependencies are installed for building Vite & esbuild
+ENV NODE_ENV=development
 RUN pnpm install --frozen-lockfile
 
-# Copy source code and assets
+# Copy application source code and static assets
 COPY . .
 
-# Generate all public web assets & build production bundle
+# Generate all public web assets & compile production bundle
 RUN pnpm build
 
-# 2. Production Runner Stage
-FROM node:20-alpine AS runner
+# 2. Production Runner Stage (Node 22 LTS Alpine)
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV SQL_DB_NAME=2date_db
 
-# Create non-root user & directories
+# Install pnpm 9 in runner
+RUN npm install -g pnpm@9
+
+# Create non-root system user & directories
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser && \
     mkdir -p /app/uploads && \
     chown -R appuser:nodejs /app/uploads
 
-# Install pnpm for production dependencies
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Copy package definitions and install only production dependencies
+# Install only production dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 
@@ -53,7 +53,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/Logo.webp ./Logo.webp
 COPY --from=builder /app/Logo.png ./Logo.png
 
-# Ensure uploads directory is writable
+# Ensure uploads directory is owned by appuser
 RUN chown -R appuser:nodejs /app
 
 USER appuser
@@ -61,7 +61,7 @@ USER appuser
 # Expose web server port
 EXPOSE 3000
 
-# Persistent volume for audio, user covers and guest photo uploads
+# Persistent volume for audio, covers, and guest uploads
 VOLUME ["/app/uploads"]
 
 # Health check endpoint
