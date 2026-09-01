@@ -253,19 +253,25 @@ export default function App() {
     }
   }, [settings?.cardStyle]);
 
-  // Update dynamic browser tab title & client meta description
+  // Update dynamic browser tab title (titlebar) & client meta description
   useEffect(() => {
     if (typeof document === 'undefined') return;
+    const coupleNames = settings?.coupleNames?.trim() || 'Sofía & Alejandro';
+
     if (currentView === 'landing') {
       document.title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
-    } else if (currentView === 'admin' || currentView === 'dashboard') {
-      document.title = `Panel de Administración — Boda de ${settings?.coupleNames || 'los Novios'}`;
+    } else if (currentView === 'ceo') {
+      document.title = 'Supervisión Centralizada Master — Atelier CEO';
+    } else if (currentView === 'admin') {
+      document.title = `Atelier de Diseño & Configuración — Boda de ${coupleNames}`;
+    } else if (currentView === 'dashboard') {
+      document.title = `Mis Bodas & Eventos — Boda de ${coupleNames}`;
     } else {
-      const coupleNames = settings?.coupleNames || 'Sofía & Alejandro';
+      // Invitation / Live View / Demo View
       if (activeGuest?.fullName) {
         document.title = `💌 ¡${activeGuest.fullName}, invitación a la Boda de ${coupleNames}!`;
       } else {
-        document.title = `💍 Boda de ${coupleNames} — Invitación Oficial`;
+        document.title = `💍 Boda de ${coupleNames} — Invitación de Boda`;
       }
     }
   }, [currentView, settings?.coupleNames, activeGuest?.fullName]);
