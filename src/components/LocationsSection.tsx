@@ -131,40 +131,40 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
           Te facilitamos los mapas interactivos y rutas guiadas por Google Maps para acompañarnos puntualmente en cada momento.
         </p>
 
-        {/* Quick Venue Cards Preview (when collapsed) */}
+        {/* Quick Venue Cards Preview (when collapsed) - Larger & Premium Styling */}
         {!isExpanded && (
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto text-left">
-            <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
-              isDark ? 'bg-[#282B25]/90 border-[#5A5A40]' : 'bg-white/90 border-[#E5E2D0]'
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+            <div className={`p-4 sm:p-5 rounded-3xl border shadow-sm flex items-center gap-3.5 transition-all hover:scale-[1.02] ${
+              isDark ? 'bg-[#282B25] border-[#5A5A40]/80' : 'bg-white/95 border-[#E5E2D0]'
             }`}>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                isDark ? 'bg-[#1F211D] text-[#C5A059]' : 'bg-[#FAF9F0] text-[#5A5A40]'
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                isDark ? 'bg-[#1F211D] border-[#5A5A40] text-[#C5A059]' : 'bg-[#FAF9F0] border-[#E5E2D0] text-[#5A5A40]'
               }`}>
-                <MapPin className="w-4 h-4" />
+                <MapPin className="w-6 h-6" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-[#7D8C7A] block">
+                <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
                   Ceremonia • {settings.ceremonyTime || '17:00'} hrs
                 </span>
-                <p className={`text-xs font-serif font-bold truncate ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
+                <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
                   {settings.ceremonyVenue || 'Parroquia Principal'}
                 </p>
               </div>
             </div>
 
-            <div className={`p-3.5 rounded-2xl border flex items-center gap-3 ${
-              isDark ? 'bg-[#282B25]/90 border-[#5A5A40]' : 'bg-white/90 border-[#E5E2D0]'
+            <div className={`p-4 sm:p-5 rounded-3xl border shadow-sm flex items-center gap-3.5 transition-all hover:scale-[1.02] ${
+              isDark ? 'bg-[#282B25] border-[#5A5A40]/80' : 'bg-white/95 border-[#E5E2D0]'
             }`}>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                isDark ? 'bg-[#1F211D] text-[#C5A059]' : 'bg-[#FAF9F0] text-[#5A5A40]'
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                isDark ? 'bg-[#1F211D] border-[#5A5A40] text-[#C5A059]' : 'bg-[#FAF9F0] border-[#E5E2D0] text-[#5A5A40]'
               }`}>
-                <MapPin className="w-4 h-4" />
+                <MapPin className="w-6 h-6" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-[#7D8C7A] block">
+                <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
                   Recepción • {settings.receptionTime || '19:30'} hrs
                 </span>
-                <p className={`text-xs font-serif font-bold truncate ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
+                <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
                   {settings.receptionVenue || 'Hacienda / Salón'}
                 </p>
               </div>
@@ -173,18 +173,18 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         )}
 
         {/* Toggle Button for Maps and Full Details */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
             }`}
           >
             <span>{isExpanded ? 'Ocultar Mapas y Rutas' : 'Ver Mapas y Cómo Llegar'}</span>
-            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+            <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
               ▼
             </span>
           </button>

@@ -944,17 +944,17 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             </p>
           )}
 
-          {/* Color palette pills summary (when collapsed) */}
+          {/* Color palette pills summary (when collapsed) - Larger & Clearer */}
           {!isExpanded && paletteList.length > 0 && (
-            <div className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto">
-              <span className={`text-xs font-mono ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3 max-w-lg mx-auto">
+              <span className={`text-sm font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                 Paleta sugerida:
               </span>
-              <div className="flex items-center gap-1.5 p-1.5 rounded-full border bg-black/10 backdrop-blur-xs">
+              <div className="flex items-center gap-2 p-2 rounded-full border bg-black/10 backdrop-blur-xs shadow-xs">
                 {paletteList.map((hex, idx) => (
                   <span
                     key={idx}
-                    className="w-5 h-5 rounded-full shadow-xs border border-white/40"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-md border-2 border-white/70 hover:scale-110 transition-transform"
                     style={{ backgroundColor: hex }}
                     title={hex}
                   />
@@ -964,18 +964,18 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
           )}
 
           {/* Inline Toggle Button for Simulator and Full Details */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-7 flex justify-center">
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+              className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
                 isDark
                   ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                   : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
               }`}
             >
               <span>{isExpanded ? 'Ocultar Simulador y Guía' : 'Ver Simulador de Atuendos y Guía'}</span>
-              <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+              <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
                 ▼
               </span>
             </button>

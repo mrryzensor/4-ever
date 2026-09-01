@@ -90,28 +90,28 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
           Te compartimos los horarios y momentos clave para que no te pierdas ningún detalle.
         </p>
 
-        {/* Inline Quick Summary Chips when collapsed */}
+        {/* Inline Quick Summary Chips when collapsed - Larger & Premium Styling */}
         {!isExpanded && itineraryList.length > 0 && (
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto">
             {previewItems.map((item, idx) => (
               <span
                 key={idx}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-xs transition-transform hover:scale-105 ${
+                className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
                   isDark
-                    ? 'bg-[#282B25] border-[#5A5A40] text-stone-200'
-                    : 'bg-white/85 border-[#E5E2D0] text-[#3D3D2C]'
+                    ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40'
+                    : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
                 }`}
               >
-                <span className={`font-mono font-bold text-[11px] ${isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'}`}>
-                  {item.time}
+                <span className={`font-mono font-bold text-sm sm:text-base ${isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'}`}>
+                  {item.time} hrs
                 </span>
-                <span className="text-stone-400">•</span>
-                <span>{item.title}</span>
+                <span className="text-stone-400 font-sans">•</span>
+                <span className="tracking-wide">{item.title}</span>
               </span>
             ))}
             {hasMore && (
-              <span className={`text-xs px-2.5 py-1 rounded-full border border-dashed ${
-                isDark ? 'border-[#5A5A40] text-stone-400' : 'border-[#E5E2D0] text-stone-500'
+              <span className={`text-xs sm:text-sm font-serif font-medium px-4 py-2 rounded-full border border-dashed ${
+                isDark ? 'border-[#5A5A40] text-stone-300 bg-stone-900/40' : 'border-[#E5E2D0] text-stone-600 bg-[#FAF9F0]/80'
               }`}>
                 +{itineraryList.length - 3} momentos más
               </span>
@@ -120,18 +120,18 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
         )}
 
         {/* Toggle Button for More Details */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
             }`}
           >
             <span>{isExpanded ? 'Ver Menos Detalles' : 'Ver Itinerario Completo'}</span>
-            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+            <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
               ▼
             </span>
           </button>

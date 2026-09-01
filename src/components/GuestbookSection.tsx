@@ -116,30 +116,32 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
           Déjanos tus mejores deseos y bendiciones para esta nueva aventura que comenzamos juntos.
         </p>
 
-        {/* Wishes count and prompt when collapsed */}
+        {/* Wishes count and prompt when collapsed - Larger & Clearer */}
         {!isExpanded && (
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <span className={`text-xs font-serif ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span className={`text-sm sm:text-base font-serif italic px-5 py-2.5 rounded-full border shadow-xs ${
+              isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-stone-700'
+            }`}>
               {wishes.length > 0
-                ? `✨ ${wishes.length} ${wishes.length === 1 ? 'mensaje publicado' : 'mensajes publicados'} de familiares y amigos`
-                : 'Sé el primero en dejar una dedicatoria a los novios'}
+                ? `✨ ${wishes.length} ${wishes.length === 1 ? 'mensaje de cariño publicado' : 'mensajes de cariño publicados'} de familiares y amigos`
+                : '✨ Sé el primero en dejar una dedicatoria a los novios'}
             </span>
           </div>
         )}
 
         {/* Inline Toggle Button */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer hover:scale-105 active:scale-95 ${
+            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
             }`}
           >
             <span>{isExpanded ? 'Ocultar Libro de Firmas' : 'Ver y Dejar Felicitaciones'}</span>
-            <span className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+            <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
               ▼
             </span>
           </button>
