@@ -864,6 +864,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
 
   const activePaletteColor = paletteList[selectedPaletteIndex] || paletteList[0];
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const isDark = settings.cardStyle === 'dark-luxury';
 
   // Identify general style to adjust default recommendation texts
   const dressCodeTitle = settings.dressCode || 'Formal Riguroso';

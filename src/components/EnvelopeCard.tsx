@@ -382,30 +382,30 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       {/* 2. INVITATION DETAILS SECTION - Seamless Continuous Page */}
       <section
         id="detalles-boda"
-        className="relative z-10 w-full pt-8 sm:pt-10 md:pt-12 pb-10 sm:pb-14 px-4 sm:px-8 md:px-12 lg:px-16"
+        className="relative z-10 w-full pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-10 sm:pb-14 px-4 sm:px-8 md:px-12 lg:px-16"
         style={{ backgroundColor: theme.bgHex }}
       >
         {/* FIXDATE-STYLE ANIMATED WAVE TRANSITION DIVIDER (Half in Hero, Half in Details Section) */}
-        <div className="absolute left-0 right-0 -top-16 sm:-top-22 md:-top-28 lg:-top-32 pointer-events-none w-full leading-none overflow-hidden z-20">
+        <div className="absolute left-0 right-0 -top-16 sm:-top-22 md:-top-28 lg:-top-32 pointer-events-none w-full leading-none overflow-hidden z-0">
           <FixDateAnimatedTransitionDivider
             fillColor={theme.bgHex}
             accentColor={theme.accentColorHex}
             cardStyle={settings.cardStyle}
           />
         </div>
-        <div className="max-w-6xl mx-auto text-center">
+        <div className="relative z-10 max-w-6xl mx-auto text-center overflow-visible">
           
           {/* Section Header: Story & Quote Banner */}
-          <div className="mb-6 sm:mb-8 flex flex-col items-center">
+          <div className="mb-6 sm:mb-8 flex flex-col items-center overflow-visible">
             {/* Large Animated Wedding Rings SVG - Permanently United & Intense Shimmer */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-3 sm:mb-4 overflow-visible"
+              className="mb-4 sm:mb-5 overflow-visible"
             >
-              <AnimatedWeddingRings className="w-28 h-16 sm:w-36 sm:h-20 md:w-44 md:h-24 mx-auto" />
+              <AnimatedWeddingRings className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 mx-auto" />
             </motion.div>
 
             <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-4 ${theme.accentClass}`}>

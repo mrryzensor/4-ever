@@ -167,7 +167,7 @@ export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string
 }) => {
   return (
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
-      <svg viewBox="0 0 160 85" className="w-full h-full overflow-visible">
+      <svg viewBox="-10 -8 180 100" className="w-full h-full overflow-visible">
         <defs>
           <linearGradient id="goldRing1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFF7C2" />
