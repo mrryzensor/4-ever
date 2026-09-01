@@ -736,6 +736,7 @@ export default function App() {
       {isDemoMode && (
         <DemoStyleBar
           currentStyle={settings.cardStyle}
+          coupleNames={settings.coupleNames}
           onSelectStyle={(newStyle) => {
             setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
             toast.info(`Diseño cambiado a ${CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo Actualizado');

@@ -408,10 +408,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <AnimatedWeddingRings className="w-32 h-20 sm:w-40 sm:h-24 md:w-48 md:h-28 mx-auto" />
             </motion.div>
 
-            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-4 ${theme.accentClass}`}>
+            <div className={`inline-flex items-center gap-2 px-5 py-2 rounded-full border mb-4 shadow-2xs ${theme.accentClass}`}>
               <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-[11px] uppercase tracking-[0.3em] font-semibold">
-                Nuestra Boda
+              <span className="text-xs uppercase tracking-[0.25em] font-semibold font-serif">
+                Boda de {settings.coupleNames || 'Sofía & Alejandro'}
               </span>
             </div>
 

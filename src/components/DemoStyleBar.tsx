@@ -14,6 +14,7 @@ import { CardStyleId } from '../types.ts';
 
 interface DemoStyleBarProps {
   currentStyle: CardStyleId;
+  coupleNames?: string;
   onSelectStyle: (style: CardStyleId) => void;
   onChooseDesign: (style: CardStyleId) => void;
   onOpenLogin?: () => void;
@@ -89,6 +90,7 @@ const STYLE_OPTIONS: StyleOption[] = [
 
 export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
   currentStyle,
+  coupleNames = 'Sofía & Alejandro',
   onSelectStyle,
   onChooseDesign,
   onOpenLogin,
@@ -111,13 +113,13 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
             <span>Inicio</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 font-mono text-[10px] uppercase font-bold tracking-wider flex items-center gap-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 font-mono text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 shrink-0">
               <Sparkles className="w-3 h-3 animate-pulse" />
-              Vista Demostración
+              Boda de {coupleNames}
             </span>
-            <span className="text-xs text-stone-400 font-serif italic hidden sm:inline">
-              (Solo lectura)
+            <span className="text-xs text-stone-400 font-serif italic hidden sm:inline truncate">
+              (Modo Demostración)
             </span>
           </div>
 
