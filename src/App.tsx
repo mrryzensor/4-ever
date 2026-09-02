@@ -890,50 +890,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Final Romantic Sign-off & RSVP Banner (FixDate style - No platform footers) */}
-      <section className="py-20 px-4 text-center bg-transparent">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="w-16 h-16 rounded-2xl bg-[#5A5A40]/10 text-[#5A5A40] border border-[#E5E2D0] flex items-center justify-center mx-auto mb-3">
-            <AnimatedWeddingRings className="w-12 h-12" />
-          </div>
-
-          <span className="text-xs uppercase tracking-[0.3em] text-[#7D8C7A] font-semibold block">
-            ¡Nos vemos muy pronto!
-          </span>
-
-          <h3 className="text-4xl sm:text-5xl font-serif italic text-[#3D3D2C]">
-            {settings.coupleNames}
-          </h3>
-
-          <AnimatedFloralDivider className="w-48 sm:w-60 h-8 mx-auto" color="#7D8C7A" />
-
-          <p className="text-xs uppercase tracking-[0.25em] text-[#7D8C7A] font-semibold font-mono">
-            {settings.eventDate} • {settings.receptionVenue}
-          </p>
-
-          <p className="text-sm text-stone-600 max-w-md mx-auto italic font-serif leading-relaxed">
-            "Gracias por ser parte de nuestra historia y acompañarnos en el día más feliz de nuestras vidas."
-          </p>
-
-          <div className="pt-4">
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => {
-                const el = document.getElementById('rsvp');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
-                }
-              }}
-              className="px-8 py-3.5 rounded-full bg-stone-900 text-stone-100 hover:bg-stone-800 font-serif font-semibold text-sm shadow-xl cursor-pointer inline-flex items-center gap-2"
-            >
-              <Heart className="w-4 h-4 fill-current text-rose-300 shrink-0" />
-              <span>Confirmar Asistencia (RSVP)</span>
-            </motion.button>
-          </div>
-        </div>
-      </section>
-
       {/* Auth Modal for Choosing Design or Logging in */}
       <AuthModal
         isOpen={isAuthModalOpen}
