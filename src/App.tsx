@@ -864,8 +864,8 @@ export default function App() {
           }}
         />
 
-        {/* Guestbook & Wishes (Opcional) */}
-        {settings.showGuestbook !== false && (
+        {/* Guestbook & Wishes (Opcional - por defecto desactivado en modo simple) */}
+        {settings.showGuestbook === true && (
           <GuestbookSection
             weddingId={settings.id}
             defaultAuthor={activeGuest?.fullName}

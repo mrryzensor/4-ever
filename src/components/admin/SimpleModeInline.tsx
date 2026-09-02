@@ -22,6 +22,10 @@ import {
   ImageIcon,
   Palette,
   Clipboard,
+  Video,
+  Film,
+  BookOpen,
+  MessageSquare,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../types.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../lib/mediaOptimizer.ts';
@@ -65,7 +69,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   settingsSavedToast,
 }) => {
   const [activeStep, setActiveStep] = useState<
-    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'confirmacion'
+    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'confirmacion'
   >('datos');
 
   // Photo optimization state for Cover Photo
@@ -93,6 +97,19 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     optimizedBytes: number;
     savedPercent: number;
   } | null>(null);
+
+  // Video Section State for Novios
+  const [videoList, setVideoList] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [newVideoDesc, setNewVideoDesc] = useState('');
+  const [newVideoPlatform, setNewVideoPlatform] = useState<'youtube' | 'vimeo' | 'tiktok' | 'direct'>('youtube');
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
+
+  // Guestbook Wishes State for Novios
+  const [wishesList, setWishesList] = useState<any[]>([]);
+  const [loadingWishes, setLoadingWishes] = useState(false);
 
   // Parse itinerary items
   const itineraryItems: { time: string; title: string; desc: string }[] = (() => {
@@ -145,11 +162,93 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     }
   };
 
+  const loadCoupleVideos = async () => {
+    try {
+      setLoadingVideos(true);
+      const res = await fetch(`/api/videos?weddingId=${settings.id || 1}`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setVideoList(data);
+      }
+    } catch (err) {
+      console.error('Error fetching videos:', err);
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
+  const loadCoupleWishes = async () => {
+    try {
+      setLoadingWishes(true);
+      const res = await fetch(`/api/wishes?weddingId=${settings.id || 1}`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setWishesList(data);
+      }
+    } catch (err) {
+      console.error('Error fetching wishes:', err);
+    } finally {
+      setLoadingWishes(false);
+    }
+  };
+
   useEffect(() => {
     if (activeStep === 'galeria' || activeStep === 'pareja') {
       loadCoupleGalleryPhotos();
+    } else if (activeStep === 'video') {
+      loadCoupleVideos();
+    } else if (activeStep === 'libro') {
+      loadCoupleWishes();
     }
   }, [activeStep, settings.id]);
+
+  const handleAddVideoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVideoTitle.trim() || !newVideoUrl.trim()) return;
+    try {
+      setIsAddingVideo(true);
+      const res = await fetch('/api/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          weddingId: settings.id || 1,
+          title: newVideoTitle.trim(),
+          platform: newVideoPlatform,
+          videoUrl: newVideoUrl.trim(),
+          description: newVideoDesc.trim() || undefined,
+          authorName: settings.coupleNames || 'Los Novios',
+        }),
+      });
+      if (res.ok) {
+        setNewVideoTitle('');
+        setNewVideoUrl('');
+        setNewVideoDesc('');
+        loadCoupleVideos();
+      }
+    } catch (err) {
+      console.error('Error adding video:', err);
+    } finally {
+      setIsAddingVideo(false);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: number) => {
+    try {
+      setVideoList((prev) => prev.filter((v) => v.id !== videoId));
+      await fetch(`/api/videos/${videoId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Error deleting video:', err);
+    }
+  };
+
+  const handleDeleteWish = async (wishId: number) => {
+    try {
+      setWishesList((prev) => prev.filter((w) => w.id !== wishId));
+      await fetch(`/api/wishes/${wishId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.error('Error deleting wish:', err);
+    }
+  };
 
   // Handle Cover Photo Upload with client-side AVIF 95% compression
   const processCoverFile = async (file: File) => {
@@ -419,13 +518,15 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   };
 
   const stepsList = [
-    { id: 'datos', label: '1. Datos & Foto', icon: Heart, desc: 'Nombres, fecha y portada' },
-    { id: 'llegar', label: '2. Cómo Llegar', icon: MapPin, desc: 'Ceremonia y recepción' },
-    { id: 'itinerario', label: '3. Itinerario', icon: Clock, desc: 'Cronograma del evento' },
-    { id: 'vestimenta', label: '4. Vestimenta', icon: Shirt, desc: 'Código de vestimenta' },
-    { id: 'regalos', label: '5. Regalos (Perú)', icon: Gift, desc: 'BCP, Interbank, Yape/Plin' },
-    { id: 'galeria', label: '6. Galería de Fotos', icon: Camera, desc: 'Subir fotos de los novios' },
-    { id: 'confirmacion', label: '7. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp' },
+    { id: 'datos', label: '1. Datos & Foto', icon: Heart, desc: 'Nombres, fecha y portada', isOptional: false },
+    { id: 'llegar', label: '2. Cómo Llegar', icon: MapPin, desc: 'Ceremonia y recepción', isOptional: false },
+    { id: 'itinerario', label: '3. Itinerario', icon: Clock, desc: 'Cronograma del evento', isOptional: false },
+    { id: 'vestimenta', label: '4. Vestimenta', icon: Shirt, desc: 'Código de vestimenta', isOptional: false },
+    { id: 'regalos', label: '5. Regalos (Perú)', icon: Gift, desc: 'BCP, Interbank, Yape/Plin', isOptional: false },
+    { id: 'galeria', label: '6. Galería de Fotos', icon: Camera, desc: 'Subir fotos de los novios', isOptional: false },
+    { id: 'video', label: '7. Video de Historia', icon: Film, desc: 'YouTube / Reels / TikTok', isOptional: true, isEnabled: settings.showVideoMemories === true },
+    { id: 'libro', label: '8. Libro de Firmas', icon: BookOpen, desc: 'Deseos y dedicatorias', isOptional: true, isEnabled: settings.showGuestbook === true },
+    { id: 'confirmacion', label: '9. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', isOptional: false },
   ];
 
   return (
@@ -446,13 +547,13 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </span>
             </div>
             <p className="text-[11px] sm:text-xs text-stone-600 mt-1 leading-relaxed break-words">
-              Ingresa tus datos, sube tu foto con compresión automática en <strong className="text-stone-800 font-semibold">AVIF al 95%</strong> y activa las secciones esenciales de tu boda.
+              Ingresa tus datos, sube tu foto con compresión automática en <strong className="text-stone-800 font-semibold">AVIF al 95%</strong> y activa opcionalmente video o libro de firmas.
             </p>
           </div>
         </div>
 
         {/* Interactive Step Pills */}
-        <div className="mt-4 pt-3.5 border-t border-[#E5E2D0]/80 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-1.5 w-full min-w-0">
+        <div className="mt-4 pt-3.5 border-t border-[#E5E2D0]/80 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-1.5 w-full min-w-0">
           {stepsList.map((step) => {
             const Icon = step.icon;
             const isActive = activeStep === step.id;
@@ -461,15 +562,28 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step.id as any)}
-                className={`p-2 rounded-xl text-left transition-all cursor-pointer select-none flex flex-col gap-0.5 min-w-0 overflow-hidden ${
+                className={`p-2 rounded-xl text-left transition-all cursor-pointer select-none flex flex-col gap-0.5 min-w-0 overflow-hidden relative ${
                   isActive
-                    ? 'bg-[#5A5A40] text-white shadow-xs'
+                    ? 'bg-[#5A5A40] text-white shadow-xs ring-2 ring-[#5A5A40]/30'
                     : 'bg-white/70 hover:bg-white text-stone-700 border border-[#E5E2D0]/60'
                 }`}
               >
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-[#7D8C7A]'}`} />
-                  <span className="text-[11px] sm:text-xs font-bold truncate block">{step.label}</span>
+                <div className="flex items-center justify-between gap-1 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-[#7D8C7A]'}`} />
+                    <span className="text-[11px] sm:text-xs font-bold truncate block">{step.label}</span>
+                  </div>
+                  {step.isOptional && (
+                    <span
+                      className={`text-[8px] px-1 py-0.2 rounded-full font-bold uppercase shrink-0 ${
+                        step.isEnabled
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-stone-100 text-stone-500 border border-stone-200'
+                      }`}
+                    >
+                      {step.isEnabled ? 'ON' : 'Opc.'}
+                    </span>
+                  )}
                 </div>
                 <span className={`text-[9px] sm:text-[10px] truncate block ${isActive ? 'text-white/80' : 'text-stone-400'}`}>
                   {step.desc}
@@ -1455,6 +1569,263 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* STEP: VIDEO DE HISTORIA (OPCIONAL) */}
+        {activeStep === 'video' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="border-b border-[#E5E2D0] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-serif text-base font-bold text-stone-900">
+                    Nuestra Historia en Video
+                  </h4>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                    Opcional
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Comparte el video de su propuesta, save the date, o reel de Instagram / YouTube.
+                </p>
+              </div>
+
+              {/* Toggle Switch */}
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none bg-[#FAF9F0] border border-[#E5E2D0] px-3.5 py-1.5 rounded-2xl">
+                <input
+                  type="checkbox"
+                  checked={settings.showVideoMemories === true}
+                  onChange={(e) => onChange({ showVideoMemories: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40] relative"></div>
+                <span className="text-xs font-bold text-stone-800">
+                  {settings.showVideoMemories === true ? 'Sección Activada' : 'Sección Desactivada'}
+                </span>
+              </label>
+            </div>
+
+            {settings.showVideoMemories !== true ? (
+              <div className="p-8 border border-dashed border-[#E5E2D0] rounded-2xl text-center bg-[#FAF9F0] space-y-2">
+                <Film className="w-8 h-8 text-stone-400 mx-auto" />
+                <p className="text-xs text-stone-700 font-bold">
+                  La sección de video está actualmente desactivada en la invitación.
+                </p>
+                <p className="text-[11px] text-stone-500 max-w-md mx-auto">
+                  Si deseas mostrar un video de su historia (YouTube, TikTok, Instagram Reel o Vimeo), actívala con el botón superior.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Form to add video */}
+                <form onSubmit={handleAddVideoSubmit} className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
+                  <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plus className="w-4 h-4 text-[#5A5A40]" />
+                    Agregar Video a la Invitación
+                  </h5>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Título del Video
+                      </label>
+                      <input
+                        type="text"
+                        value={newVideoTitle}
+                        onChange={(e) => setNewVideoTitle(e.target.value)}
+                        placeholder="Ej. Nuestra Propuesta en Cusco / Save The Date"
+                        className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Plataforma
+                      </label>
+                      <select
+                        value={newVideoPlatform}
+                        onChange={(e) => setNewVideoPlatform(e.target.value as any)}
+                        className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800"
+                      >
+                        <option value="youtube">YouTube</option>
+                        <option value="vimeo">Vimeo</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="direct">Enlace Directo / MP4</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Enlace del Video (URL de YouTube / Vimeo / TikTok)
+                    </label>
+                    <input
+                      type="url"
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                      Descripción o Dedicatoria (Opcional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newVideoDesc}
+                      onChange={(e) => setNewVideoDesc(e.target.value)}
+                      placeholder="Un vistazo de nuestro camino juntos..."
+                      className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800"
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isAddingVideo || !newVideoTitle.trim() || !newVideoUrl.trim()}
+                      className="px-5 py-2 rounded-xl bg-[#5A5A40] hover:bg-[#484833] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      {isAddingVideo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                      <span>Agregar Video</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Videos list */}
+                <div className="space-y-3">
+                  <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Video className="w-3.5 h-3.5 text-[#5A5A40]" />
+                    Videos Publicados ({videoList.length})
+                  </span>
+
+                  {loadingVideos ? (
+                    <div className="p-4 text-center text-xs text-stone-400 flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-700" /> Cargando videos...
+                    </div>
+                  ) : videoList.length === 0 ? (
+                    <div className="p-6 border border-dashed border-[#E5E2D0] rounded-2xl text-center bg-[#FAF9F0]">
+                      <p className="text-xs text-stone-600">Aún no has agregado videos.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {videoList.map((vid) => (
+                        <div key={vid.id} className="p-3.5 bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h6 className="text-xs font-bold text-stone-900 truncate">{vid.title}</h6>
+                            <p className="text-[10px] text-stone-500 font-mono truncate">{vid.videoUrl}</p>
+                            {vid.description && <p className="text-[11px] text-stone-600 mt-1 line-clamp-2">{vid.description}</p>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVideo(vid.id)}
+                            className="p-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
+                            title="Eliminar video"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* STEP: LIBRO DE FIRMAS & DESEOS (OPCIONAL) */}
+        {activeStep === 'libro' && (
+          <div className="space-y-6 animate-fadeIn">
+            <div className="border-b border-[#E5E2D0] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-serif text-base font-bold text-stone-900">
+                    Libro de Firmas Virtual
+                  </h4>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                    Opcional
+                  </span>
+                </div>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Permite a tus invitados dejar dedicatorias y felicitaciones con buenos deseos en su invitación.
+                </p>
+              </div>
+
+              {/* Toggle Switch */}
+              <label className="inline-flex items-center gap-2 cursor-pointer select-none bg-[#FAF9F0] border border-[#E5E2D0] px-3.5 py-1.5 rounded-2xl">
+                <input
+                  type="checkbox"
+                  checked={settings.showGuestbook === true}
+                  onChange={(e) => onChange({ showGuestbook: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40] relative"></div>
+                <span className="text-xs font-bold text-stone-800">
+                  {settings.showGuestbook === true ? 'Sección Activada' : 'Sección Desactivada'}
+                </span>
+              </label>
+            </div>
+
+            {settings.showGuestbook !== true ? (
+              <div className="p-8 border border-dashed border-[#E5E2D0] rounded-2xl text-center bg-[#FAF9F0] space-y-2">
+                <BookOpen className="w-8 h-8 text-stone-400 mx-auto" />
+                <p className="text-xs text-stone-700 font-bold">
+                  El libro de firmas está actualmente desactivado en la invitación.
+                </p>
+                <p className="text-[11px] text-stone-500 max-w-md mx-auto">
+                  Si deseas que los invitados escriban mensajes y felicitaciones que aparezcan en un mural de deseos, actívalo arriba.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-[#5A5A40]" />
+                    Deseos y Mensajes de Invitados ({wishesList.length})
+                  </span>
+                  {loadingWishes && (
+                    <span className="text-[11px] text-stone-400 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin text-amber-700" /> Cargando...
+                    </span>
+                  )}
+                </div>
+
+                {wishesList.length === 0 ? (
+                  <div className="p-8 border border-dashed border-[#E5E2D0] rounded-2xl text-center bg-[#FAF9F0]">
+                    <p className="text-xs text-stone-600 font-medium">Aún no hay dedicatorias escritas.</p>
+                    <p className="text-[11px] text-stone-400 mt-0.5">
+                      Cuando tus invitados firmen el libro desde la invitación, podrás verlos y gestionarlos aquí.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {wishesList.map((wish) => (
+                      <div key={wish.id} className="p-3.5 bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl space-y-2 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-stone-900 truncate">{wish.guestName}</span>
+                            <span className="text-[9px] text-stone-400">{wish.relationship || 'Invitado'}</span>
+                          </div>
+                          <p className="text-xs text-stone-600 italic mt-1 line-clamp-3">"{wish.message}"</p>
+                        </div>
+                        <div className="flex justify-end pt-2 border-t border-[#E5E2D0]/60">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWish(wish.id)}
+                            className="p-1 text-rose-600 hover:text-rose-800 text-xs font-medium flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" /> Eliminar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
