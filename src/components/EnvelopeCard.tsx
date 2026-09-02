@@ -411,13 +411,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('ceremony')}
-              className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
-                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.accentClass}`}>
+                  <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChurchBells className="w-9 h-9" color={theme.accentColorHex} />
                   </div>
                   <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
@@ -517,16 +517,16 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('reception')}
-              className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
-                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50 group-hover:scale-105 transition-transform">
+                  <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChampagneGlasses className="w-9 h-9" />
                   </div>
-                  <span className="text-xs sm:text-sm font-mono font-bold text-amber-900 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-200/70">
+                  <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
                     {settings.receptionTime || '19:30'} hrs
                   </span>
                 </div>
@@ -621,13 +621,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 onClick={() => toggleSection('itinerary')}
-                className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
-                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.accentClass}`}>
+                    <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <Clock className="w-6 h-6 shrink-0" />
                     </div>
                     <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
@@ -761,16 +761,16 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry !== false && (
               <div
                 onClick={() => toggleSection('gifts')}
-                className={`rounded-3xl p-6 sm:p-8 transition-all flex flex-col justify-between border shadow-sm hover:shadow-xl cursor-pointer select-none group ${theme.cardBgClass} ${
-                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/50 group-hover:scale-105 transition-transform">
+                    <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <AnimatedGiftBox className="w-8 h-8" />
                     </div>
-                    <span className="text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900">
+                    <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
                       Mesa de Regalos
                     </span>
                   </div>
@@ -917,11 +917,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               onClick={() => toggleSection('dresscode')}
-              className={`rounded-3xl p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border shadow-md hover:shadow-xl cursor-pointer select-none transition-all group ${theme.cardBgClass} ${
-                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform" style={{ borderColor: theme.accentColorHex }}>
+              <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                 <Shirt className="w-6 h-6" style={{ color: theme.accentColorHex }} />
               </div>
               
@@ -1131,11 +1131,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               onClick={() => toggleSection('tips')}
-              className={`rounded-3xl p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border shadow-md hover:shadow-xl cursor-pointer select-none transition-all group ${theme.cardBgClass} ${
-                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-0.5'
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform" style={{ borderColor: theme.accentColorHex }}>
+              <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                 <Lightbulb className="w-6 h-6" style={{ color: theme.accentColorHex }} />
               </div>
 

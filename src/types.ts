@@ -313,4 +313,7 @@ export interface CardThemeConfig {
   scrollbarTrackHex?: string;
   scrollbarThumbHex?: string;
   scrollbarThumbHoverHex?: string;
+  cardShapeClass?: string; // e.g. rounded-3xl, rounded-t-[3rem] rounded-b-2xl, rounded-tl-3xl rounded-br-3xl
+  cardHeaderShapeClass?: string;
+  cardBorderDecoration?: string;
 }
