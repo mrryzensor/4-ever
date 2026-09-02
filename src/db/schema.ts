@@ -53,6 +53,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   giftRegistry: text('gift_registry').default('[{"type":"bank","title":"Transferencia Bancaria","accountNumber":"1234-5678-9012-3456","clabe":"012180012345678901","bankName":"BBVA","beneficiary":"Sofía Martínez / Alejandro Ruiz","concept":"Boda Sofía & Alejandro"},{"type":"store","title":"Mesa de Regalos Liverpool","url":"https://mesaderegalos.liverpool.com.mx","eventNumber":"51298472"},{"type":"honeymoon","title":"Fondo Luna de Miel en Bali","description":"Tu aportación para experiencias inolvidables en nuestro primer viaje de casados","url":"https://paypal.me/boda"}]'),
   coverPhoto: text('cover_photo').default('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80'),
   secondaryPhoto: text('secondary_photo').default('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80'),
+  heroPhotos: text('hero_photos').default('["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]'),
+  heroAutoplayInterval: integer('hero_autoplay_interval').default(5),
   cardStyle: text('card_style').default('classic-gold'), // 'classic-gold', 'romantic-floral', 'boho-chic', 'minimal-editorial', 'dark-luxury', 'watercolor-garden'
   envelopeColor: text('envelope_color').default('#2C2B29'),
   waxSealText: text('wax_seal_text').default('S&A'),

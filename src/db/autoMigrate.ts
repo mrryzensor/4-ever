@@ -82,6 +82,8 @@ export async function autoMigrateDatabase() {
           gift_registry TEXT DEFAULT '[{"type":"bank","title":"Transferencia Bancaria","accountNumber":"1234-5678-9012-3456","clabe":"012180012345678901","bankName":"BBVA","beneficiary":"Sofía Martínez / Alejandro Ruiz","concept":"Boda Sofía & Alejandro"},{"type":"store","title":"Mesa de Regalos Liverpool","url":"https://mesaderegalos.liverpool.com.mx","eventNumber":"51298472"},{"type":"honeymoon","title":"Fondo Luna de Miel en Bali","description":"Tu aportación para experiencias inolvidables en nuestro primer viaje de casados","url":"https://paypal.me/boda"}]',
           cover_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
           secondary_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
+          hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]',
+          hero_autoplay_interval INTEGER DEFAULT 5,
           card_style TEXT DEFAULT 'classic-gold',
           envelope_color TEXT DEFAULT '#2C2B29',
           wax_seal_text TEXT DEFAULT 'S&A',
@@ -134,6 +136,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_tips BOOLEAN DEFAULT true;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_autoplay_interval INTEGER DEFAULT 5;
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

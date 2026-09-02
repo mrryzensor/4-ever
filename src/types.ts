@@ -101,6 +101,8 @@ export interface WeddingSettings {
   giftRegistry: string; // JSON array of GiftRegistryItem
   coverPhoto: string;
   secondaryPhoto: string;
+  heroPhotos?: string; // JSON array of photo URLs or single comma-separated URLs for hero carousel
+  heroAutoplayInterval?: number; // In seconds (e.g. 5)
   heroImageFit?: 'cover' | 'contain' | 'fill' | 'original'; // Display mode: cover, contain, fill (stretch), original
   heroImagePosition?: 'center' | 'top' | 'bottom'; // Alignment
   heroOverlayOpacity?: number; // 0 to 100 percentage (e.g. 40)

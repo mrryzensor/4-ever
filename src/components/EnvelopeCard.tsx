@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import {
   MapPin,
@@ -233,7 +233,37 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const cleanDate = eventDateSafe.replace(/-/g, '');
   const cleanTime = eventTimeSafe.replace(/:/g, '');
   const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Boda+de+${encodeURIComponent(coupleNamesSafe)}&dates=${cleanDate}T${cleanTime}00Z/${cleanDate}T235900Z&details=Celebraci%C3%B3n+de+nuestra+boda.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
-  const coverImage = settings.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop';
+
+  // Multi-photo Hero Carousel with Configurable Auto-Play Timer
+  const heroPhotoList = useMemo(() => {
+    try {
+      if (settings.heroPhotos) {
+        if (typeof settings.heroPhotos === 'string') {
+          const parsed = JSON.parse(settings.heroPhotos);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      }
+    } catch {
+      // If it's a comma-separated list
+      if (typeof settings.heroPhotos === 'string' && settings.heroPhotos.includes(',')) {
+        return settings.heroPhotos.split(',').map((u) => u.trim()).filter(Boolean);
+      }
+    }
+    return [settings.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop'];
+  }, [settings.heroPhotos, settings.coverPhoto]);
+
+  const [activeHeroPhotoIndex, setActiveHeroPhotoIndex] = useState(0);
+
+  useEffect(() => {
+    if (heroPhotoList.length <= 1) return;
+    const intervalSec = Math.max(2, settings.heroAutoplayInterval || 5);
+    const interval = setInterval(() => {
+      setActiveHeroPhotoIndex((prev) => (prev + 1) % heroPhotoList.length);
+    }, intervalSec * 1000);
+    return () => clearInterval(interval);
+  }, [heroPhotoList, settings.heroAutoplayInterval]);
+
+  const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
 
   const scrollToContent = () => document.getElementById('detalles-boda')?.scrollIntoView({ behavior: 'smooth' });
 
@@ -241,13 +271,58 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
       <div ref={heroContainerRef} className="sticky top-0 h-screen min-h-[600px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-8 sm:py-10 select-none z-0">
         <motion.div style={{ opacity: heroBgOpacity, filter: settings.heroEnableScrollBlur !== false ? heroBgBlur : undefined }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity,filter]">
-          {settings.heroImageFit === 'contain' && <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${coverImage})` }} />}
-          <motion.div className="absolute inset-0 bg-no-repeat" style={{ backgroundImage: `url(${coverImage})`, backgroundSize: settings.heroImageFit || 'cover', backgroundPosition: settings.heroImagePosition === 'top' ? 'center top' : 'center center', scale: heroBgScale }}>
-            {(() => {
-              const alpha = (settings.heroOverlayOpacity !== undefined ? settings.heroOverlayOpacity : 50) / 100;
-              return <div className="absolute inset-0 transition-opacity duration-300" style={{ background: `linear-gradient(to bottom, rgba(0,0,0,${Math.min(0.95, alpha * 1.15)}) 0%, rgba(0,0,0,${alpha * 0.75}) 50%, rgba(0,0,0,${Math.min(0.98, alpha * 1.45)}) 100%)` }} />;
-            })()}
-          </motion.div>
+          {settings.heroImageFit === 'contain' && (
+            <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${currentCoverImage})` }} />
+          )}
+          
+          <AnimatePresence mode="sync">
+            <motion.div
+              key={currentCoverImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+              className="absolute inset-0 bg-no-repeat"
+              style={{
+                backgroundImage: `url(${currentCoverImage})`,
+                backgroundSize: settings.heroImageFit || 'cover',
+                backgroundPosition: settings.heroImagePosition === 'top' ? 'center top' : 'center center',
+                scale: heroBgScale,
+              }}
+            >
+              {(() => {
+                const alpha = (settings.heroOverlayOpacity !== undefined ? settings.heroOverlayOpacity : 50) / 100;
+                return (
+                  <div
+                    className="absolute inset-0 transition-opacity duration-300"
+                    style={{
+                      background: `linear-gradient(to bottom, rgba(0,0,0,${Math.min(0.95, alpha * 1.15)}) 0%, rgba(0,0,0,${alpha * 0.75}) 50%, rgba(0,0,0,${Math.min(0.98, alpha * 1.45)}) 100%)`,
+                    }}
+                  />
+                );
+              })()}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Hero Slide Indicator Dots if multi-photo */}
+          {heroPhotoList.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 pointer-events-auto">
+              {heroPhotoList.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveHeroPhotoIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                    idx === activeHeroPhotoIndex
+                      ? 'w-6 bg-amber-400 shadow-sm'
+                      : 'w-1.5 bg-white/40 hover:bg-white/70'
+                  }`}
+                  title={`Foto ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+
           <AnimatedFloatingPetals count={14} />
         </motion.div>
 

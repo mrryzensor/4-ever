@@ -1063,19 +1063,34 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
     data.slug = `${cleanNames}-${Math.floor(1000 + Math.random() * 9000)}`;
   }
 
+  // Ensure non-null column defaults are present
+  const payload: typeof weddingSettings.$inferInsert = {
+    coupleNames: data.coupleNames || 'Sofía & Alejandro',
+    eventDate: data.eventDate || '2026-11-28',
+    eventTime: data.eventTime || '17:00',
+    ceremonyVenue: data.ceremonyVenue || 'Parroquia San Francisco de Asís',
+    ceremonyAddress: data.ceremonyAddress || 'Calle de los Olivos 142, Centro Histórico',
+    receptionVenue: data.receptionVenue || 'Hacienda Los Arcángeles',
+    receptionAddress: data.receptionAddress || 'Km 14.5 Carretera Real, Valle Encantado',
+    coverPhoto: data.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
+    cardStyle: data.cardStyle || 'classic-gold',
+    isPublished: data.isPublished ?? true,
+    ...data,
+  };
+
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
-      const inserted = await db.insert(weddingSettings).values(data).returning();
+      const inserted = await db.insert(weddingSettings).values(payload).returning();
       if (inserted.length > 0) return inserted[0];
     }
   } catch (err) {
-    console.warn('createWedding fallback to memory');
+    console.warn('createWedding database insert warning, falling back to memory state:', err);
   }
 
   const newId = memoryState.weddings.length + 1;
   const newWedding = {
     id: newId,
-    ...data,
+    ...payload,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

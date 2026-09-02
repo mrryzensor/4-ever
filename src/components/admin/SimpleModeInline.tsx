@@ -146,7 +146,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   };
 
   useEffect(() => {
-    if (activeStep === 'galeria') {
+    if (activeStep === 'galeria' || activeStep === 'pareja') {
       loadCoupleGalleryPhotos();
     }
   }, [activeStep, settings.id]);
@@ -572,110 +572,234 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </div>
             </div>
 
-            {/* Cover Photo Upload with AVIF 95% Compression */}
-            <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-3">
+            {/* Cover / Hero Multi-Photo Carousel Settings with AVIF 95% Compression */}
+            <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Camera className="w-4 h-4 text-[#5A5A40]" />
                   <label className="text-xs font-bold text-stone-800 uppercase tracking-wider">
-                    Foto de Portada (Hero)
+                    Fotografías de Portada (Hero) & Pase Automático
                   </label>
                 </div>
                 <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-emerald-700" /> Optimización AVIF 95%
+                  <Zap className="w-3 h-3 text-emerald-700" /> Multi-Foto Hero
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-                <div className="sm:col-span-4 relative aspect-[4/3] rounded-2xl overflow-hidden border-2 border-dashed border-[#7D8C7A]/50 bg-white shadow-2xs group flex items-center justify-center">
-                  {settings.coverPhoto ? (
-                    <img
-                      src={settings.coverPhoto}
-                      alt="Portada"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <div className="text-center p-3">
-                      <Camera className="w-6 h-6 text-stone-400 mx-auto mb-1" />
-                      <span className="text-[11px] text-stone-500">Sin foto</span>
-                    </div>
-                  )}
-                  {isOptimizingCover && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white p-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-amber-300 mb-1" />
-                      <span className="text-[10px] text-center font-medium">Optimizando AVIF...</span>
-                    </div>
-                  )}
-                </div>
+              {/* Hero Photos list resolution */}
+              {(() => {
+                let currentHeroList: string[] = [];
+                try {
+                  if (settings.heroPhotos) {
+                    const parsed = JSON.parse(settings.heroPhotos);
+                    if (Array.isArray(parsed) && parsed.length > 0) currentHeroList = parsed;
+                  }
+                } catch {
+                  if (typeof settings.heroPhotos === 'string' && settings.heroPhotos.includes(',')) {
+                    currentHeroList = settings.heroPhotos.split(',').map((s) => s.trim()).filter(Boolean);
+                  }
+                }
+                if (currentHeroList.length === 0 && settings.coverPhoto) {
+                  currentHeroList = [settings.coverPhoto];
+                }
 
-                <div className="sm:col-span-8 space-y-2.5">
-                  <label className="block w-full py-3.5 px-4 rounded-xl bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] hover:border-[#5A5A40] text-[#5A5A40] font-semibold text-xs text-center cursor-pointer transition-all shadow-2xs group">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleCoverPhotoSelect}
-                      disabled={isOptimizingCover}
-                      className="hidden"
-                    />
-                    <div className="flex flex-col items-center justify-center gap-1">
-                      <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4 text-[#5A5A40] group-hover:scale-110 transition-transform" />
-                        <span>Subir foto desde dispositivo (Auto-AVIF)</span>
+                const toggleHeroPhoto = (url: string) => {
+                  let updated: string[];
+                  if (currentHeroList.includes(url)) {
+                    if (currentHeroList.length === 1) return; // Keep at least one
+                    updated = currentHeroList.filter((u) => u !== url);
+                  } else {
+                    updated = [...currentHeroList, url];
+                  }
+                  onChange({
+                    heroPhotos: JSON.stringify(updated),
+                    coverPhoto: updated[0] || url,
+                  });
+                };
+
+                const removeHeroPhoto = (index: number) => {
+                  if (currentHeroList.length <= 1) return;
+                  const updated = currentHeroList.filter((_, i) => i !== index);
+                  onChange({
+                    heroPhotos: JSON.stringify(updated),
+                    coverPhoto: updated[0],
+                  });
+                };
+
+                return (
+                  <div className="space-y-4">
+                    {/* Active Hero Photos Carousel Preview & Order */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] font-semibold text-stone-700">
+                          Fotos activas en la Portada ({currentHeroList.length}):
+                        </span>
+                        {currentHeroList.length > 1 && (
+                          <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
+                            Pase automático activo
+                          </span>
+                        )}
                       </div>
-                      <span className="text-[11px] text-[#7D8C7A] font-normal flex items-center gap-1">
-                        <Clipboard className="w-3 h-3 text-[#7D8C7A]" />
-                        o pega directamente con <strong>Ctrl+V</strong>
-                      </span>
-                    </div>
-                  </label>
 
-                  {/* AVIF stats banner */}
-                  {coverOptimizationStats && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-900">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <div>
-                          <p className="font-semibold text-[11px]">Compresión AVIF completada</p>
-                          <p className="text-[10px] text-emerald-700">
-                            {formatBytes(coverOptimizationStats.originalSize)} ➔ {formatBytes(coverOptimizationStats.optimizedSize)} ({coverOptimizationStats.compressionRatio}% ahorro)
-                          </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {currentHeroList.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="relative aspect-[4/3] rounded-xl overflow-hidden border-2 border-[#5A5A40] bg-stone-900 group shadow-xs"
+                          >
+                            <img src={url} alt={`Hero ${idx + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute top-1.5 left-1.5 bg-black/70 backdrop-blur-xs text-amber-300 font-mono text-[10px] px-1.5 py-0.5 rounded-md font-bold">
+                              #{idx + 1}
+                            </div>
+                            {currentHeroList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeHeroPhoto(idx)}
+                                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md"
+                                title="Quitar de la portada"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Auto-play Timer Interval Control */}
+                    {currentHeroList.length > 1 && (
+                      <div className="p-3 bg-white rounded-xl border border-[#E5E2D0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                          <div>
+                            <span className="text-xs font-bold text-stone-800">
+                              Tiempo de transición del Hero:
+                            </span>
+                            <p className="text-[10px] text-stone-500">
+                              Cada cuántos segundos cambia la foto automáticamente
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {[3, 5, 8, 12].map((sec) => (
+                            <button
+                              key={sec}
+                              type="button"
+                              onClick={() => onChange({ heroAutoplayInterval: sec })}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                (settings.heroAutoplayInterval || 5) === sec
+                                  ? 'bg-[#5A5A40] text-white shadow-xs'
+                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                              }`}
+                            >
+                              {sec}s
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
-                        {coverOptimizationStats.format.replace('image/', '').toUpperCase()}
-                      </span>
+                    )}
+
+                    {/* Upload new photo for Hero */}
+                    <div className="space-y-2">
+                      <label className="block w-full py-3 px-4 rounded-xl bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] hover:border-[#5A5A40] text-[#5A5A40] font-semibold text-xs text-center cursor-pointer transition-all shadow-2xs group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCoverPhotoSelect}
+                          disabled={isOptimizingCover}
+                          className="hidden"
+                        />
+                        <div className="flex items-center justify-center gap-2">
+                          <Upload className="w-4 h-4 text-[#5A5A40] group-hover:scale-110 transition-transform" />
+                          <span>Subir nueva fotografía para la portada (Auto-AVIF)</span>
+                        </div>
+                      </label>
+
+                      {isOptimizingCover && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 flex items-center justify-center gap-2 text-xs text-amber-900 font-medium">
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-700" />
+                          <span>Optimizando en formato AVIF al 95%...</span>
+                        </div>
+                      )}
+
+                      {coverUploadMsg && (
+                        <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-medium">
+                          {coverUploadMsg}
+                        </p>
+                      )}
                     </div>
-                  )}
 
-                  {coverUploadMsg && (
-                    <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-medium">
-                      {coverUploadMsg}
-                    </p>
-                  )}
+                    {/* Choose from Uploaded Gallery Photos */}
+                    {galleryPhotos.length > 0 && (
+                      <div className="pt-2 border-t border-[#E5E2D0]">
+                        <p className="text-[11px] text-stone-700 font-bold mb-1.5 flex items-center gap-1.5">
+                          <ImageIcon className="w-3.5 h-3.5 text-[#5A5A40]" />
+                          <span>Elegir fotos que ya subiste a la Galería ({galleryPhotos.length}):</span>
+                        </p>
+                        <p className="text-[10px] text-stone-500 mb-2">
+                          Haz clic en las fotos para activarlas o desactivarlas en el carrusel de la portada.
+                        </p>
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-44 overflow-y-auto p-1">
+                          {galleryPhotos.map((p) => {
+                            const isSelected = currentHeroList.includes(p.url);
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => toggleHeroPhoto(p.url)}
+                                className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/40 scale-105 shadow-sm opacity-100'
+                                    : 'border-transparent opacity-60 hover:opacity-100'
+                                }`}
+                                title={isSelected ? 'Foto activa en portada' : 'Haz clic para añadir a la portada'}
+                              >
+                                <img src={p.url} alt="Galería" className="w-full h-full object-cover" />
+                                {isSelected && (
+                                  <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-[10px]">
+                                    ✓
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Presets Selector */}
-                  <div className="pt-1">
-                    <p className="text-[11px] text-stone-500 font-medium mb-1.5">O elige una fotografía de muestra:</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {WEDDING_HERO_PRESETS.slice(0, 4).map((preset) => (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => onChange({ coverPhoto: preset.url })}
-                          className={`relative aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                            settings.coverPhoto === preset.url
-                              ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105'
-                              : 'border-transparent hover:opacity-80'
-                          }`}
-                          title={preset.name}
-                        >
-                          <img src={preset.url} alt={preset.name} className="w-full h-full object-cover" />
-                        </button>
-                      ))}
+                    {/* Presets Sample Selector */}
+                    <div className="pt-2 border-t border-[#E5E2D0]">
+                      <p className="text-[11px] text-stone-500 font-medium mb-1.5">O elige entre fotografías de muestra:</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        {WEDDING_HERO_PRESETS.slice(0, 4).map((preset) => {
+                          const isSelected = currentHeroList.includes(preset.url);
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => toggleHeroPhoto(preset.url)}
+                              className={`relative aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 shadow-sm'
+                                  : 'border-transparent hover:opacity-80'
+                              }`}
+                              title={preset.name}
+                            >
+                              <img src={preset.url} alt={preset.name} className="w-full h-full object-cover" />
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-[10px]">
+                                  ✓
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* Atelier de Estilos & Ilustraciones Animadas (6 Diseños) */}
