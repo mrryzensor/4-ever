@@ -800,6 +800,55 @@ export async function getUserWeddings(ownerUid: string) {
 // ----------------------------------------------------
 
 export async function getCeoGlobalStats() {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const allWeddings = await db.select().from(weddingSettings);
+      const allUsers = await db.select().from(users);
+      const allGuests = await db.select().from(guests);
+
+      const totalWeddings = allWeddings.length;
+      const totalUsers = allUsers.length;
+      const weddingPlanners = allUsers.filter((u) => u.role === 'wedding_planner' || u.plan?.startsWith('planner_')).length;
+      const couples = allUsers.filter((u) => u.role === 'couple' || !u.role || u.role === 'admin').length;
+      const totalGuests = allGuests.length;
+      const confirmedGuests = allGuests.filter((g) => g.status === 'confirmed').length;
+      const totalPasses = allGuests.reduce((acc, g) => acc + (g.allocatedPasses || 1), 0);
+      const confirmedPasses = allGuests.reduce((acc, g) => acc + (g.confirmedPasses || 0), 0);
+
+      let estimatedRevenue = 0;
+      allUsers.forEach((u) => {
+        if (u.plan === 'atelier') estimatedRevenue += 29;
+        if (u.plan === 'elite') estimatedRevenue += 59;
+        if (u.plan === 'planner_starter') estimatedRevenue += 89;
+        if (u.plan === 'planner_pro') estimatedRevenue += 179;
+      });
+
+      const planBreakdown = {
+        free: allUsers.filter((u) => u.plan === 'free').length,
+        atelier: allUsers.filter((u) => u.plan === 'atelier').length,
+        elite: allUsers.filter((u) => u.plan === 'elite').length,
+        planner_starter: allUsers.filter((u) => u.plan === 'planner_starter').length,
+        planner_pro: allUsers.filter((u) => u.plan === 'planner_pro').length,
+        ceo_unlimited: allUsers.filter((u) => u.plan === 'ceo_unlimited').length,
+      };
+
+      return {
+        totalWeddings,
+        totalUsers,
+        weddingPlanners,
+        couples,
+        totalGuests,
+        confirmedGuests,
+        totalPasses,
+        confirmedPasses,
+        estimatedRevenue,
+        planBreakdown,
+      };
+    }
+  } catch (err) {
+    console.warn('getCeoGlobalStats fallback to memory:', err);
+  }
+
   const totalWeddings = memoryState.weddings.length;
   const totalUsers = memoryState.users.length;
   const weddingPlanners = memoryState.users.filter((u) => u.role === 'wedding_planner' || u.plan?.startsWith('planner_')).length;
@@ -842,6 +891,27 @@ export async function getCeoGlobalStats() {
 }
 
 export async function getAllUsersForCeo() {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const allUsers = await db.select().from(users);
+      const allWeddings = await db.select().from(weddingSettings);
+      return allUsers.map((u) => {
+        const userWeddings = allWeddings.filter((w) => w.ownerUid === u.uid);
+        return {
+          ...u,
+          weddingsCount: userWeddings.length,
+          weddings: userWeddings.map((w) => ({
+            id: w.id,
+            coupleNames: w.coupleNames,
+            eventDate: w.eventDate,
+          })),
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('getAllUsersForCeo fallback to memory:', err);
+  }
+
   return memoryState.users.map((u) => {
     const userWeddings = memoryState.weddings.filter((w) => w.ownerUid === u.uid);
     return {
@@ -857,6 +927,29 @@ export async function getAllUsersForCeo() {
 }
 
 export async function getAllWeddingsForCeo() {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const allWeddings = await db.select().from(weddingSettings).orderBy(desc(weddingSettings.id));
+      const allGuests = await db.select().from(guests);
+      const allUsers = await db.select().from(users);
+
+      return allWeddings.map((w) => {
+        const guestList = allGuests.filter((g) => g.weddingId === w.id);
+        const owner = allUsers.find((u) => u.uid === w.ownerUid) || memoryState.users.find((u) => u.uid === w.ownerUid);
+        return {
+          ...w,
+          ownerName: owner?.name || 'Organizador',
+          ownerEmail: owner?.email || 'N/A',
+          ownerRole: owner?.role || 'couple',
+          totalGuests: guestList.length,
+          confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('getAllWeddingsForCeo fallback to memory:', err);
+  }
+
   return memoryState.weddings.map((w) => {
     const guestList = memoryState.guests.filter((g) => g.weddingId === w.id);
     const owner = memoryState.users.find((u) => u.uid === w.ownerUid);
