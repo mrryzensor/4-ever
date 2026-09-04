@@ -23,8 +23,8 @@ import {
   Clock,
   Sparkle
 } from 'lucide-react';
-import { PlanId, CardStyle } from '../types.ts';
-import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
+import { PlanId, CardStyle } from '../../types.ts';
+import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 
 interface LandingPageProps {
   onOpenAuth: (mode: 'login' | 'register', planId?: PlanId) => void;
@@ -32,7 +32,6 @@ interface LandingPageProps {
   onViewDemo?: (style?: CardStyle) => void;
   onOpenDashboard?: () => void;
   onGoToDashboard?: () => void;
-  onBackToPortal?: () => void;
   user?: any;
   isLoggedIn?: boolean;
   userEmail?: string;
@@ -44,7 +43,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onViewDemo,
   onOpenDashboard,
   onGoToDashboard,
-  onBackToPortal,
   user,
   isLoggedIn = false,
   userEmail,
@@ -232,19 +230,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            {onBackToPortal && (
-              <button
-                type="button"
-                onClick={onBackToPortal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-stone-600 hover:text-stone-950 bg-stone-100/80 hover:bg-stone-200/80 border border-stone-200 transition-all cursor-pointer"
-                title="Volver al catálogo de todos los tipos de eventos"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span className="hidden sm:inline">Todos los Eventos</span>
-                <span className="sm:hidden">Eventos</span>
-              </button>
-            )}
-
             {isUserAuthenticated ? (
               <button
                 id="btn-nav-dashboard"

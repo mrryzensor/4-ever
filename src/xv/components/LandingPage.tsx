@@ -23,8 +23,8 @@ import {
   Clock,
   Sparkle
 } from 'lucide-react';
-import { PlanId, CardStyle } from '../types.ts';
-import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
+import { PlanId, CardStyle } from '../../types.ts';
+import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 
 interface LandingPageProps {
   onOpenAuth: (mode: 'login' | 'register', planId?: PlanId) => void;
@@ -201,15 +201,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 h-20 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full aspect-square shrink-0 circle-badge bg-amber-800/10 border border-amber-800/20 flex items-center justify-center text-amber-900 shadow-inner">
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-800/30 text-amber-800 shrink-0" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full aspect-square shrink-0 circle-badge bg-pink-800/10 border border-pink-800/20 flex items-center justify-center text-pink-700 shadow-inner">
+              <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 shrink-0" />
             </div>
             <div className="min-w-0">
               <span className="font-serif text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-stone-900 block leading-tight truncate">
-                Atelier Nupcial
+                Atelier XV Años
               </span>
-              <span className="text-[8px] sm:text-[10px] tracking-wider uppercase text-stone-500 font-medium block truncate">
-                Invitaciones Digitales & RSVP
+              <span className="text-[8px] sm:text-[10px] tracking-wider uppercase text-pink-600 font-bold block truncate">
+                Invitaciones Digitales & Gala Real
               </span>
             </div>
           </div>
@@ -220,7 +220,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Características
             </a>
             <a href="#modelos" className="hover:text-stone-900 transition-colors">
-              Modelos de Tarjetas
+              Modelos de Quinceañera
             </a>
             <a href="#planes" className="hover:text-stone-900 transition-colors">
               Planes & Precios
@@ -239,7 +239,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-stone-600 hover:text-stone-950 bg-stone-100/80 hover:bg-stone-200/80 border border-stone-200 transition-all cursor-pointer"
                 title="Volver al catálogo de todos los tipos de eventos"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <Sparkles className="w-3.5 h-3.5 text-pink-500" />
                 <span className="hidden sm:inline">Todos los Eventos</span>
                 <span className="sm:hidden">Eventos</span>
               </button>
@@ -251,8 +251,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 onClick={handleDashboardClick}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-full shadow-sm transition-all cursor-pointer"
               >
-                <Users className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Mis Bodas & Panel</span>
+                <Users className="w-4 h-4 text-pink-400 shrink-0" />
+                <span>Mis XV & Panel</span>
               </button>
             ) : (
               <>
@@ -266,9 +266,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="btn-nav-register"
                   onClick={() => onOpenAuth('register')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-full shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-pink-700 hover:bg-pink-800 text-white text-xs font-semibold rounded-full shadow-sm hover:shadow transition-all cursor-pointer"
                 >
-                  <span>Crear Boda</span>
+                  <span>Crear Mis XV</span>
                   <ArrowRight className="w-4 h-4 shrink-0" />
                 </button>
               </>
@@ -280,27 +280,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 2. Hero Section - Full Viewport Height & Generous Scale */}
       <section className="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center py-10 sm:py-14 lg:py-16">
         {/* Subtle Decorative Background Circles */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[850px] bg-amber-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -bottom-20 right-10 w-[550px] h-[550px] bg-rose-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[850px] bg-pink-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-20 right-10 w-[550px] h-[550px] bg-rose-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
             {/* Left Column: Copy & CTAs */}
             <div className="lg:col-span-7 text-center lg:text-left space-y-6 sm:space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-800/10 border border-amber-800/20 text-amber-900 text-xs sm:text-sm font-medium shadow-2xs">
-                <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
-                <span>Plataforma SaaS Multiusuario para Bodas Inolvidables</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-pink-100/70 border border-pink-200 text-pink-900 text-xs sm:text-sm font-medium shadow-2xs">
+                <Sparkles className="w-4 h-4 text-pink-600 shrink-0" />
+                <span>Plataforma Exclusiva para Fiestas de Quince Años de Ensueño</span>
               </div>
 
               {/* Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-stone-900 tracking-tight leading-[1.12]">
-                La invitación digital que tus invitados <span className="italic font-normal text-amber-900">recordarán para siempre</span>
+                La invitación digital para tus 15 años que <span className="italic font-normal text-pink-700">deslumbrará a todos</span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-base sm:text-lg lg:text-xl text-stone-600 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-sans">
-                Sobre interactivo con lacre de cera 3D, música de fondo personalizada, control de asistencia RSVP en tiempo real, galería colaborativa de fotos y mesa de regalos integrada.
+                Sobre real con tiara y sello de cera 3D, música para vals, confirmación RSVP por WhatsApp y en vivo, cronograma de coronación y cambio de zapatilla, fotos y lluvia de sobres.
               </p>
 
               {/* CTAs */}
@@ -308,10 +308,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="btn-hero-start"
                   onClick={() => onOpenAuth('register', 'atelier')}
-                  className="w-full sm:w-auto px-8 py-4 bg-stone-900 hover:bg-stone-800 text-stone-50 font-semibold text-sm sm:text-base rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 group cursor-pointer hover:scale-[1.02]"
+                  className="w-full sm:w-auto px-8 py-4 bg-pink-700 hover:bg-pink-800 text-white font-semibold text-sm sm:text-base rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 group cursor-pointer hover:scale-[1.02]"
                 >
-                  <Crown className="w-5 h-5 text-amber-400 shrink-0" />
-                  <span>Comenzar mi Boda Ahora</span>
+                  <Crown className="w-5 h-5 text-amber-300 shrink-0" />
+                  <span>Diseñar Mis XV Años</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform shrink-0" />
                 </button>
 
@@ -320,8 +320,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   onClick={() => handleDemoClick()}
                   className="w-full sm:w-auto px-7 py-4 bg-white hover:bg-stone-100/90 text-stone-800 border border-stone-300/90 font-semibold text-sm sm:text-base rounded-full shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span>Ver Invitación Interactiva Demo</span>
+                  <Sparkles className="w-4 h-4 text-pink-600 shrink-0" />
+                  <span>Ver Invitación XV Demo</span>
                 </button>
               </div>
 
@@ -348,40 +348,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {/* Decorative glowing card */}
                 <div className="relative bg-white/95 backdrop-blur-md rounded-3xl border border-amber-900/10 shadow-2xl p-7 sm:p-9 overflow-hidden text-center">
                   {/* Top stamp */}
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/60 rounded-full text-xs sm:text-sm font-semibold mb-5 shadow-2xs">
-                    <Heart className="w-4 h-4 fill-amber-700/40 text-amber-700" />
-                    <span>Nuestra Boda</span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-pink-50 text-pink-900 border border-pink-200/80 rounded-full text-xs sm:text-sm font-semibold mb-5 shadow-2xs">
+                    <Crown className="w-4 h-4 text-pink-700" />
+                    <span>Mis Quince Años</span>
                   </div>
 
                   <h3 className="font-serif text-3xl sm:text-4xl font-bold text-stone-900 mb-1.5 tracking-tight">
-                    Sofía & Alejandro
+                    Valeria Montserrat
                   </h3>
-                  <p className="text-xs sm:text-sm text-amber-900 font-medium mb-6">
-                    Sábado, 28 de Noviembre, 2026 • Hacienda Los Laureles
+                  <p className="text-xs sm:text-sm text-pink-900 font-medium mb-6">
+                    Sábado, 17 de Octubre, 2026 • Salón Diamante Real
                   </p>
 
                   {/* Envelope Visual Preview */}
-                  <div className="relative my-5 p-6 rounded-2xl bg-gradient-to-b from-[#fbf8f3] to-[#f4eee5] border border-amber-300/40 shadow-inner flex flex-col items-center justify-center">
+                  <div className="relative my-5 p-6 rounded-2xl bg-gradient-to-b from-[#fdf7f9] to-[#faedf2] border border-pink-300/40 shadow-inner flex flex-col items-center justify-center">
                     <div
-                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full aspect-square shrink-0 circle-seal bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 flex items-center justify-center shadow-xl border-2 border-amber-400/40 mb-3 cursor-pointer hover:scale-110 transition-transform"
+                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full aspect-square shrink-0 circle-seal bg-gradient-to-br from-pink-600 via-pink-700 to-purple-900 flex items-center justify-center shadow-xl border-2 border-amber-300/60 mb-3 cursor-pointer hover:scale-110 transition-transform"
                       onClick={() => handleDemoClick()}
                     >
-                      <span className="font-serif font-bold text-xl sm:text-2xl text-amber-100">S&A</span>
+                      <span className="font-serif font-bold text-xl sm:text-2xl text-amber-200">XV</span>
                     </div>
                     <span className="text-xs sm:text-sm font-semibold text-stone-700">
-                      Toca para romper el sello de cera
+                      Toca para abrir la invitación real
                     </span>
                   </div>
 
                   {/* Feature pills in mockup */}
                   <div className="grid grid-cols-2 gap-3 mt-5 text-left">
                     <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/70 flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-100/70 flex items-center justify-center shrink-0">
-                        <Music className="w-4 h-4 text-amber-800" />
+                      <div className="w-8 h-8 rounded-xl bg-pink-100/70 flex items-center justify-center shrink-0">
+                        <Music className="w-4 h-4 text-pink-700" />
                       </div>
                       <div className="text-xs">
-                        <span className="font-bold block text-stone-800">Música MP3</span>
-                        <span className="text-stone-500 text-[11px]">Hasta mi final</span>
+                        <span className="font-bold block text-stone-800">Vals Real</span>
+                        <span className="text-stone-500 text-[11px]">Vals de las Flores</span>
                       </div>
                     </div>
                     <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/70 flex items-center gap-2.5">
@@ -390,7 +390,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       </div>
                       <div className="text-xs">
                         <span className="font-bold block text-stone-800">RSVP Activo</span>
-                        <span className="text-stone-500 text-[11px]">142 confirmados</span>
+                        <span className="text-stone-500 text-[11px]">185 confirmados</span>
                       </div>
                     </div>
                   </div>
@@ -407,6 +407,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
 
                 {/* Floating pill badge */}
+
               </div>
             </div>
           </div>
@@ -514,14 +515,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section id="modelos" className="py-20 bg-[#faf8f5]">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-800 block mb-2">
-              Estilos Exclusivos
+            <span className="text-xs font-bold uppercase tracking-widest text-pink-700 block mb-2">
+              Estilos Exclusivos para Quinceañeras
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight mb-4">
-              12 Modelos de Tarjetas de Alta Costura
+              Modelos de Invitación de Alta Costura Real
             </h2>
             <p className="text-stone-600 text-base">
-              Selecciona el estilo que mejor combine con la temática y colores de tu boda. Puedes cambiarlo cuando quieras desde tu panel.
+              Selecciona el estilo que mejor combine con tu vestido y temática de 15 años. Puedes cambiarlo cuando desees desde tu panel.
             </p>
           </div>
 
@@ -532,7 +533,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 key={style.id}
                 onClick={() => setActivePreviewStyle(style.id)}
                 className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${activePreviewStyle === style.id
-                  ? 'bg-stone-900 text-white shadow-md scale-105'
+                  ? 'bg-pink-700 text-white shadow-md scale-105'
                   : 'bg-white text-stone-700 border border-stone-300/80 hover:bg-stone-100'
                   }`}
               >
@@ -551,19 +552,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     {current.tag}
                   </div>
                   <h3 className="text-3xl sm:text-4xl font-serif font-bold mb-2">
-                    Sofía & Alejandro
+                    Valeria Montserrat
                   </h3>
                   <p className="text-sm font-medium tracking-wide uppercase opacity-80 mb-6">
-                    Nos Casamos • 18 de Octubre, 2025
+                    Mis XV Años • 17 de Octubre, 2026
                   </p>
                   <p className="text-xs sm:text-sm max-w-lg mx-auto opacity-90 leading-relaxed mb-6 font-serif italic">
-                    "El amor no consiste en mirarse el uno al otro, sino en mirar juntos en la misma dirección."
+                    "Fuerza y dignidad son su vestidura, y se ríe de lo por venir. Sueña en grande en tus quince."
                   </p>
 
                   <div className="flex justify-center gap-3">
                     <button
                       onClick={() => handleDemoClick(current.id)}
-                      className="px-5 py-2 bg-stone-900 text-white text-xs font-semibold rounded-full shadow hover:bg-stone-800 transition-colors cursor-pointer"
+                      className="px-5 py-2 bg-pink-700 text-white text-xs font-semibold rounded-full shadow hover:bg-pink-800 transition-colors cursor-pointer"
                     >
                       Probar este Estilo en Vivo
                     </button>
@@ -571,7 +572,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       onClick={() => onOpenAuth('register', 'atelier')}
                       className="px-5 py-2 bg-white text-stone-900 border border-stone-300 text-xs font-semibold rounded-full shadow-xs hover:bg-stone-50 transition-colors cursor-pointer"
                     >
-                      Usar para mi Boda
+                      Elegir para Mis XV
                     </button>
                   </div>
                 </div>
