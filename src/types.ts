@@ -4,7 +4,13 @@ export type CardStyleId =
   | 'boho-chic'
   | 'minimal-editorial'
   | 'dark-luxury'
-  | 'watercolor-garden';
+  | 'watercolor-garden'
+  | 'royal-navy'
+  | 'terracotta-sunset'
+  | 'lavender-provence'
+  | 'emerald-botanical'
+  | 'coastal-breeze'
+  | 'champagne-glam';
 
 export type CardStyle = CardStyleId;
 
@@ -309,11 +315,32 @@ export interface CardThemeConfig {
   fontDisplay: string;
   fontBody: string;
   ornamentStyle: string;
-  transitionType?: 'organic-wave' | 'floral-arch' | 'boho-pampas' | 'minimal-editorial' | 'celestial-night' | 'watercolor-garden';
+  transitionType?: 
+    | 'organic-wave' 
+    | 'floral-arch' 
+    | 'boho-pampas' 
+    | 'minimal-editorial' 
+    | 'celestial-night' 
+    | 'watercolor-garden'
+    | 'royal-crest'
+    | 'desert-sunset'
+    | 'lavender-field'
+    | 'emerald-palms'
+    | 'ocean-tide'
+    | 'champagne-sparkle';
   scrollbarTrackHex?: string;
   scrollbarThumbHex?: string;
   scrollbarThumbHoverHex?: string;
   cardShapeClass?: string; // e.g. rounded-3xl, rounded-t-[3rem] rounded-b-2xl, rounded-tl-3xl rounded-br-3xl
   cardHeaderShapeClass?: string;
   cardBorderDecoration?: string;
+  cardLayoutVariant?: 
+    | 'standard' 
+    | 'royal-crest' 
+    | 'desert-ticket' 
+    | 'provence-parchment' 
+    | 'emerald-luxury' 
+    | 'nautical-passport' 
+    | 'artdeco-plaque';
+  cardInnerOrnamentClass?: string;
 }

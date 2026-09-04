@@ -43,6 +43,13 @@ import {
   AnimatedBohoSunMandala,
   AnimatedConstellationDivider,
   AnimatedWatercolorBranchDivider,
+  AnimatedRoyalCrownEmblem,
+  AnimatedSunsetDesertEmblem,
+  AnimatedLavenderButterflyEmblem,
+  AnimatedMonsteraEmblem,
+  AnimatedSeashellPearlEmblem,
+  AnimatedArtDecoFanEmblem,
+  CardOrnamentFrame,
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 
@@ -59,7 +66,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 }) => {
   const heroContainerRef = useRef<HTMLDivElement>(null);
   const theme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const isDark = settings.cardStyle === 'dark-luxury';
+  const isDark = settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical';
 
   const [expandedSection, setExpandedSection] = useState<'none' | 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips'>('none');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -72,13 +79,45 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     paletteList = [];
   }
   if (!paletteList.length) {
-    paletteList = settings.cardStyle === 'romantic-floral'
-      ? ['#9E5B6D', '#D8A47F', '#6E8B74', '#E6D7C3', '#2D2926']
-      : settings.cardStyle === 'boho-chic'
-      ? ['#C87D55', '#DDA15E', '#BC6C25', '#606C38', '#283618']
-      : settings.cardStyle === 'dark-luxury'
-      ? ['#D4AF37', '#1E293B', '#475569', '#334155', '#0F172A']
-      : ['#5A5A40', '#7D8C7A', '#C5A059', '#E5E2D0', '#1C2D37'];
+    switch (settings.cardStyle) {
+      case 'romantic-floral':
+        paletteList = ['#9E5B6D', '#D8A47F', '#6E8B74', '#E6D7C3', '#2D2926'];
+        break;
+      case 'boho-chic':
+        paletteList = ['#C87D55', '#DDA15E', '#BC6C25', '#606C38', '#283618'];
+        break;
+      case 'dark-luxury':
+        paletteList = ['#D4AF37', '#1E293B', '#475569', '#334155', '#0F172A'];
+        break;
+      case 'royal-navy':
+        paletteList = ['#D4AF37', '#0D1B2A', '#1E3A8A', '#E2E8F0', '#94A3B8'];
+        break;
+      case 'terracotta-sunset':
+        paletteList = ['#E07A5F', '#DDA15E', '#8F4A38', '#F4F1DE', '#3D405B'];
+        break;
+      case 'lavender-provence':
+        paletteList = ['#7B6D8D', '#9D8BB0', '#D6CEDE', '#4A3E56', '#FAF5FF'];
+        break;
+      case 'emerald-botanical':
+        paletteList = ['#D4AF37', '#1B4332', '#2D6A4F', '#52B788', '#D8F3DC'];
+        break;
+      case 'coastal-breeze':
+        paletteList = ['#2B6CB0', '#4299E1', '#D4A373', '#EBF8FF', '#2C5282'];
+        break;
+      case 'champagne-glam':
+        paletteList = ['#C39B60', '#E5C992', '#261E14', '#FAF7F0', '#8F6E3B'];
+        break;
+      case 'watercolor-garden':
+        paletteList = ['#526B50', '#7D947B', '#C5D6C4', '#2D3B2C', '#FAFBF6'];
+        break;
+      case 'minimal-editorial':
+        paletteList = ['#141414', '#5A5A40', '#999999', '#E5E2D0', '#FFFFFF'];
+        break;
+      case 'classic-gold':
+      default:
+        paletteList = ['#5A5A40', '#7D8C7A', '#C5A059', '#E5E2D0', '#1C2D37'];
+        break;
+    }
   }
 
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(0);
@@ -411,11 +450,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('ceremony')}
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div>
+              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <div className="relative z-10">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChurchBells className="w-9 h-9" color={theme.accentColorHex} />
@@ -425,14 +465,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </span>
                 </div>
 
-                <span className="text-xs uppercase tracking-widest font-semibold block mb-1 opacity-80" style={{ color: theme.accentColorHex }}>
+                <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                   Momento Sagrado
                 </span>
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   Ceremonia Religiosa
                 </h3>
-                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
-                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
+                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
+                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.accentColorHex }} />
                   <span>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
                 </p>
@@ -449,7 +489,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
                       ? isDark ? 'bg-[#C5A059] text-stone-950 font-bold' : 'bg-[#5A5A40] text-white'
-                      : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white hover:bg-stone-100 text-[#5A5A40]'
+                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-[#5A5A40]'
                   }`}
                 >
                   <Navigation className="w-3.5 h-3.5" />
@@ -502,7 +542,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`p-2.5 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5 border ${
-                          isDark ? 'bg-stone-800 text-stone-200 border-stone-700' : 'bg-white text-stone-700 border-stone-300'
+                          isDark ? 'bg-stone-800 text-stone-100 border-stone-600' : 'bg-white text-stone-700 border-stone-300'
                         }`}
                       >
                         <Compass className="w-3.5 h-3.5" />
@@ -517,11 +557,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('reception')}
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div>
+              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <div className="relative z-10">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChampagneGlasses className="w-9 h-9" />
@@ -531,15 +572,15 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </span>
                 </div>
 
-                <span className="text-xs uppercase tracking-widest text-amber-700 font-semibold block mb-1">
+                <span className={`text-xs uppercase tracking-widest font-semibold block mb-1 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
                   Celebración & Fiesta
                 </span>
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   Recepción & Brindis
                 </h3>
-                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.receptionVenue || 'Hacienda de Eventos'}</p>
-                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
-                  <MapPin className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.receptionVenue || 'Hacienda de Eventos'}</p>
+                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                  <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <span>{settings.receptionAddress || 'Dirección de la recepción'}</span>
                 </p>
               </div>
@@ -555,7 +596,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
                       ? 'bg-amber-500 text-stone-950 font-bold border-amber-500'
-                      : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white hover:bg-stone-100 text-amber-900'
+                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-amber-900'
                   }`}
                 >
                   <Navigation className="w-3.5 h-3.5" />
@@ -621,11 +662,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 onClick={() => toggleSection('itinerary')}
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
-                <div>
+                <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+                <div className="relative z-10">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <Clock className="w-6 h-6 shrink-0" />
@@ -648,15 +690,15 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <span
                         key={idx}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-                          isDark ? 'bg-stone-800 border-stone-700 text-stone-200' : 'bg-white border-stone-200 text-stone-800'
+                          isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                         }`}
                       >
-                        <span className="font-mono font-bold text-amber-500">{item.time}</span>
+                        <span className="font-mono font-bold text-amber-400">{item.time}</span>
                         <span>{item.title}</span>
                       </span>
                     ))}
                     {itineraryList.length > 3 && (
-                      <span className="text-xs font-serif italic text-stone-400 self-center">
+                      <span className={`text-xs font-serif italic self-center ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>
                         +{itineraryList.length - 3} más
                       </span>
                     )}
@@ -673,7 +715,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'itinerary'
                         ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
-                        : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white border border-stone-300 text-[#5A5A40]'
+                        : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
                     }`}
                   >
                     <span>{expandedSection === 'itinerary' ? 'Ocultar Horarios' : 'Ver Cronograma Completo'}</span>
@@ -731,18 +773,18 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                                 {getItineraryIcon(item.icon)}
                               </div>
                               <div className={`p-4 rounded-2xl border flex-1 shadow-xs transition-all hover:scale-[1.01] ${
-                                isDark ? 'bg-stone-900/90 border-stone-700 hover:border-amber-400/50' : 'bg-white border-stone-200 hover:border-amber-300'
+                                isDark ? 'bg-stone-850 border-stone-600 hover:border-amber-400/70 shadow-lg' : 'bg-white border-stone-200 hover:border-amber-300'
                               }`}>
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                                  <span className="font-serif font-bold text-base text-stone-900 dark:text-stone-100">
+                                  <span className={`font-serif font-bold text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
                                     {item.title}
                                   </span>
-                                  <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                  <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-300 border border-amber-500/30">
                                     {item.time} hrs
                                   </span>
                                 </div>
                                 {item.desc && (
-                                  <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed font-serif">
+                                  <p className={`text-xs sm:text-sm leading-relaxed font-serif ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                                     {item.desc}
                                   </p>
                                 )}
@@ -761,11 +803,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry !== false && (
               <div
                 onClick={() => toggleSection('gifts')}
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
-                <div>
+                <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+                <div className="relative z-10">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <AnimatedGiftBox className="w-8 h-8" />
@@ -775,28 +818,28 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     </span>
                   </div>
 
-                  <span className="text-xs uppercase tracking-widest font-semibold block mb-1 opacity-80" style={{ color: theme.accentColorHex }}>
+                  <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                     Muestra de Cariño
                   </span>
                   <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                     Mesa de Regalos & Cuentas
                   </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                  <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                     {settings.giftRegistryMessage || 'El mejor regalo es tu presencia. Si deseas hacernos un presente o aportación para nuestra luna de miel, ponemos a tu disposición nuestras cuentas bancarias.'}
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
                     {settings.enableBankTransfer !== false && (settings.bankName || settings.bankAccountNumber) && (
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-                        isDark ? 'bg-stone-800 border-stone-700 text-stone-200' : 'bg-white border-stone-200 text-stone-800'
+                        isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
-                        <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+                        <CreditCard className="w-3.5 h-3.5 text-amber-400" />
                         <span>{settings.bankName || 'Transferencia'}</span>
                       </span>
                     )}
                     {settings.enableEnvelopeGift !== false && (
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-                        isDark ? 'bg-stone-800 border-stone-700 text-stone-200' : 'bg-white border-stone-200 text-stone-800'
+                        isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <Mail className="w-3.5 h-3.5 text-rose-400" />
                         <span>Lluvia de Sobres</span>
@@ -815,7 +858,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'gifts'
                         ? 'bg-amber-500 text-stone-950 font-bold'
-                        : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white border border-stone-300 text-amber-900'
+                        : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-amber-900'
                     }`}
                   >
                     <span>{expandedSection === 'gifts' ? 'Ocultar Cuentas' : 'Ver Cuentas y Opciones'}</span>
@@ -834,7 +877,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     >
                       {settings.enableBankTransfer !== false && (settings.bankAccountNumber || settings.bankClabe) && (
                         <div className={`p-4 rounded-2xl border space-y-3 ${
-                          isDark ? 'bg-stone-900 border-stone-700 text-stone-200' : 'bg-white border-amber-200/80 text-stone-800'
+                          isDark ? 'bg-stone-850 border-stone-600 text-stone-100' : 'bg-white border-amber-200/80 text-stone-800'
                         }`}>
                           <div className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-wider">
                             <Building2 className="w-4 h-4" />
@@ -842,21 +885,21 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           </div>
                           {settings.bankBeneficiary && (
                             <div className="text-xs">
-                              <span className="text-stone-400 block text-[10px] uppercase">Titular / Beneficiario:</span>
-                              <span className="font-semibold">{settings.bankBeneficiary}</span>
+                              <span className={`block text-[10px] uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>Titular / Beneficiario:</span>
+                              <span className={`font-semibold ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankBeneficiary}</span>
                             </div>
                           )}
                           {settings.bankName && (
                             <div className="text-xs">
-                              <span className="text-stone-400 block text-[10px] uppercase">Banco:</span>
-                              <span className="font-semibold">{settings.bankName}</span>
+                              <span className={`block text-[10px] uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>Banco:</span>
+                              <span className={`font-semibold ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankName}</span>
                             </div>
                           )}
                           {settings.bankAccountNumber && (
-                            <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-stone-100 dark:bg-stone-800">
+                            <div className={`flex items-center justify-between gap-2 p-2 rounded-xl ${isDark ? 'bg-stone-800 border border-stone-700' : 'bg-stone-100'}`}>
                               <div className="min-w-0">
-                                <span className="text-[10px] text-stone-400 block uppercase">No. de Cuenta:</span>
-                                <span className="font-mono font-bold text-xs">{settings.bankAccountNumber}</span>
+                                <span className={`text-[10px] block uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>No. de Cuenta:</span>
+                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankAccountNumber}</span>
                               </div>
                               <button
                                 type="button"
@@ -868,10 +911,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                             </div>
                           )}
                           {settings.bankClabe && (
-                            <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-stone-100 dark:bg-stone-800">
+                            <div className={`flex items-center justify-between gap-2 p-2 rounded-xl ${isDark ? 'bg-stone-800 border border-stone-700' : 'bg-stone-100'}`}>
                               <div className="min-w-0">
-                                <span className="text-[10px] text-stone-400 block uppercase">CLABE / CCI:</span>
-                                <span className="font-mono font-bold text-xs">{settings.bankClabe}</span>
+                                <span className={`text-[10px] block uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>CLABE / CCI:</span>
+                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankClabe}</span>
                               </div>
                               <button
                                 type="button"
@@ -887,11 +930,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
                       {registryItems.map((reg, idx) => (
                         <div key={idx} className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
-                          isDark ? 'bg-stone-900 border-stone-700' : 'bg-white border-stone-200'
+                          isDark ? 'bg-stone-850 border-stone-600' : 'bg-white border-stone-200'
                         }`}>
                           <div>
-                            <p className="font-serif font-bold text-sm text-stone-900 dark:text-stone-100">{reg.title}</p>
-                            <p className="text-xs text-stone-500">{reg.description || 'Mesa de regalos en tienda'}</p>
+                            <p className={`font-serif font-bold text-sm ${isDark ? 'text-white' : 'text-stone-900'}`}>{reg.title}</p>
+                            <p className={`text-xs ${isDark ? 'text-stone-300' : 'text-stone-500'}`}>{reg.description || 'Mesa de regalos en tienda'}</p>
                           </div>
                           {reg.url && (
                             <a
@@ -917,213 +960,216 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               onClick={() => toggleSection('dresscode')}
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
-                <Shirt className="w-6 h-6" style={{ color: theme.accentColorHex }} />
-              </div>
-              
-              <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
-                Código de Vestimenta
-              </span>
-              <p className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                {settings.dressCode || 'Formal / Rigurosa Etiqueta'}
-              </p>
-              {settings.dressCodeDescription && (
-                <p className={`text-sm sm:text-base mt-2 max-w-xl mx-auto italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-                  "{settings.dressCodeDescription}"
-                </p>
-              )}
-
-              {/* Suggested Palette Swatches Banner */}
-              {paletteList.length > 0 && (
-                <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
-                  <span className={`text-xs font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-                    Paleta de colores sugerida:
-                  </span>
-                  <div className="flex items-center gap-2 p-1.5 rounded-full border bg-black/5 dark:bg-white/5 backdrop-blur-xs shadow-xs">
-                    {paletteList.map((hex, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedPaletteIndex(idx);
-                          if (expandedSection !== 'dresscode') setExpandedSection('dresscode');
-                        }}
-                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-md border-2 transition-all cursor-pointer ${
-                          selectedPaletteIndex === idx
-                            ? 'scale-115 border-white ring-2 ring-amber-400'
-                            : 'border-white/70 hover:scale-110 opacity-90'
-                        }`}
-                        style={{ backgroundColor: hex }}
-                        title={`Elegir color ${hex}`}
-                      />
-                    ))}
-                  </div>
+              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <div className="relative z-10">
+                <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
+                  <Shirt className="w-6 h-6" style={{ color: theme.accentColorHex }} />
                 </div>
-              )}
+                
+                <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
+                  Código de Vestimenta
+                </span>
+                <p className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                  {settings.dressCode || 'Formal / Rigurosa Etiqueta'}
+                </p>
+                {settings.dressCodeDescription && (
+                  <p className={`text-sm sm:text-base mt-2 max-w-xl mx-auto italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                    "{settings.dressCodeDescription}"
+                  </p>
+                )}
 
-              <div className="mt-5 flex justify-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSection('dresscode');
-                  }}
-                  className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
-                    expandedSection === 'dresscode'
-                      ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
-                      : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white border border-stone-300 text-[#5A5A40]'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{expandedSection === 'dresscode' ? 'Ocultar Guía Visual' : 'Ver Guía Visual & Colores'}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'dresscode' ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-
-              {/* Collapsible SVG Fashion Mockups & Dress Guidelines with interactive color switches */}
-              <AnimatePresence>
-                {expandedSection === 'dresscode' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
-                  >
-                    {/* View Switcher: Pareja / Damas / Caballeros */}
-                    <div className="flex items-center justify-center gap-2 mb-6">
-                      {[
-                        { id: 'both' as const, label: 'Pareja' },
-                        { id: 'women' as const, label: 'Damas' },
-                        { id: 'men' as const, label: 'Caballeros' },
-                      ].map((tab) => (
+                {/* Suggested Palette Swatches Banner */}
+                {paletteList.length > 0 && (
+                  <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+                    <span className={`text-xs font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                      Paleta de colores sugerida:
+                    </span>
+                    <div className="flex items-center gap-2 p-1.5 rounded-full border bg-black/5 dark:bg-white/5 backdrop-blur-xs shadow-xs">
+                      {paletteList.map((hex, idx) => (
                         <button
-                          key={tab.id}
+                          key={idx}
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveGenderView(tab.id);
+                            setSelectedPaletteIndex(idx);
+                            if (expandedSection !== 'dresscode') setExpandedSection('dresscode');
                           }}
-                          className={`px-4 py-1.5 rounded-full text-xs font-serif font-bold transition-all cursor-pointer ${
-                            activeGenderView === tab.id
-                              ? isDark ? 'bg-amber-400 text-stone-950 shadow-md' : 'bg-[#5A5A40] text-white shadow-md'
-                              : isDark ? 'bg-stone-800 text-stone-300 hover:text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-md border-2 transition-all cursor-pointer ${
+                            selectedPaletteIndex === idx
+                              ? 'scale-115 border-white ring-2 ring-amber-400'
+                              : 'border-white/70 hover:scale-110 opacity-90'
                           }`}
-                        >
-                          {tab.label}
-                        </button>
+                          style={{ backgroundColor: hex }}
+                          title={`Elegir color ${hex}`}
+                        />
                       ))}
                     </div>
+                  </div>
+                )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center max-w-3xl mx-auto">
-                      {/* Woman Mockup */}
-                      {(activeGenderView === 'both' || activeGenderView === 'women') && (
-                        <div className="flex flex-col items-center">
-                          <WomanFashionMockup
-                            dressColor={activePaletteColor}
-                            accessoryColor="#D4AF37"
-                            outfitType={activeWomanOutfit}
-                          />
-                          <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
-                            Vestido de Gala / Dama
-                          </p>
-                          <div className="mt-2 flex justify-center">
-                            <select
-                              value={activeWomanOutfit}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                setActiveWomanOutfit(e.target.value as any);
-                              }}
-                              className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
-                                isDark
-                                  ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
-                                  : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
-                              }`}
-                            >
-                              <option value="long-gown">Gala / Vestido Largo</option>
-                              <option value="cocktail">Cóctel / Midi</option>
-                              <option value="jumpsuit">Enterizo / Palazzo</option>
-                              <option value="boho">Bohemio / Fluido</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
+                <div className="mt-5 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection('dresscode');
+                    }}
+                    className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
+                      expandedSection === 'dresscode'
+                        ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
+                        : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white border border-stone-300 text-[#5A5A40]'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{expandedSection === 'dresscode' ? 'Ocultar Guía Visual' : 'Ver Guía Visual & Colores'}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'dresscode' ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
 
-                      {/* Man Mockup */}
-                      {(activeGenderView === 'both' || activeGenderView === 'men') && (
-                        <div className="flex flex-col items-center">
-                          <ManFashionMockup
-                            suitColor={activePaletteColor}
-                            shirtColor="#FFFFFF"
-                            tieColor={activePaletteColor}
-                            outfitType={activeManOutfit}
-                          />
-                          <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
-                            Traje Formal / Caballero
-                          </p>
-                          <div className="mt-2 flex justify-center">
-                            <select
-                              value={activeManOutfit}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                setActiveManOutfit(e.target.value as any);
-                              }}
-                              className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
-                                isDark
-                                  ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
-                                  : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
-                              }`}
-                            >
-                              <option value="tuxedo">Esmoquin / Smoking</option>
-                              <option value="suit">Traje Clásico</option>
-                              <option value="guayabera">Guayabera Formal</option>
-                              <option value="blazer">Blazer & Pantalón</option>
-                            </select>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Palette Swatches Bar Inside Simulator */}
-                    <div className="mt-8 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 text-center">
-                      <p className="text-xs text-stone-500 dark:text-stone-400 mb-3 font-serif">
-                        Toca un color para probarlo en las prendas:
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-2.5">
-                        {paletteList.map((hex, idx) => (
+                {/* Collapsible SVG Fashion Mockups & Dress Guidelines with interactive color switches */}
+                <AnimatePresence>
+                  {expandedSection === 'dresscode' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
+                    >
+                      {/* View Switcher: Pareja / Damas / Caballeros */}
+                      <div className="flex items-center justify-center gap-2 mb-6">
+                        {[
+                          { id: 'both' as const, label: 'Pareja' },
+                          { id: 'women' as const, label: 'Damas' },
+                          { id: 'men' as const, label: 'Caballeros' },
+                        ].map((tab) => (
                           <button
-                            key={idx}
+                            key={tab.id}
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedPaletteIndex(idx);
+                              setActiveGenderView(tab.id);
                             }}
-                            className={`w-9 h-9 rounded-xl shadow-md border-2 transition-all cursor-pointer flex items-center justify-center ${
-                              selectedPaletteIndex === idx
-                                ? 'scale-115 border-white ring-2 ring-amber-400'
-                                : 'border-white/70 hover:scale-110 opacity-90'
+                            className={`px-4 py-1.5 rounded-full text-xs font-serif font-bold transition-all cursor-pointer ${
+                              activeGenderView === tab.id
+                                ? isDark ? 'bg-amber-400 text-stone-950 shadow-md' : 'bg-[#5A5A40] text-white shadow-md'
+                                : isDark ? 'bg-stone-800 text-stone-300 hover:text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                             }`}
-                            style={{ backgroundColor: hex }}
                           >
-                            {selectedPaletteIndex === idx && (
-                              <Check className="w-4 h-4 text-white drop-shadow" />
-                            )}
+                            {tab.label}
                           </button>
                         ))}
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40">
-                Favor de confirmar asistencia antes del <strong>{settings.rsvpDeadline || '15 de Noviembre'}</strong>
-              </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center max-w-3xl mx-auto">
+                        {/* Woman Mockup */}
+                        {(activeGenderView === 'both' || activeGenderView === 'women') && (
+                          <div className="flex flex-col items-center">
+                            <WomanFashionMockup
+                              dressColor={activePaletteColor}
+                              accessoryColor="#D4AF37"
+                              outfitType={activeWomanOutfit}
+                            />
+                            <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
+                              Vestido de Gala / Dama
+                            </p>
+                            <div className="mt-2 flex justify-center">
+                              <select
+                                value={activeWomanOutfit}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setActiveWomanOutfit(e.target.value as any);
+                                }}
+                                className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
+                                  isDark
+                                    ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
+                                    : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
+                                }`}
+                              >
+                                <option value="long-gown">Gala / Vestido Largo</option>
+                                <option value="cocktail">Cóctel / Midi</option>
+                                <option value="jumpsuit">Enterizo / Palazzo</option>
+                                <option value="boho">Bohemio / Fluido</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Man Mockup */}
+                        {(activeGenderView === 'both' || activeGenderView === 'men') && (
+                          <div className="flex flex-col items-center">
+                            <ManFashionMockup
+                              suitColor={activePaletteColor}
+                              shirtColor="#FFFFFF"
+                              tieColor={activePaletteColor}
+                              outfitType={activeManOutfit}
+                            />
+                            <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
+                              Traje Formal / Caballero
+                            </p>
+                            <div className="mt-2 flex justify-center">
+                              <select
+                                value={activeManOutfit}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setActiveManOutfit(e.target.value as any);
+                                }}
+                                className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
+                                  isDark
+                                    ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
+                                    : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
+                                }`}
+                              >
+                                <option value="tuxedo">Esmoquin / Smoking</option>
+                                <option value="suit">Traje Clásico</option>
+                                <option value="guayabera">Guayabera Formal</option>
+                                <option value="blazer">Blazer & Pantalón</option>
+                              </select>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Palette Swatches Bar Inside Simulator */}
+                      <div className="mt-8 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 text-center">
+                        <p className="text-xs text-stone-500 dark:text-stone-400 mb-3 font-serif">
+                          Toca un color para probarlo en las prendas:
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-2.5">
+                          {paletteList.map((hex, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPaletteIndex(idx);
+                              }}
+                              className={`w-9 h-9 rounded-xl shadow-md border-2 transition-all cursor-pointer flex items-center justify-center ${
+                                selectedPaletteIndex === idx
+                                  ? 'scale-115 border-white ring-2 ring-amber-400'
+                                  : 'border-white/70 hover:scale-110 opacity-90'
+                              }`}
+                              style={{ backgroundColor: hex }}
+                            >
+                              {selectedPaletteIndex === idx && (
+                                <Check className="w-4 h-4 text-white drop-shadow" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40">
+                  Favor de confirmar asistencia antes del <strong>{settings.rsvpDeadline || '15 de Noviembre'}</strong>
+                </p>
+              </div>
             </div>
           )}
 
@@ -1131,93 +1177,96 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               onClick={() => toggleSection('tips')}
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
-                <Lightbulb className="w-6 h-6" style={{ color: theme.accentColorHex }} />
-              </div>
+              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <div className="relative z-10">
+                <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
+                  <Lightbulb className="w-6 h-6" style={{ color: theme.accentColorHex }} />
+                </div>
 
-              <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
-                Guía del Evento
-              </span>
-              <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                {settings.tipsTitle || 'Tips & Recomendaciones de los Novios'}
-              </h3>
-              <p className={`text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-                Información y sugerencias clave preparadas con cariño para que disfrutes al máximo cada momento de nuestra boda.
-              </p>
+                <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
+                  Guía del Evento
+                </span>
+                <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                  {settings.tipsTitle || 'Tips & Recomendaciones de los Novios'}
+                </h3>
+                <p className={`text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                  Información y sugerencias clave preparadas con cariño para que disfrutes al máximo cada momento de nuestra boda.
+                </p>
 
-              {/* Summary Tips Pills */}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {tipsList.map((tip, idx) => (
-                  <span
-                    key={idx}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border ${
-                      isDark ? 'bg-stone-800 border-stone-700 text-stone-200' : 'bg-white border-stone-200 text-stone-800'
+                {/* Summary Tips Pills */}
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {tipsList.map((tip, idx) => (
+                    <span
+                      key={idx}
+                      className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border ${
+                        isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
+                      }`}
+                    >
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span>{tip.title}</span>
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSection('tips');
+                    }}
+                    className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
+                      expandedSection === 'tips'
+                        ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
+                        : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
                     }`}
                   >
-                    <span className="text-amber-500 font-bold">•</span>
-                    <span>{tip.title}</span>
-                  </span>
-                ))}
-              </div>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>{expandedSection === 'tips' ? 'Ocultar Recomendaciones' : 'Ver Todos los Tips & Detalles'}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'tips' ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
 
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSection('tips');
-                  }}
-                  className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
-                    expandedSection === 'tips'
-                      ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
-                      : isDark ? 'bg-stone-800 text-stone-200 hover:text-white' : 'bg-white border border-stone-300 text-[#5A5A40]'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{expandedSection === 'tips' ? 'Ocultar Recomendaciones' : 'Ver Todos los Tips & Detalles'}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'tips' ? 'rotate-180' : ''}`} />
-                </button>
+                {/* Collapsible Tips Grid */}
+                <AnimatePresence>
+                  {expandedSection === 'tips' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {tipsList.map((tip, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-4 sm:p-5 rounded-2xl border transition-all flex items-start gap-3.5 ${
+                              isDark ? 'bg-stone-850/95 border-stone-600 shadow-md' : 'bg-white border-stone-200 shadow-xs'
+                            }`}
+                          >
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${theme.accentClass}`}>
+                              {getTipIcon(tip.icon)}
+                            </div>
+                            <div>
+                              <h4 className={`font-serif font-bold text-sm sm:text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
+                                {tip.title}
+                              </h4>
+                              <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                                {tip.desc}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-
-              {/* Collapsible Tips Grid */}
-              <AnimatePresence>
-                {expandedSection === 'tips' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {tipsList.map((tip, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-4 sm:p-5 rounded-2xl border transition-all flex items-start gap-3.5 ${
-                            isDark ? 'bg-stone-900/90 border-stone-700/80' : 'bg-white border-stone-200 shadow-xs'
-                          }`}
-                        >
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${theme.accentClass}`}>
-                            {getTipIcon(tip.icon)}
-                          </div>
-                          <div>
-                            <h4 className="font-serif font-bold text-sm sm:text-base text-stone-900 dark:text-stone-100">
-                              {tip.title}
-                            </h4>
-                            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 leading-relaxed">
-                              {tip.desc}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
         </div>

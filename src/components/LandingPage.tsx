@@ -119,6 +119,54 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       accentColor: '#2d6a4f',
       description: 'Tonos salvia, eucalipto y texturas de papel artesanal hecho a mano.',
     },
+    {
+      id: 'royal-navy' as CardStyle,
+      name: 'Royal Navy & Gold',
+      tag: 'Realeza & Gala Imperial',
+      bgClass: 'bg-[#0B1320] text-stone-100 border-[#D4AF37]/50',
+      accentColor: '#D4AF37',
+      description: 'Azul zafiro de medianoche con filigranas heráldicas y orlas reales de gala.',
+    },
+    {
+      id: 'terracotta-sunset' as CardStyle,
+      name: 'Terracotta Sunset',
+      tag: 'Atardecer & Dunas',
+      bgClass: 'bg-[#FAF4EE] border-[#EACEC1]',
+      accentColor: '#E07A5F',
+      description: 'Cálidos atardeceres de terracota, agaves del desierto y tonos cobrizos envolventes.',
+    },
+    {
+      id: 'lavender-provence' as CardStyle,
+      name: 'Lavender Provence',
+      tag: 'Provenza Francesa',
+      bgClass: 'bg-[#F8F6FB] border-[#DDD6E8]',
+      accentColor: '#7B6D8D',
+      description: 'Campos de lavanda provenzal, mariposas etéreas y lila empolvado romántico.',
+    },
+    {
+      id: 'emerald-botanical' as CardStyle,
+      name: 'Emerald & Gold',
+      tag: 'Selva Tropical & Oro',
+      bgClass: 'bg-[#081710] text-stone-100 border-[#52B788]/50',
+      accentColor: '#52B788',
+      description: 'Hojas exuberantes de monstera y palmas esmeralda con ribetes en oro reluciente.',
+    },
+    {
+      id: 'coastal-breeze' as CardStyle,
+      name: 'Coastal Breeze',
+      tag: 'Mediterráneo & Nácar',
+      bgClass: 'bg-[#F2F8FA] border-[#CCE3ED]',
+      accentColor: '#2B6CB0',
+      description: 'Olas marinas en azul mediterráneo, conchas perladas y brisa costera serena.',
+    },
+    {
+      id: 'champagne-glam' as CardStyle,
+      name: 'Champagne Glam',
+      tag: 'Art Déco & Años 20',
+      bgClass: 'bg-[#FAF7F0] border-[#E8DEC8]',
+      accentColor: '#C39B60',
+      description: 'Gala Art Déco con destellos de perlas, champagne efervescente y geometría dorada.',
+    },
   ];
 
   const faqs = [
@@ -214,113 +262,120 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </header>
 
-      {/* 2. Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-16 sm:pb-28">
+      {/* 2. Hero Section - Full Viewport Height & Generous Scale */}
+      <section className="relative overflow-hidden min-h-[calc(100vh-5rem)] flex items-center py-10 sm:py-14 lg:py-16">
         {/* Subtle Decorative Background Circles */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-amber-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
-        <div className="absolute -bottom-20 right-10 w-[400px] h-[400px] bg-rose-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[850px] h-[850px] bg-amber-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute -bottom-20 right-10 w-[550px] h-[550px] bg-rose-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
             {/* Left Column: Copy & CTAs */}
-            <div className="lg:col-span-7 text-center lg:text-left">
+            <div className="lg:col-span-7 text-center lg:text-left space-y-6 sm:space-y-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-800/10 border border-amber-800/20 text-amber-900 text-xs font-medium mb-6">
-                <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-800/10 border border-amber-800/20 text-amber-900 text-xs sm:text-sm font-medium shadow-2xs">
+                <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
                 <span>Plataforma SaaS Multiusuario para Bodas Inolvidables</span>
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-stone-900 tracking-tight leading-[1.15] mb-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-serif font-bold text-stone-900 tracking-tight leading-[1.12]">
                 La invitación digital que tus invitados <span className="italic font-normal text-amber-900">recordarán para siempre</span>
               </h1>
 
               {/* Subtitle */}
-              <p className="text-base sm:text-lg text-stone-600 leading-relaxed mb-8 max-w-2xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg lg:text-xl text-stone-600 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-sans">
                 Sobre interactivo con lacre de cera 3D, música de fondo personalizada, control de asistencia RSVP en tiempo real, galería colaborativa de fotos y mesa de regalos integrada.
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
                 <button
                   id="btn-hero-start"
                   onClick={() => onOpenAuth('register', 'atelier')}
-                  className="w-full sm:w-auto px-7 py-3.5 bg-stone-900 hover:bg-stone-800 text-stone-50 font-medium text-sm rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 bg-stone-900 hover:bg-stone-800 text-stone-50 font-semibold text-sm sm:text-base rounded-full shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 group cursor-pointer hover:scale-[1.02]"
                 >
-                  <Crown className="w-4 h-4 text-amber-400" />
+                  <Crown className="w-5 h-5 text-amber-400 shrink-0" />
                   <span>Comenzar mi Boda Ahora</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform shrink-0" />
                 </button>
 
                 <button
                   id="btn-hero-demo"
                   onClick={() => handleDemoClick()}
-                  className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-stone-100/80 text-stone-800 border border-stone-300/80 font-medium text-sm rounded-full shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-7 py-4 bg-white hover:bg-stone-100/90 text-stone-800 border border-stone-300/90 font-semibold text-sm sm:text-base rounded-full shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2.5 cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>Ver Invitación Interactiva Demo</span>
                 </button>
               </div>
 
               {/* Social Proof Stats */}
-              <div className="mt-10 pt-8 border-t border-stone-200/80 grid grid-cols-3 gap-4 max-w-md mx-auto lg:mx-0 text-center lg:text-left">
+              <div className="pt-6 sm:pt-8 border-t border-stone-200/80 grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0 text-center lg:text-left">
                 <div>
-                  <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900">100%</div>
-                  <div className="text-[11px] text-stone-500 font-medium">RSVP en Tiempo Real</div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-stone-900">100%</div>
+                  <div className="text-xs sm:text-sm text-stone-500 font-medium mt-0.5">RSVP en Tiempo Real</div>
                 </div>
                 <div>
-                  <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900">6</div>
-                  <div className="text-[11px] text-stone-500 font-medium">Estilos de Tarjeta</div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-stone-900">12</div>
+                  <div className="text-xs sm:text-sm text-stone-500 font-medium mt-0.5">Estilos de Tarjeta</div>
                 </div>
                 <div>
-                  <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900">4.9 ★</div>
-                  <div className="text-[11px] text-stone-500 font-medium">+1,200 Parejas Felices</div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-stone-900">4.9 ★</div>
+                  <div className="text-xs sm:text-sm text-stone-500 font-medium mt-0.5">+1,200 Parejas Felices</div>
                 </div>
               </div>
             </div>
 
             {/* Right Column: Interactive Mockup Card */}
             <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-md">
+              <div className="relative w-full max-w-md lg:max-w-lg">
                 {/* Decorative glowing card */}
-                <div className="relative bg-white/95 backdrop-blur-md rounded-2xl border border-amber-900/10 shadow-2xl p-6 sm:p-7 overflow-hidden text-center">
+                <div className="relative bg-white/95 backdrop-blur-md rounded-3xl border border-amber-900/10 shadow-2xl p-7 sm:p-9 overflow-hidden text-center">
                   {/* Top stamp */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200/60 rounded-full text-xs font-semibold mb-4">
-                    <Heart className="w-3.5 h-3.5 fill-amber-700/40 text-amber-700" />
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-50 text-amber-900 border border-amber-200/60 rounded-full text-xs sm:text-sm font-semibold mb-5 shadow-2xs">
+                    <Heart className="w-4 h-4 fill-amber-700/40 text-amber-700" />
                     <span>Nuestra Boda</span>
                   </div>
 
-                  <h3 className="font-serif text-2xl font-bold text-stone-900 mb-1">
+                  <h3 className="font-serif text-3xl sm:text-4xl font-bold text-stone-900 mb-1.5 tracking-tight">
                     Sofía & Alejandro
                   </h3>
-                  <p className="text-xs text-amber-900 font-medium mb-4">
+                  <p className="text-xs sm:text-sm text-amber-900 font-medium mb-6">
                     Sábado, 28 de Noviembre, 2026 • Hacienda Los Laureles
                   </p>
 
                   {/* Envelope Visual Preview */}
-                  <div className="relative my-4 p-4 rounded-xl bg-gradient-to-b from-[#fbf8f3] to-[#f4eee5] border border-amber-300/40 shadow-inner flex flex-col items-center justify-center">
-                    <div className="w-14 h-14 rounded-full aspect-square shrink-0 circle-seal bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 flex items-center justify-center shadow-lg border-2 border-amber-400/40 mb-2 cursor-pointer hover:scale-105 transition-transform" onClick={() => handleDemoClick()}>
-                      <span className="font-serif font-bold text-lg text-amber-100">S&A</span>
+                  <div className="relative my-5 p-6 rounded-2xl bg-gradient-to-b from-[#fbf8f3] to-[#f4eee5] border border-amber-300/40 shadow-inner flex flex-col items-center justify-center">
+                    <div
+                      className="w-18 h-18 sm:w-20 sm:h-20 rounded-full aspect-square shrink-0 circle-seal bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 flex items-center justify-center shadow-xl border-2 border-amber-400/40 mb-3 cursor-pointer hover:scale-110 transition-transform"
+                      onClick={() => handleDemoClick()}
+                    >
+                      <span className="font-serif font-bold text-xl sm:text-2xl text-amber-100">S&A</span>
                     </div>
-                    <span className="text-[11px] font-semibold text-stone-600">
+                    <span className="text-xs sm:text-sm font-semibold text-stone-700">
                       Toca para romper el sello de cera
                     </span>
                   </div>
 
                   {/* Feature pills in mockup */}
-                  <div className="grid grid-cols-2 gap-2 mt-4 text-left">
-                    <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/60 flex items-center gap-2">
-                      <Music className="w-4 h-4 text-amber-700 shrink-0" />
-                      <div className="text-[11px]">
-                        <span className="font-semibold block text-stone-800">Música MP3</span>
-                        <span className="text-stone-500 text-[10px]">Hasta mi final</span>
+                  <div className="grid grid-cols-2 gap-3 mt-5 text-left">
+                    <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/70 flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-100/70 flex items-center justify-center shrink-0">
+                        <Music className="w-4 h-4 text-amber-800" />
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-bold block text-stone-800">Música MP3</span>
+                        <span className="text-stone-500 text-[11px]">Hasta mi final</span>
                       </div>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/60 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <div className="text-[11px]">
-                        <span className="font-semibold block text-stone-800">RSVP Activo</span>
-                        <span className="text-stone-500 text-[10px]">142 confirmados</span>
+                    <div className="p-3 rounded-2xl bg-stone-50 border border-stone-200/70 flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100/70 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                      </div>
+                      <div className="text-xs">
+                        <span className="font-bold block text-stone-800">RSVP Activo</span>
+                        <span className="text-stone-500 text-[11px]">142 confirmados</span>
                       </div>
                     </div>
                   </div>
@@ -329,16 +384,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <button
                     id="btn-mockup-open-demo"
                     onClick={() => handleDemoClick()}
-                    className="w-full mt-5 py-2.5 bg-amber-800/10 hover:bg-amber-800/20 text-amber-950 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full mt-6 py-3.5 bg-amber-800/10 hover:bg-amber-800/20 text-amber-950 text-xs sm:text-sm font-bold rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs hover:shadow-xs"
                   >
                     <span>Abrir Demo en Vivo Completo</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Floating pill badge */}
-                <div className="absolute -bottom-4 -left-4 bg-stone-900 text-white text-xs font-medium py-2 px-3.5 rounded-full shadow-lg flex items-center gap-2 border border-stone-700">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="absolute -bottom-4 -left-4 bg-stone-900 text-white text-xs sm:text-sm font-medium py-2.5 px-4 rounded-full shadow-xl flex items-center gap-2.5 border border-stone-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>Sincronización Cloud SQL PostgreSQL</span>
                 </div>
               </div>
@@ -452,7 +507,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Estilos Exclusivos
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight mb-4">
-              6 Modelos de Tarjetas de Alta Costura
+              12 Modelos de Tarjetas de Alta Costura
             </h2>
             <p className="text-stone-600 text-base">
               Selecciona el estilo que mejor combine con la temática y colores de tu boda. Puedes cambiarlo cuando quieras desde tu panel.

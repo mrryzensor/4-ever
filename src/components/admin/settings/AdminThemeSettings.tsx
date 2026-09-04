@@ -21,7 +21,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
         <div>
           <h3 className="text-lg font-serif text-[#1a1a1a] flex items-center gap-2 font-bold">
             <Palette className="w-4 h-4 text-[#7D8C7A]" />
-            Atelier de Estilos & Ilustraciones Animadas (6 Diseños)
+            Atelier de Estilos & Ilustraciones Animadas (12 Diseños)
           </h3>
           <p className="text-xs text-[#7D8C7A] mt-0.5">
             Cada estilo incluye su propia paleta cromática, tipografías finas y motivos vectoriales SVG animados.

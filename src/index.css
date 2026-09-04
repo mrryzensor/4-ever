@@ -159,6 +159,36 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+/* ==========================================================================
+   EXCLUSIVE UNIQUE CARD FORMAT STYLES (New 6 Invitation Designs)
+   ========================================================================== */
+
+/* 7. Royal Navy: Heraldic Crest Plaque with corner ornaments */
+.clip-heraldic {
+  position: relative;
+  background-image: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 70%);
+}
+
+/* 8. Terracotta Sunset: Desert Ticket with notched perforated sides */
+.ticket-scalloped {
+  position: relative;
+  background-image: radial-gradient(#E07A5F 0.8px, transparent 0.8px);
+  background-size: 16px 16px;
+}
+
+/* 12. Champagne Glam: Art Déco Stepped Architectural Frame */
+.artdeco-frame {
+  position: relative;
+  background-image: linear-gradient(135deg, rgba(195, 155, 96, 0.04) 25%, transparent 25%), 
+                    linear-gradient(225deg, rgba(195, 155, 96, 0.04) 25%, transparent 25%), 
+                    linear-gradient(45deg, rgba(195, 155, 96, 0.04) 25%, transparent 25%), 
+                    linear-gradient(315deg, rgba(195, 155, 96, 0.04) 25%, #FAF7F0 25%);
+  background-position: 10px 0, 10px 0, 0 0, 0 0;
+  background-size: 20px 20px;
+  background-repeat: repeat;
+}
+
+
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
 input[type="time"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
