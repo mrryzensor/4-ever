@@ -879,7 +879,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
       ? 'Vestido largo o midi en telas frescas y vaporosas (lino, gasa, seda), tonos alegres o pastel y calzado cómodo para arena o jardín.'
       : dressCodeTitle.toLowerCase().includes('coctel') || dressCodeTitle.toLowerCase().includes('cocktail')
       ? 'Vestido a la rodilla, midi elegante o enterizo sofisticado (jumpsuit de fiesta) con accesorios distinguidos y zapatillas.'
-      : 'Vestido largo de noche o gala en telas finas (satén, crepé, seda). Evitar tonos blancos, marfil o perla reservados para la novia.');
+      : 'Vestido largo de noche o gala en telas finas (satén, crepé, seda). Evitar tonos rosa pastel o blanco reservados para la Quinceañera.');
 
   // Men guidelines
   const menTitle = settings.dressCodeMenTitle || 'Para Ellos (Caballeros)';
@@ -893,7 +893,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
 
   const prohibitedColors =
     settings.dressCodeProhibitedColors ||
-    'Agradecemos a nuestros invitados reservar los colores Rosa Pastel, Palo de Rosa y Blanco exclusivamente para la Quinceañera.';
+    'Agradezco a mis invitados reservar los colores Rosa Pastel, Palo de Rosa y Blanco exclusivamente para mí como Quinceañera.';
 
   return (
     <section

@@ -134,7 +134,7 @@ export const AdminImportTab: React.FC<AdminImportTabProps> = ({
       const count = data.count || list.length;
       setBulkStatus({
         type: 'success',
-        message: `¡Se importaron con éxito ${count} invitados a la boda!`,
+        message: `¡Se importaron con éxito ${count} invitados a los XV Años!`,
       });
       setBulkText('');
       if (onGuestsImported) {
@@ -274,7 +274,7 @@ export const AdminImportTab: React.FC<AdminImportTabProps> = ({
           id="btn-process-bulk"
         >
           <FileSpreadsheet className="w-4 h-4 text-amber-300" />
-          <span>{isProcessing ? 'Procesando importación...' : 'Procesar e Importar Invitados a la Boda'}</span>
+          <span>{isProcessing ? 'Procesando importación...' : 'Procesar e Importar Invitados a los XV Años'}</span>
         </button>
       </div>
     </div>

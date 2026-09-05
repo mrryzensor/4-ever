@@ -181,7 +181,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       a: '¡Sí! Puedes cargar tu archivo de audio favorito (MP3) directamente en nuestro almacenamiento seguro o elegir entre piezas acústicas y clásicas preconfiguradas. Los invitados podrán escucharla al abrir el sobre digital.',
     },
     {
-      q: '¿Los invitados pueden subir fotos y videos durante la boda?',
+      q: '¿Los invitados pueden subir fotos y videos durante los XV Años?',
       a: 'Totalmente. La invitación incluye un Módulo de Galería Interactiva donde tus invitados pueden subir fotos desde sus teléfonos celulares en tiempo real, dejar comentarios y dar "Me Gusta", creando un álbum digital inolvidable.',
     },
     {
@@ -597,7 +597,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Elige el plan ideal para tu celebración o agencia
             </h2>
             <p className="text-stone-600 text-base">
-              Planes individuales para una boda o licencias multi-boda para Wedding Planners y coordinadores de eventos.
+              Planes individuales para tus Quince Años o licencias multi-evento para Event Planners y agencias organizadoras.
             </p>
 
             {/* Category Toggle */}
@@ -610,7 +610,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : 'text-stone-600 hover:text-stone-900'
                   }`}
               >
-                💖 Planes para Parejas
+                👑 Para Quinceañeras y Familias
               </button>
               <button
                 type="button"
@@ -620,7 +620,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : 'text-stone-600 hover:text-stone-900'
                   }`}
               >
-                💼 Planes para Wedding Planners & Agencias
+                💼 Para Event Planners & Agencias
               </button>
             </div>
           </div>
@@ -721,7 +721,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* Guarantee pill */}
           <div className="mt-12 text-center flex items-center justify-center gap-2 text-xs text-stone-500">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Garantía de satisfacción y soporte técnico directo durante la organización de tu boda</span>
+            <span>Garantía de satisfacción y soporte técnico directo durante la organización de tus XV Años</span>
           </div>
         </div>
       </section>
@@ -730,46 +730,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="py-20 bg-[#faf8f5]">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-800 block mb-2">
-              Historias de Amor
+            <span className="text-xs font-bold uppercase tracking-widest text-pink-700 block mb-2">
+              Momentos Inolvidables
             </span>
             <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900">
-              Lo que dicen nuestras parejas
+              Lo que dicen nuestras quinceañeras y familias
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="p-7 rounded-2xl bg-white border border-stone-200/70 shadow-xs">
-              <div className="flex text-amber-500 mb-3">
+              <div className="flex text-pink-500 mb-3">
                 {'★'.repeat(5)}
               </div>
               <p className="text-stone-700 text-xs sm:text-sm italic leading-relaxed mb-4">
-                "Nuestros invitados quedaron fascinados con el sobre y la música cuando abrían el enlace. El control de confirmaciones nos ahorró semanas de llamadas."
+                "Mis invitados quedaron fascinados con el sobre y el vals de fondo cuando abrían el enlace. El control de confirmaciones en tiempo real fue una maravilla."
               </p>
-              <div className="text-xs font-bold text-stone-900">Camila & Mateo</div>
-              <div className="text-[11px] text-stone-500">Boda en Lima (San Isidro) • Plan Atelier</div>
+              <div className="text-xs font-bold text-stone-900">Valeria Montserrat</div>
+              <div className="text-[11px] text-stone-500">Mis XV Años • Plan Atelier</div>
             </div>
 
             <div className="p-7 rounded-2xl bg-white border border-stone-200/70 shadow-xs">
-              <div className="flex text-amber-500 mb-3">
+              <div className="flex text-pink-500 mb-3">
                 {'★'.repeat(5)}
               </div>
               <p className="text-stone-700 text-xs sm:text-sm italic leading-relaxed mb-4">
-                "Poder subir las fotos de la fiesta en tiempo real fue lo mejor. Tenemos recuerdos que nuestro fotógrafo oficial no alcanzó a capturar."
+                "Poder recibir fotos de mis amigos y familia en vivo durante la fiesta fue lo mejor. Tengo recuerdos hermosos de mi entrada y mi vals."
               </p>
-              <div className="text-xs font-bold text-stone-900">Lucía & Daniel</div>
-              <div className="text-[11px] text-stone-500">Boda en Cusco (Valle Sagrado) • Plan Élite</div>
+              <div className="text-xs font-bold text-stone-900">Sofía Fernanda</div>
+              <div className="text-[11px] text-stone-500">Mis XV Años • Plan Élite</div>
             </div>
 
             <div className="p-7 rounded-2xl bg-white border border-stone-200/70 shadow-xs">
-              <div className="flex text-amber-500 mb-3">
+              <div className="flex text-pink-500 mb-3">
                 {'★'.repeat(5)}
               </div>
               <p className="text-stone-700 text-xs sm:text-sm italic leading-relaxed mb-4">
-                "La asignación de pases individuales con código evitó que se nos colaran acompañantes no contemplados. Súper elegante y formal."
+                "La asignación de pases individuales con código evitó confusiones y nos permitió organizar la recepción de manera impecable y formal."
               </p>
-              <div className="text-xs font-bold text-stone-900">Renata & Jorge</div>
-              <div className="text-[11px] text-stone-500">Boda en Arequipa (Yanahuara) • Plan Atelier</div>
+              <div className="text-xs font-bold text-stone-900">Familia Morales Gómez</div>
+              <div className="text-[11px] text-stone-500">Recepción de XV • Plan Atelier</div>
             </div>
           </div>
         </div>
@@ -817,12 +817,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 8. Bottom Final CTA Banner */}
       <section className="py-16 bg-stone-900 text-stone-100">
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 max-w-6xl mx-auto text-center">
-          <Heart className="w-8 h-8 mx-auto text-amber-400 mb-4 fill-amber-400/20" />
+          <Crown className="w-8 h-8 mx-auto text-amber-400 mb-4 fill-amber-400/20" />
           <h2 className="text-3xl sm:text-4xl font-serif font-bold mb-4 tracking-tight">
             Comienza a diseñar tu invitación en menos de 2 minutos
           </h2>
           <p className="text-stone-400 text-sm sm:text-base max-w-xl mx-auto mb-8">
-            Únete a cientos de parejas que ya están organizando su gran día con la máxima elegancia y tecnología.
+            Únete a cientos de quinceañeras y familias que ya están organizando su gran noche con la máxima elegancia y tecnología.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
@@ -830,7 +830,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={() => onOpenAuth('register', 'atelier')}
               className="w-full sm:w-auto px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold text-sm rounded-full shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Crear mi Boda Ahora</span>
+              <span>Crear mis XV Años Ahora</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <button

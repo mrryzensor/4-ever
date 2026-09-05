@@ -8,6 +8,7 @@ interface AudioPlayerProps {
   audioUrl?: string;
   songTitle?: string;
   artistName?: string;
+  eventTitle?: string;
   onUpdateSettings?: (updated: Partial<WeddingSettings>) => void;
   onAudioUpdated?: (newUrl: string, newTitle: string) => void;
   isAdmin?: boolean;
@@ -37,6 +38,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   songTitle,
   artistName,
+  eventTitle,
   onUpdateSettings,
   onAudioUpdated,
   isAdmin = false,
@@ -51,6 +53,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const effectiveEventLabel = eventTitle || 'Música de Boda';
+
   const effectiveAudioUrl =
     audioUrl ||
     settings?.audioUrl ||
@@ -64,7 +68,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const effectiveArtist =
     artistName ||
     settings?.coupleNames ||
-    'Música de la Celebración';
+    effectiveEventLabel;
 
   const effectiveAutoplay = settings?.audioAutoplay ?? false;
 
@@ -199,7 +203,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         >
           <span className="text-[9px] uppercase tracking-widest font-bold text-[#7D8C7A] flex items-center gap-1.5 font-mono">
             <Disc3 className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? 'animate-spin' : ''}`} />
-            Música de boda
+            {effectiveEventLabel}
           </span>
           <span className="text-xs font-serif italic truncate text-[#1a1a1a]" title={effectiveTitle}>
             {effectiveTitle}
@@ -252,7 +256,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-serif text-[#1a1a1a]">
-                    Música de la Invitación
+                    {effectiveEventLabel}
                   </h3>
                   <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] font-bold">
                     Compresión en Frontend & Almacenamiento

@@ -237,7 +237,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-full shadow-sm transition-all cursor-pointer"
               >
                 <Users className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>Mis Bodas & Panel</span>
+                <span>Mis Eventos & Panel</span>
               </button>
             ) : (
               <>

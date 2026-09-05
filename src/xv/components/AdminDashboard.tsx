@@ -162,7 +162,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     link.setAttribute('href', encodedUri);
     link.setAttribute(
       'download',
-      `lista_invitados_boda_${new Date().toISOString().split('T')[0]}.csv`
+      `lista_invitados_xv_${new Date().toISOString().split('T')[0]}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -173,7 +173,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const inviteUrl = settings.slug 
       ? `${window.location.origin}/${encodeURIComponent(settings.slug)}?code=${encodeURIComponent(guest.accessCode)}`
       : `${window.location.origin}/?w=${encodeURIComponent(settings.id || 1)}&code=${encodeURIComponent(guest.accessCode)}`;
-    const text = `¡Hola ${guest.fullName}! ✨ Con inmensa alegría queremos invitarte a nuestra boda (${settings.coupleNames}). Puedes consultar tu invitación personal y confirmar tu asistencia en el siguiente enlace: ${inviteUrl} (Tu código: ${guest.accessCode}). ¡Esperamos contar con tu compañía! 💕`;
+    const text = `¡Hola ${guest.fullName}! ✨ Con inmensa alegría quiero invitarte a celebrar mis XV Años (${settings.coupleNames}). Puedes consultar tu invitación personal y confirmar tu asistencia en el siguiente enlace: ${inviteUrl} (Tu código: ${guest.accessCode}). ¡Será un honor que me acompañes! 💕`;
     return `https://wa.me/${
       guest.phone ? guest.phone.replace(/[^0-9]/g, '') : ''
     }?text=${encodeURIComponent(text)}`;

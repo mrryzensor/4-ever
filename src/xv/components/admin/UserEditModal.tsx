@@ -208,8 +208,8 @@ export const UserEditModal: React.FC<UserEditModalProps> = ({
                   onChange={(e) => setRole(e.target.value as UserRole)}
                   className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
                 >
-                  <option value="couple">💖 Pareja de Novios</option>
-                  <option value="wedding_planner">💼 Wedding Planner / Agencia</option>
+                  <option value="couple">💖 Pareja / Cliente Organizador</option>
+                  <option value="wedding_planner">💼 Event Planner / Agencia</option>
                   <option value="ceo">👑 CEO Master</option>
                 </select>
               </div>

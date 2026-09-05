@@ -84,7 +84,7 @@ const upload = multer({
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // Body parsers
   app.use(express.json({ limit: '20mb' }));
@@ -511,10 +511,10 @@ async function startServer() {
   app.post('/api/user/weddings', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const uid = req.user?.uid || req.body.ownerUid || 'demo-user-master';
-      const { coupleNames, eventDate, eventTime, cardStyle, ceremonyVenue, receptionVenue } = req.body;
+      const { coupleNames, eventDate, eventTime, cardStyle, ceremonyVenue, receptionVenue, eventType } = req.body;
 
       if (!coupleNames || !eventDate) {
-        return res.status(400).json({ error: 'Nombres de los novios y fecha son requeridos' });
+        return res.status(400).json({ error: 'Nombres y fecha del evento son requeridos' });
       }
 
       const newWedding = await createWedding({
@@ -525,6 +525,7 @@ async function startServer() {
         cardStyle: cardStyle || 'classic-gold',
         ceremonyVenue: ceremonyVenue || 'Lugar de la Ceremonia',
         receptionVenue: receptionVenue || 'Lugar del Banquete / Recepción',
+        eventType: eventType || 'bodas',
         isPublished: true,
       });
 
@@ -552,6 +553,9 @@ async function startServer() {
     try {
       const identifier = req.query.weddingId ? Number(req.query.weddingId) : (typeof req.query.slug === 'string' ? req.query.slug : undefined);
       const config = await getWeddingSettings(identifier);
+      if (identifier && !config) {
+        return res.status(404).json({ error: 'Evento no encontrado' });
+      }
       res.json(config);
     } catch (error: any) {
       console.error('Failed to get wedding config:', error);
@@ -964,6 +968,112 @@ async function startServer() {
     }
   });
 
+  // High-performance streaming endpoint for audio (HTTP Range 206, Content-Disposition: inline, never triggers file downloads)
+  app.get('/api/audio/stream', async (req, res) => {
+    try {
+      const targetUrl = typeof req.query.url === 'string' ? req.query.url.trim() : (typeof req.query.file === 'string' ? req.query.file.trim() : '');
+      if (!targetUrl) {
+        return res.status(400).json({ error: 'URL o nombre de archivo de audio requerido' });
+      }
+
+      // 1. Check if it's a local file
+      let localPath: string | null = null;
+      if (targetUrl.startsWith('/uploads/') || targetUrl.startsWith('uploads/')) {
+        const rel = targetUrl.replace(/^\/?uploads\//, '');
+        const resolved = path.join(uploadsDir, path.basename(rel));
+        if (fs.existsSync(resolved)) localPath = resolved;
+      } else if (targetUrl.startsWith('/audio/') || targetUrl.startsWith('audio/')) {
+        const rel = targetUrl.replace(/^\/?audio\//, '');
+        const resolved = path.join(process.cwd(), 'public', 'audio', path.basename(rel));
+        if (fs.existsSync(resolved)) localPath = resolved;
+      } else if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        const pubAudio = path.join(process.cwd(), 'public', 'audio', path.basename(targetUrl));
+        const upAudio = path.join(uploadsDir, path.basename(targetUrl));
+        if (fs.existsSync(pubAudio)) localPath = pubAudio;
+        else if (fs.existsSync(upAudio)) localPath = upAudio;
+      }
+
+      if (localPath) {
+        const stat = fs.statSync(localPath);
+        const total = stat.size;
+        const ext = path.extname(localPath).toLowerCase();
+        const mimeType = ext === '.ogg' ? 'audio/ogg' : ext === '.wav' ? 'audio/wav' : ext === '.m4a' || ext === '.mp4' ? 'audio/mp4' : 'audio/mpeg';
+
+        const range = req.headers.range;
+        if (range) {
+          const parts = range.replace(/bytes=/, '').split('-');
+          const start = parseInt(parts[0], 10);
+          const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+          if (start >= total || end >= total) {
+            res.status(416).setHeader('Content-Range', `bytes */${total}`).end();
+            return;
+          }
+          const chunkSize = end - start + 1;
+          res.writeHead(206, {
+            'Content-Range': `bytes ${start}-${end}/${total}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize,
+            'Content-Type': mimeType,
+            'Content-Disposition': 'inline', // CRITICAL: strictly inline, never triggers file downloads
+            'Cache-Control': 'public, max-age=86400',
+          });
+          fs.createReadStream(localPath, { start, end }).pipe(res);
+        } else {
+          res.writeHead(200, {
+            'Content-Length': total,
+            'Content-Type': mimeType,
+            'Accept-Ranges': 'bytes',
+            'Content-Disposition': 'inline', // CRITICAL: strictly inline
+            'Cache-Control': 'public, max-age=86400',
+          });
+          fs.createReadStream(localPath).pipe(res);
+        }
+        return;
+      }
+
+      // 2. If it's a remote HTTP/HTTPS URL (e.g. CDN or user custom URL), proxy via stream with inline disposition
+      if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+        const headers: Record<string, string> = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        };
+        if (req.headers.range) {
+          headers['Range'] = req.headers.range;
+        }
+
+        const upstream = await fetch(targetUrl, { headers });
+        const upstreamContentType = upstream.headers.get('content-type') || 'audio/mpeg';
+        const upstreamContentRange = upstream.headers.get('content-range');
+        const upstreamContentLength = upstream.headers.get('content-length');
+
+        const outHeaders: Record<string, string> = {
+          'Content-Type': upstreamContentType,
+          'Content-Disposition': 'inline', // Strip any 'attachment; filename=...' and force inline streaming
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'public, max-age=3600',
+        };
+        if (upstreamContentRange) outHeaders['Content-Range'] = upstreamContentRange;
+        if (upstreamContentLength) outHeaders['Content-Length'] = upstreamContentLength;
+
+        res.writeHead(upstream.status, outHeaders);
+        if (upstream.body) {
+          const { Readable } = await import('stream');
+          // @ts-ignore Node 18+ Web ReadableStream to Node stream
+          Readable.fromWeb(upstream.body as any).pipe(res);
+        } else {
+          res.end();
+        }
+        return;
+      }
+
+      return res.status(404).json({ error: 'Archivo de audio no encontrado' });
+    } catch (err: any) {
+      console.error('Audio streaming error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Error al reproducir streaming de audio' });
+      }
+    }
+  });
+
   // 8. Auth sync
   app.post('/api/auth/sync', requireAuth, async (req: AuthRequest, res) => {
     try {
@@ -1157,7 +1267,8 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Wedding & RSVP App server running on http://0.0.0.0:${PORT}`);
+    console.log(`\n  ➜  Local:   http://localhost:${PORT}`);
+    console.log(`  ➜  Network: http://0.0.0.0:${PORT}\n`);
   });
 }
 

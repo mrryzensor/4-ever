@@ -332,8 +332,8 @@ export const ExcelUserImportModal: React.FC<ExcelUserImportModalProps> = ({
                     onChange={(e) => setDefaultRole(e.target.value as UserRole)}
                     className="w-full text-xs bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
                   >
-                    <option value="couple">Pareja de Novios</option>
-                    <option value="wedding_planner">Wedding Planner / Agencia</option>
+                    <option value="couple">Pareja / Cliente</option>
+                    <option value="wedding_planner">Event Planner / Organizador</option>
                     <option value="ceo">CEO Master</option>
                   </select>
                 </div>

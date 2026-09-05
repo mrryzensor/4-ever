@@ -128,7 +128,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          Te facilitamos los mapas interactivos y rutas guiadas por Google Maps para acompañarnos puntualmente en cada momento.
+          Te facilito los mapas interactivos y rutas guiadas por Google Maps para acompañarme puntualmente en cada momento de mi fiesta.
         </p>
 
         {/* Quick Venue Cards Preview (when collapsed) - Larger & Premium Styling */}

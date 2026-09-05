@@ -332,7 +332,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 <div className="flex gap-2">
                   <input
                     type="url"
-                    placeholder="https://mis-fotos.com/boda-portada.jpg"
+                    placeholder="https://mis-fotos.com/xv-portada.jpg"
                     value={settings.coverPhoto || ''}
                     onChange={(e) =>
                       onChange({ coverPhoto: e.target.value })
@@ -345,7 +345,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               {/* Preset photo picker */}
               <div className="space-y-1.5 pt-1">
                 <span className="text-[11px] font-semibold text-[#7D8C7A] block">
-                  Fotos de Boda Profesionales Preestablecidas (1 clic para probar):
+                  Fotos de Quinceañera Profesionales Preestablecidas (1 clic para probar):
                 </span>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
                   {WEDDING_HERO_PRESETS.map((preset) => {
@@ -529,7 +529,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 </span>
               </label>
               <span className="text-[10px] text-[#7D8C7A] block">
-                Transiciona la portada suavemente hacia el color de fondo de la boda.
+                Transiciona la portada suavemente hacia el color de fondo de los XV Años.
               </span>
             </div>
           </div>
@@ -592,11 +592,11 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           )}
         </div>
 
-        {/* 3. Nombres de los Contrayentes & Enlace Personalizado /slug */}
+        {/* 3. Nombre de la Quinceañera & Enlace Personalizado /slug */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E5E2D0]">
           <div>
             <label className="text-xs font-bold text-[#1a1a1a] block mb-1">
-              3. Nombres de los Novios:
+              3. Nombre de la Quinceañera:
             </label>
             <input
               type="text"
@@ -604,11 +604,11 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               onChange={(e) =>
                 onChange({ coupleNames: e.target.value })
               }
-              placeholder="Nombre & Nombre"
+              placeholder="Nombre de la Quinceañera"
               className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
             />
             <span className="text-[10px] text-[#7D8C7A] mt-1 block">
-              Ejemplo: <em>Sofía & Alejandro</em> o <em>Sergio & Lore</em>
+              Ejemplo: <em>Valeria Montserrat</em>
             </span>
           </div>
 
@@ -629,12 +629,12 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     .replace(/[^a-z0-9-_]/g, '');
                   onChange({ slug: cleaned });
                 }}
-                placeholder="bodasergioylore"
+                placeholder="xv-valeria-montserrat"
                 className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl pl-6 pr-3.5 py-2.5 text-xs text-[#3D3D3D] font-mono focus:outline-none focus:border-[#5A5A40]"
               />
             </div>
             <span className="text-[10px] text-[#7D8C7A] mt-1 block">
-              Enlace directo: <em>/{settings.slug || 'bodasergioylore'}</em>
+              Enlace directo: <em>/{settings.slug || 'xv-valeria-montserrat'}</em>
             </span>
           </div>
 
@@ -898,7 +898,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">
-              Hashtag Oficial de la Boda:
+              Hashtag Oficial de Mis XV:
             </label>
             <input
               type="text"

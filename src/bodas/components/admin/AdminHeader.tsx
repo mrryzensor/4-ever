@@ -50,7 +50,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               title="Volver a la lista de bodas"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mis Bodas</span>
+              <span className="hidden sm:inline">Mis Eventos</span>
             </button>
           )}
 

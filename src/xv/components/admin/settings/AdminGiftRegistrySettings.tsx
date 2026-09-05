@@ -292,7 +292,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
-                  placeholder="Boda Sofía y Alejandro"
+                  placeholder="Mis XV Valeria Montserrat"
                   value={settings.bankConcept || ''}
                   onChange={(e) =>
                     onChange({ bankConcept: e.target.value })
@@ -419,7 +419,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-[#1a1a1a]">
-              Mesas de Regalo en Tiendas Departamentales / Fondo de Luna de Miel:
+              Mesas de Regalo en Tiendas Departamentales / Deseos Especiales:
             </label>
             <button
               type="button"
@@ -434,7 +434,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
           {/* List of custom stores */}
           {getParsedStoreItems().length === 0 ? (
             <div className="p-4 bg-[#FAF9F0] border border-dashed border-[#E5E2D0] rounded-2xl text-center text-xs text-[#7D8C7A]">
-              No has agregado tiendas departamentales aún. Puedes agregar Liverpool, Amazon, El Palacio de Hierro o tu Fondo de Luna de Miel.
+              No has agregado tiendas departamentales aún. Puedes agregar Liverpool, Amazon, El Palacio de Hierro o tus Deseos Especiales.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -501,7 +501,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
                 Agregar Mesa de Regalos / Tienda
               </h3>
               <p className="text-xs text-[#7D8C7A] mt-0.5">
-                Liverpool, Amazon, Palacio de Hierro, Zankyou o Fondo de Luna de Miel.
+                Liverpool, Amazon, Palacio de Hierro, Zankyou o Viaje de XV Años.
               </p>
             </div>
 
@@ -511,7 +511,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
                   Nombre de la Tienda / Servicio:
                 </label>
                 <div className="flex flex-wrap gap-1 mb-1.5">
-                  {['Liverpool', 'Amazon', 'Palacio de Hierro', 'Luna de Miel', 'Zankyou', 'Falabella'].map((st) => (
+                  {['Liverpool', 'Amazon', 'Palacio de Hierro', 'Viaje de XV Años', 'Zankyou', 'Falabella'].map((st) => (
                     <button
                       key={st}
                       type="button"

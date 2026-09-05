@@ -28,7 +28,7 @@ import {
   Mail,
   UserPlus
 } from 'lucide-react';
-import { UserProfile, WeddingSummary, PlanId, CardStyle } from '../../types.ts';
+import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../../types.ts';
 import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
@@ -69,13 +69,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const [clientEmailInput, setClientEmailInput] = useState('');
   const [assignSuccessMessage, setAssignSuccessMessage] = useState<string | null>(null);
 
-  // New Wedding Form state
+  // New Event Form state
+  const [newEventType, setNewEventType] = useState<EventType>('xv');
   const [newCoupleNames, setNewCoupleNames] = useState('');
   const [newEventDate, setNewEventDate] = useState('2026-11-28');
   const [newEventTime, setNewEventTime] = useState('17:30');
-  const [newCardStyle, setNewCardStyle] = useState<CardStyle>('classic-gold');
+  const [newCardStyle, setNewCardStyle] = useState<CardStyle>('romantic-floral');
   const [newCeremonyVenue, setNewCeremonyVenue] = useState('Parroquia Nuestra Señora del Pilar');
-  const [newReceptionVenue, setNewReceptionVenue] = useState('Casa Prado & Jardines');
+  const [newReceptionVenue, setNewReceptionVenue] = useState('Salón Real de Eventos');
   const [creatingSubmitting, setCreatingSubmitting] = useState(false);
 
   const isCeo = user.role === 'ceo' || user.email === 'daviex14@gmail.com';
@@ -90,7 +91,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         setWeddings(data);
       }
     } catch (err) {
-      console.error('Error loading weddings:', err);
+      console.error('Error loading events:', err);
     } finally {
       setLoading(false);
     }
@@ -112,6 +113,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         body: JSON.stringify({
           ownerUid: user.uid,
           coupleNames: newCoupleNames.trim(),
+          eventType: newEventType,
           eventDate: newEventDate,
           eventTime: newEventTime,
           cardStyle: newCardStyle,
@@ -124,14 +126,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         setIsCreatingWedding(false);
         setNewCoupleNames('');
         fetchWeddings();
-        toast.success(`Boda "${newCoupleNames}" creada exitosamente`, 'Boda Creada');
+        const eventLabel = newEventType === 'xv' ? 'XV Años' : 'Boda';
+        toast.success(`${eventLabel} "${newCoupleNames}" creado exitosamente`, `${eventLabel} Creado`);
       } else {
         const errData = await res.json();
-        toast.error(errData.error || 'No se pudo crear la boda', 'Error');
+        toast.error(errData.error || 'No se pudo crear el evento', 'Error');
       }
     } catch (err) {
-      console.error('Error creating wedding:', err);
-      toast.error('Error al crear la boda', 'Error');
+      console.error('Error creating event:', err);
+      toast.error('Error al crear el evento', 'Error');
     } finally {
       setCreatingSubmitting(false);
     }
@@ -139,8 +142,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleDeleteWedding = (wedding: WeddingSummary, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (wedding.id === 1) {
-      toast.warning('La boda de demostración no puede ser eliminada.');
+    if (wedding.id === 1 || wedding.id === 5) {
+      toast.warning('El evento de demostración no puede ser eliminado.');
       return;
     }
     setWeddingToDelete(wedding);
@@ -168,9 +171,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
   };
 
-  const handleCopyLink = (slug: string, weddingId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const url = slug ? `${window.location.origin}/${slug}` : `${window.location.origin}/?w=${weddingId}`;
+  const handleCopyLink = (slug: string, weddingId: number, eventType?: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const isXv = eventType === 'xv' || (slug && slug.toLowerCase().startsWith('xv'));
+    const eventParam = isXv ? '?event=xv' : '?event=bodas';
+    const url = slug 
+      ? `${window.location.origin}/${slug}${eventParam}` 
+      : `${window.location.origin}/${eventParam}&w=${weddingId}`;
     navigator.clipboard.writeText(url);
     setCopiedSlug(slug || String(weddingId));
     toast.success('Enlace de invitación copiado al portapapeles', 'Enlace Copiado');
@@ -224,15 +231,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               onClick={onBackToLanding}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              <div className="w-9 h-9 rounded-full aspect-square shrink-0 circle-badge bg-amber-800/10 border border-amber-800/20 flex items-center justify-center text-amber-900 shadow-inner">
-                <Heart className="w-4 h-4 fill-amber-800/30 text-amber-800" />
+              <div className="w-9 h-9 rounded-full aspect-square shrink-0 circle-badge bg-pink-800/10 border border-pink-800/20 flex items-center justify-center text-pink-900 shadow-inner">
+                <Crown className="w-4 h-4 text-pink-600" />
               </div>
               <div className="text-left">
                 <span className="font-serif text-lg font-bold text-stone-900 leading-tight block">
-                  Atelier Nupcial
+                  Atelier XV Años
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-amber-800 font-bold flex items-center gap-1">
-                  {isCeo ? '👑 CEO & Control Total' : isWeddingPlanner ? '💼 Panel Wedding Planner' : 'Panel de Pareja'}
+                <span className="text-[10px] uppercase tracking-wider text-pink-800 font-bold flex items-center gap-1">
+                  {isCeo ? '👑 CEO & Control Total' : isWeddingPlanner ? '💼 Panel Event Planner XV' : 'Panel de Quinceañera'}
                 </span>
               </div>
             </button>
@@ -297,17 +304,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 tracking-tight">
-                {isWeddingPlanner ? 'Gestión Centralizada de Bodas' : 'Mis Proyectos de Boda'}
+                {isWeddingPlanner ? 'Gestión Centralizada de XV Años' : 'Mis Invitaciones de XV Años'}
               </h1>
               {isWeddingPlanner && (
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] uppercase tracking-wider border border-amber-300">
-                  {currentPlan.maxWeddings === 'unlimited' ? 'Bodas Ilimitadas' : `${currentPlan.maxWeddings} Bodas`}
+                  {currentPlan.maxWeddings === 'unlimited' ? 'Eventos Ilimitados' : `${currentPlan.maxWeddings} Eventos`}
                 </span>
               )}
             </div>
             <p className="text-sm text-stone-600">
               {isWeddingPlanner
-                ? 'Panel para organizadores profesionales: crea, edita y administra invitaciones para tus parejas de novios.'
+                ? 'Panel para organizadores profesionales: crea, edita y administra invitaciones para tus quinceañeras.'
                 : 'Gestiona tu invitación digital, lista de invitados, pases y mesa de regalos.'}
             </p>
           </div>
@@ -319,7 +326,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>{isWeddingPlanner ? 'Nueva Boda de Cliente' : 'Crear Nueva Invitación'}</span>
+              <span>{isWeddingPlanner ? 'Nuevo Evento de Cliente' : 'Crear Nueva Invitación'}</span>
             </button>
           </div>
         </div>
@@ -340,9 +347,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </div>
               <p className="text-xs text-stone-600 mt-1 leading-relaxed max-w-2xl">
                 {isCeo
-                  ? 'Como CEO tienes control total sobre todas las bodas, usuarios y analíticas de la plataforma sin límites.'
+                  ? 'Como CEO tienes control total sobre todas las celebraciones, usuarios y analíticas de la plataforma sin límites.'
                   : isWeddingPlanner
-                  ? `Tienes capacidad para ${currentPlan.maxWeddings === 'unlimited' ? 'bodas ilimitadas' : `${currentPlan.maxWeddings} bodas simultáneas`} con invitaciones y pases WhatsApp ilimitados por cada pareja.`
+                  ? `Tienes capacidad para ${currentPlan.maxWeddings === 'unlimited' ? 'eventos ilimitados' : `${currentPlan.maxWeddings} eventos simultáneos`} con invitaciones y pases WhatsApp ilimitados.`
                   : 'Diseño artesanal, confirmación RSVP y sobre interactivo con lacre digital.'}
               </p>
             </div>
@@ -373,7 +380,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             </div>
 
             <div className="text-xs text-stone-500 font-medium">
-              Mostrando <strong>{filteredWeddings.length}</strong> de <strong>{weddings.length}</strong> bodas registradas
+              Mostrando <strong>{filteredWeddings.length}</strong> de <strong>{weddings.length}</strong> celebraciones registradas
             </div>
           </div>
         )}
@@ -381,25 +388,25 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         {/* Weddings List Grid */}
         {loading ? (
           <div className="py-16 text-center text-stone-500 text-sm">
-            Cargando proyectos de boda...
+            Cargando proyectos de eventos...
           </div>
         ) : filteredWeddings.length === 0 ? (
           <div className="p-12 text-center bg-white rounded-3xl border border-stone-200/80 max-w-lg mx-auto">
-            <div className="w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-pink-100 text-pink-700 flex items-center justify-center mx-auto mb-4">
+              <Crown className="w-6 h-6" />
             </div>
             <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
-              No se encontraron bodas
+              No se encontraron eventos
             </h3>
             <p className="text-xs text-stone-600 mb-6">
-              Comienza creando una nueva invitación de boda para tu evento o para tu pareja cliente.
+              Comienza creando una nueva invitación de XV Años o Boda para tu celebración.
             </p>
             <button
               onClick={() => setIsCreatingWedding(true)}
               className="px-5 py-2.5 bg-stone-900 text-white text-xs font-semibold rounded-xl shadow hover:bg-stone-800 transition-colors inline-flex items-center gap-2 cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-amber-400" />
-              <span>Crear Boda</span>
+              <Plus className="w-4 h-4 text-pink-400" />
+              <span>Crear Evento</span>
             </button>
           </div>
         ) : (
@@ -416,8 +423,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <div className="p-5 pb-3 border-b border-stone-100 flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">
-                          Estilo: {w.cardStyle || 'Classic Gold'}
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                          w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'))
+                            ? 'bg-pink-100 text-pink-900 border border-pink-200'
+                            : 'bg-amber-100 text-amber-900 border border-amber-200'
+                        }`}>
+                          {w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv')) ? '👑 XV Años' : '💍 Boda'}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-stone-700 block">
+                          Estilo: {w.cardStyle || 'Rose Gold'}
                         </span>
                         {(w as any).clientEmail && (
                           <span className="text-[9px] bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full font-mono">
@@ -512,7 +526,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </button>
 
                   <button
-                    onClick={(e) => handleCopyLink(w.slug, w.id, e)}
+                    onClick={(e) => handleCopyLink(w.slug, w.id, w.eventType, e)}
                     className="p-2 bg-white hover:bg-stone-100 text-stone-600 rounded-xl border border-stone-200 transition-colors shrink-0"
                     title="Copiar enlace para compartir"
                   >
@@ -547,11 +561,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </button>
 
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-amber-50 text-amber-800 mb-3">
-                  <Heart className="w-6 h-6" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-pink-50 text-pink-700 mb-3">
+                  <Crown className="w-6 h-6" />
                 </div>
                 <h2 className="text-2xl font-serif font-bold text-stone-900">
-                  {isWeddingPlanner ? 'Nueva Boda para Cliente' : 'Crea tu Nueva Invitación'}
+                  {newEventType === 'xv'
+                    ? (isWeddingPlanner ? 'Nuevo Evento XV Años para Cliente' : 'Crea tu Invitación de Quince Años')
+                    : (isWeddingPlanner ? 'Nueva Boda para Cliente' : 'Crea tu Nueva Invitación de Boda')}
                 </h2>
                 <p className="text-xs text-stone-500 mt-1">
                   Ingresa los detalles principales. Podrás configurar música, itinerario y fotos en el Atelier.
@@ -559,17 +575,50 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </div>
 
               <form onSubmit={handleCreateWedding} className="space-y-4">
+                {/* Event Type Selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                    Tipo de Celebración *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewEventType('xv')}
+                      className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        newEventType === 'xv'
+                          ? 'bg-pink-50 border-pink-400 text-pink-950 shadow-xs'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Crown className="w-3.5 h-3.5 text-pink-600" />
+                      <span>Fiesta de XV Años</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewEventType('bodas')}
+                      className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        newEventType === 'bodas'
+                          ? 'bg-amber-50 border-amber-400 text-amber-950 shadow-xs'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Heart className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Boda Nupcial</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Nombres de los Novios *
+                    {newEventType === 'xv' ? 'Nombre de la Quinceañera *' : 'Nombres de los Novios *'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej. Sofía & Alejandro"
+                    placeholder={newEventType === 'xv' ? 'Ej. Valeria Montserrat' : 'Ej. Sofía & Alejandro'}
                     value={newCoupleNames}
                     onChange={(e) => setNewCoupleNames(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-pink-500/20 focus:border-pink-700 focus:outline-none"
                   />
                 </div>
 
@@ -583,7 +632,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       required
                       value={newEventDate}
                       onChange={(e) => setNewEventDate(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-pink-500/20 focus:border-pink-700 focus:outline-none"
                     />
                   </div>
 
@@ -594,39 +643,52 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     <select
                       value={newCardStyle}
                       onChange={(e) => setNewCardStyle(e.target.value as CardStyle)}
-                      className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none font-medium"
+                      className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-pink-500/20 focus:border-pink-700 focus:outline-none font-medium"
                     >
-                      <option value="classic-gold">Classic Gold & Marfil</option>
-                      <option value="romantic-floral">Romantic Floral Rosé</option>
-                      <option value="boho-chic">Boho Terracotta</option>
-                      <option value="minimal-editorial">Minimalist Editorial</option>
-                      <option value="dark-luxury">Dark Velvet Luxury</option>
-                      <option value="watercolor-garden">Watercolor Garden</option>
+                      {newEventType === 'xv' ? (
+                        <>
+                          <option value="romantic-floral">Rose Gold & Princesa Real</option>
+                          <option value="classic-gold">Dorado Real & Tiara</option>
+                          <option value="lavender-provence">Sweet Lavanda & Mariposas</option>
+                          <option value="emerald-prestige">Emerald Fairy & Bosque</option>
+                          <option value="midnight-stellar">Midnight Galaxia & Estrellas</option>
+                          <option value="cherry-blossom">Sakura Cerezo de Ensueño</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="classic-gold">Classic Gold & Marfil</option>
+                          <option value="romantic-floral">Romantic Floral Rosé</option>
+                          <option value="boho-chic">Boho Terracotta</option>
+                          <option value="minimal-editorial">Minimalist Editorial</option>
+                          <option value="dark-luxury">Dark Velvet Luxury</option>
+                          <option value="watercolor-garden">Watercolor Garden</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Lugar de la Ceremonia
+                    Lugar de la Misa / Ceremonia
                   </label>
                   <input
                     type="text"
                     value={newCeremonyVenue}
                     onChange={(e) => setNewCeremonyVenue(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-pink-500/20 focus:border-pink-700 focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Lugar de Recepción / Banquete
+                    Lugar de Fiesta / Recepción
                   </label>
                   <input
                     type="text"
                     value={newReceptionVenue}
                     onChange={(e) => setNewReceptionVenue(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-pink-500/20 focus:border-pink-700 focus:outline-none"
                   />
                 </div>
 
@@ -678,7 +740,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     Asignar Pareja / Cliente
                   </h3>
                   <p className="text-xs text-stone-500">
-                    Boda: {selectedWeddingForClient.coupleNames}
+                    Evento: {selectedWeddingForClient.coupleNames}
                   </p>
                 </div>
               </div>
@@ -747,7 +809,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   Elige el plan que se adapte a tus proyectos
                 </h2>
                 <p className="text-xs sm:text-sm text-stone-600 mt-2">
-                  Planes individuales para una boda o planes profesionales para Wedding Planners y Agencias de eventos.
+                  Planes individuales para una celebración o planes profesionales para Organizadores y Agencias de eventos.
                 </p>
 
                 {/* Plan Category Switcher */}
@@ -760,7 +822,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         : 'text-stone-600 hover:text-stone-900'
                     }`}
                   >
-                    💖 Para Parejas (1 Boda)
+                    💖 Plan Individual (1 Celebración)
                   </button>
                   <button
                     onClick={() => setUpgradeCategory('planner')}
@@ -854,8 +916,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
       {/* Confirmation Modal for Wedding Deletion */}
       <ConfirmModal
         isOpen={Boolean(weddingToDelete)}
-        title="¿Eliminar Proyecto de Boda?"
-        message={`¿Estás seguro de que deseas eliminar la boda de "${weddingToDelete?.coupleNames}"?\nSe borrarán permanentemente sus configuraciones, invitados y fotos asociadas.`}
+        title="¿Eliminar Proyecto de Invitación?"
+        message={`¿Estás seguro de que deseas eliminar el evento de "${weddingToDelete?.coupleNames}"?\nSe borrarán permanentemente sus configuraciones, invitados y fotos asociadas.`}
         confirmText="Eliminar Proyecto"
         cancelText="Cancelar"
         variant="danger"

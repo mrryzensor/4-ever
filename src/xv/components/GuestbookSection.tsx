@@ -113,7 +113,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          Déjanos tus mejores deseos y bendiciones para esta nueva aventura que comenzamos juntos.
+          Déjame tus mejores deseos y bendiciones para esta hermosa etapa de mis quince años.
         </p>
 
         {/* Wishes count and prompt when collapsed - Larger & Clearer */}
@@ -124,7 +124,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
             }`}>
               {wishes.length > 0
                 ? `✨ ${wishes.length} ${wishes.length === 1 ? 'mensaje de cariño publicado' : 'mensajes de cariño publicados'} de familiares y amigos`
-                : '✨ Sé el primero en dejar una dedicatoria a los novios'}
+                : '✨ Sé el primero en dejar una dedicatoria para la quinceañera'}
             </span>
           </div>
         )}
@@ -201,7 +201,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                 type="text"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                placeholder="Ej. Amiga de la novia, Primo..."
+                placeholder="Ej. Amiga de la quinceañera, Primo..."
                 className={`w-full rounded-2xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none transition-colors border ${
                   isDark
                     ? 'bg-[#1F211D] border-[#5A5A40] text-[#FDFCF0] placeholder:text-stone-500 focus:border-[#C5A059]'
@@ -218,7 +218,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Escribe tus bendiciones para los novios..."
+                placeholder="Escribe tus bendiciones y felicitaciones para mis XV..."
                 className={`w-full rounded-2xl p-3 text-xs sm:text-sm focus:outline-none transition-colors resize-none border ${
                   isDark
                     ? 'bg-[#1F211D] border-[#5A5A40] text-[#FDFCF0] placeholder:text-stone-500 focus:border-[#C5A059]'

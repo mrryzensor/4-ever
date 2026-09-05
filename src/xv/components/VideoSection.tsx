@@ -62,7 +62,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           title,
           videoUrl,
           description,
-          authorName: authorName || 'Novios',
+          authorName: authorName || 'Quinceañera',
         }),
       });
 
@@ -189,7 +189,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
           isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
         }`}>
-          Nuestra Historia en Video
+          Mis Recuerdos en Video
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
@@ -199,7 +199,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          Revive el Save The Date, la propuesta de matrimonio y los mensajes más emotivos de nuestros seres queridos.
+          Revive mi sesión previa de fotos, el video de mis mejores momentos y los mensajes más emotivos.
         </p>
 
         {/* Video count / summary preview when collapsed - Larger & Clearer */}
@@ -304,7 +304,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                         {video.platform}
                       </span>
                       <span className={`text-[11px] ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                        Por: {video.authorName || 'Novios'}
+                        Por: {video.authorName || 'Quinceañera'}
                       </span>
                     </div>
                     <h3 className={`text-base font-serif font-bold mt-1.5 ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
@@ -347,7 +347,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
             <h3 className="text-xl font-serif font-bold text-stone-900 mb-1 flex items-center gap-2">
               <Video className="w-5 h-5 text-amber-600" />
-              Agregar Video de Boda
+              Agregar Video de Mis XV
             </h3>
             <p className="text-xs text-stone-500 mb-4">
               Soporta URLs de YouTube, Instagram Reels, Facebook Video o enlace directo.

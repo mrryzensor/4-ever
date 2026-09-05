@@ -201,10 +201,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   }
   if (!tipsList.length) {
     tipsList = [
-      { icon: 'clock', title: 'Puntualidad', desc: 'Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo.' },
+      { icon: 'clock', title: 'Puntualidad', desc: 'Agradezco llegar 15 minutos antes de la misa de acción de gracias para dar inicio puntual.' },
       { icon: 'car', title: 'Estacionamiento & Valet', desc: 'El recinto cuenta con servicio de Valet Parking y vigilancia privada.' },
-      { icon: 'camera', title: 'Fotografías & Momentos', desc: '¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!' },
-      { icon: 'heart', title: 'Niños / Solo Adultos', desc: 'Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!' },
+      { icon: 'camera', title: 'Fotografías & Momentos', desc: '¡Sube tus fotos a mi galería en vivo o etiqueta con mi hashtag oficial!' },
+      { icon: 'heart', title: 'Gala & Fiesta', desc: 'He preparado una velada inolvidable. ¡Ven listo para bailar y celebrar conmigo!' },
     ];
   }
 
@@ -268,12 +268,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     return () => clearInterval(interval);
   }, [settings.eventDate, settings.eventTime]);
 
-  const coupleNamesSafe = settings.coupleNames || 'Sofía & Alejandro';
-  const eventDateSafe = settings.eventDate || '2026-11-28';
-  const eventTimeSafe = settings.eventTime || '17:00';
+  const coupleNamesSafe = settings.coupleNames || 'Valeria Montserrat';
+  const eventDateSafe = settings.eventDate || '2026-10-17';
+  const eventTimeSafe = settings.eventTime || '18:00';
   const cleanDate = eventDateSafe.replace(/-/g, '');
   const cleanTime = eventTimeSafe.replace(/:/g, '');
-  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Boda+de+${encodeURIComponent(coupleNamesSafe)}&dates=${cleanDate}T${cleanTime}00Z/${cleanDate}T235900Z&details=Celebraci%C3%B3n+de+nuestra+boda.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mis+XV+A%C3%B1os+-+${encodeURIComponent(coupleNamesSafe)}&dates=${cleanDate}T${cleanTime}00Z/${cleanDate}T235900Z&details=Celebraci%C3%B3n+de+mis+XV+A%C3%B1os.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
 
   // Multi-photo Hero Carousel with Configurable Auto-Play Timer
   const heroPhotoList = useMemo(() => {
@@ -306,7 +306,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
 
-  const scrollToContent = () => document.getElementById('detalles-boda')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToContent = () => (document.getElementById('detalles-xv') || document.getElementById('detalles-boda'))?.scrollIntoView({ behavior: 'smooth' });
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
@@ -398,7 +398,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
       {/* 2. INVITATION DETAILS SECTION - FUSED INTERACTIVE SECTION WITH INLINE EXPANSIONS */}
       <section
-        id="detalles-boda"
+        id="detalles-xv"
         className="relative z-10 w-full pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-14 sm:pb-20 px-4 sm:px-8 md:px-12 lg:px-16"
         style={{ backgroundColor: theme.bgHex }}
       >
@@ -442,7 +442,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             />
             
             <p className={`text-sm sm:text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-              {settings.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de manera interactiva.'}
+              {settings.welcomeSubtitle || 'Me llena de alegría compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de mi gran celebración.'}
             </p>
           </div>
 
@@ -827,7 +827,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     Mesa de Regalos & Cuentas
                   </h3>
                   <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
-                    {settings.giftRegistryMessage || 'El mejor regalo es tu presencia. Si deseas hacernos un presente o aportación para nuestra luna de miel, ponemos a tu disposición nuestras cuentas bancarias.'}
+                    {settings.giftRegistryMessage || 'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.'}
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">

@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX, Play, Pause, Music, Upload, Check, Disc3, Zap, Loader2, FileAudio } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
 import { optimizeAudioClient, formatBytes, AudioOptimizationResult } from '../../lib/mediaOptimizer.ts';
+import { getStreamAudioUrl } from '../../lib/audioStream.ts';
 
 interface AudioPlayerProps {
   settings?: WeddingSettings;
   audioUrl?: string;
   songTitle?: string;
   artistName?: string;
+  eventTitle?: string;
   onUpdateSettings?: (updated: Partial<WeddingSettings>) => void;
   onAudioUpdated?: (newUrl: string, newTitle: string) => void;
   isAdmin?: boolean;
@@ -15,20 +17,20 @@ interface AudioPlayerProps {
 
 const PRESET_SONGS = [
   {
+    title: 'Vals de Ensueño (Danubio Azul - Gran Orquesta)',
+    url: '/audio/vals-danubio-azul.mp3',
+  },
+  {
+    title: 'Canon in D (Pachelbel - Cuerdas Reales)',
+    url: '/audio/canon-in-d.ogg',
+  },
+  {
+    title: 'Vals de las Flores (Tchaikovsky)',
+    url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73549.mp3',
+  },
+  {
     title: 'Acoustic Romance (Guitarra Suave)',
-    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
-  },
-  {
-    title: 'Canon in D (Pachelbel - Piano & Cuerdas)',
-    url: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c3527e028b.mp3?filename=canon-in-d-piano-solo-10023.mp3',
-  },
-  {
-    title: 'Wedding Waltz & Strings (Clásico Elegante)',
-    url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=wedding-18451.mp3',
-  },
-  {
-    title: 'Love Story Piano & Violin',
-    url: 'https://cdn.pixabay.com/download/audio/2021/11/24/audio_349d4f0099.mp3?filename=emotional-piano-inspirational-11267.mp3',
+    url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
   },
 ];
 
@@ -37,6 +39,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   audioUrl,
   songTitle,
   artistName,
+  eventTitle,
   onUpdateSettings,
   onAudioUpdated,
   isAdmin = false,
@@ -51,26 +54,31 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const effectiveEventLabel = eventTitle || 'Música de XV Años';
+
   const effectiveAudioUrl =
     audioUrl ||
     settings?.audioUrl ||
-    'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3';
+    '/audio/vals-danubio-azul.mp3';
 
   const effectiveTitle =
     songTitle ||
     settings?.audioTitle ||
-    'Nuestra Canción de Boda';
+    'Vals de Ensueño - Mis XV';
 
   const effectiveArtist =
     artistName ||
     settings?.coupleNames ||
-    'Música de la Celebración';
+    effectiveEventLabel;
 
   const effectiveAutoplay = settings?.audioAutoplay ?? false;
 
   useEffect(() => {
     if (audioRef.current && effectiveAudioUrl) {
-      audioRef.current.src = effectiveAudioUrl;
+      const streamUrl = getStreamAudioUrl(effectiveAudioUrl);
+      if (audioRef.current.src !== streamUrl) {
+        audioRef.current.src = streamUrl;
+      }
       if (effectiveAutoplay) {
         audioRef.current
           .play()
@@ -165,6 +173,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <audio
         ref={audioRef}
         loop
+        preload="metadata"
+        controlsList="nodownload"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
@@ -199,7 +209,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         >
           <span className="text-[9px] uppercase tracking-widest font-bold text-[#7D8C7A] flex items-center gap-1.5 font-mono">
             <Disc3 className={`w-3.5 h-3.5 shrink-0 ${isPlaying ? 'animate-spin' : ''}`} />
-            Música de boda
+            {effectiveEventLabel}
           </span>
           <span className="text-xs font-serif italic truncate text-[#1a1a1a]" title={effectiveTitle}>
             {effectiveTitle}
@@ -252,7 +262,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 </div>
                 <div>
                   <h3 className="text-lg font-serif text-[#1a1a1a]">
-                    Música de la Invitación
+                    {effectiveEventLabel}
                   </h3>
                   <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] font-bold">
                     Compresión en Frontend & Almacenamiento

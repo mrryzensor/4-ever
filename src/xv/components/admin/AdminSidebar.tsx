@@ -110,7 +110,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </div>
               <div className="min-w-0">
                 <span className="text-xs font-serif font-bold text-stone-900 block truncate">
-                  {settings.coupleNames || 'Panel Boda'}
+                  {settings.coupleNames || 'Panel XV Años'}
                 </span>
                 <span className="text-[10px] text-stone-500 block truncate">
                   Gestión & Atelier
@@ -305,11 +305,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               <div className="p-4 bg-[#FAF9F0] border-b border-[#E5E2D0] flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-[#5A5A40] text-white flex items-center justify-center font-serif font-bold text-xs shadow-xs">
-                    {settings.waxSealText || 'W'}
+                    {settings.waxSealText || 'XV'}
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-xs font-serif font-bold text-stone-900 truncate">
-                      {settings.coupleNames || 'Panel de Boda'}
+                      {settings.coupleNames || 'Panel de XV Años'}
                     </h3>
                     <p className="text-[10px] text-stone-500">Menú Principal</p>
                   </div>

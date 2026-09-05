@@ -18,6 +18,7 @@ export const users = pgTable('users', {
 // Wedding global configuration
 export const weddingSettings = pgTable('wedding_settings', {
   id: serial('id').primaryKey(),
+  eventType: text('event_type').default('bodas'), // 'bodas' | 'xv'
   userId: integer('user_id'),
   ownerUid: text('owner_uid'),
   slug: text('slug'),

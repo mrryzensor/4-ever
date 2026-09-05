@@ -160,16 +160,18 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
       <div className="absolute bottom-10 left-10 w-[500px] h-[500px] bg-purple-100/30 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       {/* 1. Header / Navigation */}
-      <header className="sticky top-0 z-40 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="sticky top-0 z-40 w-full bg-[#FAF9F6]/90 backdrop-blur-md border-b border-stone-200/80 transition-all">
+        <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 h-20 flex items-center justify-between">
           {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 via-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md">
-              <Sparkles className="w-5 h-5" />
-            </div>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <img
+              src="/Logo.webp"
+              alt="2date Logo"
+              className="w-9 h-9 sm:w-11 sm:h-11 object-contain shrink-0"
+            />
             <div>
               <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-stone-900 block leading-tight">
-                4-EVER Atelier
+                2date Atelier
               </span>
               <span className="text-[10px] tracking-wider uppercase text-stone-500 font-bold block">
                 Plataforma Integral de Invitaciones & RSVP
@@ -212,66 +214,68 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
       </header>
 
       {/* 2. Hero Section */}
-      <section className="relative pt-12 pb-16 sm:pt-16 sm:pb-24 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 shadow-xs mb-6"
-        >
-          <Sparkles className="w-4 h-4 text-amber-500" />
-          <span className="text-xs uppercase tracking-widest font-bold text-stone-700">
-            Invitaciones Digitales Exclusivas para Todo Tipo de Evento
-          </span>
-        </motion.div>
+      <section className="relative w-full pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-8 lg:px-12 xl:px-16 text-center">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-stone-200 shadow-xs mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span className="text-xs uppercase tracking-widest font-bold text-stone-700">
+              Invitaciones Digitales Exclusivas para Todo Tipo de Evento
+            </span>
+          </motion.div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold text-stone-950 tracking-tight leading-[1.15]"
-        >
-          Elige la celebración perfecta para tu{' '}
-          <span className="italic font-normal bg-gradient-to-r from-amber-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-            día inolvidable
-          </span>
-        </motion.h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-serif font-bold text-stone-950 tracking-tight leading-[1.15]"
+          >
+            Elige la celebración perfecta para tu{' '}
+            <span className="italic font-normal bg-gradient-to-r from-amber-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+              día inolvidable
+            </span>
+          </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="text-base sm:text-xl text-stone-600 max-w-3xl mx-auto mt-6 leading-relaxed font-serif"
-        >
-          Cada momento único merece su propio arte. Explora nuestras experiencias diseñadas a la medida: desde la solemnidad de una <strong>Boda</strong> hasta el glamour deslumbrante de los <strong>XV Años</strong> y futuras celebraciones.
-        </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-base sm:text-xl text-stone-600 max-w-3xl mx-auto mt-6 leading-relaxed font-serif"
+          >
+            Cada momento único merece su propio arte. Explora nuestras experiencias diseñadas a la medida: desde la solemnidad de una <strong>Boda</strong> hasta el glamour deslumbrante de los <strong>XV Años</strong> y futuras celebraciones.
+          </motion.p>
 
-        {/* Filter Tabs */}
-        <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
-          {[
-            { id: 'all' as const, label: 'Todos los Eventos' },
-            { id: 'available' as const, label: '✨ Disponibles Ahora' },
-            { id: 'upcoming' as const, label: 'Próximamente' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilterCategory(tab.id)}
-              className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                filterCategory === tab.id
-                  ? 'bg-stone-900 text-white shadow-md'
-                  : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {/* Filter Tabs */}
+          <div className="mt-10 flex items-center justify-center gap-2 flex-wrap">
+            {[
+              { id: 'all' as const, label: 'Todos los Eventos' },
+              { id: 'available' as const, label: '✨ Disponibles Ahora' },
+              { id: 'upcoming' as const, label: 'Próximamente' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setFilterCategory(tab.id)}
+                className={`px-5 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  filterCategory === tab.id
+                    ? 'bg-stone-900 text-white shadow-md'
+                    : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* 3. Event Types Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+      {/* 3. Event Types Grid - Full Viewport Width */}
+      <section className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 pb-24">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
           {filteredEvents.map((evt, idx) => {
             const Icon = evt.icon;
             return (
@@ -290,7 +294,7 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
                 }`}
               >
                 {/* Cover Image Header */}
-                <div className="relative h-52 w-full overflow-hidden">
+                <div className="relative h-60 w-full overflow-hidden">
                   <img
                     src={evt.coverImage}
                     alt={evt.name}
@@ -330,7 +334,7 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
                 </div>
 
                 {/* Body Content */}
-                <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-5 font-serif">
                     {evt.description}
                   </p>
@@ -369,55 +373,55 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
         </div>
       </section>
 
-      {/* 4. Platform Benefits Banner */}
-      <section className="bg-white border-y border-stone-200 py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-12">
+      {/* 4. Platform Benefits Banner - Full Viewport Width */}
+      <section className="w-full bg-white border-y border-stone-200 py-16 sm:py-20 px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-24">
+        <div className="w-full">
+          <div className="text-center max-w-3xl mx-auto mb-14">
             <span className="text-xs uppercase tracking-widest font-bold text-amber-700 block mb-2">
               Tecnología de Vanguardia
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900">
-              ¿Por qué elegir nuestra plataforma de eventos?
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900">
+              ¿Por qué elegir 2date para tus eventos?
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="p-6 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
               <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-4">
                 <Music className="w-6 h-6" />
               </div>
-              <h4 className="font-serif font-bold text-base text-stone-900 mb-1">Música & Multimedia</h4>
-              <p className="text-xs text-stone-600 leading-relaxed">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-stone-900 mb-1">Música & Multimedia</h4>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                 Reproductor flotante para vals o canción representativa y galerías fotográficas en tiempo real.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
               <div className="w-12 h-12 rounded-2xl bg-pink-100 text-pink-800 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h4 className="font-serif font-bold text-base text-stone-900 mb-1">RSVP Inteligente</h4>
-              <p className="text-xs text-stone-600 leading-relaxed">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-stone-900 mb-1">RSVP Inteligente</h4>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                 Control de pases asignados, acompañantes, confirmación instantánea y recordatorios por WhatsApp.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
               <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-6 h-6" />
               </div>
-              <h4 className="font-serif font-bold text-base text-stone-900 mb-1">Mapas & Rutas GPS</h4>
-              <p className="text-xs text-stone-600 leading-relaxed">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-stone-900 mb-1">Mapas & Rutas GPS</h4>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                 Integración directa con Google Maps y Waze para que ningún invitado se pierda en el camino.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#FAF9F6] border border-stone-200/80 text-center">
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto mb-4">
                 <Gift className="w-6 h-6" />
               </div>
-              <h4 className="font-serif font-bold text-base text-stone-900 mb-1">Mesa & Lluvia de Sobres</h4>
-              <p className="text-xs text-stone-600 leading-relaxed">
+              <h4 className="font-serif font-bold text-base sm:text-lg text-stone-900 mb-1">Mesa & Lluvia de Sobres</h4>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
                 Cuentas bancarias CLABE, tiendas departamentales y buzón de sobres con mensajes personalizados.
               </p>
             </div>
@@ -425,14 +429,14 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
         </div>
       </section>
 
-      {/* 5. Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 bg-stone-950 text-stone-400 text-center text-xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span className="font-serif text-sm font-bold text-white">4-EVER Atelier Multieventos</span>
+      {/* 5. Footer - Full Viewport Width */}
+      <footer className="w-full py-12 px-4 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 bg-stone-950 text-stone-400 text-xs">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <img src="/Logo.webp" alt="2date" className="w-7 h-7 object-contain shrink-0" />
+            <span className="font-serif text-sm font-bold text-white">2date Atelier Multieventos</span>
           </div>
-          <p>© {new Date().getFullYear()} 4-EVER Inc. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} 2date. Todos los derechos reservados.</p>
           <div className="flex items-center gap-4">
             <button type="button" onClick={() => onSelectEventType('bodas')} className="hover:text-white transition-colors cursor-pointer">Bodas</button>
             <button type="button" onClick={() => onSelectEventType('xv')} className="hover:text-white transition-colors cursor-pointer">XV Años</button>

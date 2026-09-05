@@ -403,7 +403,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </span>
         <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
           }`}>
-          Nuestra Galería de Fotos
+          Mi Galería de Fotos
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
@@ -412,7 +412,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         />
         <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'
           }`}>
-          Desliza o usa los botones para revivir nuestras sesiones y momentos favoritos juntos.
+          Desliza o usa los botones para revivir mi sesión de fotos de quince años y mis recuerdos favoritos.
         </p>
 
         {/* External Cloud Album Banner (Google Photos, Apple Photos, Drive, etc.) */}
@@ -471,7 +471,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             Galería en preparación
           </h4>
           <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-            Las fotografías y momentos oficiales de la boda serán compartidos aquí por los novios.
+            Las fotografías y recuerdos oficiales de los quince años serán compartidos aquí por la quinceañera.
           </p>
           {effectiveAlbumUrl && (
             <a
@@ -528,7 +528,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                       <img
                         src={currentCarouselPhoto.url}
-                        alt={currentCarouselPhoto.caption || 'Foto de boda'}
+                        alt={currentCarouselPhoto.caption || 'Foto de XV Años'}
                         onLoad={(e) => handleImageLoad(currentCarouselPhoto.id, e)}
                         className="relative z-10 w-full h-full object-contain sm:object-cover transition-transform duration-700 group-hover:scale-103"
                         referrerPolicy="no-referrer"
@@ -599,7 +599,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           {/* Category Badge positioned nicely above caption */}
                           <div className="mb-1.5">
                             <span className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
-                              {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
+                              {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Recuerdo de Mis XV'}
                             </span>
                           </div>
 
@@ -609,7 +609,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             </p>
                           )}
                           <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
-                            {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
+                            {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de la Quinceañera'}
                           </p>
                         </div>
                       </div>
@@ -763,7 +763,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 </div>
                 <div>
                   <h3 className="font-serif font-bold text-base text-white">Subir Foto a la Galería</h3>
-                  <p className="text-xs text-stone-400">Comparte tu recuerdo con los novios</p>
+                  <p className="text-xs text-stone-400">Comparte tu recuerdo con la quinceañera</p>
                 </div>
               </div>
 
@@ -837,7 +837,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     type="text"
                     value={uploadCaption}
                     onChange={(e) => setUploadCaption(e.target.value)}
-                    placeholder="Ej. ¡Felicidades a los novios! / Momento inolvidable"
+                    placeholder="Ej. ¡Felicidades en tus XV! / Momento inolvidable"
                     className="w-full px-3.5 py-2 rounded-xl bg-stone-950 border border-stone-700 text-xs text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-400"
                   />
                 </div>
@@ -927,7 +927,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         >
                           <img
                             src={activePhoto.url}
-                            alt={activePhoto.caption || 'Foto de boda'}
+                            alt={activePhoto.caption || 'Foto de XV Años'}
                             className="max-h-[66vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
                             referrerPolicy="no-referrer"
                           />
@@ -982,11 +982,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     {/* Header & Photo Title - With clean spacing from close button */}
                     <div className="p-5 sm:p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0 relative">
                       <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1 rounded-full inline-block mb-2.5">
-                        {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
+                        {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de Mis XV'}
                       </span>
 
                       <h3 className="text-lg sm:text-xl font-serif font-semibold text-white leading-snug">
-                        {activePhoto.caption || 'Recuerdo de la Boda'}
+                        {activePhoto.caption || 'Recuerdo de Mis Quince Años'}
                       </h3>
                     </div>
 
@@ -1011,7 +1011,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         <div className="py-10 text-center bg-stone-950/40 rounded-2xl border border-dashed border-stone-800 p-5">
                           <MessageCircle className="w-8 h-8 text-stone-600 mx-auto mb-2" />
                           <p className="text-sm text-stone-300 font-medium">Sé el primero en comentar esta foto</p>
-                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo para los novios.</p>
+                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo para la quinceañera.</p>
                         </div>
                       ) : (
                         comments.map((c) => (

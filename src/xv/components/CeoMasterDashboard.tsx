@@ -53,7 +53,7 @@ import { toast } from '../../lib/toast.ts';
 
 interface CeoMasterDashboardProps {
   currentUser: UserProfile;
-  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin') => void;
+  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => void;
   onBackToUserDashboard: () => void;
   onLogout: () => void;
 }
@@ -88,6 +88,7 @@ interface GlobalWedding {
   totalGuests: number;
   confirmedGuests: number;
   coverPhoto?: string;
+  eventType?: 'bodas' | 'xv' | string;
 }
 
 interface GlobalUser {
@@ -116,12 +117,13 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   const [users, setUsers] = useState<GlobalUser[]>([]);
   const [plans, setPlans] = useState<PlanDetails[]>(SUBSCRIPTION_PLANS);
   const [loading, setLoading] = useState(true);
-  
+
   // Search & Filters
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
   const [weddingSearchTerm, setWeddingSearchTerm] = useState('');
   const [weddingFilterStatus, setWeddingFilterStatus] = useState<string>('all');
-  
+  const [weddingEventTypeFilter, setWeddingEventTypeFilter] = useState<string>('all');
+
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
   const [userPlanFilter, setUserPlanFilter] = useState<string>('all');
@@ -136,25 +138,26 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   const [bulkTargetPlan, setBulkTargetPlan] = useState<PlanId>('atelier');
   const [bulkTargetRole, setBulkTargetRole] = useState<UserRole>('wedding_planner');
   const [isBulkOperating, setIsBulkOperating] = useState(false);
-  
+
   // Modals state
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [selectedWeddingToTransfer, setSelectedWeddingToTransfer] = useState<GlobalWedding | null>(null);
   const [newOwnerUid, setNewOwnerUid] = useState('');
   const [isCreatingWeddingModal, setIsCreatingWeddingModal] = useState(false);
-  
+
   const [isUserEditModalOpen, setIsUserEditModalOpen] = useState(false);
   const [selectedUserToEdit, setSelectedUserToEdit] = useState<GlobalUser | null>(null);
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
 
   const [isPlanEditorModalOpen, setIsPlanEditorModalOpen] = useState(false);
   const [selectedPlanToEdit, setSelectedPlanToEdit] = useState<PlanDetails | null>(null);
-  
+
   const [userToDelete, setUserToDelete] = useState<GlobalUser | null>(null);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
 
-  // New Wedding Form by CEO
+  // New Event Form by CEO
   const [createForUid, setCreateForUid] = useState(currentUser.uid);
+  const [newEventCategory, setNewEventCategory] = useState<'bodas' | 'xv'>('bodas');
   const [newCoupleNames, setNewCoupleNames] = useState('');
   const [newEventDate, setNewEventDate] = useState('2026-11-28');
   const [newCardStyle, setNewCardStyle] = useState<CardStyle>('classic-gold');
@@ -344,15 +347,15 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         method: 'DELETE',
       });
       if (res.ok) {
-        toast.success(`Boda "${weddingToDelete.coupleNames}" eliminada correctamente.`, 'Eliminada');
+        toast.success(`Evento "${weddingToDelete.coupleNames}" eliminado correctamente.`, 'Eliminado');
         setWeddingToDelete(null);
         fetchCeoData();
       } else {
-        toast.error('No se pudo eliminar la boda', 'Error');
+        toast.error('No se pudo eliminar el evento', 'Error');
       }
     } catch (err) {
-      console.error('Error deleting wedding:', err);
-      toast.error('Error al eliminar la boda', 'Error');
+      console.error('Error deleting event:', err);
+      toast.error('Error al eliminar el evento', 'Error');
     } finally {
       setIsDeletingWedding(false);
     }
@@ -376,7 +379,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
       if (res.ok) {
         setIsTransferModalOpen(false);
         setSelectedWeddingToTransfer(null);
-        toast.success('Propiedad de boda transferida exitosamente.', 'Transferencia Exitosa');
+        toast.success('Propiedad de evento transferida exitosamente.', 'Transferencia Exitosa');
         fetchCeoData();
       }
     } catch (err) {
@@ -403,38 +406,66 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
           cardStyle: newCardStyle,
           ceremonyVenue: newCeremonyVenue,
           receptionVenue: newReceptionVenue,
+          eventType: newEventCategory,
         }),
       });
 
       if (res.ok) {
         setIsCreatingWeddingModal(false);
         setNewCoupleNames('');
-        toast.success(`Boda "${newCoupleNames}" creada exitosamente.`, 'Boda Creada');
+        toast.success(
+          `Evento "${newCoupleNames}" (${newEventCategory === 'xv' ? 'XV Años' : 'Boda'}) creado exitosamente.`,
+          'Evento Creado'
+        );
         await fetchCeoData();
       }
     } catch (err) {
-      console.error('Error creating wedding:', err);
-      toast.error('Error al crear la boda');
+      console.error('Error creating event:', err);
+      toast.error('Error al crear el evento');
     } finally {
       setSubmittingAction(false);
     }
   };
 
-  // Filtered & Sorted Weddings
+  // Event Counts (Bodas vs XV Años vs Total)
+  const eventCounts = useMemo(() => {
+    let bodas = 0;
+    let xv = 0;
+    weddings.forEach((w) => {
+      const isXv = w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'));
+      if (isXv) xv++;
+      else bodas++;
+    });
+    return { bodas, xv, total: weddings.length };
+  }, [weddings]);
+
+  // Filtered & Sorted Events / Weddings
   const filteredWeddings = useMemo(() => {
     const search = (weddingSearchTerm || globalSearchTerm).toLowerCase().trim();
     return weddings.filter((w) => {
+      const isXv = w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'));
+      const eventType = isXv ? 'xv' : 'bodas';
+
       const matchesSearch =
         !search ||
         w.coupleNames?.toLowerCase().includes(search) ||
         w.ownerName?.toLowerCase().includes(search) ||
         w.ownerEmail?.toLowerCase().includes(search) ||
-        w.slug?.toLowerCase().includes(search);
+        w.slug?.toLowerCase().includes(search) ||
+        (isXv && ('xv' === search || 'quinceañera'.includes(search) || '15 años'.includes(search))) ||
+        (!isXv && ('boda'.includes(search) || 'matrimonio'.includes(search) || 'novios'.includes(search)));
 
-      if (weddingFilterStatus === 'all') return matchesSearch;
-      return matchesSearch && (w.status === weddingFilterStatus || (!w.status && weddingFilterStatus === 'active'));
+      const matchesStatus =
+        weddingFilterStatus === 'all' ||
+        w.status === weddingFilterStatus ||
+        (!w.status && weddingFilterStatus === 'active');
+
+      const matchesType =
+        weddingEventTypeFilter === 'all' || eventType === weddingEventTypeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
     });
-  }, [weddings, weddingSearchTerm, globalSearchTerm, weddingFilterStatus]);
+  }, [weddings, weddingSearchTerm, globalSearchTerm, weddingFilterStatus, weddingEventTypeFilter]);
 
   // Filtered & Sorted Users
   const filteredAndSortedUsers = useMemo(() => {
@@ -553,7 +584,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
             <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-stone-400" />
             <input
               type="text"
-              placeholder="Búsqueda global (usuarios, bodas, correos, planes)..."
+              placeholder="Búsqueda global (eventos, bodas, XV años, organizadores, planes)..."
               value={globalSearchTerm}
               onChange={(e) => setGlobalSearchTerm(e.target.value)}
               className="w-full pl-10 pr-9 py-2 text-xs bg-stone-950/90 border border-stone-700 rounded-full text-stone-200 placeholder:text-stone-500 focus:outline-none focus:border-amber-500 shadow-inner"
@@ -583,7 +614,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               className="px-3.5 sm:px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-1.5 sm:gap-2 shadow-md shadow-amber-500/10 transition-all cursor-pointer"
             >
               <Layers className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline">Vista Wedding Planner / Parejas</span>
+              <span className="hidden sm:inline">Vista Planner Dashboard</span>
               <span className="sm:hidden">Panel</span>
             </button>
 
@@ -601,11 +632,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 flex space-x-1 border-t border-stone-800 overflow-x-auto">
           <button
             onClick={() => setActiveTab('metrics')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-              activeTab === 'metrics'
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${activeTab === 'metrics'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
-            }`}
+              }`}
           >
             <TrendingUp className="w-4 h-4" />
             <span>1. Métricas & Finanzas Globales</span>
@@ -613,35 +643,32 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
           <button
             onClick={() => setActiveTab('weddings')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-              activeTab === 'weddings'
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${activeTab === 'weddings'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
-            }`}
+              }`}
           >
-            <Heart className="w-4 h-4" />
-            <span>2. Control Maestro de Bodas ({weddings.length})</span>
+            <Calendar className="w-4 h-4" />
+            <span>2. Control Maestro de Eventos ({weddings.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('planners')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-              activeTab === 'planners'
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${activeTab === 'planners'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
-            }`}
+              }`}
           >
             <Briefcase className="w-4 h-4" />
-            <span>3. Wedding Planners & Usuarios ({users.length})</span>
+            <span>3. Event Planners & Usuarios ({users.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('plans')}
-            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-              activeTab === 'plans'
+            className={`py-3.5 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all shrink-0 cursor-pointer ${activeTab === 'plans'
                 ? 'border-amber-400 text-amber-400 bg-amber-500/5'
                 : 'border-transparent text-stone-400 hover:text-stone-200'
-            }`}
+              }`}
           >
             <Crown className="w-4 h-4" />
             <span>4. Planes & Tarifas</span>
@@ -660,13 +687,13 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               <div className="relative z-10 max-w-3xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold uppercase tracking-wider mb-3">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Supervisión Centralizada Atelier</span>
+                  <span>Supervisión Centralizada Atelier Multi-Eventos</span>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2">
-                  Bienvenido, Daviex. Todo el ecosistema nupcial bajo tu mando.
+                  Bienvenido, Daviex. Todo el ecosistema de eventos bajo tu mando.
                 </h1>
                 <p className="text-stone-400 text-sm leading-relaxed">
-                  Como CEO de la plataforma, tienes facultades ilimitadas para auditar, intervenir, transferir y configurar cualquier boda, gestionar cuentas de Wedding Planners profesionales y supervisar la facturación global.
+                  Como CEO de la plataforma, tienes facultades ilimitadas para auditar, intervenir, transferir y configurar cualquier evento (Bodas, XV Años y celebraciones), gestionar cuentas de Event Planners y agencias, y supervisar la facturación global.
                 </p>
               </div>
             </div>
@@ -690,26 +717,28 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 </div>
               </div>
 
-              {/* Card 2: Total Weddings */}
+              {/* Card 2: Total Events (Bodas + XV Años) */}
               <div className="p-6 rounded-2xl bg-stone-900 border border-stone-800 hover:border-amber-500/40 transition-all">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Total de Bodas</span>
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
-                    <Heart className="w-5 h-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Total de Eventos</span>
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                    <Calendar className="w-5 h-5" />
                   </div>
                 </div>
                 <div className="text-2xl sm:text-3xl font-serif font-bold text-white mb-1">
                   {stats?.totalWeddings || weddings.length}
                 </div>
-                <div className="text-xs text-stone-400">
-                  Proyectos de invitaciones en la base de datos
+                <div className="text-xs text-stone-400 flex items-center gap-1.5 flex-wrap">
+                  <span className="text-rose-400 font-semibold">{eventCounts.bodas} Bodas 💍</span>
+                  <span>•</span>
+                  <span className="text-purple-400 font-semibold">{eventCounts.xv} XV Años 👑</span>
                 </div>
               </div>
 
-              {/* Card 3: Wedding Planners */}
+              {/* Card 3: Event Planners & Agencias */}
               <div className="p-6 rounded-2xl bg-stone-900 border border-stone-800 hover:border-amber-500/40 transition-all">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Wedding Planners</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-stone-400">Event Planners & Agencias</span>
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
                     <Briefcase className="w-5 h-5" />
                   </div>
@@ -718,7 +747,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   {stats?.weddingPlanners || weddingPlannersList.length}
                 </div>
                 <div className="text-xs text-amber-400">
-                  Agencias y organizadores con planes pro
+                  Agencias y organizadores de eventos pro
                 </div>
               </div>
 
@@ -735,6 +764,78 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 </div>
                 <div className="text-xs text-blue-400">
                   Pases confirmados por los invitados
+                </div>
+              </div>
+            </div>
+
+            {/* Breakdown by Event Type */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-stone-900 border border-stone-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-400" />
+                  <span>Distribución por Tipos de Eventos en la Plataforma</span>
+                </h3>
+                <span className="text-xs text-stone-400">
+                  Total de celebraciones: <strong className="text-white font-mono">{weddings.length}</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Bodas Card */}
+                <div className="p-5 rounded-2xl bg-stone-950 border border-rose-500/20 hover:border-rose-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">💍</span>
+                      <div>
+                        <h4 className="font-serif font-bold text-stone-100 text-sm">Bodas & Matrimonios</h4>
+                        <span className="text-[10px] text-stone-400 font-mono">Categoría Bodas</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      {eventCounts.bodas} ({weddings.length ? Math.round((eventCounts.bodas / weddings.length) * 100) : 0}%)
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-400 leading-relaxed">
+                    Invitaciones nupciales, itinerarios ceremoniales, mesas de regalos, dress code y control de pases confirmados.
+                  </p>
+                </div>
+
+                {/* XV Años Card */}
+                <div className="p-5 rounded-2xl bg-stone-950 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">👑</span>
+                      <div>
+                        <h4 className="font-serif font-bold text-stone-100 text-sm">XV Años & Quinceañeras</h4>
+                        <span className="text-[10px] text-stone-400 font-mono">Categoría XV Años</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {eventCounts.xv} ({weddings.length ? Math.round((eventCounts.xv / weddings.length) * 100) : 0}%)
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-400 leading-relaxed">
+                    Celebraciones juveniles, sesiones fotográficas, corte de honor, padrinos, vals y pases dinámicos.
+                  </p>
+                </div>
+
+                {/* Eventos Sociales & Corporativos */}
+                <div className="p-5 rounded-2xl bg-stone-950 border border-amber-500/20 hover:border-amber-500/40 transition-all">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🎉</span>
+                      <div>
+                        <h4 className="font-serif font-bold text-stone-100 text-sm">Eventos Sociales & Corporativos</h4>
+                        <span className="text-[10px] text-amber-400 font-mono">Multi-Evento</span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Activo
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-400 leading-relaxed">
+                    Soporte para aniversarios, baby showers, bautizos y graduaciones con personalización avanzada en Atelier.
+                  </p>
                 </div>
               </div>
             </div>
@@ -758,7 +859,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                         {count} {count === 1 ? 'cuenta' : 'cuentas'}
                       </div>
                       <span className="text-[10px] text-stone-500 font-mono">
-                        {plan.price}
+{plan.price}
                       </span>
                     </div>
                   );
@@ -768,18 +869,18 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
           </div>
         )}
 
-        {/* TAB 2: WEDDINGS MASTER CONTROL */}
+        {/* TAB 2: EVENTS MASTER CONTROL */}
         {activeTab === 'weddings' && (
           <div className="space-y-6 animate-fadeIn">
             {/* Header & Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-stone-900 p-6 rounded-3xl border border-stone-800">
               <div>
                 <h2 className="font-serif text-xl font-bold text-white mb-1 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-rose-400" />
-                  <span>Directorio Maestro de Todas las Bodas</span>
+                  <Calendar className="w-5 h-5 text-amber-400" />
+                  <span>Directorio Maestro de Todos los Eventos</span>
                 </h2>
                 <p className="text-xs text-stone-400">
-                  Puedes editar la invitación de cualquier boda, transferir el organizador o eliminarla.
+                  Supervisa, audita en Atelier, transfiere organizadores o gestiona las invitaciones de todos los tipos de eventos (Bodas, XV Años y celebraciones).
                 </p>
               </div>
 
@@ -789,48 +890,65 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/10 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Crear Boda como CEO</span>
+                  <span>Crear Evento como CEO</span>
                 </button>
               </div>
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-stone-900/60 p-4 rounded-2xl border border-stone-800">
-              <div className="relative w-full sm:w-80">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-stone-900/60 p-4 rounded-2xl border border-stone-800">
+              <div className="relative w-full lg:w-80">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-stone-500" />
                 <input
                   type="text"
-                  placeholder="Buscar por novios, organizador, slug..."
+                  placeholder="Buscar por novios, quinceañera, slug, organizador..."
                   value={weddingSearchTerm}
                   onChange={(e) => setWeddingSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-xs bg-stone-950 border border-stone-700 rounded-xl text-stone-200 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-xs text-stone-400 font-medium flex items-center gap-1">
-                  <Filter className="w-3.5 h-3.5" /> Estado:
-                </span>
-                <select
-                  value={weddingFilterStatus}
-                  onChange={(e) => setWeddingFilterStatus(e.target.value)}
-                  className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
-                >
-                  <option value="all">Todas las Bodas</option>
-                  <option value="active">Activas / Publicadas</option>
-                  <option value="planning">En Planeación</option>
-                  <option value="completed">Concluidas</option>
-                </select>
+              <div className="flex items-center flex-wrap gap-3 w-full lg:w-auto justify-end">
+                {/* Event Type Filter */}
+                <div className="flex items-center gap-1.5 text-xs text-stone-400">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Tipo:</span>
+                  <select
+                    value={weddingEventTypeFilter}
+                    onChange={(e) => setWeddingEventTypeFilter(e.target.value)}
+                    className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
+                  >
+                    <option value="all">Todos los Tipos ({eventCounts.total})</option>
+                    <option value="bodas">💍 Bodas ({eventCounts.bodas})</option>
+                    <option value="xv">👑 XV Años ({eventCounts.xv})</option>
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div className="flex items-center gap-1.5 text-xs text-stone-400">
+                  <Filter className="w-3.5 h-3.5 text-stone-500" />
+                  <span>Estado:</span>
+                  <select
+                    value={weddingFilterStatus}
+                    onChange={(e) => setWeddingFilterStatus(e.target.value)}
+                    className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="all">Todos los Estados</option>
+                    <option value="active">Activas / Publicadas</option>
+                    <option value="planning">En Planeación</option>
+                    <option value="completed">Concluidas</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Weddings Table */}
+            {/* Weddings & Events Table */}
             <div className="bg-stone-900 rounded-3xl border border-stone-800 overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-stone-300">
                   <thead className="bg-stone-950 text-stone-400 uppercase tracking-wider font-semibold text-[10px] border-b border-stone-800">
                     <tr>
-                      <th className="py-4 px-5">ID & Novios</th>
+                      <th className="py-4 px-5">ID & Evento</th>
                       <th className="py-4 px-5">Organizador / Dueño</th>
                       <th className="py-4 px-5">Fecha & Estilo</th>
                       <th className="py-4 px-5">Invitados / RSVP</th>
@@ -839,106 +957,123 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-800">
-                    {filteredWeddings.map((wedding) => (
-                      <tr key={wedding.id} className="hover:bg-stone-800/50 transition-colors">
-                        <td className="py-4 px-5">
-                          <div className="font-serif font-bold text-stone-100 text-sm mb-0.5">
-                            {wedding.coupleNames}
-                          </div>
-                          <div className="text-[11px] text-stone-400 font-mono flex items-center gap-1.5">
-                            <span className="text-amber-400 font-bold">#{wedding.id}</span>
-                            <span>•</span>
-                            <span className="text-stone-500">/{wedding.slug}</span>
-                          </div>
-                        </td>
+                    {filteredWeddings.map((wedding) => {
+                      const isXv = wedding.eventType === 'xv' || (wedding.slug && wedding.slug.toLowerCase().startsWith('xv'));
+                      const eventCategoryName = isXv ? 'XV Años' : 'Boda';
+                      const publicUrl = isXv
+                        ? (wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=xv`)
+                        : (wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=bodas`);
 
-                        <td className="py-4 px-5">
-                          <div className="font-semibold text-stone-200">
-                            {wedding.ownerName}
-                          </div>
-                          <div className="text-[11px] text-stone-400 font-mono">
-                            {wedding.ownerEmail}
-                          </div>
-                        </td>
+                      return (
+                        <tr key={wedding.id} className="hover:bg-stone-800/50 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              {isXv ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                                  <span>👑</span> XV Años
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
+                                  <span>💍</span> Boda
+                                </span>
+                              )}
+                              <span className="text-[11px] text-amber-400 font-mono font-bold">#{wedding.id}</span>
+                            </div>
+                            <div className="font-serif font-bold text-stone-100 text-sm mb-0.5">
+                              {wedding.coupleNames}
+                            </div>
+                            <div className="text-[11px] text-stone-500 font-mono">
+                              /{wedding.slug}
+                            </div>
+                          </td>
 
-                        <td className="py-4 px-5">
-                          <div className="text-stone-200">
-                            {wedding.eventDate ? String(wedding.eventDate).substring(0, 10) : 'Por definir'}
-                          </div>
-                          <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-stone-800 text-[10px] font-mono text-amber-300 border border-stone-700">
-                            {wedding.cardStyle}
-                          </span>
-                        </td>
+                          <td className="py-4 px-5">
+                            <div className="font-semibold text-stone-200">
+                              {wedding.ownerName}
+                            </div>
+                            <div className="text-[11px] text-stone-400 font-mono">
+                              {wedding.ownerEmail}
+                            </div>
+                          </td>
 
-                        <td className="py-4 px-5">
-                          <div className="font-semibold text-stone-200">
-                            {wedding.confirmedGuests} / {wedding.totalGuests} confirmados
-                          </div>
-                          <div className="text-[11px] text-stone-500">
-                            Invitados en lista
-                          </div>
-                        </td>
+                          <td className="py-4 px-5">
+                            <div className="text-stone-200">
+                              {wedding.eventDate ? String(wedding.eventDate).substring(0, 10) : 'Por definir'}
+                            </div>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-stone-800 text-[10px] font-mono text-amber-300 border border-stone-700">
+                              {wedding.cardStyle}
+                            </span>
+                          </td>
 
-                        <td className="py-4 px-5">
-                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            wedding.status === 'active' || wedding.isPublished
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          }`}>
-                            {wedding.status || (wedding.isPublished ? 'Activa' : 'Borrador')}
-                          </span>
-                        </td>
+                          <td className="py-4 px-5">
+                            <div className="font-semibold text-stone-200">
+                              {wedding.confirmedGuests} / {wedding.totalGuests} confirmados
+                            </div>
+                            <div className="text-[11px] text-stone-500">
+                              Invitados en lista
+                            </div>
+                          </td>
 
-                        <td className="py-4 px-5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Open Public URL */}
-                            <a
-                              href={`/${wedding.slug || `?wedding=${wedding.id}`}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
-                              title="Ver invitación pública"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
+                          <td className="py-4 px-5">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${wedding.status === 'active' || wedding.isPublished
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              }`}>
+                              {wedding.status || (wedding.isPublished ? 'Activa' : 'Borrador')}
+                            </span>
+                          </td>
 
-                            {/* Open in Admin Mode */}
-                            <button
-                              onClick={() => onSelectWedding(wedding.id, 'admin')}
-                              className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/30 font-bold transition-all flex items-center gap-1 cursor-pointer"
-                              title="Administrar en Atelier"
-                            >
-                              <SlidersHorizontal className="w-3.5 h-3.5" />
-                              <span>Atelier</span>
-                            </button>
-
-                            {/* Transfer Ownership */}
-                            <button
-                              onClick={() => {
-                                setSelectedWeddingToTransfer(wedding);
-                                setNewOwnerUid(wedding.ownerUid);
-                                setIsTransferModalOpen(true);
-                              }}
-                              className="p-2 rounded-lg bg-stone-800 hover:bg-blue-950 hover:text-blue-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
-                              title="Transferir a otro Wedding Planner / Dueño"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                            </button>
-
-                            {/* Delete */}
-                            {wedding.id !== 1 && (
-                              <button
-                                onClick={() => handleDeleteWedding(wedding.id, wedding.coupleNames)}
-                                className="p-2 rounded-lg bg-stone-800 hover:bg-rose-950 hover:text-rose-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
-                                title="Eliminar boda definitivamente"
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* Open Public URL */}
+                              <a
+                                href={publicUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors"
+                                title={`Ver invitación pública de ${eventCategoryName}`}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+
+                              {/* Open in Admin Mode */}
+                              <button
+                                onClick={() => onSelectWedding(wedding.id, 'admin', isXv ? 'xv' : 'bodas')}
+                                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/30 font-bold transition-all flex items-center gap-1 cursor-pointer"
+                                title={`Administrar en Atelier (${eventCategoryName})`}
+                              >
+                                <SlidersHorizontal className="w-3.5 h-3.5" />
+                                <span>Atelier</span>
                               </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+
+                              {/* Transfer Ownership */}
+                              <button
+                                onClick={() => {
+                                  setSelectedWeddingToTransfer(wedding);
+                                  setNewOwnerUid(wedding.ownerUid);
+                                  setIsTransferModalOpen(true);
+                                }}
+                                className="p-2 rounded-lg bg-stone-800 hover:bg-blue-950 hover:text-blue-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
+                                title="Transferir a otro Event Planner / Dueño"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                              </button>
+
+                              {/* Delete */}
+                              {wedding.id !== 1 && (
+                                <button
+                                  onClick={() => handleDeleteWedding(wedding.id, wedding.coupleNames)}
+                                  className="p-2 rounded-lg bg-stone-800 hover:bg-rose-950 hover:text-rose-300 border border-stone-700 text-stone-400 transition-colors cursor-pointer"
+                                  title="Eliminar evento"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1006,8 +1141,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
                   >
                     <option value="all">Todos los Roles</option>
-                    <option value="wedding_planner">Wedding Planners</option>
-                    <option value="couple">Parejas</option>
+                    <option value="wedding_planner">Event Planners / Organizadores</option>
+                    <option value="couple">Parejas & Clientes</option>
                     <option value="ceo">CEO Master</option>
                   </select>
                 </div>
@@ -1034,17 +1169,15 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                 <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs">
                   <button
                     onClick={() => setUserViewMode('table')}
-                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
-                      userViewMode === 'table' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${userViewMode === 'table' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
+                      }`}
                   >
                     Tabla Detallada
                   </button>
                   <button
                     onClick={() => setUserViewMode('cards')}
-                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
-                      userViewMode === 'cards' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg font-medium transition-colors cursor-pointer ${userViewMode === 'cards' ? 'bg-stone-800 text-amber-300 font-bold' : 'text-stone-400 hover:text-white'
+                      }`}
                   >
                     Tarjetas
                   </button>
@@ -1105,9 +1238,9 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                       onChange={(e) => setBulkTargetRole(e.target.value as UserRole)}
                       className="text-xs bg-transparent border-none text-stone-200 focus:outline-none font-medium"
                     >
-                      <option value="couple">Pareja</option>
-                      <option value="wedding_planner">Wedding Planner</option>
-                      <option value="ceo">CEO</option>
+                      <option value="couple">Pareja / Cliente</option>
+                      <option value="wedding_planner">Event Planner / Organizador</option>
+                      <option value="ceo">CEO Master</option>
                     </select>
                     <button
                       onClick={handleBulkUpdateRole}
@@ -1222,7 +1355,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                           onClick={() => handleSort('weddingsCount')}
                         >
                           <div className="flex items-center gap-1.5">
-                            <span>Bodas</span>
+                            <span>Eventos</span>
                             {userSortField === 'weddingsCount' ? (
                               userSortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-amber-400" /> : <ArrowDown className="w-3 h-3 text-amber-400" />
                             ) : (
@@ -1252,9 +1385,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                           return (
                             <tr
                               key={u.uid}
-                              className={`transition-colors ${
-                                isSelected ? 'bg-amber-500/10' : 'hover:bg-stone-800/50'
-                              }`}
+                              className={`transition-colors ${isSelected ? 'bg-amber-500/10' : 'hover:bg-stone-800/50'
+                                }`}
                             >
                               {/* Row Checkbox */}
                               <td className="py-3 px-4 text-center">
@@ -1305,13 +1437,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                                 <select
                                   value={u.role}
                                   onChange={(e) => handleUpdateUserRole(u.uid, e.target.value)}
-                                  className={`text-[11px] font-bold rounded-lg px-2.5 py-1 border uppercase tracking-wider focus:outline-none ${
-                                    isCeo
+                                  className={`text-[11px] font-bold rounded-lg px-2.5 py-1 border uppercase tracking-wider focus:outline-none ${isCeo
                                       ? 'bg-amber-400 text-stone-950 border-amber-400'
                                       : isPlanner
-                                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                      : 'bg-stone-800 text-stone-300 border-stone-700'
-                                  }`}
+                                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                        : 'bg-stone-800 text-stone-300 border-stone-700'
+                                    }`}
                                 >
                                   <option value="couple">PAREJA</option>
                                   <option value="wedding_planner">PLANNER</option>
@@ -1341,7 +1472,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                                   {u.weddingsCount || 0}
                                 </span>
                                 <span className="text-[10px] text-stone-500 ml-1">
-                                  {u.weddingsCount === 1 ? 'boda' : 'bodas'}
+                                  {u.weddingsCount === 1 ? 'evento' : 'eventos'}
                                 </span>
                               </td>
 
@@ -1390,24 +1521,22 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   return (
                     <div
                       key={u.uid}
-                      className={`p-6 rounded-3xl border transition-all flex flex-col justify-between ${
-                        isCeoUser
+                      className={`p-6 rounded-3xl border transition-all flex flex-col justify-between ${isCeoUser
                           ? 'bg-gradient-to-b from-stone-900 to-amber-950/30 border-amber-500/50 shadow-lg shadow-amber-500/10'
                           : isPlanner
-                          ? 'bg-stone-900 border-amber-500/20'
-                          : 'bg-stone-900/80 border-stone-800'
-                      }`}
+                            ? 'bg-stone-900 border-amber-500/20'
+                            : 'bg-stone-900/80 border-stone-800'
+                        }`}
                     >
                       <div>
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-serif font-bold text-base ${
-                              isCeoUser
+                            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-serif font-bold text-base ${isCeoUser
                                 ? 'bg-amber-400 text-stone-950 shadow-md ring-2 ring-amber-400/50'
                                 : isPlanner
-                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                : 'bg-stone-800 text-stone-300'
-                            }`}>
+                                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                  : 'bg-stone-800 text-stone-300'
+                              }`}>
                               {isCeoUser ? <Crown className="w-5 h-5" /> : (u.name ? u.name[0] : 'U')}
                             </div>
                             <div>
@@ -1452,8 +1581,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
                         <div className="space-y-2 text-xs text-stone-400 mb-6">
                           <div className="flex justify-between py-1 border-b border-stone-800/80">
-                            <span>Bodas Gestionadas:</span>
-                            <strong className="text-stone-200">{u.weddingsCount || 0} bodas</strong>
+                            <span>Eventos Gestionados:</span>
+                            <strong className="text-stone-200">{u.weddingsCount || 0} {u.weddingsCount === 1 ? 'evento' : 'eventos'}</strong>
                           </div>
                           <div className="flex justify-between py-1 border-b border-stone-800/80">
                             <span>UID de Cuenta:</span>
@@ -1476,7 +1605,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                             <option value="free">Plan Esencial ($0 USD)</option>
                             <option value="atelier">Plan Atelier Romance ($29 USD)</option>
                             <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
-                            <option value="planner_starter">Planner Studio 5 Bodas ($89 USD)</option>
+                            <option value="planner_starter">Planner Studio 5 Eventos ($89 USD)</option>
                             <option value="planner_pro">Planner Agencia Ilimitado ($179 USD)</option>
                             <option value="ceo_unlimited">CEO Maestro Ilimitado</option>
                           </select>
@@ -1500,7 +1629,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   <span>Estructura de Tarifas & Planes Disponibles en la Plataforma</span>
                 </h2>
                 <p className="text-stone-400 text-sm">
-                  Configuración editable de precios, límites y características activas para Novios y Wedding Planners profesionales.
+                  Configuración editable de precios, límites y características activas para Clientes, Novios y Event Planners profesionales.
                 </p>
               </div>
 
@@ -1513,13 +1642,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${
-                    plan.id === 'ceo_unlimited'
+                  className={`p-8 rounded-3xl border flex flex-col justify-between transition-all ${plan.id === 'ceo_unlimited'
                       ? 'bg-gradient-to-b from-stone-900 to-amber-950/40 border-amber-500/60 shadow-2xl'
                       : plan.category === 'planner'
-                      ? 'bg-stone-900 border-amber-500/30'
-                      : 'bg-stone-900/70 border-stone-800'
-                  }`}
+                        ? 'bg-stone-900 border-amber-500/30'
+                        : 'bg-stone-900/70 border-stone-800'
+                    }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -1527,7 +1655,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                         {plan.badge}
                       </span>
                       <span className="text-xs text-stone-400 font-mono">
-                        {plan.category === 'planner' ? 'Wedding Planner' : plan.category === 'ceo' ? 'CEO Master' : 'Pareja'}
+                        {plan.category === 'planner' ? 'Event Planner' : plan.category === 'ceo' ? 'CEO Master' : 'Pareja / Cliente'}
                       </span>
                     </div>
 
@@ -1559,7 +1687,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
                   <div className="pt-6 border-t border-stone-800 flex items-center justify-between">
                     <span className="text-xs text-stone-400 font-mono">
-                      {plan.maxWeddings === 'unlimited' ? 'Bodas Ilimitadas' : `${plan.maxWeddings} Bodas`}
+                      {plan.maxWeddings === 'unlimited' ? 'Eventos Ilimitados' : `${plan.maxWeddings} Eventos`}
                     </span>
 
                     <button
@@ -1633,10 +1761,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   </div>
                   <div>
                     <h3 className="font-serif text-lg font-bold text-white">
-                      Transferir Propiedad de Boda
+                      Transferir Propiedad del Evento
                     </h3>
                     <p className="text-xs text-stone-400">
-                      Boda: {selectedWeddingToTransfer.coupleNames} (ID: {selectedWeddingToTransfer.id})
+                      Evento: {selectedWeddingToTransfer.coupleNames} (ID: {selectedWeddingToTransfer.id})
                     </p>
                   </div>
                 </div>
@@ -1651,7 +1779,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               <form onSubmit={handleTransferOwnership} className="space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1.5">
-                    Seleccionar Nuevo Wedding Planner / Dueño:
+                    Seleccionar Nuevo Organizador / Planner / Dueño:
                   </label>
                   <select
                     value={newOwnerUid}
@@ -1661,14 +1789,14 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   >
                     {users.map((u) => (
                       <option key={u.uid} value={u.uid}>
-                        {u.name} ({u.email}) - {u.role === 'wedding_planner' ? 'Wedding Planner' : u.role}
+                        {u.name} ({u.email}) - {u.role === 'wedding_planner' ? 'Event Planner' : u.role}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 leading-relaxed">
-                  Al transferir, el nuevo usuario tendrá acceso completo para editar invitados, música, fotos e itinerario de esta boda desde su propio panel de control.
+                  Al transferir, el nuevo usuario tendrá acceso completo para editar invitados, música, fotos e itinerario de este evento desde su propio panel de control.
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-stone-800">
@@ -1693,7 +1821,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         )}
       </AnimatePresence>
 
-      {/* MODAL: CREATE WEDDING AS CEO */}
+      {/* MODAL: CREATE WEDDING / EVENT AS CEO */}
       <AnimatePresence>
         {isCreatingWeddingModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md overflow-y-auto">
@@ -1710,10 +1838,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   </div>
                   <div>
                     <h3 className="font-serif text-lg font-bold text-white">
-                      Crear Nueva Boda (Modo CEO)
+                      Crear Nuevo Evento (Modo CEO)
                     </h3>
                     <p className="text-xs text-stone-400">
-                      Asigna la boda a ti mismo o a cualquier Wedding Planner.
+                      Asigna el evento a ti mismo o a cualquier Event Planner / Usuario.
                     </p>
                   </div>
                 </div>
@@ -1726,6 +1854,37 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
               </div>
 
               <form onSubmit={handleCreateWeddingByCeo} className="space-y-4">
+                {/* Event Category Selector */}
+                <div>
+                  <label className="block text-xs font-medium text-stone-300 mb-1.5">
+                    Tipo de Evento:
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-stone-950 rounded-xl border border-stone-800">
+                    <button
+                      type="button"
+                      onClick={() => setNewEventCategory('bodas')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        newEventCategory === 'bodas'
+                          ? 'bg-amber-500 text-stone-950 shadow-md'
+                          : 'text-stone-400 hover:text-stone-200'
+                      }`}
+                    >
+                      <span>💍 Boda Nupcial</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewEventCategory('xv')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        newEventCategory === 'xv'
+                          ? 'bg-amber-500 text-stone-950 shadow-md'
+                          : 'text-stone-400 hover:text-stone-200'
+                      }`}
+                    >
+                      <span>👑 Fiesta de XV Años</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
                     Asignar Dueño / Organizador:
@@ -1745,12 +1904,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    Nombres de los Novios:
+                    {newEventCategory === 'xv' ? 'Nombre de la Quinceañera:' : 'Nombres de los Novios:'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej. Isabella & Mateo"
+                    placeholder={newEventCategory === 'xv' ? 'Ej. Valentina Morales' : 'Ej. Isabella & Mateo'}
                     value={newCoupleNames}
                     onChange={(e) => setNewCoupleNames(e.target.value)}
                     className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
@@ -1792,24 +1951,26 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    Lugar de Ceremonia:
+                    {newEventCategory === 'xv' ? 'Lugar de Misa / Ceremonia de Acción de Gracias:' : 'Lugar de Ceremonia:'}
                   </label>
                   <input
                     type="text"
                     value={newCeremonyVenue}
                     onChange={(e) => setNewCeremonyVenue(e.target.value)}
+                    placeholder={newEventCategory === 'xv' ? 'Ej. Parroquia San José' : 'Ej. Parroquia Nuestra Señora del Pilar'}
                     className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    Lugar de Recepción / Banquete:
+                    {newEventCategory === 'xv' ? 'Lugar de Recepción / Salón de Fiesta:' : 'Lugar de Recepción / Banquete:'}
                   </label>
                   <input
                     type="text"
                     value={newReceptionVenue}
                     onChange={(e) => setNewReceptionVenue(e.target.value)}
+                    placeholder="Ej. Hacienda Las Rosas / Salón Real"
                     className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
                   />
                 </div>
@@ -1827,7 +1988,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     disabled={submittingAction}
                     className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>{submittingAction ? 'Creando...' : 'Crear Boda'}</span>
+                    <span>{submittingAction ? 'Creando...' : newEventCategory === 'xv' ? 'Crear Evento de XV Años' : 'Crear Boda'}</span>
                   </button>
                 </div>
               </form>
@@ -1839,8 +2000,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
       {/* Confirmation Modal for CEO Wedding Deletion */}
       <ConfirmModal
         isOpen={Boolean(weddingToDelete)}
-        title="¿Eliminar Proyecto de Boda?"
-        message={`¿Confirmas la eliminación definitiva de la boda "${weddingToDelete?.coupleNames}" (ID: ${weddingToDelete?.id})?\nEsta acción borrará permanentemente sus datos, invitados y fotos asociadas.`}
+        title="¿Eliminar Proyecto de Evento?"
+        message={`¿Confirmas la eliminación definitiva del evento "${weddingToDelete?.coupleNames}" (ID: ${weddingToDelete?.id})?\nEsta acción borrará permanentemente sus datos, invitados y fotos asociadas.`}
         confirmText="Eliminar Definitivamente"
         cancelText="Cancelar"
         variant="danger"

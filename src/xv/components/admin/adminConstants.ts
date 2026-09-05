@@ -55,7 +55,7 @@ export const HERO_FIT_OPTIONS: Array<{
     id: 'cover',
     title: 'Pantalla Completa (Cover)',
     badge: 'Recomendado',
-    desc: 'Llena toda la pantalla recortando armónicamente sin deformar la foto (Ideal para fotos verticales de pareja).',
+    desc: 'Llena toda la pantalla recortando armónicamente sin deformar la foto (Ideal para fotos verticales de la quinceañera).',
   },
   {
     id: 'contain',

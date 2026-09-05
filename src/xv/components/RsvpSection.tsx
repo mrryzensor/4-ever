@@ -322,7 +322,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           />
 
           <p className={`text-sm sm:text-base font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-            Por favor confírmanos tu asistencia antes del <strong className="font-semibold">{settings.rsvpDeadline || 'la fecha límite'}</strong> para coordinar todos los preparativos de mi fiesta.
+            Por favor confírmame tu asistencia antes del <strong className="font-semibold">{settings.rsvpDeadline || 'la fecha límite'}</strong> para coordinar todos los preparativos de mi fiesta.
           </p>
         </div>
 
@@ -346,7 +346,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               <p className={`text-sm sm:text-base max-w-lg mx-auto leading-relaxed mb-8 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                 {status === 'confirmed'
                   ? `Muchas gracias ${fullName}. Me llena de felicidad que me acompañes a celebrar mis quince años.`
-                  : `Sentimos que no puedas acompañarnos ${fullName}. Estarás presente en nuestros corazones.`}
+                  : `Siento mucho que no puedas acompañarme ${fullName}. Te tendré presente en mi corazón.`}
               </p>
 
               <div className="p-5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 max-w-md mx-auto text-xs sm:text-sm mb-8 space-y-1">
@@ -647,15 +647,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       </div>
                     </div>
 
-                    {/* Dedication message for couple */}
+                    {/* Dedication message for quinceañera */}
                     <div>
                       <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                         <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
-                        Mensaje o Dedicatoria para los Novios
+                        Mensaje o Dedicatoria para la Quinceañera
                       </label>
                       <textarea
                         rows={3}
-                        placeholder="Escribe unas palabras de felicitación o buenos deseos..."
+                        placeholder="Escribe tus mejores deseos para mis quince años..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"

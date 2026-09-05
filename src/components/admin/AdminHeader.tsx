@@ -47,10 +47,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <button
               onClick={onBackToDashboard}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-stone-100 border border-[#E5E2D0] text-[#5A5A40] text-xs font-semibold shadow-2xs transition-all cursor-pointer shrink-0"
-              title="Volver a la lista de bodas"
+              title="Volver al panel de todos los eventos y proyectos"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Mis Bodas</span>
+              <span className="hidden sm:inline">Mis Eventos</span>
             </button>
           )}
 

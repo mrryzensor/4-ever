@@ -294,7 +294,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       ? `${currentUrl}/${encodeURIComponent(settings.slug)}?code=${encodeURIComponent(guest.accessCode)}`
       : `${currentUrl}/?w=${encodeURIComponent(settings.id || 1)}&code=${encodeURIComponent(guest.accessCode)}`;
     const msg = encodeURIComponent(
-      `¡Hola ${guest.fullName}! Nos hace inmensa ilusión invitarte a nuestra boda. Puedes ver todos los detalles y confirmar tus pases (${guest.allocatedPasses}) directamente aquí: ${directInvitationUrl}`
+      `¡Hola ${guest.fullName}! Me hace inmensa ilusión invitarte a celebrar mis XV Años. Puedes ver todos los detalles y confirmar tus pases (${guest.allocatedPasses}) directamente aquí: ${directInvitationUrl}`
     );
     return `https://wa.me/${cleanPhone.replace('+', '')}?text=${msg}`;
   };

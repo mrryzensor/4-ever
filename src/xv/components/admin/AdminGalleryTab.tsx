@@ -107,7 +107,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
             Métricas & Comentarios de la Galería
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            Supervisa las reacciones con "Me gusta", lecturas y dedicatorias que los invitados dejan en tus fotografías de boda.
+            Supervisa las reacciones con "Me gusta", lecturas y dedicatorias que los invitados dejan en tus fotografías de los XV Años.
           </p>
         </div>
 
@@ -189,7 +189,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
               Foto Más Querida
             </span>
             <h3 className="text-base font-serif font-bold text-stone-900 truncate">
-              {topLikedPhoto ? (topLikedPhoto.caption || 'Foto de Boda') : 'Sin fotos'}
+              {topLikedPhoto ? (topLikedPhoto.caption || 'Foto de XV Años') : 'Sin fotos'}
             </h3>
             <span className="text-[10px] text-rose-600 font-bold mt-0.5 flex items-center gap-1">
               <Heart className="w-3 h-3 fill-rose-500" /> {topLikedPhoto?.likesCount || 0} Me gusta

@@ -266,8 +266,8 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
             <p className="text-stone-600 max-w-md mx-auto text-sm leading-relaxed mb-6">
               {status === 'confirmed'
-                ? `Muchas gracias ${guest?.fullName}. Nos llena de alegría que nos acompañes en el día más feliz de nuestras vidas.`
-                : `Sentimos que no puedas acompañarnos ${guest?.fullName}. Te tendremos presente en nuestro corazón.`}
+                ? `Muchas gracias ${guest?.fullName}. Me llena de felicidad que me acompañes en mis quince años.`
+                : `Siento mucho que no puedas acompañarme ${guest?.fullName}. Te tendré presente en mi corazón.`}
             </p>
 
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 max-w-sm mx-auto text-xs text-amber-900 mb-6">
@@ -294,7 +294,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
               </h3>
               <p className="text-xs text-stone-500 mt-1">
                 {isOpenRegistration
-                  ? 'Ingresa tu nombre para registrarte a la celebración de los novios'
+                  ? 'Ingresa tu nombre para registrarte a la fiesta de la quinceañera'
                   : 'Ingresa tu código exclusivo o escribe tu nombre completo'}
               </p>
             </div>
@@ -646,11 +646,11 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
             <div>
               <label className="text-xs font-semibold text-stone-700 block mb-1 flex items-center gap-1.5">
                 <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
-                Dedicatoria o mensaje para los novios:
+                Dedicatoria o mensaje para la quinceañera:
               </label>
               <textarea
                 rows={2}
-                placeholder="Escribe unas palabras de felicitación..."
+                placeholder="Escribe unas palabras de felicitación y bendiciones para mis XV..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="w-full bg-white border border-stone-300 rounded-lg p-2.5 text-xs text-stone-900 focus:outline-none focus:border-amber-500 resize-none"

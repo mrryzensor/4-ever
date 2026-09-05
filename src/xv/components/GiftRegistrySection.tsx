@@ -81,7 +81,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
           {settings.giftRegistryMessage ||
-            'El mejor regalo es contar con tu cariño y presencia en mis XV años. Si deseas obsequiarme un detalle para mis metas y recuerdos, ponemos a tu disposición las siguientes opciones:'}
+            'El mejor regalo es contar con tu cariño y presencia en mis XV años. Si deseas obsequiarme un detalle para mis metas y recuerdos, pongo a tu disposición las siguientes opciones:'}
         </p>
 
         {/* Quick Summary Preview (when collapsed) - Larger & Premium Styling */}
@@ -529,7 +529,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                   )}
                   <p className={`text-xs leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                     {item.description ||
-                      'Puedes consultar nuestra mesa de regalos en línea o visitando la sucursal de tu preferencia.'}
+                      'Puedes consultar mi mesa de regalos en línea o visitando la sucursal de tu preferencia.'}
                   </p>
                 </div>
               )}
@@ -537,14 +537,14 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
               {item.type === 'honeymoon' && (
                 <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   {item.description ||
-                    'Ayúdanos a vivir experiencias increíbles en nuestro primer viaje como esposos.'}
+                    'Apóyame a cumplir mis metas académicas y vivir mi viaje soñado de quince años.'}
                 </p>
               )}
 
               {item.type === 'envelope' && (
                 <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   {item.description ||
-                    'Si prefieres hacernos un obsequio en efectivo, dispondremos de un cofre especial de sobres en la entrada de la recepción.'}
+                    'Si prefieres hacerme un obsequio en efectivo, dispondré de un buzón especial de sobres en la entrada de la recepción.'}
                 </p>
               )}
 

@@ -118,7 +118,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
         const parsed = typeof settings.itinerary === 'string' ? JSON.parse(settings.itinerary) : settings.itinerary;
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch {}
+    } catch { }
     return [
       { time: '17:00', title: 'Ceremonia Religiosa', desc: 'Enlace matrimonial y bendición' },
       { time: '18:30', title: 'Cóctel & Bienvenida', desc: 'Brindis y aperitivos' },
@@ -422,14 +422,14 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           totalFiles === 1 && galleryCaption.trim()
             ? galleryCaption.trim()
             : galleryCaption.trim()
-            ? `${galleryCaption.trim()} (${i + 1}/${totalFiles})`
-            : file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+              ? `${galleryCaption.trim()} (${i + 1}/${totalFiles})`
+              : file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
 
         const photoPayload = {
           weddingId: settings.id || 1,
           url: finalUrl,
-          caption: itemCaption || 'Fotografía de la boda',
-          authorName: 'Novios',
+          caption: itemCaption || 'Fotografía de los XV Años',
+          authorName: 'Quinceañera y Familia',
           category: galleryCategory,
         };
 
@@ -562,11 +562,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step.id as any)}
-                className={`p-2 rounded-xl text-left transition-all cursor-pointer select-none flex flex-col gap-0.5 min-w-0 overflow-hidden relative ${
-                  isActive
-                    ? 'bg-[#5A5A40] text-white shadow-xs ring-2 ring-[#5A5A40]/30'
-                    : 'bg-white/70 hover:bg-white text-stone-700 border border-[#E5E2D0]/60'
-                }`}
+                className={`p-2 rounded-xl text-left transition-all cursor-pointer select-none flex flex-col gap-0.5 min-w-0 overflow-hidden relative ${isActive
+                  ? 'bg-[#5A5A40] text-white shadow-xs ring-2 ring-[#5A5A40]/30'
+                  : 'bg-white/70 hover:bg-white text-stone-700 border border-[#E5E2D0]/60'
+                  }`}
               >
                 <div className="flex items-center justify-between gap-1 min-w-0">
                   <div className="flex items-center gap-1.5 min-w-0">
@@ -575,11 +574,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   </div>
                   {step.isOptional && (
                     <span
-                      className={`text-[8px] px-1 py-0.2 rounded-full font-bold uppercase shrink-0 ${
-                        step.isEnabled
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-stone-100 text-stone-500 border border-stone-200'
-                      }`}
+                      className={`text-[8px] px-1 py-0.2 rounded-full font-bold uppercase shrink-0 ${step.isEnabled
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-stone-100 text-stone-500 border border-stone-200'
+                        }`}
                     >
                       {step.isEnabled ? 'ON' : 'Opc.'}
                     </span>
@@ -602,7 +600,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="border-b border-[#E5E2D0] pb-3 flex flex-wrap items-center justify-between gap-2 min-w-0">
               <div className="min-w-0 flex-1">
                 <h4 className="font-serif text-sm sm:text-base font-bold text-stone-900 break-words">
-                  1. Datos de la Pareja & Foto de Portada
+                  1. Datos de la Quinceañera & Foto de Portada
                 </h4>
                 <p className="text-[11px] sm:text-xs text-stone-500 break-words">
                   Aparecen en el sobre interactivo, portada y cabecera de la invitación.
@@ -616,20 +614,20 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                  Nombres de la Pareja
+                  Nombre de la Quinceañera
                 </label>
                 <input
                   type="text"
                   value={settings.coupleNames || ''}
                   onChange={(e) => onChange({ coupleNames: e.target.value })}
-                  placeholder="Ej. Ana García & Carlos Mendoza"
+                  placeholder="Ej. Valeria Montserrat"
                   className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-sm text-stone-800 font-serif"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                  Fecha de la Boda
+                  Fecha de los XV Años
                 </label>
                 <input
                   type="date"
@@ -663,7 +661,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     type="text"
                     value={settings.welcomeMessage || ''}
                     onChange={(e) => onChange({ welcomeMessage: e.target.value })}
-                    placeholder="¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor"
+                    placeholder="¡Mis Quince Años! Un sueño hecho realidad"
                     className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-xs text-stone-800 font-serif"
                   />
                 </div>
@@ -677,9 +675,9 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   </div>
                   <textarea
                     rows={2}
-                    value={settings.welcomeSubtitle !== undefined ? settings.welcomeSubtitle : 'Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración.'}
+                    value={settings.welcomeSubtitle !== undefined ? settings.welcomeSubtitle : 'Doy gracias a Dios y a mis queridos padres por permitirme llegar a esta hermosa etapa. Será un inmenso honor contar con tu compañía en mi noche inolvidable.'}
                     onChange={(e) => onChange({ welcomeSubtitle: e.target.value })}
-                    placeholder="Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración."
+                    placeholder="Doy gracias a Dios y a mis queridos padres por permitirme llegar a esta hermosa etapa. Será un inmenso honor contar con tu compañía en mi noche inolvidable."
                     className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-xs text-stone-800 leading-relaxed resize-none"
                   />
                 </div>
@@ -801,11 +799,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                               key={sec}
                               type="button"
                               onClick={() => onChange({ heroAutoplayInterval: sec })}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                (settings.heroAutoplayInterval || 5) === sec
-                                  ? 'bg-[#5A5A40] text-white shadow-xs'
-                                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                              }`}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${(settings.heroAutoplayInterval || 5) === sec
+                                ? 'bg-[#5A5A40] text-white shadow-xs'
+                                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                }`}
                             >
                               {sec}s
                             </button>
@@ -862,11 +859,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                                 key={p.id}
                                 type="button"
                                 onClick={() => toggleHeroPhoto(p.url)}
-                                className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                                  isSelected
-                                    ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/40 scale-105 shadow-sm opacity-100'
-                                    : 'border-transparent opacity-60 hover:opacity-100'
-                                }`}
+                                className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${isSelected
+                                  ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/40 scale-105 shadow-sm opacity-100'
+                                  : 'border-transparent opacity-60 hover:opacity-100'
+                                  }`}
                                 title={isSelected ? 'Foto activa en portada' : 'Haz clic para añadir a la portada'}
                               >
                                 <img src={p.url} alt="Galería" className="w-full h-full object-cover" />
@@ -893,11 +889,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                               key={preset.id}
                               type="button"
                               onClick={() => toggleHeroPhoto(preset.url)}
-                              className={`relative aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 shadow-sm'
-                                  : 'border-transparent hover:opacity-80'
-                              }`}
+                              className={`relative aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${isSelected
+                                ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 shadow-sm'
+                                : 'border-transparent hover:opacity-80'
+                                }`}
                               title={preset.name}
                             >
                               <img src={preset.url} alt={preset.name} className="w-full h-full object-cover" />
@@ -930,7 +925,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </span>
               </div>
               <p className="text-xs text-stone-600">
-                Selecciona la identidad visual de tu invitación. Cada estilo personaliza los colores, tipografías finas, sobre y animaciones SVG de toda la boda.
+                Selecciona la identidad visual de tu invitación. Cada estilo personaliza los colores, tipografías finas, sobre y animaciones SVG de toda la celebración de XV Años.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -942,11 +937,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                       key={themeKey}
                       type="button"
                       onClick={() => onChange({ cardStyle: themeKey })}
-                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between min-w-0 ${
-                        isSelected
-                          ? 'bg-white border-[#5A5A40] ring-2 ring-[#5A5A40]/30 shadow-md scale-[1.01]'
-                          : 'bg-white/80 border-[#E5E2D0] hover:border-[#7D8C7A] hover:bg-white hover:shadow-xs'
-                      }`}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between min-w-0 ${isSelected
+                        ? 'bg-white border-[#5A5A40] ring-2 ring-[#5A5A40]/30 shadow-md scale-[1.01]'
+                        : 'bg-white/80 border-[#E5E2D0] hover:border-[#7D8C7A] hover:bg-white hover:shadow-xs'
+                        }`}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center justify-between mb-2">
@@ -1153,7 +1147,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 4. Código de Vestimenta (Dress Code)
               </h4>
               <p className="text-xs text-stone-500">
-                Orienta a tus invitados sobre el atuendo adecuado para tu boda.
+                Orienta a tus invitados sobre el atuendo adecuado para tus XV Años.
               </p>
             </div>
 
@@ -1215,11 +1209,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     key={b}
                     type="button"
                     onClick={() => onChange({ bankName: b, enableBankTransfer: true })}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                      (settings.bankName || 'BCP').toLowerCase().includes(b.toLowerCase().split(' ')[0])
-                        ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-2xs'
-                        : 'bg-[#FAF9F0] text-stone-700 border-[#E5E2D0] hover:bg-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${(settings.bankName || 'BCP').toLowerCase().includes(b.toLowerCase().split(' ')[0])
+                      ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-2xs'
+                      : 'bg-[#FAF9F0] text-stone-700 border-[#E5E2D0] hover:bg-white'
+                      }`}
                   >
                     {b}
                   </button>
@@ -1317,7 +1310,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     type="text"
                     value={settings.bankConcept || ''}
                     onChange={(e) => onChange({ bankConcept: e.target.value, enableBankTransfer: true })}
-                    placeholder="Regalo Boda Ana & Carlos"
+                    placeholder="Regalo Mis XV Valeria"
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800"
                   />
                 </div>
@@ -1326,7 +1319,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           </div>
         )}
 
-        {/* STEP 6: GALERÍA DE FOTOS (GESTIÓN EXCLUSIVA PARA LOS NOVIOS) */}
+        {/* STEP 6: GALERÍA DE FOTOS (GESTIÓN EXCLUSIVA PARA LA QUINCEAÑERA) */}
         {activeStep === 'galeria' && (
           <div className="space-y-6 animate-fadeIn">
             <div className="border-b border-[#E5E2D0] pb-3 flex items-center justify-between">
@@ -1366,7 +1359,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   type="text"
                   value={galleryCaption}
                   onChange={(e) => setGalleryCaption(e.target.value)}
-                  placeholder="Ej. Sesión de fotos preboda / Recuerdos especiales"
+                  placeholder="Ej. Sesión de fotos de XV Años / Recuerdos especiales"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-[#5A5A40]"
                 />
               </div>
@@ -1376,11 +1369,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 onDragOver={handleGalleryDragOver}
                 onDragLeave={handleGalleryDragLeave}
                 onDrop={handleGalleryDrop}
-                className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
-                  isDraggingGallery
-                    ? 'border-[#5A5A40] bg-[#5A5A40]/10 scale-[1.01]'
-                    : 'border-[#E5E2D0] bg-white hover:border-[#5A5A40]/50 hover:bg-stone-50/50'
-                }`}
+                className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-all ${isDraggingGallery
+                  ? 'border-[#5A5A40] bg-[#5A5A40]/10 scale-[1.01]'
+                  : 'border-[#E5E2D0] bg-white hover:border-[#5A5A40]/50 hover:bg-stone-50/50'
+                  }`}
               >
                 <input
                   type="file"
@@ -1579,7 +1571,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-serif text-base font-bold text-stone-900">
-                    Nuestra Historia en Video
+                    Mi Historia en Video
                   </h4>
                   <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">
                     Opcional

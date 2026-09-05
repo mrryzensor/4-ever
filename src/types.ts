@@ -69,8 +69,11 @@ export interface UserProfile {
   createdAt?: string;
 }
 
+export type EventType = 'bodas' | 'xv';
+
 export interface WeddingSettings {
   id: number;
+  eventType?: EventType; // 'bodas' | 'xv' (defaults to 'bodas')
   userId?: number | null;
   ownerUid?: string | null;
   slug?: string | null;
@@ -170,6 +173,7 @@ export interface WeddingSettings {
 
 export interface WeddingSummary {
   id: number;
+  eventType?: EventType;
   coupleNames: string;
   hashtag: string;
   eventDate: string;

@@ -2,6 +2,7 @@ import { WeddingSettings } from '../types.ts';
 
 export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   id: 1,
+  eventType: 'bodas',
   userId: 1,
   ownerUid: 'demo-user-master',
   slug: 'boda-sofia-alejandro',

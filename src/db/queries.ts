@@ -16,6 +16,7 @@ const memoryState = {
   weddings: [
     {
       id: 1,
+      eventType: 'bodas',
       ownerUid: 'demo-user-master',
       slug: 'boda-sofia-alejandro',
       coupleNames: 'Sofía & Alejandro',
@@ -72,8 +73,8 @@ const memoryState = {
       waxSealColor: '#C5A059',
       coverPhoto: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
       secondaryPhoto: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
-      audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
-      audioTitle: 'Acoustic Romance - Guitarra Suave',
+      audioUrl: '/audio/canon-in-d.ogg',
+      audioTitle: 'Canon in D - Orquesta Nupcial',
       isAudioAutoplay: false,
       audioAutoplay: false,
       welcomeMessage: '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor',
@@ -204,6 +205,50 @@ const memoryState = {
       status: 'planning',
       clientEmail: 'jimena.fuentes@gmail.com',
       createdAt: new Date('2026-03-10'),
+      updatedAt: new Date(),
+    },
+    {
+      id: 5,
+      eventType: 'xv',
+      ownerUid: 'demo-user-xv',
+      slug: 'xv-valeria-montserrat',
+      coupleNames: 'Valeria Montserrat',
+      hashtag: '#MisXValeria2026',
+      eventDate: '2026-10-17',
+      eventTime: '18:00',
+      ceremonyVenue: 'Catedral Metropolitana / Misa de Acción de Gracias',
+      ceremonyAddress: 'Plaza de la Constitución S/N, Centro Histórico',
+      ceremonyMapsUrl: 'https://maps.google.com/?q=Catedral+Metropolitana',
+      ceremonyEmbedUrl: '',
+      ceremonyPlaceQuery: 'Catedral Metropolitana',
+      ceremonyTime: '18:00',
+      receptionVenue: 'Salón Diamante & Jardines de Versalles',
+      receptionAddress: 'Av. Las Palmas 550, Zona Residencial Real',
+      receptionMapsUrl: 'https://maps.google.com/?q=Salon+Diamante',
+      receptionEmbedUrl: '',
+      receptionPlaceQuery: 'Salón Diamante',
+      receptionTime: '20:00',
+      dressCode: 'Rigurosa Etiqueta / Gala Juvenil',
+      dressCodeDescription: 'Agradezco a mis invitados reservar los tonos Rosa Pastel, Palo de Rosa y Blanco para mí como Quinceañera.',
+      dressCodePalette: '["#F4C2C2", "#DDA0DD", "#E6C280", "#2C3E50", "#7D5A85"]',
+      cardStyle: 'romantic-floral',
+      envelopeColor: '#3B2338',
+      waxSealText: 'XV',
+      waxSealColor: '#D4AF37',
+      coverPhoto: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80',
+      audioUrl: '/audio/vals-danubio-azul.mp3',
+      audioTitle: 'Vals de Ensueño - Gran Orquesta Real',
+      welcomeMessage: '¡Mis Quince Años! Un sueño hecho realidad',
+      welcomeSubtitle: 'Doy gracias a Dios y a mis queridos padres por permitirme llegar a esta hermosa etapa. Será un inmenso honor contar con tu compañía en mi noche inolvidable.',
+      rsvpDeadline: '2026-09-25',
+      enablePhotoGallery: true,
+      enableVideos: true,
+      enableGuestbook: true,
+      enableGiftRegistry: true,
+      isPublished: true,
+      status: 'active',
+      clientEmail: 'xv.valeriamontserrat@gmail.com',
+      createdAt: new Date('2026-03-15'),
       updatedAt: new Date(),
     }
   ] as any[],
@@ -547,6 +592,7 @@ export async function getWeddingSettings(identifier?: number | string) {
       const found = memoryState.weddings.find((w) => w.slug === slugStr);
       if (found) return found;
     }
+    return null;
   }
   return memoryState.weddings[0];
 }
@@ -751,8 +797,9 @@ export async function getUserWeddings(ownerUid: string) {
             coupleNames: w.coupleNames,
             hashtag: w.hashtag || '',
             eventDate: w.eventDate,
-            slug: w.slug || `boda-${w.id}`,
+            slug: w.slug || `evento-${w.id}`,
             cardStyle: w.cardStyle as any,
+            eventType: ((w as any).eventType || (w.slug && w.slug.toLowerCase().startsWith('xv') ? 'xv' : 'bodas')) as any,
             isPublished: w.isPublished ?? true,
             status: (w as any).status || 'active',
             clientEmail: (w as any).clientEmail || '',
@@ -767,10 +814,10 @@ export async function getUserWeddings(ownerUid: string) {
     console.warn('getUserWeddings fallback to memory');
   }
 
-  // Memory fallback
+  // Memory fallback: include demo projects (1 Boda, 5 XV) so users can manage both categories
   const list = isCeo 
     ? memoryState.weddings 
-    : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === 1);
+    : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === 1 || w.id === 5);
 
   return list.map((w) => {
     const guestList = memoryState.guests.filter((g) => g.weddingId === w.id);
@@ -783,8 +830,9 @@ export async function getUserWeddings(ownerUid: string) {
       coupleNames: w.coupleNames,
       hashtag: w.hashtag || '',
       eventDate: w.eventDate,
-      slug: w.slug || `boda-${w.id}`,
-      cardStyle: w.cardStyle,
+      slug: w.slug || `evento-${w.id}`,
+      cardStyle: w.cardStyle as any,
+      eventType: (w.eventType || (w.slug && w.slug.toLowerCase().startsWith('xv') ? 'xv' : 'bodas')) as any,
       isPublished: w.isPublished ?? true,
       status: w.status || 'active',
       clientEmail: w.clientEmail || '',

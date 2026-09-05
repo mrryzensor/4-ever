@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Smartphone,
@@ -108,18 +109,74 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const mobileDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
+  const dropdownMenuRef = useRef<HTMLDivElement>(null);
+  const [dropdownCoords, setDropdownCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
-  // Close mobile models dropdown on outside click
+  // Update floating dropdown position aligned under the button and within viewport bounds
+  const updateDropdownCoords = useCallback(() => {
+    if (mobileButtonRef.current) {
+      const rect = mobileButtonRef.current.getBoundingClientRect();
+      const menuWidth = 264;
+      const left = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow < 280 && rect.top > 280
+        ? rect.top - 250
+        : rect.bottom + 8;
+
+      setDropdownCoords({ top, left });
+    }
+  }, []);
+
+  // Recalculate floating position on open, window resize and scroll
   useEffect(() => {
+    if (!isMobileDropdownOpen) return;
+
+    updateDropdownCoords();
+
+    const handleScrollOrResize = () => {
+      updateDropdownCoords();
+    };
+
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
+    return () => {
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+    };
+  }, [isMobileDropdownOpen, updateDropdownCoords]);
+
+  // Close floating dropdown on outside click or Escape key
+  useEffect(() => {
+    if (!isMobileDropdownOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        mobileButtonRef.current &&
+        !mobileButtonRef.current.contains(target) &&
+        dropdownMenuRef.current &&
+        !dropdownMenuRef.current.contains(target)
+      ) {
         setIsMobileDropdownOpen(false);
       }
     };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileDropdownOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileDropdownOpen]);
 
   const dragStartRef = useRef<{ x: number; y: number; panX: number; panY: number }>({
     x: 0,
@@ -301,18 +358,19 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     setRefreshKey((k) => k + 1);
   };
 
-  const iframeSrc = `?mode=preview_embed&w=${settings.id || 1}&t=${refreshKey}`;
+  const iframeSrc = `?mode=preview_embed&w=${settings.id || 5}&event=xv&t=${refreshKey}`;
 
   return (
     <div className="w-full flex flex-col items-center select-none">
       {/* 1. Top Simulator Toolbar (Single Line: 1. Móvil w/ collapsible models, 2. Escritorio, 3. Actualizar, 4. Abrir en pestaña completa) */}
-      <div className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl p-1.5 sm:px-3 sm:py-2.5 mb-3 shadow-xs min-w-0">
+      <div className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl p-1.5 sm:px-3 sm:py-2.5 mb-3 shadow-xs min-w-0 relative z-30">
         <div className="w-full flex items-center justify-between gap-1.5 sm:gap-2 overflow-x-auto custom-scrollbar pb-0.5">
           {/* Left Side: Preview Options (Móvil dropdown & Escritorio) */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            {/* Option 1: Móvil with Collapsible Models Menu */}
-            <div className="relative shrink-0" ref={mobileDropdownRef}>
+            {/* Option 1: Móvil with Floating Models Menu */}
+            <div className="relative shrink-0">
               <button
+                ref={mobileButtonRef}
                 type="button"
                 onClick={() => {
                   if (selectedDevice === 'desktop') {
@@ -320,70 +378,129 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
                   }
                   setIsMobileDropdownOpen((prev) => !prev);
                 }}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 sm:gap-1.5 transition-all cursor-pointer select-none whitespace-nowrap shadow-2xs shrink-0 ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer select-none whitespace-nowrap shadow-2xs shrink-0 ${
                   selectedDevice !== 'desktop'
                     ? 'bg-[#5A5A40] text-white shadow-xs'
                     : 'bg-white hover:bg-stone-50 text-stone-700 border border-[#E5E2D0]'
                 }`}
+                title="Seleccionar modelo de dispositivo móvil o tablet"
               >
                 <Smartphone className="w-3.5 h-3.5 shrink-0" />
                 <span>Móvil</span>
+                {selectedDevice !== 'desktop' && (
+                  <span className="hidden sm:inline-block text-[10px] px-1.5 py-0.5 rounded-md bg-white/20 text-white font-mono font-medium leading-none">
+                    {selectedDevice === 'iphone15'
+                      ? 'iPhone 15'
+                      : selectedDevice === 'android'
+                      ? 'S24'
+                      : selectedDevice === 'compact'
+                      ? 'Compacto'
+                      : selectedDevice === 'tablet'
+                      ? 'Tablet'
+                      : ''}
+                  </span>
+                )}
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
-                    isMobileDropdownOpen ? 'rotate-180 text-amber-300' : selectedDevice !== 'desktop' ? 'text-white/80' : 'text-stone-400'
+                    isMobileDropdownOpen
+                      ? 'rotate-180 text-amber-300'
+                      : selectedDevice !== 'desktop'
+                      ? 'text-white/80'
+                      : 'text-stone-400'
                   }`}
                 />
               </button>
 
-              {/* Collapsible Mobile Models Dropdown */}
-              <AnimatePresence>
-                {isMobileDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 4, scale: 0.96 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute left-0 top-full mt-1.5 w-56 sm:w-60 bg-white border border-[#E5E2D0] rounded-2xl shadow-xl z-50 p-1.5 space-y-1"
-                  >
-                    <div className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider text-stone-400 border-b border-[#E5E2D0]/60">
-                      Modelos de Móvil
-                    </div>
-                    {[
-                      { id: 'iphone15' as DevicePreset, name: 'iPhone 15 Pro', dims: '393 × 852 px', icon: Smartphone },
-                      { id: 'android' as DevicePreset, name: 'Galaxy S24', dims: '412 × 890 px', icon: Smartphone },
-                      { id: 'compact' as DevicePreset, name: 'Móvil Compacto', dims: '375 × 667 px', icon: Smartphone },
-                      { id: 'tablet' as DevicePreset, name: 'iPad / Tablet', dims: '768 × 980 px', icon: Tablet },
-                    ].map((dev) => {
-                      const isCurrent = selectedDevice === dev.id;
-                      const DevIcon = dev.icon;
-                      return (
-                        <button
-                          key={dev.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedDevice(dev.id);
-                            setIsMobileDropdownOpen(false);
-                          }}
-                          className={`w-full px-2.5 py-2 rounded-xl text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
-                            isCurrent
-                              ? 'bg-[#FAF9F0] text-[#5A5A40] font-bold border border-[#E5E2D0]'
-                              : 'hover:bg-[#FAF9F0]/60 text-stone-700 font-medium'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <DevIcon className={`w-3.5 h-3.5 shrink-0 ${isCurrent ? 'text-[#5A5A40]' : 'text-stone-400'}`} />
-                            <div className="truncate">
-                              <p className="text-xs leading-tight truncate">{dev.name}</p>
-                              <p className="text-[10px] text-stone-400 font-mono leading-none mt-0.5">{dev.dims}</p>
-                            </div>
+              {/* Floating Mobile Models Popover mounted in Portal to escape overflow-hidden/auto */}
+              {typeof document !== 'undefined' &&
+                createPortal(
+                  <AnimatePresence>
+                    {isMobileDropdownOpen && (
+                      <motion.div
+                        ref={dropdownMenuRef}
+                        initial={{ opacity: 0, y: -4, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                        transition={{ duration: 0.14, ease: 'easeOut' }}
+                        style={{
+                          position: 'fixed',
+                          top: dropdownCoords.top,
+                          left: dropdownCoords.left,
+                          zIndex: 99999,
+                        }}
+                        className="w-64 sm:w-72 bg-white/95 backdrop-blur-xl border border-[#E5E2D0] rounded-2xl shadow-2xl p-2 space-y-1 ring-1 ring-black/5 select-none"
+                      >
+                        <div className="px-2.5 py-1.5 flex items-center justify-between border-b border-[#E5E2D0]/70 pb-1.5 mb-1">
+                          <div className="flex items-center gap-1.5 text-[#5A5A40]">
+                            <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                            <span className="text-[11px] uppercase font-bold tracking-wider text-stone-600">
+                              Dispositivo Móvil
+                            </span>
                           </div>
-                          {isCurrent && <Check className="w-3.5 h-3.5 text-[#5A5A40] shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </motion.div>
+                          <span className="text-[10px] font-medium bg-[#5A5A40]/10 text-[#5A5A40] px-2 py-0.5 rounded-full">
+                            Simulador
+                          </span>
+                        </div>
+
+                        {[
+                          { id: 'iphone15' as DevicePreset, name: 'iPhone 15 Pro', dims: '393 × 852 px', badge: 'iOS', icon: Smartphone },
+                          { id: 'android' as DevicePreset, name: 'Galaxy S24', dims: '412 × 890 px', badge: 'Android', icon: Smartphone },
+                          { id: 'compact' as DevicePreset, name: 'Móvil Compacto', dims: '375 × 667 px', badge: 'SE', icon: Smartphone },
+                          { id: 'tablet' as DevicePreset, name: 'iPad / Tablet', dims: '768 × 980 px', badge: 'Tablet', icon: Tablet },
+                        ].map((dev) => {
+                          const isCurrent = selectedDevice === dev.id;
+                          const DevIcon = dev.icon;
+                          return (
+                            <button
+                              key={dev.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDevice(dev.id);
+                                setIsMobileDropdownOpen(false);
+                              }}
+                              className={`w-full px-2.5 py-2 rounded-xl text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                                isCurrent
+                                  ? 'bg-[#5A5A40] text-white font-semibold shadow-xs'
+                                  : 'hover:bg-[#FAF9F0] text-stone-700 font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div
+                                  className={`p-1.5 rounded-lg shrink-0 ${
+                                    isCurrent ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-500'
+                                  }`}
+                                >
+                                  <DevIcon className="w-3.5 h-3.5" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="text-xs leading-tight truncate">{dev.name}</p>
+                                  <p
+                                    className={`text-[10px] font-mono leading-none mt-1 ${
+                                      isCurrent ? 'text-white/85' : 'text-stone-400'
+                                    }`}
+                                  >
+                                    {dev.dims}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span
+                                  className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                                    isCurrent ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-500'
+                                  }`}
+                                >
+                                  {dev.badge}
+                                </span>
+                                {isCurrent && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>,
+                  document.body
                 )}
-              </AnimatePresence>
             </div>
 
             {/* Option 2: Escritorio */}
@@ -602,7 +719,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
                 <div className="bg-stone-900/80 text-stone-300 font-mono text-[10px] px-6 py-1 rounded-md border border-stone-700/60 max-w-sm truncate text-center">
-                  https://boda.invitacion.digital/{settings.coupleNames ? encodeURIComponent(settings.coupleNames) : 'nombres'}
+                  https://xv.invitacion.digital/{settings.slug || (settings.coupleNames ? encodeURIComponent(settings.coupleNames) : 'quinceanera')}
                 </div>
                 <div className="w-12" />
               </div>
