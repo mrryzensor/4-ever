@@ -958,11 +958,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   </thead>
                   <tbody className="divide-y divide-stone-800">
                     {filteredWeddings.map((wedding) => {
-                      const isXv = wedding.eventType === 'xv' || (wedding.slug && wedding.slug.toLowerCase().startsWith('xv'));
+                      const isXv = wedding.eventType === 'xv' || (wedding.slug && (wedding.slug.toLowerCase().startsWith('xv') || wedding.slug.toLowerCase().includes('quince') || wedding.slug.toLowerCase().includes('15')));
                       const eventCategoryName = isXv ? 'XV Años' : 'Boda';
-                      const publicUrl = isXv
-                        ? (wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=xv`)
-                        : (wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=bodas`);
+                      const resolvedCat = wedding.eventType || (isXv ? 'xv' : 'bodas');
+                      const publicUrl = wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=${resolvedCat}`;
 
                       return (
                         <tr key={wedding.id} className="hover:bg-stone-800/50 transition-colors">

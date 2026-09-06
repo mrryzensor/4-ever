@@ -35,7 +35,7 @@ import { toast } from '../../lib/toast.ts';
 
 interface UserDashboardProps {
   user: UserProfile;
-  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin') => void;
+  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => void;
   onLogout: () => void;
   onBackToLanding: () => void;
   onUpdatePlan: (newPlan: PlanId) => void;
@@ -496,7 +496,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 {/* Card Actions */}
                 <div className="p-4 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2">
                   <button
-                    onClick={() => onSelectWedding(w.id, 'invitation')}
+                    onClick={() => onSelectWedding(w.id, 'invitation', w.eventType)}
                     className="flex-1 py-2 px-3 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -504,7 +504,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </button>
 
                   <button
-                    onClick={() => onSelectWedding(w.id, 'admin')}
+                    onClick={() => onSelectWedding(w.id, 'admin', w.eventType)}
                     className="flex-1 py-2 px-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />

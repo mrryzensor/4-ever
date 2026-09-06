@@ -1124,13 +1124,15 @@ async function startServer() {
   const injectSocialMeta = async (rawHtml: string, req: express.Request): Promise<string> => {
     try {
       // Extract custom slug from path e.g. "/bodasergioylore" -> "bodasergioylore"
-      const pathParts = req.path.split('/').filter(Boolean);
+      const originalPath = (req.originalUrl || req.path || '/').split('?')[0].toLowerCase();
+      const pathParts = originalPath.split('/').filter(Boolean);
       const reservedPaths = [
         'api', 'uploads', 'src', 'assets', '@vite', '@fs', '@id', 'node_modules',
         'favicon.ico', 'favicon.png', 'favicon-32x32.png', 'apple-touch-icon.png',
         'Logo.webp', 'Logo.png', 'og-landing.png', 'og-landing.webp', 'icon-192.png',
         'icon-512.png', 'manifest.json', 'robots.txt', 'index.html',
-        'demo', 'demostracion', 'login', 'register', 'ingresar', 'registro', 'signin', 'signup'
+        'demo', 'demostracion', 'login', 'register', 'ingresar', 'registro', 'signin', 'signup',
+        'boda', 'bodas', 'xv', 'quince', 'quinceanera', 'portal', 'mis-eventos'
       ];
       const pathSlug = (pathParts.length === 1 && !reservedPaths.includes(pathParts[0].toLowerCase()))
         ? pathParts[0]
@@ -1149,12 +1151,30 @@ async function startServer() {
         wedding = await getWeddingSettings(weddingParam);
       }
 
-      const isLandingRequest = !weddingParam && !guestCodeParam && (req.path === '/' || req.path === '/index.html' || req.query.mode === 'landing');
+      const pathLower = originalPath;
+      const eventQuery = (req.query.event || req.query.tipo || '').toString().toLowerCase();
+      const isXvRoute = pathLower === '/xv' || pathLower === '/quince' || pathLower === '/quinceanera' || eventQuery === 'xv' || eventQuery === 'quince';
+      const isBodaRoute = pathLower === '/boda' || pathLower === '/bodas' || eventQuery === 'bodas' || eventQuery === 'boda';
+      const isPortalRoute = (pathLower === '/' || pathLower === '/portal' || pathLower === '/index.html') && !isXvRoute && !isBodaRoute && !weddingParam && !guestCodeParam;
 
-      let title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
-      let description = 'Crea y comparte tu invitación de boda digital de lujo con música personalizada, confirmación de asistencia RSVP en tiempo real, itinerario interactivo y galería de fotos colaborativa.';
-      let ogImageUrl = `${baseUrl}/og-landing.png`;
-      let ogImageAlt = 'Atelier Nupcial Digital - Invitaciones de Boda Elegantes & RSVP';
+      const isLandingRequest = !weddingParam && !guestCodeParam && (isPortalRoute || isXvRoute || isBodaRoute || req.query.mode === 'landing');
+
+      let title = '2date Atelier | Plataforma Integral de Invitaciones Digitales & RSVP';
+      let description = 'Plataforma de alta costura para invitaciones digitales interactivas con sobre 3D, música personalizada, confirmación RSVP y galería para Bodas, XV Años y Eventos Especiales.';
+      let ogImageUrl = `${baseUrl}/Logo.webp`;
+      let ogImageAlt = '2date Atelier - Invitaciones Digitales & RSVP para Todo Tipo de Eventos';
+
+      if (isXvRoute && !weddingParam) {
+        title = 'Atelier XV Años | Invitaciones Digitales de Quinceañera & Gala Real';
+        description = 'Invitaciones interactivas de XV Años con sobre 3D, tiara animada, cronograma de vals, zapatilla de cristal, música y confirmación RSVP.';
+        ogImageUrl = 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80';
+        ogImageAlt = 'Atelier XV Años - Invitaciones de Quinceañera & Gala Real';
+      } else if (isBodaRoute && !weddingParam) {
+        title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
+        description = 'Crea y comparte tu invitación de boda digital de lujo con música personalizada, confirmación de asistencia RSVP en tiempo real, itinerario interactivo y galería de fotos colaborativa.';
+        ogImageUrl = `${baseUrl}/og-landing.png`;
+        ogImageAlt = 'Atelier Nupcial Digital - Invitaciones de Boda Elegantes & RSVP';
+      }
 
       if (!isLandingRequest) {
         if (!wedding) {

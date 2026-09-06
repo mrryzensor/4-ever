@@ -352,7 +352,7 @@ export default function App() {
         setSettings(DEFAULT_XV_SETTINGS);
         setIsViewingDemo(false);
         setCurrentView('landing');
-      } else if (pathname === '/portal') {
+      } else if (pathname === '/portal' || pathname === '/') {
         setIsViewingDemo(false);
         setCurrentView('portal');
       }
@@ -395,7 +395,9 @@ export default function App() {
     if (typeof document === 'undefined') return;
     const coupleNames = settings?.coupleNames?.trim() || (eventCategory === 'xv' ? 'Valeria Montserrat' : 'Sofía & Alejandro');
 
-    if (currentView === 'landing') {
+    if (currentView === 'portal') {
+      document.title = '2date Atelier | Plataforma Integral de Invitaciones Digitales & RSVP';
+    } else if (currentView === 'landing') {
       document.title = eventCategory === 'xv'
         ? 'Atelier XV Años | Invitaciones Digitales de Quinceañera & Gala Real'
         : 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
@@ -458,6 +460,8 @@ export default function App() {
     }
 
     const pathname = window.location.pathname.toLowerCase();
+    const eventParam = params.get('event') || params.get('tipo');
+
     if (pathname === '/boda' || pathname === '/bodas') {
       setEventCategory('bodas');
       try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
@@ -478,7 +482,7 @@ export default function App() {
       setLoadingWedding(false);
       return;
     }
-    if (pathname === '/portal') {
+    if (pathname === '/portal' || (pathname === '/' && !eventParam && !weddingParam && !guestCode && !modeParam && !checkIsDemoUrl())) {
       setIsViewingDemo(false);
       setCurrentView('portal');
       setLoadingWedding(false);
@@ -488,7 +492,6 @@ export default function App() {
     // Check if URL is pointing to demo
     const isDemo = checkIsDemoUrl();
     if (isDemo) {
-      const eventParam = params.get('event') || params.get('tipo');
       const isXv = eventParam === 'xv' || eventParam === 'quince' || (eventCategory === 'xv' && !eventParam);
       const targetCategory = isXv ? 'xv' : 'bodas';
       setEventCategory(targetCategory);
@@ -498,7 +501,7 @@ export default function App() {
       setCurrentView('invitation');
       setLoadingWedding(false);
 
-      // Ensure URL has ?event=xv or ?event=bodas explicitly
+      // Ensure URL has ?event=xv or ?event=bodas explicitly on /demo
       const currentUrl = new URL(window.location.href);
       if (currentUrl.searchParams.get('event') !== targetCategory) {
         currentUrl.searchParams.set('event', targetCategory);
@@ -531,9 +534,16 @@ export default function App() {
       setCurrentView('invitation');
     } else if (modeParam === 'admin') {
       setCurrentView(weddingParam ? 'admin' : 'dashboard');
-    } else {
-      // Default to landing page
+    } else if (eventParam) {
+      const isXv = eventParam === 'xv' || eventParam === 'quince';
+      const targetCategory = isXv ? 'xv' : 'bodas';
+      setEventCategory(targetCategory);
+      setCurrentWeddingId(isXv ? 5 : 1);
+      setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
       setCurrentView('landing');
+    } else {
+      // Pure root URL default: Global Portal Landing
+      setCurrentView('portal');
     }
 
     const handleScroll = () => {
@@ -570,12 +580,20 @@ export default function App() {
       return;
     }
 
+    let weddingParam = params.get('w') || params.get('wedding') || getPathSlug();
+    const isDemo = checkIsDemoUrl();
+
+    // Do NOT fetch specific wedding or mutate URL if user is simply browsing Portal or generic Landing
+    const shouldFetch = currentView === 'invitation' || currentView === 'admin' || Boolean(weddingParam) || isDemo;
+    if (!shouldFetch) {
+      setLoadingWedding(false);
+      return;
+    }
+
     const fetchWeddingConfig = async () => {
       try {
         setLoadingWedding(true);
         const search = window.location.search;
-        const params = new URLSearchParams(search);
-        let weddingParam = params.get('w') || params.get('wedding') || getPathSlug();
         let guestCode = params.get('code');
 
         if (!weddingParam) {
@@ -600,20 +618,20 @@ export default function App() {
             const isXvData =
               data.eventType === 'xv' ||
               data.category === 'xv' ||
-              (weddingParam && (weddingParam.toLowerCase().startsWith('xv') || weddingParam.toLowerCase().startsWith('quince'))) ||
-              (data.slug && (data.slug.toLowerCase().startsWith('xv') || data.slug.toLowerCase().startsWith('quince')));
+              (weddingParam && (weddingParam.toLowerCase().startsWith('xv') || weddingParam.toLowerCase().includes('quince') || weddingParam.toLowerCase().includes('15'))) ||
+              (data.slug && (data.slug.toLowerCase().startsWith('xv') || data.slug.toLowerCase().includes('quince') || data.slug.toLowerCase().includes('15')));
 
-            const resolvedCategory = isXvData ? 'xv' : 'bodas';
+            const resolvedCategory = isXvData ? 'xv' : (data.eventType || 'bodas');
 
             if (eventCategory !== resolvedCategory) {
               setEventCategory(resolvedCategory);
-              localStorage.setItem('atelier_event_category', resolvedCategory);
+              try { localStorage.setItem('atelier_event_category', resolvedCategory); } catch (e) {}
             }
 
-            // Sync URL with standard ?event= parameter
+            // Cleanly fix conflicting URL event parameter ONLY if one was already present
             if (typeof window !== 'undefined') {
               const currentUrl = new URL(window.location.href);
-              if (currentUrl.searchParams.get('event') !== resolvedCategory) {
+              if (currentUrl.searchParams.has('event') && currentUrl.searchParams.get('event') !== resolvedCategory) {
                 currentUrl.searchParams.set('event', resolvedCategory);
                 window.history.replaceState({}, '', currentUrl.toString());
               }
@@ -680,7 +698,11 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('atelier_user_session');
-    setCurrentView('landing');
+    setCurrentView('portal');
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUpdatePlan = async (newPlan: PlanId) => {
@@ -707,18 +729,18 @@ export default function App() {
   const handleSelectWedding = (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => {
     setIsViewingDemo(false);
     setCurrentWeddingId(weddingId);
-    const resolvedCat = (eventType === 'xv' || (typeof eventType === 'string' && eventType.toLowerCase().includes('xv'))) ? 'xv' : 'bodas';
-    setEventCategory(resolvedCat);
+    const isXv = eventType === 'xv' || (typeof eventType === 'string' && (eventType.toLowerCase().includes('xv') || eventType.toLowerCase().includes('quince') || eventType.toLowerCase().includes('15'))) || weddingId === 5;
+    const resolvedCat = isXv ? 'xv' : (eventType || 'bodas');
+    setEventCategory(resolvedCat as EventCategory);
     try { localStorage.setItem('atelier_event_category', resolvedCat); } catch (e) {}
 
     setCurrentView(mode === 'admin' ? 'admin' : 'invitation');
     if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
+      const url = new URL(window.location.origin);
+      url.pathname = '/';
       url.searchParams.set('w', String(weddingId));
       if (mode === 'admin') {
         url.searchParams.set('mode', 'admin');
-      } else {
-        url.searchParams.delete('mode');
       }
       url.searchParams.set('event', resolvedCat);
       window.history.pushState({}, '', url.toString());
@@ -817,6 +839,9 @@ export default function App() {
             userEmail={currentUser?.email}
             onBackToPortal={() => {
               setCurrentView('portal');
+              if (typeof window !== 'undefined') {
+                window.history.pushState(null, '', '/');
+              }
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onOpenAuth={(mode, plan) => openAuth(mode, plan)}
@@ -866,6 +891,9 @@ export default function App() {
             userEmail={currentUser?.email}
             onBackToPortal={() => {
               setCurrentView('portal');
+              if (typeof window !== 'undefined') {
+                window.history.pushState(null, '', '/');
+              }
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onOpenAuth={(mode, plan) => openAuth(mode, plan)}
@@ -941,8 +969,14 @@ export default function App() {
         <UserDashboard
           user={activeUser}
           onSelectWedding={handleSelectWedding}
-          onLogout={currentUser ? handleLogout : () => setCurrentView('landing')}
-          onBackToLanding={() => setCurrentView('landing')}
+          onLogout={handleLogout}
+          onBackToLanding={() => {
+            setCurrentView('portal');
+            if (typeof window !== 'undefined') {
+              window.history.pushState(null, '', '/');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           onUpdatePlan={handleUpdatePlan}
           onOpenCeoDashboard={() => setCurrentView('ceo')}
         />
