@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Loader2,
   Clipboard,
+  Clock,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
@@ -886,6 +887,116 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </label>
           </div>
         </div>
+      </div>
+
+      {/* 5. CUENTA REGRESIVA ANIMADA (SVG) & PASES DE INVITADOS */}
+      <div className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] space-y-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E2D0] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#5A5A40]/10 flex items-center justify-center text-[#5A5A40] shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-serif text-[#1a1a1a] font-bold">
+                Cuenta Regresiva Animada (SVG)
+              </h3>
+              <p className="text-xs text-[#7D8C7A]">
+                Contador dinámico situado sobre la ola ondulada de transición entre la portada y la invitación.
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={settings.showCountdown !== false}
+              onChange={(e) => onChange({ showCountdown: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+          </label>
+        </div>
+
+        {settings.showCountdown !== false && (
+          <div className="space-y-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-[#1a1a1a] block mb-1.5">
+                  Texto del Encabezado:
+                </label>
+                <input
+                  type="text"
+                  value={settings.countdownTitle || ''}
+                  onChange={(e) => onChange({ countdownTitle: e.target.value })}
+                  placeholder="Ej. Faltan, Falta, Sólo faltan, El Gran Día"
+                  className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs font-serif"
+                />
+              </div>
+
+              <div className="flex items-center">
+                <label className="flex items-center gap-3 p-3 bg-[#FAF9F0] rounded-xl border border-[#E5E2D0] cursor-pointer hover:bg-[#F0EEDC] transition-colors w-full mt-auto">
+                  <input
+                    type="checkbox"
+                    checked={settings.showCountdownGuestsBadge !== false}
+                    onChange={(e) => onChange({ showCountdownGuestsBadge: e.target.checked })}
+                    className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-semibold text-[#1a1a1a] block">
+                      Placa de Invitados y Acompañantes
+                    </span>
+                    <span className="text-[10px] text-[#7D8C7A]">
+                      Muestra el badge de pases y nombres de invitados bajo el contador.
+                    </span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            {/* Selector de Estilos Visuales de SVG */}
+            <div>
+              <label className="text-xs font-bold text-[#1a1a1a] block mb-2">
+                Estilo de Arte SVG Animado:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+                {[
+                  { id: 'auto', name: 'Automático', desc: 'Sigue el tema de la tarjeta' },
+                  { id: 'classic-gold', name: 'Aros Dorados', desc: 'Órbitas y destellos de oro' },
+                  { id: 'romantic-floral', name: 'Rosas en Acuarela', desc: 'Ramillete floral y pétalos' },
+                  { id: 'watercolor-garden', name: 'Geométrico Eucalipto', desc: 'Cristal facetado & hojas' },
+                  { id: 'boho-chic', name: 'Mandala Boho', desc: 'Sol radiante y pampas' },
+                  { id: 'dark-luxury', name: 'Constelación Noche', desc: 'Giroscópico estelar' },
+                  { id: 'minimal-editorial', name: 'Minimalista Vogue', desc: 'Precisión relojera suiza' },
+                  { id: 'royal-navy', name: 'Corona Imperial', desc: 'Filigrana barroca y tiara' },
+                  { id: 'terracotta-sunset', name: 'Atardecer Cobre', desc: 'Arco crepuscular' },
+                  { id: 'lavender-provence', name: 'Lavanda & Mariposa', desc: 'Alas 3D y espigas' },
+                  { id: 'emerald-botanical', name: 'Palmas & Monstera', desc: 'Follaje tropical esmeralda' },
+                  { id: 'coastal-breeze', name: 'Brisa Marina', desc: 'Ondas de agua y perlas' },
+                  { id: 'champagne-glam', name: 'Art Déco Gatsby', desc: 'Abanico y perlas doradas' },
+                ].map((st) => {
+                  const isSelected = (settings.countdownStyle || 'auto') === st.id;
+                  return (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => onChange({ countdownStyle: st.id })}
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        isSelected
+                          ? 'border-[#5A5A40] bg-[#FAF9F0] shadow-sm ring-2 ring-[#5A5A40]/30'
+                          : 'border-[#E5E2D0] bg-white hover:bg-[#FAF9F0]/60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-[#1a1a1a]">{st.name}</span>
+                        {isSelected && <span className="w-2 h-2 rounded-full bg-[#5A5A40]" />}
+                      </div>
+                      <span className="text-[10px] text-[#7D8C7A] line-clamp-2">{st.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Couple & General Data */}

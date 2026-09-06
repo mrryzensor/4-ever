@@ -14,3 +14,4 @@ export * from './champagneGlam.tsx';
 export * from './FixDateTransitionDivider.tsx';
 export * from './StyleSpecificDivider.tsx';
 export * from './CardOrnamentFrame.tsx';
+export * from './AnimatedCountdown.tsx';

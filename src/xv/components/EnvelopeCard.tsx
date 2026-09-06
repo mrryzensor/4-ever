@@ -52,6 +52,7 @@ import {
   CardOrnamentFrame,
   AnimatedQuinceaneraTiara,
   AnimatedGlassSlipper,
+  AnimatedCountdown,
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 
@@ -412,6 +413,20 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         </div>
 
         <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto text-center overflow-visible">
+          {/* Animated SVG Countdown Section sitting right on the transition wave */}
+          {settings.showCountdown !== false && (
+            <div className="-mt-28 sm:-mt-36 md:-mt-44 mb-6 sm:mb-12 relative z-20 flex justify-center">
+              <AnimatedCountdown
+                settings={settings}
+                guest={guest}
+                cardStyle={settings.cardStyle}
+                customStyle={settings.countdownStyle}
+                customTitle={settings.countdownTitle || 'Faltan'}
+                showGuestsBadge={settings.showCountdownGuestsBadge}
+              />
+            </div>
+          )}
+
           {/* Section Header: Story & Quote Banner */}
           <div className="mb-8 sm:mb-12 flex flex-col items-center overflow-visible">
             <motion.div

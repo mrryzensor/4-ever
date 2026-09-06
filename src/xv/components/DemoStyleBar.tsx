@@ -120,24 +120,25 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
   const activeStyleObj = STYLE_OPTIONS.find((s) => s.id === currentStyle) || STYLE_OPTIONS[0];
 
   return (
-    <header className="sticky top-0 z-50 w-full px-2 sm:px-4 lg:px-8 py-2 bg-stone-950/95 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all select-none">
+    <header className="sticky top-0 z-50 w-full px-2 sm:px-4 lg:px-8 py-1.5 sm:py-2 bg-stone-950/95 backdrop-blur-xl border-b border-white/10 shadow-2xl transition-all select-none">
       <div className="w-full flex items-center justify-between gap-1.5 sm:gap-3">
         
-        {/* Left: Back button & XV Demo Badge (Responsive) */}
+        {/* Left: Back button & XV Demo Badge (Responsive & Never Clipped) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={onBackToLanding}
-            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white border border-white/15 text-[11px] sm:text-xs font-serif font-medium transition-all flex items-center gap-1 cursor-pointer shrink-0"
+            className="p-1.5 sm:px-3 sm:py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-stone-200 hover:text-white border border-white/15 text-xs font-serif font-medium transition-all flex items-center gap-1 cursor-pointer shrink-0"
             title="Volver a la página principal"
           >
-            <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden md:inline">Inicio</span>
           </button>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="px-2 py-0.5 sm:py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 font-mono text-[9px] sm:text-[11px] uppercase font-bold tracking-wider flex items-center gap-1 shrink-0">
-              <Crown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-pink-300" />
-              <span className="truncate max-w-[80px] xs:max-w-[110px] sm:max-w-none">
+          {/* XV Quinceañera Badge on tablet/desktop */}
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
+            <span className="px-2.5 py-0.5 sm:py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-300 font-mono text-[10px] sm:text-[11px] uppercase font-bold tracking-wider flex items-center gap-1 shrink-0">
+              <Crown className="w-3 h-3 text-pink-300" />
+              <span className="truncate max-w-[120px] md:max-w-none">
                 XV {coupleNames}
               </span>
             </span>
@@ -147,43 +148,43 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
           </div>
         </div>
 
-        {/* Center: Interactive Elegant Dropdown Menu for Styles */}
-        <div className="relative flex-1 max-w-[160px] xs:max-w-[210px] sm:max-w-xs md:max-w-sm mx-auto flex justify-center">
+        {/* Center: Interactive Elegant Dropdown Menu for Styles (Full-width on mobile, perfectly readable) */}
+        <div className="relative flex-1 min-w-0 mx-1 sm:mx-2 max-w-[240px] sm:max-w-xs md:max-w-sm flex justify-center">
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="w-full px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-pink-400/30 hover:border-pink-400/60 text-white transition-all flex items-center justify-between gap-1 sm:gap-2 shadow-inner cursor-pointer"
+            className="w-full px-2.5 sm:px-3.5 py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-pink-400/35 hover:border-pink-400/70 text-white transition-all flex items-center justify-between gap-1.5 sm:gap-2 shadow-inner cursor-pointer min-w-0"
             title="Cambiar diseño de la invitación"
           >
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <Palette className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-400 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+              <Palette className="w-3.5 h-3.5 text-pink-400 shrink-0" />
               <span
-                className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full aspect-square shrink-0 border border-black/30 shadow-xs"
+                className="w-2.5 h-2.5 rounded-full aspect-square shrink-0 border border-black/30 shadow-xs"
                 style={{ backgroundColor: activeStyleObj.dotColor }}
               />
-              <span className="text-[11px] sm:text-xs font-serif font-medium truncate text-stone-100">
+              <span className="text-xs font-serif font-medium truncate text-stone-100 flex-1 text-left">
                 {activeStyleObj.name}
               </span>
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 text-stone-400">
+            <div className="flex items-center gap-1 shrink-0 text-stone-400 ml-1">
               <span className="text-[9px] sm:text-[10px] uppercase font-mono tracking-wider hidden lg:inline text-pink-400/80">
                 Cambiar
               </span>
-              <ChevronDown className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform duration-200 ${isMenuOpen ? 'rotate-180 text-pink-400' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${isMenuOpen ? 'rotate-180 text-pink-400' : ''}`} />
             </div>
           </button>
 
-          {/* Dropdown Menu Modal / Popover */}
+          {/* Dropdown Menu Modal / Popover (Safely anchored for mobile & desktop) */}
           {isMenuOpen && (
             <>
               {/* Backdrop */}
               <div
-                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
+                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs"
                 onClick={() => setIsMenuOpen(false)}
               />
 
               {/* Menu Container */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 mt-2 z-50 w-72 sm:w-84 max-w-[92vw] bg-stone-900/95 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl p-2 max-h-[70vh] overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-150">
+              <div className="fixed inset-x-3 top-14 sm:inset-x-auto sm:absolute sm:top-full sm:left-1/2 sm:-translate-x-1/2 mt-2 z-50 sm:w-84 max-w-full bg-stone-900/98 backdrop-blur-2xl border border-pink-500/30 rounded-2xl shadow-2xl p-2.5 max-h-[75vh] overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1.5">
                   <span className="text-[11px] uppercase font-mono tracking-widest text-pink-400/90 font-bold flex items-center gap-1.5">
                     <Palette className="w-3.5 h-3.5" />

@@ -15,3 +15,4 @@ export * from './FixDateTransitionDivider.tsx';
 export * from './StyleSpecificDivider.tsx';
 export * from './CardOrnamentFrame.tsx';
 export * from './quinceaneraAnimations.tsx';
+export * from '../../../components/animations/AnimatedCountdown.tsx';

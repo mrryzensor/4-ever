@@ -140,6 +140,10 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_autoplay_interval INTEGER DEFAULT 5;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_countdown BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS countdown_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS countdown_title TEXT DEFAULT 'Faltan';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_countdown_guests_badge BOOLEAN DEFAULT true;
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

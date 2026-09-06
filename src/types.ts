@@ -133,6 +133,11 @@ export interface WeddingSettings {
   heroShowRsvpButton?: boolean; // false by default
   heroShowIcon?: boolean; // false by default
   heroShowGuestPill?: boolean; // false by default
+  // Countdown Settings
+  showCountdown?: boolean; // Mostrar contador regresivo animado en la transición de portada
+  countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.
+  countdownTitle?: string; // 'Faltan' | 'Falta' | 'Sólo faltan' | 'Mis XV Años' | etc.
+  showCountdownGuestsBadge?: boolean; // Mostrar placa de invitados y acompañantes bajo el contador
   // Section Visibility Toggles (Atelier / Design)
   showItinerary?: boolean; // Cronograma del evento
   showLocations?: boolean; // Lugares & Cómo llegar (Google Maps)
