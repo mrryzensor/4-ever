@@ -12,16 +12,20 @@ import { AnimatedEmeraldBotanicalDivider } from './emeraldBotanical.tsx';
 import { AnimatedCoastalBreezeDivider } from './coastalBreeze.tsx';
 import { AnimatedChampagneGlamDivider } from './champagneGlam.tsx';
 
-/**
- * Universal Dynamic Theme Divider Dispatcher
- * Automatically renders the tailored animated SVG divider for all 12 styles!
- */
 export const StyleSpecificDivider: React.FC<{
   cardStyle?: string;
+  dividerStyle?: string;
+  fallbackStyle?: string;
   className?: string;
   color?: string;
-}> = ({ cardStyle = 'classic-gold', className = '', color }) => {
-  switch (cardStyle) {
+}> = ({ cardStyle = 'classic-gold', dividerStyle, fallbackStyle = 'classic-gold', className = '', color }) => {
+  const effectiveStyle = (dividerStyle && dividerStyle !== 'auto')
+    ? dividerStyle
+    : (cardStyle && cardStyle !== 'auto')
+      ? cardStyle
+      : (fallbackStyle && fallbackStyle !== 'auto' ? fallbackStyle : 'classic-gold');
+
+  switch (effectiveStyle) {
     case 'romantic-floral':
       return <AnimatedRoseArchDivider className={className} color={color || '#8A6D65'} />;
     case 'boho-chic':

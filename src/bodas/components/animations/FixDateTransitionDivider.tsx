@@ -16,8 +16,9 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
   svgClassName = 'w-full h-32 sm:h-44 md:h-56 lg:h-64 block preserve-3d',
   fillColor = '#FDFCF0',
   accentColor = '#7D8C7A',
-  cardStyle = 'classic-gold',
+  cardStyle: rawCardStyle = 'classic-gold',
 }) => {
+  const cardStyle = (rawCardStyle && rawCardStyle !== 'auto') ? rawCardStyle : 'classic-gold';
   return (
     <div className={`relative w-full overflow-hidden leading-none z-10 ${className}`}>
       {/* Dynamic Animated Multi-layered SVG Wave */}

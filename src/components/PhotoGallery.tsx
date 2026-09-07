@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   Play,
   Pause,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { GalleryPhoto, PhotoComment, WeddingSettings } from '../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
@@ -62,6 +64,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [likedPhotoIds, setLikedPhotoIds] = useState<number[]>([]);
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
+  const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
+
+  // Close mobile comments drawer whenever active photo changes so the photo is protagonist
+  useEffect(() => {
+    setMobileCommentsOpen(false);
+  }, [activePhotoIndex]);
 
   const activePhoto = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
 
@@ -868,23 +876,35 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               >
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-[96vw] max-w-7xl h-[94vh] bg-stone-950 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
+                  className="relative w-full h-full sm:w-[96vw] sm:max-w-7xl sm:h-[94vh] bg-stone-950 sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
                 >
-                  {/* Close Button Top Right */}
-                  <button
-                    type="button"
-                    onClick={() => setActivePhotoIndex(null)}
-                    className="absolute top-4 right-4 z-30 w-11 h-11 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
-                    title="Cerrar galería (Esc)"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+                  {/* Top Bar Actions: High-res Download & Close Button */}
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
+                    <a
+                      href={activePhoto.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
+                      className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-lg cursor-pointer transition-all hover:scale-105"
+                      title="Abrir imagen original"
+                    >
+                      <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setActivePhotoIndex(null)}
+                      className="w-10 h-10 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
+                      title="Cerrar galería (Esc)"
+                    >
+                      <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </button>
+                  </div>
 
                   {/* Huge Immersive Photo Carousel Display Area */}
-                  <div className="flex-1 bg-black/80 flex flex-col justify-between items-center p-2 sm:p-4 min-h-0 overflow-hidden relative select-none">
+                  <div className="flex-1 w-full h-full bg-black flex flex-col justify-center items-center p-0 sm:p-4 min-h-0 overflow-hidden relative select-none">
 
                     {/* Photo Position Counter at top */}
-                    <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2">
+                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
                       <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
                       <span className="text-stone-500">/</span>
                       <span>{photos.length}</span>
@@ -895,10 +915,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <button
                         type="button"
                         onClick={handlePrevPhoto}
-                        className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                        title="Foto anterior (Flecha Izquierda)"
+                        className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        title="Foto anterior"
                       >
-                        <ChevronLeft className="w-7 h-7 -translate-x-0.5" />
+                        <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 -translate-x-0.5" />
                       </button>
                     )}
 
@@ -907,15 +927,22 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <button
                         type="button"
                         onClick={handleNextPhoto}
-                        className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                        title="Siguiente foto (Flecha Derecha)"
+                        className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        title="Siguiente foto"
                       >
                         <ChevronRight className="w-7 h-7 translate-x-0.5" />
                       </button>
                     )}
 
                     {/* Main Photo with smooth transition */}
-                    <div className="flex-1 w-full flex flex-col items-center justify-center min-h-0 relative px-2">
+                    <div 
+                      className="flex-1 w-full h-full flex flex-col items-center justify-center min-h-0 relative px-0 sm:px-2 cursor-pointer"
+                      onClick={() => {
+                        if (mobileCommentsOpen) {
+                          setMobileCommentsOpen(false);
+                        }
+                      }}
+                    >
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={activePhoto.id}
@@ -923,17 +950,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.98 }}
                           transition={{ duration: 0.25 }}
-                          className="flex flex-col items-center justify-center max-h-[72vh] w-full"
+                          className="flex flex-col items-center justify-center h-full w-full relative"
                         >
                           <img
                             src={activePhoto.url}
                             alt={activePhoto.caption || 'Foto de boda'}
-                            className="max-h-[66vh] w-auto max-w-full object-contain rounded-xl shadow-2xl"
+                            className="h-full w-full max-h-[100vh] lg:max-h-[75vh] object-contain sm:rounded-xl shadow-2xl"
                             referrerPolicy="no-referrer"
                           />
 
-                          {/* Photo Subtitle (Author & Date underneath the photo) */}
-                          <div className="mt-2.5 flex items-center justify-center gap-3 text-xs sm:text-sm text-stone-300 font-serif">
+                          {/* Photo Subtitle (Author & Date underneath the photo on desktop) */}
+                          <div className="hidden lg:flex mt-2.5 items-center justify-center gap-3 text-xs sm:text-sm text-stone-300 font-serif">
                             {activePhoto.authorName && (
                               <span className="text-amber-200/90 italic">
                                 Fotografía por: {activePhoto.authorName}
@@ -956,9 +983,106 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       </AnimatePresence>
                     </div>
 
-                    {/* Bottom Thumbnails Carousel Bar */}
+                    {/* MOBILE FLOATING ACTION COLUMN - Directly over the photo on the right */}
+                    <div className="lg:hidden absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3 select-none">
+                      {/* Like Button directly over the photo */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLike(activePhoto.id);
+                        }}
+                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${
+                          likedPhotoIds.includes(activePhoto.id)
+                            ? 'bg-rose-950/80 border-rose-500 text-rose-200 ring-2 ring-rose-500/40 scale-105'
+                            : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
+                        }`}
+                        title="Me gusta"
+                      >
+                        <Heart
+                          className={`w-5 h-5 transition-transform ${
+                            likedPhotoIds.includes(activePhoto.id)
+                              ? 'fill-rose-500 text-rose-500 scale-110'
+                              : 'fill-rose-500 text-rose-500'
+                          }`}
+                        />
+                        <span className="text-[10px] font-bold mt-0.5 leading-none">{activePhoto.likesCount}</span>
+                      </button>
+
+                      {/* Comments Toggle Button directly over the photo */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMobileCommentsOpen((prev) => !prev);
+                        }}
+                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${
+                          mobileCommentsOpen
+                            ? 'bg-amber-950/80 border-amber-400 text-amber-200 ring-2 ring-amber-400/40'
+                            : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
+                        }`}
+                        title={mobileCommentsOpen ? 'Cerrar comentarios' : 'Ver comentarios'}
+                      >
+                        <MessageCircle className="w-5 h-5 text-amber-400" />
+                        <span className="text-[10px] font-bold mt-0.5 leading-none">{comments.length}</span>
+                      </button>
+                    </div>
+
+                    {/* MOBILE BOTTOM GRADIENT OVERLAY - Subtle & Elegant (Photo is the real protagonist) */}
+                    <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none transition-opacity duration-300 ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
+                      <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 px-4 pr-16 text-left">
+                        <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
+                          {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
+                        </span>
+
+                        <h3 className="text-sm font-serif font-semibold text-white leading-snug truncate drop-shadow-md">
+                          {activePhoto.caption || 'Recuerdo de la Boda'}
+                        </h3>
+
+                        {activePhoto.authorName && (
+                          <p className="text-[11px] text-stone-300/90 italic truncate drop-shadow-sm mt-0.5">
+                            Por: {activePhoto.authorName}
+                          </p>
+                        )}
+
+                        {/* Sutil Comment Preview: Only 1 compact line if there are comments */}
+                        {comments.length > 0 && (
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMobileCommentsOpen(true);
+                            }}
+                            className="pointer-events-auto mt-1.5 inline-flex items-center gap-2 max-w-full px-3 py-1 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 text-[11px] text-stone-200 cursor-pointer shadow-md active:scale-95 transition-all"
+                          >
+                            <MessageCircle className="w-3 h-3 text-amber-400 shrink-0" />
+                            <span className="font-semibold text-amber-200 truncate shrink-0">{comments[comments.length - 1].guestName}:</span>
+                            <span className="truncate text-stone-300 italic">"{comments[comments.length - 1].message}"</span>
+                          </div>
+                        )}
+
+                        {/* Sutil Trigger: Tap to comment or view all */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMobileCommentsOpen(true);
+                          }}
+                          className="pointer-events-auto mt-2 w-full flex items-center justify-between px-3.5 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 text-xs text-stone-300 shadow-md active:scale-98 transition-all cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
+                            <span>{comments.length === 0 ? 'Sé el primero en comentar...' : `Ver y dejar comentarios (${comments.length})...`}</span>
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
+                            {comments.length}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Desktop Thumbnails Carousel Bar */}
                     {photos.length > 1 && (
-                      <div className="w-full pt-2 flex items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
+                      <div className="hidden sm:flex w-full pt-2 items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
                         {photos.map((p, idx) => (
                           <button
                             key={p.id}
@@ -976,22 +1100,154 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     )}
                   </div>
 
-                  {/* Sidebar Info, Likes & Interactive Comments Panel */}
-                  <div className="w-full lg:w-[440px] flex flex-col justify-between bg-stone-900/95 text-stone-100 border-t lg:border-t-0 lg:border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
+                  {/* MOBILE COMMENTS SLIDE-UP SHEET (Translucent Frosted Glass, Non-intrusive) */}
+                  <AnimatePresence>
+                    {mobileCommentsOpen && (
+                      <>
+                        {/* Tap backdrop to close */}
+                        <div 
+                          className="lg:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
+                          onClick={() => setMobileCommentsOpen(false)}
+                        />
 
-                    {/* Header & Photo Title - With clean spacing from close button */}
-                    <div className="p-5 sm:p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0 relative">
-                      <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1 rounded-full inline-block mb-2.5">
+                        <motion.div
+                          initial={{ y: '100%', opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: '100%', opacity: 0 }}
+                          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[62vh] flex flex-col bg-stone-950/80 backdrop-blur-2xl border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Drag Handle & Header */}
+                          <div className="p-3.5 pb-2.5 border-b border-white/10 shrink-0">
+                            <div 
+                              onClick={() => setMobileCommentsOpen(false)}
+                              className="w-10 h-1 rounded-full bg-white/30 mx-auto mb-2 cursor-pointer hover:bg-white/50" 
+                            />
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <MessageCircle className="w-4 h-4 text-amber-400" />
+                                <h4 className="text-sm font-semibold text-white">Comentarios & Dedicatorias</h4>
+                                <span className="text-xs font-mono font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
+                                  {comments.length}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setMobileCommentsOpen(false)}
+                                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-stone-300 hover:text-white transition-colors cursor-pointer"
+                                title="Cerrar comentarios"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Comments List */}
+                          <div className="flex-1 p-3.5 py-2.5 overflow-y-auto space-y-2 min-h-0 custom-scrollbar">
+                            {loadingComments ? (
+                              <div className="py-6 text-center text-xs text-stone-400 flex items-center justify-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                                <span>Cargando comentarios...</span>
+                              </div>
+                            ) : comments.length === 0 ? (
+                              <div className="py-6 text-center bg-white/5 backdrop-blur-sm rounded-2xl border border-dashed border-white/15 p-4">
+                                <MessageCircle className="w-6 h-6 text-stone-400 mx-auto mb-1" />
+                                <p className="text-xs text-stone-200 font-medium">Sé el primero en comentar esta foto</p>
+                                <p className="text-[11px] text-stone-400 mt-0.5">Deja un lindo mensaje o dedicatoria.</p>
+                              </div>
+                            ) : (
+                              comments.map((c) => (
+                                <div
+                                  key={c.id}
+                                  className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-2.5 sm:p-3 space-y-1"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <div className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center text-[10px] font-bold shrink-0 border border-amber-500/30">
+                                        {c.guestName.charAt(0).toUpperCase()}
+                                      </div>
+                                      <span className="text-xs font-semibold text-amber-200 truncate">
+                                        {c.guestName}
+                                      </span>
+                                    </div>
+                                    {c.createdAt && (
+                                      <span className="text-[10px] text-stone-400 font-mono shrink-0">
+                                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-stone-100 leading-relaxed pl-7">
+                                    {c.message}
+                                  </p>
+                                </div>
+                              ))
+                            )}
+                          </div>
+
+                          {/* Mobile Comment Form */}
+                          <div className="p-3 bg-black/50 border-t border-white/15 shrink-0">
+                            <form onSubmit={handleAddComment} className="space-y-2">
+                              <div className="relative">
+                                <User className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                  type="text"
+                                  value={authorInputName}
+                                  onChange={(e) => setAuthorInputName(e.target.value)}
+                                  placeholder="Tu nombre (ej. Familia Pérez)"
+                                  className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
+                                  required
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={newCommentText}
+                                  onChange={(e) => setNewCommentText(e.target.value)}
+                                  placeholder="Escribe un comentario o dedicatoria..."
+                                  className="flex-1 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
+                                  required
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={isSubmittingComment || !newCommentText.trim()}
+                                  className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-serif font-bold flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer"
+                                  title="Enviar comentario"
+                                >
+                                  {isSubmittingComment ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Send className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+
+                  {/* DESKTOP SIDEBAR PANEL - 100% full experience on desktop */}
+                  <div className="hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
+                    {/* Header & Photo Title */}
+                    <div className="p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0">
+                      <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
                         {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                       </span>
-
-                      <h3 className="text-lg sm:text-xl font-serif font-semibold text-white leading-snug">
+                      <h3 className="text-xl font-serif font-semibold text-white leading-snug">
                         {activePhoto.caption || 'Recuerdo de la Boda'}
                       </h3>
+                      {activePhoto.authorName && (
+                        <p className="text-xs text-stone-400 italic mt-1">
+                          Por: {activePhoto.authorName}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Interactive Comments List (Scrollable) */}
-                    <div className="flex-1 p-5 sm:p-6 py-4 overflow-y-auto space-y-3 min-h-0 custom-scrollbar">
+                    {/* Comments List */}
+                    <div className="flex-1 p-6 py-4 overflow-y-auto space-y-3 min-h-0 custom-scrollbar">
                       <div className="flex items-center justify-between text-xs sm:text-sm text-stone-400 pb-2 border-b border-stone-800/40">
                         <div className="flex items-center gap-2 font-semibold text-stone-200">
                           <MessageCircle className="w-4 h-4 text-amber-400" />
@@ -1011,7 +1267,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         <div className="py-10 text-center bg-stone-950/40 rounded-2xl border border-dashed border-stone-800 p-5">
                           <MessageCircle className="w-8 h-8 text-stone-600 mx-auto mb-2" />
                           <p className="text-sm text-stone-300 font-medium">Sé el primero en comentar esta foto</p>
-                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo para los novios.</p>
+                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo.</p>
                         </div>
                       ) : (
                         comments.map((c) => (
@@ -1042,10 +1298,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       )}
                     </div>
 
-                    {/* Write Comment Box & Like Bar - Larger Inputs & Clearer Controls */}
-                    <div className="p-4 sm:p-6 bg-stone-950/95 border-t border-stone-800 shrink-0 space-y-3.5">
-
-                      {/* Action Bar (Like + Download) */}
+                    {/* Desktop Action Bar (Like + Download) & Comment Form */}
+                    <div className="p-6 bg-stone-950/95 border-t border-stone-800 shrink-0 space-y-4">
                       <div className="flex items-center justify-between gap-3">
                         <button
                           type="button"
@@ -1078,20 +1332,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         </a>
                       </div>
 
-                      {/* Comment Input Form - Increased Height & Typography */}
-                      <form onSubmit={handleAddComment} className="space-y-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            <input
-                              type="text"
-                              value={authorInputName}
-                              onChange={(e) => setAuthorInputName(e.target.value)}
-                              placeholder="Tu nombre (ej. Familia Pérez)"
-                              className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
-                              required
-                            />
-                          </div>
+                      <form onSubmit={handleAddComment} className="space-y-3">
+                        <div className="relative">
+                          <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={authorInputName}
+                            onChange={(e) => setAuthorInputName(e.target.value)}
+                            placeholder="Tu nombre (ej. Familia Pérez)"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                            required
+                          />
                         </div>
 
                         <div className="flex gap-2">
@@ -1099,7 +1350,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             type="text"
                             value={newCommentText}
                             onChange={(e) => setNewCommentText(e.target.value)}
-                            placeholder="Escribe un comentario o felicitación..."
+                            placeholder="Escribe un comentario o dedicatoria..."
                             className="flex-1 px-4 py-3 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                             required
                           />

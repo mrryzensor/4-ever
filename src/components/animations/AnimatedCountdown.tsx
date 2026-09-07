@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Heart } from 'lucide-react';
+import { Heart, Check } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
 
@@ -1198,28 +1198,43 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     }
   };
 
-  // Companion names parsing
+  // Companion names parsing - only computed when a real guest exists
   const companionList = useMemo(() => {
     if (!guest) {
-      // Default demo companions preview matching the user reference
-      return ['Juan García', 'Sofía García'];
+      return [];
+    }
+    const list: string[] = [];
+    if (guest.fullName) {
+      list.push(guest.fullName);
     }
     if (guest.companionNames) {
       try {
         const parsed = JSON.parse(guest.companionNames);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) {
+          for (const c of parsed) {
+            const trimmed = typeof c === 'string' ? c.trim() : '';
+            if (trimmed && !list.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
+              list.push(trimmed);
+            }
+          }
+        }
       } catch {
         if (typeof guest.companionNames === 'string' && guest.companionNames.includes(',')) {
-          return guest.companionNames.split(',').map((s) => s.trim()).filter(Boolean);
+          for (const c of guest.companionNames.split(',')) {
+            const trimmed = c.trim();
+            if (trimmed && !list.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) {
+              list.push(trimmed);
+            }
+          }
         }
       }
     }
-    return [guest.fullName];
+    return list;
   }, [guest]);
 
-  const passesCount = guest ? guest.allocatedPasses || 1 : 4;
+  const passesCount = guest ? (guest.confirmedPasses || guest.allocatedPasses || 1) : 0;
   const companionsCount = Math.max(0, passesCount - 1);
-  const shouldShowGuestBadge = showGuestsBadge !== undefined ? showGuestsBadge : (settings.showCountdownGuestsBadge !== false);
+  const shouldShowGuestBadge = Boolean(guest) && (showGuestsBadge !== undefined ? showGuestsBadge : (settings.showCountdownGuestsBadge !== false));
 
   return (
     <div className={`relative flex flex-col items-center justify-center select-none ${className}`}>
@@ -1354,14 +1369,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
         </motion.div>
       </div>
 
-      {/* Guest Information & Passes Badge (Ref. Imagen 1, 2, 3) */}
-      {shouldShowGuestBadge && (
+      {/* Guest Information & Passes Badge - Only shown when guest is identified (via link or returning session) */}
+      {shouldShowGuestBadge && guest && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="mt-2 sm:mt-3 flex flex-col items-center text-center space-y-1 z-10"
+          className="mt-2 sm:mt-3 flex flex-col items-center text-center space-y-1.5 z-10"
         >
           {/* Circular Badge with Passes Count */}
           <div
@@ -1377,7 +1391,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
               isDark ? 'text-white' : 'text-stone-800'
             }`}
           >
-            Invitados
+            {passesCount === 1 ? 'Pase Personal' : 'Invitados'}
           </span>
 
           {/* Subtitle with Companions Count */}
@@ -1388,20 +1402,30 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           )}
 
           {/* Companion Name Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 mt-1 max-w-xs sm:max-w-md">
-            {companionList.map((name, idx) => (
-              <span
-                key={idx}
-                className={`px-3 py-1 rounded-lg text-[11px] sm:text-xs font-serif font-medium border shadow-2xs ${
-                  isDark
-                    ? 'bg-stone-850/90 border-stone-700 text-stone-200'
-                    : 'bg-white/90 border-stone-200 text-stone-700'
-                }`}
-              >
-                {name}
-              </span>
-            ))}
-          </div>
+          {companionList.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-1.5 mt-1 max-w-xs sm:max-w-md">
+              {companionList.map((name, idx) => (
+                <span
+                  key={idx}
+                  className={`px-3 py-1 rounded-lg text-[11px] sm:text-xs font-serif font-medium border shadow-2xs ${
+                    isDark
+                      ? 'bg-stone-850/90 border-stone-700 text-stone-200'
+                      : 'bg-white/90 border-stone-200 text-stone-700'
+                  }`}
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Confirmation Status Tag */}
+          {guest.status === 'confirmed' && (
+            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 mt-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-[10px] font-sans font-semibold tracking-wide">
+              <Check className="w-3 h-3 text-emerald-600" />
+              <span>Asistencia Confirmada</span>
+            </div>
+          )}
         </motion.div>
       )}
     </div>

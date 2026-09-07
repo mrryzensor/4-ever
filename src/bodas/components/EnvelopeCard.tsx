@@ -28,7 +28,7 @@ import {
   ShieldCheck,
   Footprints,
 } from 'lucide-react';
-import { WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
+import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { formatHeroDate } from '../../lib/dateFormatters.ts';
 import {
@@ -51,6 +51,7 @@ import {
   AnimatedArtDecoFanEmblem,
   CardOrnamentFrame,
   AnimatedCountdown,
+  AnimatedAmbientParticles,
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 
@@ -60,14 +61,80 @@ interface EnvelopeCardProps {
   onOpenRsvp?: () => void;
 }
 
+const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold') => {
+  const effectiveIcon = (heroIconStyle && heroIconStyle !== 'auto') ? heroIconStyle : cardStyle;
+  switch (effectiveIcon) {
+    case 'romantic-floral':
+      return <AnimatedTwinSwans className="w-14 h-12 mx-auto" />;
+    case 'boho-chic':
+      return <AnimatedBohoSunMandala className="w-12 h-12 mx-auto" />;
+    case 'dark-luxury':
+      return <AnimatedConstellationDivider className="w-16 h-8 mx-auto" color="#D4AF37" />;
+    case 'watercolor-garden':
+      return <AnimatedWatercolorBranchDivider className="w-16 h-8 mx-auto" color="#526B50" />;
+    case 'royal-navy':
+      return <AnimatedRoyalCrownEmblem className="w-14 h-12 mx-auto" />;
+    case 'terracotta-sunset':
+      return <AnimatedSunsetDesertEmblem className="w-14 h-12 mx-auto" />;
+    case 'lavender-provence':
+      return <AnimatedLavenderButterflyEmblem className="w-14 h-12 mx-auto" />;
+    case 'emerald-botanical':
+      return <AnimatedMonsteraEmblem className="w-14 h-12 mx-auto" />;
+    case 'coastal-breeze':
+      return <AnimatedSeashellPearlEmblem className="w-14 h-12 mx-auto" />;
+    case 'champagne-glam':
+      return <AnimatedArtDecoFanEmblem className="w-14 h-12 mx-auto" />;
+    case 'minimal-editorial':
+      return <div className="w-12 h-0.5 bg-white/70 mx-auto my-2" />;
+    case 'classic-gold':
+    default:
+      return <AnimatedWeddingRings className="w-14 h-10 mx-auto" />;
+  }
+};
+
 export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   settings,
   guest,
   onOpenRsvp,
 }) => {
   const heroContainerRef = useRef<HTMLDivElement>(null);
-  const theme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const isDark = settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical';
+  
+  // Composite Theme Resolution: inherit base, overlay custom colors and typography
+  const baseTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const colorTheme = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
+    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || baseTheme)
+    : baseTheme;
+  const fontTheme = (settings.fontPairStyle && settings.fontPairStyle !== 'auto')
+    ? (CARD_THEMES[settings.fontPairStyle as CardStyleId] || baseTheme)
+    : baseTheme;
+
+  const theme = {
+    ...baseTheme,
+    bgHex: settings.customBgColor || colorTheme.bgHex,
+    secondaryBgHex: colorTheme.secondaryBgHex,
+    accentColorHex: settings.customAccentColor || colorTheme.accentColorHex,
+    primaryColorHex: colorTheme.primaryColorHex,
+    cardBgClass: colorTheme.cardBgClass,
+    textPrimaryClass: colorTheme.textPrimaryClass,
+    textSecondaryClass: colorTheme.textSecondaryClass,
+    accentClass: colorTheme.accentClass,
+    borderClass: colorTheme.borderClass,
+    fontDisplay: fontTheme.fontDisplay,
+    fontBody: fontTheme.fontBody,
+  };
+  const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
+    ? (settings.colorPaletteStyle === 'dark-luxury' || settings.colorPaletteStyle === 'royal-navy' || settings.colorPaletteStyle === 'emerald-botanical')
+    : (settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical');
+
+  const activeFrameStyle = (settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto')
+    ? settings.frameOrnamentStyle
+    : settings.cardStyle;
+  const activeDividerStyle = (settings.dividerStyle && settings.dividerStyle !== 'auto')
+    ? settings.dividerStyle
+    : settings.cardStyle;
+  const activeWaveStyle = (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto')
+    ? settings.transitionWaveStyle
+    : settings.cardStyle;
 
   const [expandedSection, setExpandedSection] = useState<'none' | 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips'>('none');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -363,14 +430,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </div>
           )}
 
-          <AnimatedFloatingPetals count={14} />
+          <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={14} />
         </motion.div>
 
         <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-6 sm:pt-10 pb-16">
           <div className="min-h-4">
             {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1">
-                {settings.cardStyle === 'romantic-floral' ? <AnimatedTwinSwans className="w-14 h-12 mx-auto" /> : settings.cardStyle === 'boho-chic' ? <AnimatedBohoSunMandala className="w-12 h-12 mx-auto" /> : <AnimatedWeddingRings className="w-14 h-10 mx-auto" />}
+                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle)}
               </motion.div>
             )}
           </div>
@@ -406,7 +473,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           <FixDateAnimatedTransitionDivider
             fillColor={theme.bgHex}
             accentColor={theme.accentColorHex}
-            cardStyle={settings.cardStyle}
+            cardStyle={activeWaveStyle}
           />
         </div>
 
@@ -449,7 +516,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </h2>
             
             <StyleSpecificDivider
-              cardStyle={settings.cardStyle}
+              cardStyle={activeDividerStyle}
               className="w-56 sm:w-72 h-10 mx-auto mt-6"
               color={theme.accentColorHex}
             />
@@ -469,7 +536,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
               <div className="relative z-10">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
@@ -576,7 +643,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
               <div className="relative z-10">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
@@ -681,7 +748,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
-                <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+                <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
@@ -822,7 +889,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
-                <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+                <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-3 mb-4">
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
@@ -979,7 +1046,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
               <div className="relative z-10">
                 <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                   <Shirt className="w-6 h-6" style={{ color: theme.accentColorHex }} />
@@ -1196,7 +1263,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
-              <CardOrnamentFrame cardStyle={settings.cardStyle} accentColor={theme.accentColorHex} />
+              <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
               <div className="relative z-10">
                 <div className={`w-12 h-12 flex items-center justify-center mx-auto mb-3 border shadow-xs group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                   <Lightbulb className="w-6 h-6" style={{ color: theme.accentColorHex }} />

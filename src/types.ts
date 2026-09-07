@@ -138,6 +138,17 @@ export interface WeddingSettings {
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.
   countdownTitle?: string; // 'Faltan' | 'Falta' | 'Sólo faltan' | 'Mis XV Años' | etc.
   showCountdownGuestsBadge?: boolean; // Mostrar placa de invitados y acompañantes bajo el contador
+  // Modular Style Mix & Match Settings (Modo Avanzado / Atelier)
+  colorPaletteStyle?: string; // 'auto' | CardStyleId - Paleta cromática adoptada
+  customAccentColor?: string; // Color de acento personalizado (hex)
+  customBgColor?: string; // Color de fondo personalizado (hex)
+  fontPairStyle?: string; // 'auto' | CardStyleId - Combinación tipográfica de títulos y textos
+  dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
+  frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
+  transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido
+  heroIconStyle?: string; // 'auto' | 'wedding-rings' | 'twin-swans' | 'boho-sun' | 'royal-crown' | 'tiara' | 'none'
+  ambientParticleStyle?: string; // 'auto' | 'petals' | 'gold-sparkles' | 'champagne-bubbles' | 'fireflies' | 'stars' | 'none'
+  sealStyle?: string; // 'auto' | CardStyleId - Textura y estilo del sello de lacre digital
   // Section Visibility Toggles (Atelier / Design)
   showItinerary?: boolean; // Cronograma del evento
   showLocations?: boolean; // Lugares & Cómo llegar (Google Maps)

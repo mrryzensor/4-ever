@@ -651,9 +651,36 @@ export default function App() {
               if (guestRes.ok) {
                 const guestData = await guestRes.json();
                 setActiveGuest(guestData);
+                try {
+                  localStorage.setItem(`rsvp_guest_${data.id}`, JSON.stringify(guestData));
+                } catch {}
               }
             } catch (guestErr) {
               console.warn('Could not find guest by code:', guestErr);
+            }
+          } else if (data?.id) {
+            // General link: check if this user previously confirmed or filled RSVP on this device
+            try {
+              const savedGuestRaw = localStorage.getItem(`rsvp_guest_${data.id}`);
+              if (savedGuestRaw) {
+                const parsed = JSON.parse(savedGuestRaw);
+                if (parsed?.accessCode) {
+                  const guestRes = await fetch(`/api/rsvp/find?q=${encodeURIComponent(parsed.accessCode)}&weddingId=${data.id}`);
+                  if (guestRes.ok) {
+                    const freshGuest = await guestRes.json();
+                    setActiveGuest(freshGuest);
+                    try {
+                      localStorage.setItem(`rsvp_guest_${data.id}`, JSON.stringify(freshGuest));
+                    } catch {}
+                  } else {
+                    setActiveGuest(parsed);
+                  }
+                } else if (parsed?.fullName) {
+                  setActiveGuest(parsed);
+                }
+              }
+            } catch (storageErr) {
+              console.warn('Could not restore saved guest session:', storageErr);
             }
           }
         }
@@ -1297,6 +1324,13 @@ export default function App() {
             settings={settings}
             onRsvpSuccess={(updated) => {
               setActiveGuest(updated);
+              if (settings?.id && updated) {
+                try {
+                  localStorage.setItem(`rsvp_guest_${settings.id}`, JSON.stringify(updated));
+                } catch (e) {
+                  console.warn('Could not save guest to localStorage:', e);
+                }
+              }
             }}
           />
         ) : (
@@ -1305,6 +1339,13 @@ export default function App() {
             settings={settings}
             onRsvpSuccess={(updated) => {
               setActiveGuest(updated);
+              if (settings?.id && updated) {
+                try {
+                  localStorage.setItem(`rsvp_guest_${settings.id}`, JSON.stringify(updated));
+                } catch (e) {
+                  console.warn('Could not save guest to localStorage:', e);
+                }
+              }
             }}
           />
         )}

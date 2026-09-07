@@ -3,6 +3,7 @@ import { Palette, Eye, Check, Sparkles } from 'lucide-react';
 import { WeddingSettings, CardStyleId } from '../../../../types.ts';
 import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../AnimatedSvgs.tsx';
+import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
 
 interface AdminThemeSettingsProps {
   settings: WeddingSettings;
@@ -153,6 +154,9 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           </div>
         );
       })()}
+
+      {/* Advanced Modular Mix & Match Customization */}
+      <AdminMixMatchSettings settings={settings} onChange={onChange} />
 
       {/* Wax Seal & Digital Envelope settings */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
