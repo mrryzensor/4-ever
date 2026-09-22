@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
+import { HeroCourtCard } from './HeroCourtCard.tsx';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
@@ -380,60 +381,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   const scrollToContent = () => document.getElementById('detalles-boda')?.scrollIntoView({ behavior: 'smooth' });
 
-  const renderCourtCard = () => {
-    const activeCourtItems = [
-      settings.heroShowBrideParents && settings.heroBrideParents?.trim()
-        ? { title: settings.heroBrideParentsTitle?.trim() || 'Padres de la Novia', names: settings.heroBrideParents.trim() }
-        : null,
-      settings.heroShowGroomParents && settings.heroGroomParents?.trim()
-        ? { title: settings.heroGroomParentsTitle?.trim() || 'Padres del Novio', names: settings.heroGroomParents.trim() }
-        : null,
-      settings.heroShowPadrinos && settings.heroPadrinos?.trim()
-        ? { title: settings.heroPadrinosTitle?.trim() || (settings.eventType === 'xv' ? 'Mis Padrinos' : 'Nuestros Padrinos'), names: settings.heroPadrinos.trim() }
-        : null,
-      settings.heroShowWitnesses && settings.heroWitnesses?.trim()
-        ? { title: settings.heroWitnessesTitle?.trim() || 'Testigos', names: settings.heroWitnesses.trim() }
-        : null,
-    ].filter(Boolean) as { title: string; names: string }[];
-
-    if (activeCourtItems.length === 0) return null;
-
-    const cardTitle = settings.heroCourtTitle?.trim() || (settings.eventType === 'xv' ? 'Con la bendición de mi familia' : 'Con la bendición de Dios y de nuestras familias');
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.85, delay: 0.28 }}
-        className="my-3 sm:my-4 w-full max-w-xl mx-auto px-5 py-3 sm:py-4 rounded-2xl bg-black/40 backdrop-blur-md border border-amber-200/30 text-center shadow-xl"
-      >
-        <span className="text-[9px] sm:text-xs uppercase tracking-[0.25em] text-amber-200/90 font-serif font-medium block mb-2 sm:mb-3 drop-shadow-xs">
-          ✦ {cardTitle} ✦
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-center">
-          {activeCourtItems.map((item, idx) => {
-            const isAloneOnRow =
-              activeCourtItems.length % 2 !== 0 && idx === activeCourtItems.length - 1;
-            return (
-              <div
-                key={idx}
-                className={`flex flex-col items-center text-center ${
-                  isAloneOnRow ? 'sm:col-span-2 max-w-md mx-auto' : ''
-                }`}
-              >
-                <span className="text-[9px] sm:text-[11px] uppercase tracking-wider text-amber-200/80 font-serif font-semibold">
-                  {item.title}
-                </span>
-                <p className="text-xs sm:text-sm md:text-base font-serif italic text-white tracking-wide mt-0.5 drop-shadow-sm">
-                  {item.names}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </motion.div>
-    );
-  };
+  const renderCourtCard = () => <HeroCourtCard settings={settings} theme={theme} />;
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>

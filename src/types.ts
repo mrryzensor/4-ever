@@ -138,7 +138,7 @@ export interface WeddingSettings {
   heroShowPadrinos?: boolean; // false by default (opcional)
   heroPadrinosTitle?: string; // e.g. 'Nuestros Padrinos', 'Padrinos de Honor', 'Mis Padrinos'
   heroPadrinos?: string; // e.g. 'Roberto Gómez & Carmen Morales'
-  // Padres y Testigos (Exclusivo Bodas / Opcional)
+  // Familia, padrinos y testigos destacados en portada (opcional, reutilizable por tipo de evento)
   heroShowBrideParents?: boolean; // false by default
   heroBrideParentsTitle?: string; // e.g. 'Padres de la Novia'
   heroBrideParents?: string; // e.g. 'Carlos Mendoza & Elena Flores'

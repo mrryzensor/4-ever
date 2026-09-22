@@ -14,6 +14,8 @@ import {
   Users,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
+import { CARD_THEMES } from '../../../lib/themes.ts';
+import { HeroCourtCard } from '../../HeroCourtCard.tsx';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
 import { DATE_FORMAT_OPTIONS, formatHeroDate } from '../../../lib/dateFormatters.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../../lib/mediaOptimizer.ts';
@@ -763,49 +765,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
           {/* Rendered Hero hierarchy */}
           {(() => {
-            const renderMiniCourtCard = () => {
-              const hasItems = 
-                (settings.heroShowBrideParents && settings.heroBrideParents?.trim()) ||
-                (settings.heroShowGroomParents && settings.heroGroomParents?.trim()) ||
-                (settings.heroShowPadrinos && settings.heroPadrinos?.trim()) ||
-                (settings.heroShowWitnesses && settings.heroWitnesses?.trim());
-              
-              if (!hasItems) return null;
-
-              return (
-                <div className="my-2 max-w-sm mx-auto px-3.5 py-2 rounded-2xl bg-black/40 backdrop-blur-xs border border-amber-200/25 text-center animate-fadeIn shadow-md">
-                  <span className="text-[8px] uppercase tracking-[0.2em] text-amber-200/90 font-serif font-medium block mb-1">
-                    Con la bendición de nuestras familias
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-left">
-                    {settings.heroShowBrideParents && settings.heroBrideParents?.trim() && (
-                      <div className="text-center sm:text-left">
-                        <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">{settings.heroBrideParentsTitle || 'Padres de la Novia'}</span>
-                        <span className="text-[10px] font-serif italic text-white drop-shadow-xs">{settings.heroBrideParents}</span>
-                      </div>
-                    )}
-                    {settings.heroShowGroomParents && settings.heroGroomParents?.trim() && (
-                      <div className="text-center sm:text-left">
-                        <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">{settings.heroGroomParentsTitle || 'Padres del Novio'}</span>
-                        <span className="text-[10px] font-serif italic text-white drop-shadow-xs">{settings.heroGroomParents}</span>
-                      </div>
-                    )}
-                    {settings.heroShowPadrinos && settings.heroPadrinos?.trim() && (
-                      <div className="text-center sm:text-left">
-                        <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">{settings.heroPadrinosTitle || 'Padrinos'}</span>
-                        <span className="text-[10px] font-serif italic text-white drop-shadow-xs">{settings.heroPadrinos}</span>
-                      </div>
-                    )}
-                    {settings.heroShowWitnesses && settings.heroWitnesses?.trim() && (
-                      <div className="text-center sm:text-left">
-                        <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">{settings.heroWitnessesTitle || 'Testigos'}</span>
-                        <span className="text-[10px] font-serif italic text-white drop-shadow-xs">{settings.heroWitnesses}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            };
+            const miniCourtTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+            const renderMiniCourtCard = () => (
+              <HeroCourtCard settings={settings} theme={miniCourtTheme} compact />
+            );
 
             return (
               <div className="relative z-10 py-6 text-center flex flex-col items-center justify-center space-y-3">
@@ -944,7 +907,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               </div>
             </label>
 
-            {/* Cortejo, Familia & Padrinos en Portada (Opcional - Exclusivo Bodas) */}
+            {/* Cortejo, Familia & Padrinos en Portada (Opcional) */}
             <div className="sm:col-span-2 p-5 bg-[#FAF9F0] rounded-2xl border border-[#E5E2D0] space-y-4">
               <div className="flex items-center justify-between gap-2 border-b border-[#E5E2D0]/70 pb-3">
                 <div className="flex items-center gap-2.5">

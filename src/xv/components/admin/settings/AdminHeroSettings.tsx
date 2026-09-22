@@ -14,6 +14,8 @@ import {
   Users,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../../types.ts';
+import { HeroCourtCard } from '../../../../components/HeroCourtCard.tsx';
+import { XV_CARD_THEMES } from '../../../themes.ts';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
 import { DATE_FORMAT_OPTIONS, formatHeroDate } from '../../../../lib/dateFormatters.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../../../lib/mediaOptimizer.ts';
@@ -35,6 +37,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   const [isDraggingHero, setIsDraggingHero] = useState(false);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
   const heroDropZoneRef = useRef<HTMLDivElement>(null);
+  const miniCourtTheme = XV_CARD_THEMES[settings.cardStyle] || XV_CARD_THEMES['classic-gold'];
 
   const processHeroFile = async (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -773,22 +776,16 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </p>
 
             {/* Names */}
+            {settings.heroCourtPosition === 'above-names' && (
+              <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
+            )}
             <h2 className="text-2xl sm:text-4xl font-serif italic text-white tracking-tight drop-shadow-lg">
               {settings.coupleNames || 'Nombre & Nombre'}
             </h2>
 
-            {/* Padrinos in Live Mini-Preview */}
-            {Boolean(settings.heroShowPadrinos && settings.heroPadrinos?.trim()) && (
-              <div className="my-1.5 flex flex-col items-center justify-center text-center animate-fadeIn">
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-amber-200/90 font-serif font-medium flex items-center gap-1.5">
-                  <span className="w-3 sm:w-5 h-[1px] bg-amber-200/40 inline-block" />
-                  {settings.heroPadrinosTitle?.trim() || 'Mis Padrinos'}
-                  <span className="w-3 sm:w-5 h-[1px] bg-amber-200/40 inline-block" />
-                </span>
-                <p className="text-xs sm:text-sm font-serif italic text-white tracking-wide mt-0.5 drop-shadow">
-                  {settings.heroPadrinos.trim()}
-                </p>
-              </div>
+            {/* Familia, padrinos y testigos con el mismo tema que la invitación */}
+            {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && (
+              <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
             )}
 
             {/* Quote with quotes */}
@@ -812,6 +809,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 </p>
               )}
             </div>
+            {settings.heroCourtPosition === 'below-quote' && (
+              <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
+            )}
           </div>
 
           <div className="relative z-10 text-center text-[10px] text-stone-300 font-light">

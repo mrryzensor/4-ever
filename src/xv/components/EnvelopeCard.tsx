@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
@@ -381,6 +382,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
 
   const scrollToContent = () => (document.getElementById('detalles-xv') || document.getElementById('detalles-boda'))?.scrollIntoView({ behavior: 'smooth' });
+  const renderCourtCard = () => <HeroCourtCard settings={settings} theme={theme} eventType="xv" />;
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
@@ -451,27 +453,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </div>
           <div className="max-w-4xl mx-auto my-auto px-4 text-center text-white flex flex-col items-center justify-center">
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-base sm:text-2xl md:text-3xl tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium">{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+            {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tight text-white my-3 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
-            {Boolean(settings.heroShowPadrinos && settings.heroPadrinos?.trim()) && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.28 }}
-                className="my-2 sm:my-3 flex flex-col items-center justify-center text-center"
-              >
-                <span className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.25em] text-amber-200/90 font-serif font-medium flex items-center gap-2 drop-shadow-xs">
-                  <span className="w-5 sm:w-8 h-[1px] bg-amber-200/40 inline-block" />
-                  {settings.heroPadrinosTitle?.trim() || 'Mis Padrinos'}
-                  <span className="w-5 sm:w-8 h-[1px] bg-amber-200/40 inline-block" />
-                </span>
-                <p className="text-sm sm:text-lg md:text-xl font-serif italic text-white tracking-wide mt-0.5 sm:mt-1 drop-shadow-md">
-                  {settings.heroPadrinos.trim()}
-                </p>
-              </motion.div>
-            )}
+            {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
               <p className="text-base sm:text-xl font-serif italic text-white/95 leading-relaxed drop-shadow-md">{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>
+            {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex gap-3 mt-6">
                 <button onClick={onOpenRsvp} className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-serif font-semibold text-sm uppercase shadow-xl hover:brightness-110 transition-all flex items-center gap-2">

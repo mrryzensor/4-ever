@@ -652,7 +652,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 />
               </div>
 
-              {/* Cortejo & Familia de Honor en la Portada (Hero) - Exclusivo Bodas (Opcional) */}
+              {/* Cortejo & Familia de Honor en la Portada (Hero) - Opcional */}
               <div className="sm:col-span-2 p-4 sm:p-5 rounded-3xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E2D0] pb-3">
                   <div className="flex items-center gap-2.5">
@@ -669,7 +669,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     </div>
                   </div>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200/60 self-start sm:self-auto">
-                    Exclusivo Bodas
+                    Bodas &amp; XV
                   </span>
                 </div>
 
