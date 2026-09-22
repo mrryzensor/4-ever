@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Heart, Check } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
+import { parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 
 interface AnimatedCountdownProps {
   settings: WeddingSettings;
@@ -1134,35 +1135,18 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const dateStr = settings.eventDate || '2026-11-28';
-      const timeStr = settings.eventTime || '17:00';
-      const targetDate = new Date(`${dateStr}T${timeStr}:00`).getTime();
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-          isExpired: false,
-        });
-      } else {
-        setTimeLeft({
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-          isExpired: true,
-        });
-      }
+      const targetDate = parseEventTargetDate(
+        settings.eventDate,
+        settings.eventTime,
+        settings.heroCustomDateText
+      );
+      setTimeLeft(calculateCountdownTimeLeft(targetDate));
     };
 
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [settings.eventDate, settings.eventTime]);
+  }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
 
   // Title selection ("Faltan", "Falta", or custom)
   const displayTitle = customTitle || settings.countdownTitle || (timeLeft.days === 1 ? 'Falta' : 'Faltan');

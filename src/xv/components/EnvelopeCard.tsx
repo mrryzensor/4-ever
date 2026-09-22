@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
-import { formatHeroDate } from '../../lib/dateFormatters.ts';
+import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
   AnimatedWeddingRings,
@@ -319,29 +319,35 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const targetDate = new Date(`${settings.eventDate || '2026-11-28'}T${settings.eventTime || '17:00'}:00`).getTime();
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        });
-      }
+      const targetDate = parseEventTargetDate(
+        settings.eventDate,
+        settings.eventTime,
+        settings.heroCustomDateText
+      );
+      const res = calculateCountdownTimeLeft(targetDate);
+      setTimeLeft({ days: res.days, hours: res.hours, minutes: res.minutes, seconds: res.seconds });
     };
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [settings.eventDate, settings.eventTime]);
+  }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
 
   const coupleNamesSafe = settings.coupleNames || 'Valeria Montserrat';
-  const eventDateSafe = settings.eventDate || '2026-10-17';
-  const eventTimeSafe = settings.eventTime || '18:00';
-  const cleanDate = eventDateSafe.replace(/-/g, '');
-  const cleanTime = eventTimeSafe.replace(/:/g, '');
-  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mis+XV+A%C3%B1os+-+${encodeURIComponent(coupleNamesSafe)}&dates=${cleanDate}T${cleanTime}00Z/${cleanDate}T235900Z&details=Celebraci%C3%B3n+de+mis+XV+A%C3%B1os.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
+  const targetDateObj = useMemo(() => {
+    return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
+  }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
+
+  const googleCalendarUrl = useMemo(() => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const y = targetDateObj.getFullYear();
+    const m = pad(targetDateObj.getMonth() + 1);
+    const d = pad(targetDateObj.getDate());
+    const h = pad(targetDateObj.getHours());
+    const min = pad(targetDateObj.getMinutes());
+    const startStr = `${y}${m}${d}T${h}${min}00Z`;
+    const endStr = `${y}${m}${d}T235900Z`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mis+XV+A%C3%B1os+-+${encodeURIComponent(coupleNamesSafe)}&dates=${startStr}/${endStr}&details=Celebraci%C3%B3n+de+mis+XV+A%C3%B1os.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
+  }, [targetDateObj, coupleNamesSafe, settings.receptionVenue]);
 
   // Multi-photo Hero Carousel with Configurable Auto-Play Timer
   const heroPhotoList = useMemo(() => {
@@ -446,6 +452,23 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           <div className="max-w-4xl mx-auto my-auto px-4 text-center text-white flex flex-col items-center justify-center">
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-base sm:text-2xl md:text-3xl tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium">{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tight text-white my-3 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
+            {Boolean(settings.heroShowPadrinos && settings.heroPadrinos?.trim()) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.28 }}
+                className="my-2 sm:my-3 flex flex-col items-center justify-center text-center"
+              >
+                <span className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.25em] text-amber-200/90 font-serif font-medium flex items-center gap-2 drop-shadow-xs">
+                  <span className="w-5 sm:w-8 h-[1px] bg-amber-200/40 inline-block" />
+                  {settings.heroPadrinosTitle?.trim() || 'Mis Padrinos'}
+                  <span className="w-5 sm:w-8 h-[1px] bg-amber-200/40 inline-block" />
+                </span>
+                <p className="text-sm sm:text-lg md:text-xl font-serif italic text-white tracking-wide mt-0.5 sm:mt-1 drop-shadow-md">
+                  {settings.heroPadrinos.trim()}
+                </p>
+              </motion.div>
+            )}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
               <p className="text-base sm:text-xl font-serif italic text-white/95 leading-relaxed drop-shadow-md">{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>

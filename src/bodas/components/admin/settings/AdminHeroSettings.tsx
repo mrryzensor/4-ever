@@ -11,6 +11,7 @@ import {
   Loader2,
   Clipboard,
   Clock,
+  Users,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../../types.ts';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
@@ -761,43 +762,106 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           </div>
 
           {/* Rendered Hero hierarchy */}
-          <div className="relative z-10 py-6 text-center flex flex-col items-center justify-center space-y-3">
-            {/* Date */}
-            <p className="text-sm sm:text-base font-serif tracking-[0.25em] uppercase text-stone-200 font-medium drop-shadow">
-              {formatHeroDate(
-                settings.eventDate,
-                settings.heroDateFormat || 'dd.mm.aaaa',
-                settings.heroCustomDateText
-              )}
-            </p>
+          {(() => {
+            const renderMiniCourtCard = () => {
+              const activeCourtItems = [
+                settings.heroShowBrideParents && settings.heroBrideParents?.trim()
+                  ? { title: settings.heroBrideParentsTitle?.trim() || 'Padres de la Novia', names: settings.heroBrideParents.trim() }
+                  : null,
+                settings.heroShowGroomParents && settings.heroGroomParents?.trim()
+                  ? { title: settings.heroGroomParentsTitle?.trim() || 'Padres del Novio', names: settings.heroGroomParents.trim() }
+                  : null,
+                settings.heroShowPadrinos && settings.heroPadrinos?.trim()
+                  ? { title: settings.heroPadrinosTitle?.trim() || (settings.eventType === 'xv' ? 'Mis Padrinos' : 'Nuestros Padrinos'), names: settings.heroPadrinos.trim() }
+                  : null,
+                settings.heroShowWitnesses && settings.heroWitnesses?.trim()
+                  ? { title: settings.heroWitnessesTitle?.trim() || 'Testigos', names: settings.heroWitnesses.trim() }
+                  : null,
+              ].filter(Boolean) as { title: string; names: string }[];
+              
+              if (!activeCourtItems.length) return null;
 
-            {/* Names */}
-            <h2 className="text-2xl sm:text-4xl font-serif italic text-white tracking-tight drop-shadow-lg">
-              {settings.coupleNames || 'Nombre & Nombre'}
-            </h2>
+              const cardTitle = settings.heroCourtTitle?.trim() || (settings.eventType === 'xv' ? 'Con la bendición de mi familia' : 'Con la bendición de Dios y de nuestras familias');
 
-            {/* Quote with quotes */}
-            <div className="flex flex-col items-center max-w-md mx-auto pt-1">
-              <span className="text-3xl sm:text-4xl font-serif text-amber-200/90 leading-none select-none drop-shadow">
-                “
-              </span>
-              <p className="text-xs sm:text-sm font-serif italic text-stone-100 leading-relaxed px-4 text-center drop-shadow">
-                {settings.heroQuote !== undefined && settings.heroQuote !== ''
-                  ? settings.heroQuote
-                  : 'Texto de su Preferencia'}
-              </p>
-              <span className="text-3xl sm:text-4xl font-serif text-amber-200/90 leading-none select-none drop-shadow">
-                ”
-              </span>
+              return (
+                <div className="my-2 max-w-sm mx-auto px-3.5 py-2 rounded-2xl bg-black/40 backdrop-blur-xs border border-amber-200/25 text-center animate-fadeIn shadow-md">
+                  <span className="text-[8px] uppercase tracking-[0.2em] text-amber-200/90 font-serif font-medium block mb-1">
+                    ✦ {cardTitle} ✦
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-center">
+                    {activeCourtItems.map((item, idx) => {
+                      const isAloneOnRow =
+                        activeCourtItems.length % 2 !== 0 && idx === activeCourtItems.length - 1;
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex flex-col items-center text-center ${
+                            isAloneOnRow ? 'sm:col-span-2 max-w-xs mx-auto' : ''
+                          }`}
+                        >
+                          <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">
+                            {item.title}
+                          </span>
+                          <span className="text-[10px] font-serif italic text-white drop-shadow-xs">
+                            {item.names}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            };
 
-              {/* Bible verse */}
-              {(settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17') && (
-                <p className="text-[10px] sm:text-xs font-sans tracking-[0.25em] uppercase font-semibold text-amber-200 mt-2 drop-shadow">
-                  {settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17'}
+            return (
+              <div className="relative z-10 py-6 text-center flex flex-col items-center justify-center space-y-3">
+                {/* Date */}
+                <p className="text-sm sm:text-base font-serif tracking-[0.25em] uppercase text-stone-200 font-medium drop-shadow">
+                  {formatHeroDate(
+                    settings.eventDate,
+                    settings.heroDateFormat || 'dd.mm.aaaa',
+                    settings.heroCustomDateText
+                  )}
                 </p>
-              )}
-            </div>
-          </div>
+
+                {/* Above names */}
+                {settings.heroCourtPosition === 'above-names' && renderMiniCourtCard()}
+
+                {/* Names */}
+                <h2 className="text-2xl sm:text-4xl font-serif italic text-white tracking-tight drop-shadow-lg">
+                  {settings.coupleNames || 'Nombre & Nombre'}
+                </h2>
+
+                {/* Below names (Default) */}
+                {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderMiniCourtCard()}
+
+                {/* Quote with quotes */}
+                <div className="flex flex-col items-center max-w-md mx-auto pt-1">
+                  <span className="text-3xl sm:text-4xl font-serif text-amber-200/90 leading-none select-none drop-shadow">
+                    “
+                  </span>
+                  <p className="text-xs sm:text-sm font-serif italic text-stone-100 leading-relaxed px-4 text-center drop-shadow">
+                    {settings.heroQuote !== undefined && settings.heroQuote !== ''
+                      ? settings.heroQuote
+                      : 'Texto de su Preferencia'}
+                  </p>
+                  <span className="text-3xl sm:text-4xl font-serif text-amber-200/90 leading-none select-none drop-shadow">
+                    ”
+                  </span>
+
+                  {/* Bible verse */}
+                  {(settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17') && (
+                    <p className="text-[10px] sm:text-xs font-sans tracking-[0.25em] uppercase font-semibold text-amber-200 mt-2 drop-shadow">
+                      {settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17'}
+                    </p>
+                  )}
+                </div>
+
+                {/* Below quote */}
+                {settings.heroCourtPosition === 'below-quote' && renderMiniCourtCard()}
+              </div>
+            );
+          })()}
 
           <div className="relative z-10 text-center text-[10px] text-stone-300 font-light">
             ✦ Desliza hacia abajo en el simulador para ver la transición suave hacia las demás secciones
@@ -885,6 +949,282 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 </span>
               </div>
             </label>
+
+            {/* Cortejo, Familia & Padrinos en Portada (Opcional - Exclusivo Bodas) */}
+            <div className="sm:col-span-2 p-5 bg-[#FAF9F0] rounded-2xl border border-[#E5E2D0] space-y-4">
+              <div className="flex items-center justify-between gap-2 border-b border-[#E5E2D0]/70 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] shadow-2xs">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-[#1a1a1a] block">
+                      Cortejo, Familia & Padrinos en Portada (Hero)
+                    </span>
+                    <span className="text-[10px] text-[#7D8C7A]">
+                      Opcional y exclusivo para bodas • Despliega con distinción ornamental bajo los novios
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Controles de Configuración Global del Card de Cortejo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-3.5 bg-white rounded-xl border border-[#E5E2D0] shadow-2xs">
+                <div>
+                  <label className="text-[11px] font-bold text-[#1a1a1a] block mb-1">
+                    Ubicación en la Portada (Hero):
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#FAF9F0] rounded-xl border border-[#E5E2D0]">
+                    <button
+                      type="button"
+                      onClick={() => onChange({ heroCourtPosition: 'above-names' })}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
+                        settings.heroCourtPosition === 'above-names'
+                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                          : 'text-[#5A5A40] hover:bg-white/80'
+                      }`}
+                    >
+                      Arriba
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onChange({ heroCourtPosition: 'below-names' })}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
+                        !settings.heroCourtPosition || settings.heroCourtPosition === 'below-names'
+                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                          : 'text-[#5A5A40] hover:bg-white/80'
+                      }`}
+                    >
+                      Centro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onChange({ heroCourtPosition: 'below-quote' })}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
+                        settings.heroCourtPosition === 'below-quote'
+                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                          : 'text-[#5A5A40] hover:bg-white/80'
+                      }`}
+                    >
+                      Abajo
+                    </button>
+                  </div>
+                  <span className="text-[9px] text-[#7D8C7A] mt-1 block">
+                    {settings.heroCourtPosition === 'above-names'
+                      ? 'Arriba de los novios (estilo protocolario clásico)'
+                      : settings.heroCourtPosition === 'below-quote'
+                      ? 'Al pie del Hero (bajo la frase bíblica)'
+                      : 'Entre los novios y la frase (estándar recomendado)'}
+                  </span>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-[#1a1a1a] block mb-1">
+                    Título Superior de Bendición:
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.heroCourtTitle !== undefined ? settings.heroCourtTitle : 'Con la bendición de Dios y de nuestras familias'}
+                    onChange={(e) => onChange({ heroCourtTitle: e.target.value })}
+                    placeholder="Con la bendición de Dios y de nuestras familias"
+                    className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                  />
+                  <span className="text-[9px] text-[#7D8C7A] mt-1 block">
+                    Encabezado dorado que corona la tarjeta en portada
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                {/* 1. Padres de la Novia */}
+                <div className="p-3.5 rounded-xl bg-white border border-[#E5E2D0] shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-bold text-[#1a1a1a] block">
+                        Padres de la Novia
+                      </span>
+                      <span className="text-[9.5px] text-[#7D8C7A]">Nombres y distinción</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.heroShowBrideParents)}
+                        onChange={(e) =>
+                          onChange({ heroShowBrideParents: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+                    </label>
+                  </div>
+                  {settings.heroShowBrideParents && (
+                    <div className="space-y-2 pt-1 border-t border-[#E5E2D0]/60 animate-fadeIn">
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Título / Etiqueta:</label>
+                        <input
+                          type="text"
+                          value={settings.heroBrideParentsTitle !== undefined ? settings.heroBrideParentsTitle : 'Padres de la Novia'}
+                          onChange={(e) => onChange({ heroBrideParentsTitle: e.target.value })}
+                          placeholder="Padres de la Novia"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Nombres:</label>
+                        <input
+                          type="text"
+                          value={settings.heroBrideParents || ''}
+                          onChange={(e) => onChange({ heroBrideParents: e.target.value })}
+                          placeholder="Ej. Fernando Herrera & María Elena Castro"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Padres del Novio */}
+                <div className="p-3.5 rounded-xl bg-white border border-[#E5E2D0] shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-bold text-[#1a1a1a] block">
+                        Padres del Novio
+                      </span>
+                      <span className="text-[9.5px] text-[#7D8C7A]">Nombres y distinción</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.heroShowGroomParents)}
+                        onChange={(e) =>
+                          onChange({ heroShowGroomParents: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+                    </label>
+                  </div>
+                  {settings.heroShowGroomParents && (
+                    <div className="space-y-2 pt-1 border-t border-[#E5E2D0]/60 animate-fadeIn">
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Título / Etiqueta:</label>
+                        <input
+                          type="text"
+                          value={settings.heroGroomParentsTitle !== undefined ? settings.heroGroomParentsTitle : 'Padres del Novio'}
+                          onChange={(e) => onChange({ heroGroomParentsTitle: e.target.value })}
+                          placeholder="Padres del Novio"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Nombres:</label>
+                        <input
+                          type="text"
+                          value={settings.heroGroomParents || ''}
+                          onChange={(e) => onChange({ heroGroomParents: e.target.value })}
+                          placeholder="Ej. Roberto Vega & Carmen Salcedo"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Padrinos de Honor */}
+                <div className="p-3.5 rounded-xl bg-white border border-[#E5E2D0] shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-bold text-[#1a1a1a] block">
+                        Padrinos de Honor / Velación
+                      </span>
+                      <span className="text-[9.5px] text-[#7D8C7A]">Nombres y distinción</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.heroShowPadrinos)}
+                        onChange={(e) =>
+                          onChange({ heroShowPadrinos: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+                    </label>
+                  </div>
+                  {settings.heroShowPadrinos && (
+                    <div className="space-y-2 pt-1 border-t border-[#E5E2D0]/60 animate-fadeIn">
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Título / Etiqueta:</label>
+                        <input
+                          type="text"
+                          value={settings.heroPadrinosTitle !== undefined ? settings.heroPadrinosTitle : 'Nuestros Padrinos'}
+                          onChange={(e) => onChange({ heroPadrinosTitle: e.target.value })}
+                          placeholder="Nuestros Padrinos"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Nombres:</label>
+                        <input
+                          type="text"
+                          value={settings.heroPadrinos || ''}
+                          onChange={(e) => onChange({ heroPadrinos: e.target.value })}
+                          placeholder="Ej. Roberto Gómez & Carmen Morales"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Testigos */}
+                <div className="p-3.5 rounded-xl bg-white border border-[#E5E2D0] shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <span className="text-xs font-bold text-[#1a1a1a] block">
+                        Testigos
+                      </span>
+                      <span className="text-[9.5px] text-[#7D8C7A]">Nombres y distinción</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(settings.heroShowWitnesses)}
+                        onChange={(e) =>
+                          onChange({ heroShowWitnesses: e.target.checked })
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+                    </label>
+                  </div>
+                  {settings.heroShowWitnesses && (
+                    <div className="space-y-2 pt-1 border-t border-[#E5E2D0]/60 animate-fadeIn">
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Título / Etiqueta:</label>
+                        <input
+                          type="text"
+                          value={settings.heroWitnessesTitle !== undefined ? settings.heroWitnessesTitle : 'Testigos'}
+                          onChange={(e) => onChange({ heroWitnessesTitle: e.target.value })}
+                          placeholder="Testigos"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#5A5A40] block mb-0.5">Nombres:</label>
+                        <input
+                          type="text"
+                          value={settings.heroWitnesses || ''}
+                          onChange={(e) => onChange({ heroWitnesses: e.target.value })}
+                          placeholder="Ej. David Ruiz & Andrea Morales"
+                          className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-lg px-2.5 py-1.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

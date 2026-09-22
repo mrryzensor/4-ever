@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
-import { formatHeroDate } from '../../lib/dateFormatters.ts';
+import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
   AnimatedWeddingRings,
@@ -317,29 +317,35 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const targetDate = new Date(`${settings.eventDate || '2026-11-28'}T${settings.eventTime || '17:00'}:00`).getTime();
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        });
-      }
+      const targetDate = parseEventTargetDate(
+        settings.eventDate,
+        settings.eventTime,
+        settings.heroCustomDateText
+      );
+      const res = calculateCountdownTimeLeft(targetDate);
+      setTimeLeft({ days: res.days, hours: res.hours, minutes: res.minutes, seconds: res.seconds });
     };
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(interval);
-  }, [settings.eventDate, settings.eventTime]);
+  }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
 
   const coupleNamesSafe = settings.coupleNames || 'Sofía & Alejandro';
-  const eventDateSafe = settings.eventDate || '2026-11-28';
-  const eventTimeSafe = settings.eventTime || '17:00';
-  const cleanDate = eventDateSafe.replace(/-/g, '');
-  const cleanTime = eventTimeSafe.replace(/:/g, '');
-  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Boda+de+${encodeURIComponent(coupleNamesSafe)}&dates=${cleanDate}T${cleanTime}00Z/${cleanDate}T235900Z&details=Celebraci%C3%B3n+de+nuestra+boda.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
+  const targetDateObj = useMemo(() => {
+    return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
+  }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
+
+  const googleCalendarUrl = useMemo(() => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const y = targetDateObj.getFullYear();
+    const m = pad(targetDateObj.getMonth() + 1);
+    const d = pad(targetDateObj.getDate());
+    const h = pad(targetDateObj.getHours());
+    const min = pad(targetDateObj.getMinutes());
+    const startStr = `${y}${m}${d}T${h}${min}00Z`;
+    const endStr = `${y}${m}${d}T235900Z`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Boda+de+${encodeURIComponent(coupleNamesSafe)}&dates=${startStr}/${endStr}&details=Celebraci%C3%B3n+de+nuestra+boda.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
+  }, [targetDateObj, coupleNamesSafe, settings.receptionVenue]);
 
   // Multi-photo Hero Carousel with Configurable Auto-Play Timer
   const heroPhotoList = useMemo(() => {
@@ -373,6 +379,61 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
 
   const scrollToContent = () => document.getElementById('detalles-boda')?.scrollIntoView({ behavior: 'smooth' });
+
+  const renderCourtCard = () => {
+    const activeCourtItems = [
+      settings.heroShowBrideParents && settings.heroBrideParents?.trim()
+        ? { title: settings.heroBrideParentsTitle?.trim() || 'Padres de la Novia', names: settings.heroBrideParents.trim() }
+        : null,
+      settings.heroShowGroomParents && settings.heroGroomParents?.trim()
+        ? { title: settings.heroGroomParentsTitle?.trim() || 'Padres del Novio', names: settings.heroGroomParents.trim() }
+        : null,
+      settings.heroShowPadrinos && settings.heroPadrinos?.trim()
+        ? { title: settings.heroPadrinosTitle?.trim() || (settings.eventType === 'xv' ? 'Mis Padrinos' : 'Nuestros Padrinos'), names: settings.heroPadrinos.trim() }
+        : null,
+      settings.heroShowWitnesses && settings.heroWitnesses?.trim()
+        ? { title: settings.heroWitnessesTitle?.trim() || 'Testigos', names: settings.heroWitnesses.trim() }
+        : null,
+    ].filter(Boolean) as { title: string; names: string }[];
+
+    if (activeCourtItems.length === 0) return null;
+
+    const cardTitle = settings.heroCourtTitle?.trim() || (settings.eventType === 'xv' ? 'Con la bendición de mi familia' : 'Con la bendición de Dios y de nuestras familias');
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.85, delay: 0.28 }}
+        className="my-3 sm:my-4 w-full max-w-xl mx-auto px-5 py-3 sm:py-4 rounded-2xl bg-black/40 backdrop-blur-md border border-amber-200/30 text-center shadow-xl"
+      >
+        <span className="text-[9px] sm:text-xs uppercase tracking-[0.25em] text-amber-200/90 font-serif font-medium block mb-2 sm:mb-3 drop-shadow-xs">
+          ✦ {cardTitle} ✦
+        </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-center">
+          {activeCourtItems.map((item, idx) => {
+            const isAloneOnRow =
+              activeCourtItems.length % 2 !== 0 && idx === activeCourtItems.length - 1;
+            return (
+              <div
+                key={idx}
+                className={`flex flex-col items-center text-center ${
+                  isAloneOnRow ? 'sm:col-span-2 max-w-md mx-auto' : ''
+                }`}
+              >
+                <span className="text-[9px] sm:text-[11px] uppercase tracking-wider text-amber-200/80 font-serif font-semibold">
+                  {item.title}
+                </span>
+                <p className="text-xs sm:text-sm md:text-base font-serif italic text-white tracking-wide mt-0.5 drop-shadow-sm">
+                  {item.names}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
@@ -443,10 +504,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </div>
           <div className="max-w-4xl mx-auto my-auto px-4 text-center text-white flex flex-col items-center justify-center">
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-base sm:text-2xl md:text-3xl tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium">{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+            {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tight text-white my-3 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
+            {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
               <p className="text-base sm:text-xl font-serif italic text-white/95 leading-relaxed drop-shadow-md">{settings.heroQuote || 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'}</p>
             </motion.div>
+            {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex gap-3 mt-6">
                 <button onClick={onOpenRsvp} className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-serif font-semibold text-sm uppercase shadow-xl hover:brightness-110 transition-all flex items-center gap-2">

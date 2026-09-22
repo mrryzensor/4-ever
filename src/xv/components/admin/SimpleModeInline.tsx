@@ -26,6 +26,7 @@ import {
   Film,
   BookOpen,
   MessageSquare,
+  Users,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../../types.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../../lib/mediaOptimizer.ts';
@@ -647,6 +648,67 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   onChange={(e) => onChange({ eventTime: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-sm text-stone-800"
                 />
+              </div>
+
+              {/* Nombres de los Padrinos en Portada (Hero) - Opcional */}
+              <div className="sm:col-span-2 p-3.5 sm:p-4 rounded-2xl bg-white border border-[#E5E2D0] shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#5A5A40]" />
+                    <div>
+                      <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block">
+                        Padrinos en la Portada (Hero)
+                      </span>
+                      <span className="text-[10px] text-stone-500">
+                        Opcional • Se mostrarán con distinción en la cabecera principal de la invitación
+                      </span>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(settings.heroShowPadrinos)}
+                      onChange={(e) => onChange({ heroShowPadrinos: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
+                  </label>
+                </div>
+
+                {settings.heroShowPadrinos && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 animate-fadeIn">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Título / Distinción
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.heroPadrinosTitle !== undefined ? settings.heroPadrinosTitle : 'Mis Padrinos'}
+                        onChange={(e) => onChange({ heroPadrinosTitle: e.target.value })}
+                        placeholder="Mis Padrinos"
+                        className="w-full px-3 py-2 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-xs text-stone-800 font-serif"
+                      />
+                      <span className="text-[9px] text-stone-400 mt-0.5 block">
+                        Ej: Mis Padrinos, Padrinos de Honor, Padrinos de Brindis
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-semibold text-stone-700 mb-1">
+                        Nombres de los Padrinos
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.heroPadrinos || ''}
+                        onChange={(e) => onChange({ heroPadrinos: e.target.value })}
+                        placeholder="Ej. Roberto Gómez & Carmen Morales"
+                        className="w-full px-3 py-2 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5A5A40] text-xs text-stone-800 font-serif"
+                      />
+                      <span className="text-[9px] text-stone-400 mt-0.5 block">
+                        Escribe los nombres tal como deseas que aparezcan
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="sm:col-span-2 space-y-3">

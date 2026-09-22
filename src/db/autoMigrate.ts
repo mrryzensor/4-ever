@@ -102,6 +102,20 @@ export async function autoMigrateDatabase() {
           hero_show_rsvp_button BOOLEAN DEFAULT false,
           hero_show_icon BOOLEAN DEFAULT false,
           hero_show_guest_pill BOOLEAN DEFAULT false,
+          hero_show_padrinos BOOLEAN DEFAULT false,
+          hero_padrinos_title TEXT DEFAULT 'Nuestros Padrinos',
+          hero_padrinos TEXT DEFAULT '',
+          hero_show_bride_parents BOOLEAN DEFAULT false,
+          hero_bride_parents_title TEXT DEFAULT 'Padres de la Novia',
+          hero_bride_parents TEXT DEFAULT '',
+          hero_show_groom_parents BOOLEAN DEFAULT false,
+          hero_groom_parents_title TEXT DEFAULT 'Padres del Novio',
+          hero_groom_parents TEXT DEFAULT '',
+          hero_show_witnesses BOOLEAN DEFAULT false,
+          hero_witnesses_title TEXT DEFAULT 'Testigos',
+          hero_witnesses TEXT DEFAULT '',
+          hero_court_position TEXT DEFAULT 'below-names',
+          hero_court_title TEXT DEFAULT 'Con la bendición de Dios y de nuestras familias',
           hero_image_fit TEXT DEFAULT 'cover',
           hero_image_position TEXT DEFAULT 'center',
           hero_overlay_opacity INTEGER DEFAULT 40,
@@ -154,6 +168,18 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_icon_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ambient_particle_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS seal_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_padrinos BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_padrinos_title TEXT DEFAULT 'Nuestros Padrinos';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_padrinos TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_bride_parents BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_bride_parents_title TEXT DEFAULT 'Padres de la Novia';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_bride_parents TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_groom_parents BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_groom_parents_title TEXT DEFAULT 'Padres del Novio';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_groom_parents TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_witnesses BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses_title TEXT DEFAULT 'Testigos';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses TEXT DEFAULT '';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

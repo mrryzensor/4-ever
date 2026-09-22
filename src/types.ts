@@ -133,6 +133,22 @@ export interface WeddingSettings {
   heroShowRsvpButton?: boolean; // false by default
   heroShowIcon?: boolean; // false by default
   heroShowGuestPill?: boolean; // false by default
+  heroShowPadrinos?: boolean; // false by default (opcional)
+  heroPadrinosTitle?: string; // e.g. 'Nuestros Padrinos', 'Padrinos de Honor', 'Mis Padrinos'
+  heroPadrinos?: string; // e.g. 'Roberto Gómez & Carmen Morales'
+  // Padres y Testigos (Exclusivo Bodas / Opcional)
+  heroShowBrideParents?: boolean; // false by default
+  heroBrideParentsTitle?: string; // e.g. 'Padres de la Novia'
+  heroBrideParents?: string; // e.g. 'Carlos Mendoza & Elena Flores'
+  heroShowGroomParents?: boolean; // false by default
+  heroGroomParentsTitle?: string; // e.g. 'Padres del Novio'
+  heroGroomParents?: string; // e.g. 'Roberto Vega & Carmen Salcedo'
+  heroShowWitnesses?: boolean; // false by default
+  heroWitnessesTitle?: string; // e.g. 'Testigos'
+  heroWitnesses?: string; // e.g. 'David Ruiz & Andrea Morales'
+  // Ubicación y Título de la tarjeta de Cortejo / Familia en Hero
+  heroCourtPosition?: 'below-names' | 'above-names' | 'below-quote'; // Posición del card en el Hero
+  heroCourtTitle?: string; // Título superior del card (e.g. 'Con la bendición de Dios y de nuestras familias')
   // Countdown Settings
   showCountdown?: boolean; // Mostrar contador regresivo animado en la transición de portada
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.

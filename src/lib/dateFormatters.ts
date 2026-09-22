@@ -114,6 +114,126 @@ const WEEKDAYS_ES = [
 ];
 
 /**
+ * Universal date parser that reliably parses any date input:
+ * - YYYY-MM-DD, YYYY.MM.DD, YYYY/MM/DD
+ * - DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY
+ * - Spanish textual dates: "12 de Diciembre de 2026", "12 Diciembre 2026"
+ * - ISO formats and Date instances
+ * - Configurable time (24h or 12h AM/PM, with or without seconds)
+ */
+export function parseEventTargetDate(
+  dateInput: string | Date | undefined,
+  timeInput?: string | undefined,
+  fallbackText?: string
+): Date {
+  const str =
+    (typeof dateInput === 'string' ? dateInput.trim() : '') ||
+    (typeof fallbackText === 'string' ? fallbackText.trim() : '') ||
+    '2026-11-28';
+
+  let hours = 17;
+  let minutes = 0;
+  let seconds = 0;
+
+  if (timeInput && typeof timeInput === 'string') {
+    const t = timeInput.trim();
+    const isPM = /pm/i.test(t);
+    const isAM = /am/i.test(t);
+    const cleanTime = t.replace(/[^\d:]/g, '');
+    const tParts = cleanTime.split(':').map((n) => parseInt(n, 10));
+    if (tParts.length >= 2 && !isNaN(tParts[0]) && !isNaN(tParts[1])) {
+      hours = tParts[0];
+      minutes = tParts[1];
+      if (tParts.length >= 3 && !isNaN(tParts[2])) {
+        seconds = tParts[2];
+      }
+      if (isPM && hours < 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+    }
+  }
+
+  if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
+    return new Date(dateInput.getFullYear(), dateInput.getMonth(), dateInput.getDate(), hours, minutes, seconds);
+  }
+
+  // 1. Direct standard YYYY-MM-DD or YYYY.MM.DD or YYYY/MM/DD (with optional spaces)
+  const ymdMatch = str.match(/^(\d{4})\s*[-\.\/]\s*(\d{1,2})\s*[-\.\/]\s*(\d{1,2})/);
+  if (ymdMatch) {
+    const y = parseInt(ymdMatch[1], 10);
+    const m = parseInt(ymdMatch[2], 10);
+    const d = parseInt(ymdMatch[3], 10);
+    return new Date(y, m - 1, d, hours, minutes, seconds);
+  }
+
+  // 2. Standard DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY, DD.MM.YY (with optional spaces)
+  const dmyMatch = str.match(/^(\d{1,2})\s*[-\.\/]\s*(\d{1,2})\s*[-\.\/]\s*(\d{2,4})/);
+  if (dmyMatch) {
+    const d = parseInt(dmyMatch[1], 10);
+    const m = parseInt(dmyMatch[2], 10);
+    let y = parseInt(dmyMatch[3], 10);
+    if (y < 100) y += 2000;
+    return new Date(y, m - 1, d, hours, minutes, seconds);
+  }
+
+  // 3. Spanish textual date: e.g. "Sábado, 12 de Diciembre de 2026", "12 de Diciembre de 2026", "12 Diciembre 2026"
+  const spanishMatch = str.match(/(\d{1,2})\s+(?:de\s+)?([a-záéíóúñ]+)\s+(?:del?\s+)?(\d{2,4})/i);
+  if (spanishMatch) {
+    const d = parseInt(spanishMatch[1], 10);
+    const mName = spanishMatch[2].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const mIndex = MONTHS_ES.findIndex((m) =>
+      m.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').startsWith(mName.substring(0, 3))
+    );
+    let y = parseInt(spanishMatch[3], 10);
+    if (y < 100) y += 2000;
+    if (mIndex !== -1) {
+      return new Date(y, mIndex, d, hours, minutes, seconds);
+    }
+  }
+
+  // 4. Fallback try native Date
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), hours, minutes, seconds);
+  }
+
+  return new Date(2026, 11 - 1, 28, hours, minutes, seconds);
+}
+
+export interface CountdownTimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+  totalMilliseconds: number;
+}
+
+export function calculateCountdownTimeLeft(targetDate: Date): CountdownTimeLeft {
+  const now = Date.now();
+  const difference = targetDate.getTime() - now;
+
+  if (difference > 0) {
+    return {
+      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((difference / (1000 * 60)) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+      isExpired: false,
+      totalMilliseconds: difference,
+    };
+  }
+
+  return {
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: true,
+    totalMilliseconds: 0,
+  };
+}
+
+/**
  * Formats wedding event date according to the selected hero format style
  */
 export function formatHeroDate(
@@ -125,40 +245,16 @@ export function formatHeroDate(
     return customText.trim();
   }
 
-  if (!dateInput) {
+  if (!dateInput && (!customText || !customText.trim())) {
     return '28.11.2026';
   }
 
   try {
-    let year = 2026;
-    let month = 11;
-    let day = 28;
-    let weekdayIndex = 6;
-
-    if (typeof dateInput === 'string') {
-      const cleanDateStr = dateInput.split('T')[0];
-      const parts = cleanDateStr.split('-');
-      if (parts.length === 3) {
-        year = parseInt(parts[0], 10);
-        month = parseInt(parts[1], 10);
-        day = parseInt(parts[2], 10);
-        const parsedDate = new Date(year, month - 1, day);
-        weekdayIndex = parsedDate.getDay();
-      } else {
-        const d = new Date(dateInput);
-        if (!isNaN(d.getTime())) {
-          year = d.getFullYear();
-          month = d.getMonth() + 1;
-          day = d.getDate();
-          weekdayIndex = d.getDay();
-        }
-      }
-    } else if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
-      year = dateInput.getFullYear();
-      month = dateInput.getMonth() + 1;
-      day = dateInput.getDate();
-      weekdayIndex = dateInput.getDay();
-    }
+    const parsedDate = parseEventTargetDate(dateInput, '12:00', customText);
+    const year = parsedDate.getFullYear();
+    const month = parsedDate.getMonth() + 1;
+    const day = parsedDate.getDate();
+    const weekdayIndex = parsedDate.getDay();
 
     const dd = String(day).padStart(2, '0');
     const mm = String(month).padStart(2, '0');
@@ -186,7 +282,6 @@ export function formatHeroDate(
       case 'literal-en':
         return `${monthNameEn} ${day}, ${aaaa}`;
       default:
-        // Default to dd.mm.aaaa
         return `${dd}.${mm}.${aaaa}`;
     }
   } catch {
