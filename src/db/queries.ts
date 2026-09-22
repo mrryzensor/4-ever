@@ -14,7 +14,11 @@ import {
   generateDynamicInitials,
   generateEventHashtag,
   resolveEventType,
+  DEMO_WEDDING_ID,
+  DEMO_XV_ID,
+  DEMO_XV_SLUG,
 } from '../lib/eventUtils.ts';
+import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
 const memoryState = {
@@ -574,6 +578,91 @@ let sqlEnabled = false;
 
 const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
 
+// Keep the persisted XV demo aligned with the complete XV template. The
+// schema has more fields than the demo object, so only database columns are
+// copied here; optional editor-only fields are intentionally excluded.
+const DEMO_XV_DB_FIELDS = [
+  'eventType', 'userId', 'ownerUid', 'slug', 'isPublished', 'coupleNames',
+  'hashtag', 'hashtagIsCustom', 'eventDate', 'eventTime',
+  'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl', 'ceremonyEmbedUrl',
+  'ceremonyPlaceQuery', 'ceremonyTime', 'receptionVenue', 'receptionAddress',
+  'receptionMapsUrl', 'receptionEmbedUrl', 'receptionPlaceQuery', 'receptionTime',
+  'dressCode', 'dressCodeDescription', 'dressCodePalette', 'dressCodeMenTitle',
+  'dressCodeMenDescription', 'dressCodeWomenTitle', 'dressCodeWomenDescription',
+  'dressCodeFootwearNote', 'dressCodeProhibitedColors', 'dressCodeWomanOutfit',
+  'dressCodeManOutfit', 'itinerary', 'giftRegistry', 'coverPhoto', 'secondaryPhoto',
+  'heroImageFit', 'heroImagePosition', 'heroOverlayOpacity', 'heroEnableScrollBlur',
+  'cardStyle', 'envelopeColor', 'waxSealText', 'waxSealTextIsCustom', 'waxSealColor',
+  'audioUrl', 'audioTitle', 'audioAutoplay', 'welcomeMessage', 'welcomeSubtitle',
+  'heroDateFormat', 'heroCustomDateText', 'heroQuote', 'heroVerse',
+  'heroShowCountdown', 'heroShowRsvpButton', 'heroShowIcon', 'heroShowGuestPill',
+  'heroShowPadrinos', 'heroPadrinosTitle', 'heroPadrinos', 'heroCourtPosition',
+  'heroCourtTitle', 'showCountdown', 'countdownStyle', 'countdownTitle',
+  'showCountdownGuestsBadge', 'showItinerary', 'showLocations', 'showDressCode',
+  'showGiftRegistry', 'showPhotoGallery', 'showVideoMemories', 'showGuestbook',
+  'showHotels', 'showRsvpSection', 'bankName', 'bankBeneficiary',
+  'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency',
+  'enableBankTransfer', 'enableStoreRegistry', 'enableEnvelopeGift',
+  'envelopeGiftMessage', 'rsvpDeadline', 'contactPhone', 'contactEmail',
+] as const;
+
+function getDemoXvDatabasePayload() {
+  const source = DEFAULT_XV_SETTINGS as Record<string, any>;
+  const payload = Object.fromEntries(
+    DEMO_XV_DB_FIELDS
+      .filter((field) => source[field] !== undefined)
+      .map((field) => [field, source[field]]),
+  ) as Record<string, any>;
+
+  payload.eventType = 'xv';
+  payload.slug = DEMO_XV_SLUG;
+  payload.hashtag = generateEventHashtag(source.coupleNames, 'xv', source.eventDate);
+  payload.hashtagIsCustom = false;
+  payload.waxSealText = generateDynamicInitials(source.coupleNames, 'xv');
+  payload.waxSealTextIsCustom = false;
+  return payload;
+}
+
+async function ensureDemoXvRecord() {
+  if (!sqlEnabled) return;
+
+  const existing = await db
+    .select()
+    .from(weddingSettings)
+    .where(eq(weddingSettings.slug, DEMO_XV_SLUG))
+    .limit(1);
+  const payload = getDemoXvDatabasePayload();
+
+  if (existing.length === 0) {
+    const reservedId = await db
+      .select({ id: weddingSettings.id, slug: weddingSettings.slug })
+      .from(weddingSettings)
+      .where(eq(weddingSettings.id, DEMO_XV_ID))
+      .limit(1);
+    if (reservedId.length > 0) {
+      console.warn(`XV demo ID ${DEMO_XV_ID} is already assigned to ${reservedId[0].slug || 'another event'}.`);
+      return;
+    }
+    await db.insert(weddingSettings).values({ id: DEMO_XV_ID, ...payload } as any);
+    console.log(`✅ XV demo invitation created at /${DEMO_XV_SLUG}`);
+    return;
+  }
+
+  const current = existing[0] as any;
+  const hasLegacyWeddingContent = current.eventType !== 'xv'
+    || current.cardStyle === 'classic-gold'
+    || current.audioTitle === 'Acoustic Romance - Guitarra Suave'
+    || String(current.welcomeMessage || '').startsWith('¡Nos casamos!');
+
+  if (hasLegacyWeddingContent) {
+    await db
+      .update(weddingSettings)
+      .set({ ...payload, updatedAt: new Date() } as any)
+      .where(eq(weddingSettings.id, current.id));
+    console.log(`✅ XV demo invitation synchronized at /${DEMO_XV_SLUG}`);
+  }
+}
+
 function hydrateWeddingAutoFields<T extends Record<string, any>>(wedding: T): T {
   const eventType = resolveEventType(wedding.eventType, wedding.slug);
   const shouldGenerateHashtag = wedding.hashtagIsCustom !== true
@@ -896,10 +985,10 @@ export async function getUserWeddings(ownerUid: string) {
     console.warn('getUserWeddings fallback to memory');
   }
 
-  // Memory fallback: include demo projects (1 Boda, 5 XV) so users can manage both categories
+  // Memory fallback: include demo projects (1 Boda, 6 XV) so users can manage both categories
   const list = isCeo 
     ? memoryState.weddings 
-    : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === 1 || w.id === 5);
+    : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === DEMO_WEDDING_ID || w.id === DEMO_XV_ID);
 
   return list.map((w) => {
     const hydrated = hydrateWeddingAutoFields(w as any);
@@ -1252,8 +1341,8 @@ export async function transferWeddingOwnership(weddingId: number, newOwnerUid: s
 }
 
 export async function deleteWeddingByCeo(weddingId: number) {
-  if (weddingId === 1) {
-    throw new Error('No se puede eliminar la boda de demostración principal.');
+  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID) {
+    throw new Error('No se pueden eliminar las invitaciones de demostración.');
   }
   memoryState.weddings = memoryState.weddings.filter((w) => w.id !== weddingId);
   memoryState.guests = memoryState.guests.filter((g) => g.weddingId !== weddingId);
@@ -1336,7 +1425,7 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
     console.warn('createWedding database insert warning, falling back to memory state:', err);
   }
 
-  const newId = memoryState.weddings.length + 1;
+  const newId = Math.max(...memoryState.weddings.map((w) => Number(w.id) || 0), 0) + 1;
   const newWedding = {
     id: newId,
     ...payload,
@@ -1348,8 +1437,8 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
 }
 
 export async function deleteWedding(weddingId: number, ownerUid?: string) {
-  if (weddingId === 1) {
-    throw new Error('No se puede eliminar la plantilla de demostración principal.');
+  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID) {
+    throw new Error('No se pueden eliminar las plantillas de demostración.');
   }
 
   try {
@@ -2029,6 +2118,7 @@ export async function updateCustomPlan(planId: string, updates: any) {
 export async function seedInitialData() {
   try {
     await testDbConnection();
+    await ensureDemoXvRecord();
   } catch (err) {
     console.warn('Database connection check complete. Using available storage engine.');
   }
