@@ -591,6 +591,7 @@ const DEMO_XV_DB_FIELDS = [
   'dressCodeMenDescription', 'dressCodeWomenTitle', 'dressCodeWomenDescription',
   'dressCodeFootwearNote', 'dressCodeProhibitedColors', 'dressCodeWomanOutfit',
   'dressCodeManOutfit', 'itinerary', 'giftRegistry', 'coverPhoto', 'secondaryPhoto',
+  'heroPhotos', 'heroAutoplayInterval',
   'heroImageFit', 'heroImagePosition', 'heroOverlayOpacity', 'heroEnableScrollBlur',
   'cardStyle', 'envelopeColor', 'waxSealText', 'waxSealTextIsCustom', 'waxSealColor',
   'audioUrl', 'audioTitle', 'audioAutoplay', 'welcomeMessage', 'welcomeSubtitle',
@@ -620,6 +621,10 @@ function getDemoXvDatabasePayload() {
   payload.hashtagIsCustom = false;
   payload.waxSealText = generateDynamicInitials(source.coupleNames, 'xv');
   payload.waxSealTextIsCustom = false;
+  // The wedding schema default seeds a wedding hero carousel. The XV template
+  // intentionally falls back to its own cover, so persist that same fallback.
+  payload.heroPhotos = JSON.stringify([source.coverPhoto]);
+  payload.heroAutoplayInterval = source.heroAutoplayInterval ?? 5;
   return payload;
 }
 
@@ -649,17 +654,19 @@ async function ensureDemoXvRecord() {
   }
 
   const current = existing[0] as any;
-  const hasLegacyWeddingContent = current.eventType !== 'xv'
-    || current.cardStyle === 'classic-gold'
-    || current.audioTitle === 'Acoustic Romance - Guitarra Suave'
-    || String(current.welcomeMessage || '').startsWith('¡Nos casamos!');
+  const hasTemplateDrift = DEMO_XV_DB_FIELDS.some((field) => {
+    const currentValue = current[field];
+    const expectedValue = payload[field];
+    if (currentValue == null && expectedValue == null) return false;
+    return String(currentValue ?? '') !== String(expectedValue ?? '');
+  });
 
-  if (hasLegacyWeddingContent) {
+  if (hasTemplateDrift) {
     await db
       .update(weddingSettings)
       .set({ ...payload, updatedAt: new Date() } as any)
       .where(eq(weddingSettings.id, current.id));
-    console.log(`✅ XV demo invitation synchronized at /${DEMO_XV_SLUG}`);
+    console.log(`✅ XV demo invitation synchronized with its canonical template at /${DEMO_XV_SLUG}`);
   }
 }
 

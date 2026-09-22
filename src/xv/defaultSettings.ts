@@ -70,6 +70,8 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   ]),
   coverPhoto: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80',
   secondaryPhoto: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80',
+  heroPhotos: JSON.stringify(['https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80']),
+  heroAutoplayInterval: 5,
   heroImageFit: 'cover',
   heroImagePosition: 'center',
   heroOverlayOpacity: 35,
