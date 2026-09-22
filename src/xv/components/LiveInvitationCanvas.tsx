@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
+import { DEMO_XV_ID } from '../../lib/eventUtils.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
 
 interface LiveInvitationCanvasProps {
@@ -358,7 +359,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     setRefreshKey((k) => k + 1);
   };
 
-  const iframeSrc = `?mode=preview_embed&w=${settings.id || 5}&event=xv&t=${refreshKey}`;
+  const iframeSrc = `?mode=preview_embed&w=${settings.id || DEMO_XV_ID}&event=xv&t=${refreshKey}`;
 
   return (
     <div className="w-full flex flex-col items-center select-none">

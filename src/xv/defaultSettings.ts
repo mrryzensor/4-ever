@@ -1,7 +1,7 @@
 import { WeddingSettings } from '../types.ts';
 
 export const DEFAULT_XV_SETTINGS: WeddingSettings = {
-  id: 2,
+  id: 6,
   eventType: 'xv',
   userId: 1,
   ownerUid: 'demo-user-xv',

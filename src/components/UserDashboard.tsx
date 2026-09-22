@@ -144,7 +144,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleDeleteWedding = (wedding: WeddingSummary, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (wedding.id === 1 || wedding.id === 5) {
+    if (wedding.id === 1 || wedding.slug === 'xv-valeria-montserrat') {
       toast.warning('Los proyectos de demostración no pueden ser eliminados.');
       return;
     }

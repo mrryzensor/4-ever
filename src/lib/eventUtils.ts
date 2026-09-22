@@ -2,6 +2,14 @@ import { EventType, WeddingSettings } from '../types.ts';
 
 const EVENT_TYPE_ALIASES = new Set(['xv', 'quince', 'quinceanera', 'quinceañera', '15', '15anos', '15años']);
 
+// Stable identifiers for the two built-in demo invitations. These are kept
+// separate from user-created event IDs so a demo route can never select a
+// real customer event by accident.
+export const DEMO_WEDDING_ID = 1;
+export const DEMO_XV_ID = 6;
+export const DEMO_WEDDING_SLUG = 'boda-sofia-alejandro';
+export const DEMO_XV_SLUG = 'xv-valeria-montserrat';
+
 const stripAccents = (value: string) =>
   value
     .normalize('NFD')

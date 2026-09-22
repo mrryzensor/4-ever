@@ -68,7 +68,7 @@ import { ToastContainer } from './components/ToastContainer.tsx';
 import { toast } from './lib/toast.ts';
 import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
 import { formatHeroDate } from './lib/dateFormatters.ts';
-import { getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
+import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 import { CardStyle } from './types.ts';
@@ -258,18 +258,18 @@ export default function App() {
   const [currentWeddingId, setCurrentWeddingId] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname.toLowerCase();
-      if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') return 5;
-      if (pathname === '/boda' || pathname === '/bodas') return 1;
+      if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') return DEMO_XV_ID;
+      if (pathname === '/boda' || pathname === '/bodas') return DEMO_WEDDING_ID;
 
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('event') || params.get('tipo');
       const isXv = (cat ? resolveEventType(cat) === 'xv' : eventCategory === 'xv');
       const isDemo = checkIsDemoUrl();
-      if (isDemo) return isXv ? 5 : 1;
+      if (isDemo) return isXv ? DEMO_XV_ID : DEMO_WEDDING_ID;
       const w = params.get('w') || params.get('wedding');
       if (w && !isNaN(Number(w))) return Number(w);
     }
-    return 1;
+    return DEMO_WEDDING_ID;
   });
 
   // Active Event Settings State
@@ -300,11 +300,11 @@ export default function App() {
       window.history.pushState({}, '', targetPath);
     }
     if (category === 'xv') {
-      setCurrentWeddingId(5);
+      setCurrentWeddingId(DEMO_XV_ID);
       setSettings(DEFAULT_XV_SETTINGS);
       toast.info('Modo Quince Años (XV) activado', 'Atelier XV');
     } else {
-      setCurrentWeddingId(1);
+      setCurrentWeddingId(DEMO_WEDDING_ID);
       setSettings(DEFAULT_WEDDING_SETTINGS);
       toast.info('Modo Bodas Nupciales activado', 'Atelier Nupcial');
     }
@@ -341,20 +341,20 @@ export default function App() {
         const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
         const targetCategory = isXv ? 'xv' : 'bodas';
         setEventCategory(targetCategory);
-        setCurrentWeddingId(isXv ? 5 : 1);
+        setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
         setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
         setCurrentView('invitation');
       } else if (pathname === '/boda' || pathname === '/bodas') {
         setEventCategory('bodas');
         try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
-        setCurrentWeddingId(1);
+        setCurrentWeddingId(DEMO_WEDDING_ID);
         setSettings(DEFAULT_WEDDING_SETTINGS);
         setIsViewingDemo(false);
         setCurrentView('landing');
       } else if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') {
         setEventCategory('xv');
         try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) {}
-        setCurrentWeddingId(5);
+        setCurrentWeddingId(DEMO_XV_ID);
         setSettings(DEFAULT_XV_SETTINGS);
         setIsViewingDemo(false);
         setCurrentView('landing');
@@ -409,7 +409,7 @@ export default function App() {
     const location = settings?.receptionVenue || settings?.ceremonyVenue || 'nuestra celebración';
     const invitationDescription = `${settings?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.'} • ${formattedDate} en ${location}. Toca aquí para ver los detalles y confirmar tu asistencia.`;
     const previewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
-    const demoMode = (isViewingDemo || (!currentUser && currentWeddingId === 1 && !getPathSlug())) && !previewEmbed;
+    const demoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !previewEmbed;
 
     let title = '2date Atelier | Invitaciones Digitales & RSVP';
     let description = 'Invitaciones digitales interactivas con música, cuenta regresiva, confirmación RSVP, itinerario y galería para bodas y XV Años.';
@@ -500,7 +500,7 @@ export default function App() {
     if (pathname === '/boda' || pathname === '/bodas') {
       setEventCategory('bodas');
       try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
-      setCurrentWeddingId(1);
+      setCurrentWeddingId(DEMO_WEDDING_ID);
       setSettings(DEFAULT_WEDDING_SETTINGS);
       setIsViewingDemo(false);
       setCurrentView('landing');
@@ -530,7 +530,7 @@ export default function App() {
       const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
       const targetCategory = isXv ? 'xv' : 'bodas';
       setEventCategory(targetCategory);
-      setCurrentWeddingId(isXv ? 5 : 1);
+      setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
       setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
       setIsViewingDemo(true);
       setCurrentView('invitation');
@@ -573,7 +573,7 @@ export default function App() {
       const isXv = resolveEventType(eventParam) === 'xv';
       const targetCategory = isXv ? 'xv' : 'bodas';
       setEventCategory(targetCategory);
-      setCurrentWeddingId(isXv ? 5 : 1);
+      setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
       setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
       setCurrentView('landing');
     } else {
@@ -731,7 +731,7 @@ export default function App() {
     setIsAuthModalOpen(false);
 
     if (directToAdmin) {
-      setCurrentWeddingId(1);
+      setCurrentWeddingId(DEMO_WEDDING_ID);
       setCurrentView('admin');
       setShowAdminDashboard(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -918,7 +918,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onExploreDemo={(style) => {
-              setCurrentWeddingId(5);
+              setCurrentWeddingId(DEMO_XV_ID);
               setIsViewingDemo(true);
               setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
               setShowAdminDashboard(false);
@@ -929,7 +929,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onViewDemo={(style) => {
-              setCurrentWeddingId(5);
+              setCurrentWeddingId(DEMO_XV_ID);
               setIsViewingDemo(true);
               setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
               setShowAdminDashboard(false);
@@ -970,7 +970,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onExploreDemo={(style) => {
-              setCurrentWeddingId(1);
+              setCurrentWeddingId(DEMO_WEDDING_ID);
               setIsViewingDemo(true);
               if (style && settings) {
                 setSettings({ ...settings, cardStyle: style });
@@ -983,7 +983,7 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onViewDemo={(style) => {
-              setCurrentWeddingId(1);
+              setCurrentWeddingId(DEMO_WEDDING_ID);
               setIsViewingDemo(true);
               if (style && settings) {
                 setSettings({ ...settings, cardStyle: style });
@@ -1149,7 +1149,7 @@ export default function App() {
     : (CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold']);
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
-  const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === 1 && !getPathSlug())) && !isPreviewEmbed;
+  const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !isPreviewEmbed;
 
   return (
     <div
