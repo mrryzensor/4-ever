@@ -180,6 +180,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_witnesses BOOLEAN DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses_title TEXT DEFAULT 'Testigos';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_position TEXT DEFAULT 'below-names';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_title TEXT DEFAULT 'Con la bendición de Dios y de nuestras familias';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (
