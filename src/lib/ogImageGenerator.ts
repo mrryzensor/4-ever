@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { WeddingSettings, Guest } from '../types.ts';
 import { formatHeroDate } from './dateFormatters.ts';
+import { getEventPresentation } from './eventUtils.ts';
 
 // Helper to escape XML characters for SVG text
 function escapeXml(unsafe: string): string {
@@ -26,7 +27,8 @@ export async function generateWeddingOgImage(
   const width = 1200;
   const height = 630;
 
-  const coupleNames = settings.coupleNames || 'Nuestra Boda';
+  const presentation = getEventPresentation(settings.eventType, settings.slug);
+  const coupleNames = settings.coupleNames || presentation.defaultName;
   const eventDateFormatted = formatHeroDate(
     settings.eventDate || '2026-11-28',
     settings.heroDateFormat || 'dd.mm.aaaa',
@@ -78,6 +80,8 @@ export async function generateWeddingOgImage(
       .png()
       .toBuffer();
   }
+
+  const categoryLabel = presentation.type === 'xv' ? 'M I S   X V   A Ñ O S' : 'N U E S T R A   B O D A';
 
   // 2. Build Hero Overlay SVG with Typography & Golden Accents
   const guestBadge = guest?.fullName
@@ -138,7 +142,7 @@ export async function generateWeddingOgImage(
       <!-- Top Tag / Category -->
       <g filter="url(#softGlow)">
         <text x="600" y="110" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="url(#goldGradient)" font-weight="700" letter-spacing="6">
-          N U E S T R A   B O D A
+          ${categoryLabel}
         </text>
         <line x1="420" y1="130" x2="780" y2="130" stroke="url(#goldGradient)" stroke-width="1" stroke-opacity="0.6" />
       </g>

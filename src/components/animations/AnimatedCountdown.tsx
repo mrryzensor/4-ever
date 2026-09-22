@@ -1102,6 +1102,48 @@ export const ChampagneGlamCountdownSvg: React.FC<{ accentColor?: string }> = ({
   );
 };
 
+/** Every card theme has a matching countdown surround. Keeping this registry
+ * typed makes adding a new card style fail at compile time until its artwork
+ * is implemented as well. */
+export const COUNTDOWN_STYLE_IDS = [
+  'classic-gold',
+  'romantic-floral',
+  'boho-chic',
+  'minimal-editorial',
+  'dark-luxury',
+  'watercolor-garden',
+  'royal-navy',
+  'terracotta-sunset',
+  'lavender-provence',
+  'emerald-botanical',
+  'coastal-breeze',
+  'champagne-glam',
+] as const satisfies readonly CardStyleId[];
+
+const COUNTDOWN_STYLE_RENDERERS: Record<CardStyleId, React.FC<{ accentColor?: string }>> = {
+  'classic-gold': ClassicGoldCountdownSvg,
+  'romantic-floral': RomanticFloralCountdownSvg,
+  'boho-chic': BohoMandalaCountdownSvg,
+  'minimal-editorial': MinimalEditorialCountdownSvg,
+  'dark-luxury': DarkLuxuryCountdownSvg,
+  'watercolor-garden': GeometricEucalyptusCountdownSvg,
+  'royal-navy': RoyalNavyCountdownSvg,
+  'terracotta-sunset': TerracottaSunsetCountdownSvg,
+  'lavender-provence': LavenderProvenceCountdownSvg,
+  'emerald-botanical': EmeraldBotanicalCountdownSvg,
+  'coastal-breeze': CoastalBreezeCountdownSvg,
+  'champagne-glam': ChampagneGlamCountdownSvg,
+};
+
+function resolveCountdownStyle(...candidates: Array<string | undefined>): CardStyleId {
+  for (const candidate of candidates) {
+    if (candidate && candidate !== 'auto' && candidate in COUNTDOWN_STYLE_RENDERERS) {
+      return candidate as CardStyleId;
+    }
+  }
+  return 'classic-gold';
+}
+
 // ----------------------------------------------------------------------
 // MASTER COUNTDOWN COMPONENT
 // ----------------------------------------------------------------------
@@ -1114,14 +1156,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   customTitle,
   showGuestsBadge,
 }) => {
-  const rawStyle = (customStyle && customStyle !== 'auto')
-    ? customStyle
-    : (settings.countdownStyle && settings.countdownStyle !== 'auto')
-      ? settings.countdownStyle
-      : (cardStyle || settings.cardStyle || 'classic-gold');
-
-  const activeStyleId = rawStyle as CardStyleId;
-  const resolvedTheme = CARD_THEMES[activeStyleId] || CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const activeStyleId = resolveCountdownStyle(
+    customStyle,
+    settings.countdownStyle,
+    cardStyle,
+    settings.cardStyle,
+  );
+  const resolvedTheme = CARD_THEMES[activeStyleId] || CARD_THEMES['classic-gold'];
   const isDark = activeStyleId === 'dark-luxury' || activeStyleId === 'royal-navy' || activeStyleId === 'emerald-botanical';
 
   // Sincronized Real-Time Countdown Engine
@@ -1153,33 +1194,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
 
   // Select the appropriate animated SVG surround
   const renderSvgSurround = () => {
-    switch (rawStyle) {
-      case 'romantic-floral':
-        return <RomanticFloralCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'watercolor-garden':
-        return <GeometricEucalyptusCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'boho-chic':
-        return <BohoMandalaCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'dark-luxury':
-        return <DarkLuxuryCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'minimal-editorial':
-        return <MinimalEditorialCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'royal-navy':
-        return <RoyalNavyCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'terracotta-sunset':
-        return <TerracottaSunsetCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'lavender-provence':
-        return <LavenderProvenceCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'emerald-botanical':
-        return <EmeraldBotanicalCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'coastal-breeze':
-        return <CoastalBreezeCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'champagne-glam':
-        return <ChampagneGlamCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-      case 'classic-gold':
-      default:
-        return <ClassicGoldCountdownSvg accentColor={resolvedTheme.accentColorHex} />;
-    }
+    const CountdownSurround = COUNTDOWN_STYLE_RENDERERS[activeStyleId];
+    return <CountdownSurround accentColor={resolvedTheme.accentColorHex} />;
   };
 
   // Companion names parsing - only computed when a real guest exists

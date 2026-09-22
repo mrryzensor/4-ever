@@ -149,6 +149,23 @@ export async function autoMigrateDatabase() {
           updated_at TIMESTAMP DEFAULT NOW()
         );
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'bodas';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hashtag_is_custom BOOLEAN;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_text_is_custom BOOLEAN;
+        -- Backfill the flags for legacy rows without overwriting future manual edits.
+        UPDATE wedding_settings
+        SET hashtag_is_custom = CASE
+          WHEN hashtag IS NULL OR BTRIM(hashtag) = '' OR hashtag IN ('#BodaSofyAle2026', '#MisXValeria2026') THEN false
+          ELSE true
+        END
+        WHERE hashtag_is_custom IS NULL;
+        UPDATE wedding_settings
+        SET wax_seal_text_is_custom = CASE
+          WHEN wax_seal_text IS NULL OR BTRIM(wax_seal_text) = '' OR wax_seal_text IN ('S&A', 'XV', 'W') THEN false
+          ELSE true
+        END
+        WHERE wax_seal_text_is_custom IS NULL;
+        ALTER TABLE wedding_settings ALTER COLUMN hashtag_is_custom SET DEFAULT false;
+        ALTER TABLE wedding_settings ALTER COLUMN wax_seal_text_is_custom SET DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_tips BOOLEAN DEFAULT true;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]';

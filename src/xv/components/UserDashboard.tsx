@@ -32,6 +32,7 @@ import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../..
 import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
+import { resolveEventType } from '../../lib/eventUtils.ts';
 
 interface UserDashboardProps {
   user: UserProfile;
@@ -173,7 +174,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleCopyLink = (slug: string, weddingId: number, eventType?: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const isXv = eventType === 'xv' || (slug && (slug.toLowerCase().startsWith('xv') || slug.toLowerCase().includes('quince') || slug.toLowerCase().includes('15')));
+    const isXv = resolveEventType(eventType, slug) === 'xv';
     const resolvedCat = eventType || (isXv ? 'xv' : 'bodas');
     const url = slug 
       ? `${window.location.origin}/${slug}` 
@@ -424,11 +425,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                          w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'))
+                          resolveEventType(w.eventType, w.slug) === 'xv'
                             ? 'bg-pink-100 text-pink-900 border border-pink-200'
                             : 'bg-amber-100 text-amber-900 border border-amber-200'
                         }`}>
-                          {w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv')) ? '👑 XV Años' : '💍 Boda'}
+                          {resolveEventType(w.eventType, w.slug) === 'xv' ? '👑 XV Años' : '💍 Boda'}
                         </span>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-stone-700 block">
                           Estilo: {w.cardStyle || 'Rose Gold'}

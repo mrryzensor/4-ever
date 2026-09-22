@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Eye, Share2, Check, Crown, Menu } from 'lucide-react';
 import { WeddingSettings, UserProfile } from '../../../types.ts';
+import { getDisplayedWaxSealText } from '../../../lib/eventUtils.ts';
 
 interface AdminHeaderProps {
   settings?: WeddingSettings;
@@ -23,7 +24,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   currentUser,
   onToggleSidebar,
 }) => {
-  const waxSeal = settings?.waxSealText || 'XV';
+  const waxSeal = getDisplayedWaxSealText(settings);
   const coupleNames = settings?.coupleNames || 'Mis XV Años';
   const eventDate = settings?.eventDate || '';
 

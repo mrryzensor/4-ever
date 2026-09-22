@@ -50,6 +50,7 @@ import { ExcelUserImportModal } from './admin/ExcelUserImportModal.tsx';
 import { UserEditModal } from './admin/UserEditModal.tsx';
 import { PlanEditorModal } from './admin/PlanEditorModal.tsx';
 import { toast } from '../lib/toast.ts';
+import { resolveEventType } from '../lib/eventUtils.ts';
 
 interface CeoMasterDashboardProps {
   currentUser: UserProfile;
@@ -432,7 +433,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
     let bodas = 0;
     let xv = 0;
     weddings.forEach((w) => {
-      const isXv = w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'));
+      const isXv = resolveEventType(w.eventType, w.slug) === 'xv';
       if (isXv) xv++;
       else bodas++;
     });
@@ -443,7 +444,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
   const filteredWeddings = useMemo(() => {
     const search = (weddingSearchTerm || globalSearchTerm).toLowerCase().trim();
     return weddings.filter((w) => {
-      const isXv = w.eventType === 'xv' || (w.slug && w.slug.toLowerCase().startsWith('xv'));
+      const isXv = resolveEventType(w.eventType, w.slug) === 'xv';
       const eventType = isXv ? 'xv' : 'bodas';
 
       const matchesSearch =
@@ -958,9 +959,9 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   </thead>
                   <tbody className="divide-y divide-stone-800">
                     {filteredWeddings.map((wedding) => {
-                      const isXv = wedding.eventType === 'xv' || (wedding.slug && (wedding.slug.toLowerCase().startsWith('xv') || wedding.slug.toLowerCase().includes('quince') || wedding.slug.toLowerCase().includes('15')));
+                      const isXv = resolveEventType(wedding.eventType, wedding.slug) === 'xv';
                       const eventCategoryName = isXv ? 'XV Años' : 'Boda';
-                      const resolvedCat = wedding.eventType || (isXv ? 'xv' : 'bodas');
+                      const resolvedCat = resolveEventType(wedding.eventType, wedding.slug);
                       const publicUrl = wedding.slug ? `/${wedding.slug}` : `/?w=${wedding.id}&event=${resolvedCat}`;
 
                       return (

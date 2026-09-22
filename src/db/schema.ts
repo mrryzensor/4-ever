@@ -25,6 +25,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   isPublished: boolean('is_published').default(true),
   coupleNames: text('couple_names').notNull().default('Sofía & Alejandro'),
   hashtag: text('hashtag').default('#BodaSofyAle2026'),
+  hashtagIsCustom: boolean('hashtag_is_custom').default(false),
   eventDate: text('event_date').notNull().default('2026-11-28'),
   eventTime: text('event_time').notNull().default('17:00'),
   ceremonyVenue: text('ceremony_venue').notNull().default('Parroquia San Francisco de Asís'),
@@ -59,6 +60,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   cardStyle: text('card_style').default('classic-gold'), // 'classic-gold', 'romantic-floral', 'boho-chic', 'minimal-editorial', 'dark-luxury', 'watercolor-garden'
   envelopeColor: text('envelope_color').default('#2C2B29'),
   waxSealText: text('wax_seal_text').default('S&A'),
+  waxSealTextIsCustom: boolean('wax_seal_text_is_custom').default(false),
   waxSealColor: text('wax_seal_color').default('#C5A059'),
   audioUrl: text('audio_url').default('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3'),
   audioTitle: text('audio_title').default('Acoustic Romance - Guitarra Suave'),

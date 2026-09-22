@@ -10,6 +10,11 @@ import {
   users
 } from './schema.ts';
 import { eq, desc, asc, ilike, or, and } from 'drizzle-orm';
+import {
+  generateDynamicInitials,
+  generateEventHashtag,
+  resolveEventType,
+} from '../lib/eventUtils.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
 const memoryState = {
@@ -566,6 +571,27 @@ const memoryState = {
 
 // Check if PostgreSQL is available
 let sqlEnabled = false;
+
+const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
+
+function hydrateWeddingAutoFields<T extends Record<string, any>>(wedding: T): T {
+  const eventType = resolveEventType(wedding.eventType, wedding.slug);
+  const shouldGenerateHashtag = wedding.hashtagIsCustom !== true
+    && (!wedding.hashtag || LEGACY_AUTO_HASHTAGS.has(String(wedding.hashtag).trim()));
+  const shouldGenerateSeal = wedding.waxSealTextIsCustom !== true;
+
+  return {
+    ...wedding,
+    eventType,
+    hashtag: shouldGenerateHashtag
+      ? generateEventHashtag(wedding.coupleNames, eventType, wedding.eventDate)
+      : wedding.hashtag,
+    waxSealText: shouldGenerateSeal
+      ? generateDynamicInitials(wedding.coupleNames, eventType)
+      : wedding.waxSealText,
+  };
+}
+
 export async function testDbConnection() {
   const hasPgConfig = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.SQL_HOST || process.env.POSTGRES_HOST || process.env.DB_HOST;
   if (!hasPgConfig) {
@@ -594,15 +620,15 @@ export async function getWeddingSettings(identifier?: number | string) {
         if (typeof identifier === 'number' || !isNaN(Number(identifier))) {
           const idNum = typeof identifier === 'number' ? identifier : Number(identifier);
           const list = await db.select().from(weddingSettings).where(eq(weddingSettings.id, idNum)).limit(1);
-          if (list.length > 0) return list[0];
+          if (list.length > 0) return hydrateWeddingAutoFields(list[0] as any);
         } else {
           const slugStr = String(identifier).trim().toLowerCase();
           const list = await db.select().from(weddingSettings).where(eq(weddingSettings.slug, slugStr)).limit(1);
-          if (list.length > 0) return list[0];
+          if (list.length > 0) return hydrateWeddingAutoFields(list[0] as any);
         }
       } else {
         const list = await db.select().from(weddingSettings).orderBy(asc(weddingSettings.id)).limit(1);
-        if (list.length > 0) return list[0];
+        if (list.length > 0) return hydrateWeddingAutoFields(list[0] as any);
       }
     }
   } catch (err) {
@@ -614,15 +640,15 @@ export async function getWeddingSettings(identifier?: number | string) {
     if (typeof identifier === 'number' || !isNaN(Number(identifier))) {
       const idNum = Number(identifier);
       const found = memoryState.weddings.find((w) => w.id === idNum);
-      if (found) return found;
+      if (found) return hydrateWeddingAutoFields(found as any);
     } else {
       const slugStr = String(identifier).trim().toLowerCase();
       const found = memoryState.weddings.find((w) => w.slug === slugStr);
-      if (found) return found;
+      if (found) return hydrateWeddingAutoFields(found as any);
     }
     return null;
   }
-  return memoryState.weddings[0];
+  return memoryState.weddings[0] ? hydrateWeddingAutoFields(memoryState.weddings[0] as any) : null;
 }
 
 export async function updateWeddingSettings(
@@ -630,14 +656,41 @@ export async function updateWeddingSettings(
   weddingId?: number
 ) {
   const targetId = weddingId || 1;
+  const normalizedData: any = { ...data };
+  const resolvedEventType = resolveEventType(data.eventType, data.slug);
+
+  if (data.eventType !== undefined) {
+    normalizedData.eventType = resolvedEventType;
+  }
+
+  if (
+    data.hashtagIsCustom !== true
+    && (data.coupleNames !== undefined || data.eventType !== undefined || data.eventDate !== undefined)
+  ) {
+    normalizedData.hashtag = generateEventHashtag(
+      data.coupleNames,
+      resolvedEventType,
+      data.eventDate,
+    );
+    normalizedData.hashtagIsCustom = false;
+  }
+
+  if (
+    data.waxSealTextIsCustom !== true
+    && (data.coupleNames !== undefined || data.eventType !== undefined)
+  ) {
+    normalizedData.waxSealText = generateDynamicInitials(data.coupleNames, resolvedEventType);
+    normalizedData.waxSealTextIsCustom = false;
+  }
+
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
       const updated = await db
         .update(weddingSettings)
-        .set({ ...data, updatedAt: new Date() })
+        .set({ ...normalizedData, updatedAt: new Date() })
         .where(eq(weddingSettings.id, targetId))
         .returning();
-      if (updated.length > 0) return updated[0];
+      if (updated.length > 0) return hydrateWeddingAutoFields(updated[0] as any);
     }
   } catch (err) {
     console.warn('Postgres update fallback to memory');
@@ -647,14 +700,14 @@ export async function updateWeddingSettings(
   if (idx !== -1) {
     memoryState.weddings[idx] = {
       ...memoryState.weddings[idx],
-      ...data,
+      ...normalizedData,
       updatedAt: new Date(),
     };
-    return memoryState.weddings[idx];
+    return hydrateWeddingAutoFields(memoryState.weddings[idx] as any);
   }
-  const newWedding = { id: targetId, ...data, updatedAt: new Date() };
+  const newWedding = { id: targetId, ...normalizedData, updatedAt: new Date() };
   memoryState.weddings.push(newWedding);
-  return newWedding;
+  return hydrateWeddingAutoFields(newWedding as any);
 }
 
 // 2. User Profiles & Auth
@@ -815,6 +868,7 @@ export async function getUserWeddings(ownerUid: string) {
 
       return await Promise.all(
         weddingList.map(async (w) => {
+          const hydrated = hydrateWeddingAutoFields(w as any);
           const guestList = await db.select().from(guests).where(eq(guests.weddingId, w.id));
           const owner = memoryState.users.find((u) => u.uid === w.ownerUid);
           return {
@@ -822,18 +876,18 @@ export async function getUserWeddings(ownerUid: string) {
             ownerUid: w.ownerUid,
             ownerName: owner?.name || 'Organizador',
             ownerEmail: owner?.email || '',
-            coupleNames: w.coupleNames,
-            hashtag: w.hashtag || '',
-            eventDate: w.eventDate,
-            slug: w.slug || `evento-${w.id}`,
-            cardStyle: w.cardStyle as any,
-            eventType: ((w as any).eventType || (w.slug && (w.slug.toLowerCase().startsWith('xv') || w.slug.toLowerCase().includes('quince') || w.slug.toLowerCase().includes('15')) ? 'xv' : 'bodas')) as any,
-            isPublished: w.isPublished ?? true,
+            coupleNames: hydrated.coupleNames,
+            hashtag: hydrated.hashtag || '',
+            eventDate: hydrated.eventDate,
+            slug: hydrated.slug || `evento-${w.id}`,
+            cardStyle: hydrated.cardStyle as any,
+            eventType: hydrated.eventType as any,
+            isPublished: hydrated.isPublished ?? true,
             status: (w as any).status || 'active',
             clientEmail: (w as any).clientEmail || '',
             totalGuests: guestList.length,
             confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
-            coverPhoto: w.coverPhoto,
+            coverPhoto: hydrated.coverPhoto,
           };
         })
       );
@@ -848,6 +902,7 @@ export async function getUserWeddings(ownerUid: string) {
     : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === 1 || w.id === 5);
 
   return list.map((w) => {
+    const hydrated = hydrateWeddingAutoFields(w as any);
     const guestList = memoryState.guests.filter((g) => g.weddingId === w.id);
     const owner = memoryState.users.find((u) => u.uid === w.ownerUid);
     return {
@@ -855,18 +910,18 @@ export async function getUserWeddings(ownerUid: string) {
       ownerUid: w.ownerUid,
       ownerName: owner?.name || 'Organizador',
       ownerEmail: owner?.email || '',
-      coupleNames: w.coupleNames,
-      hashtag: w.hashtag || '',
-      eventDate: w.eventDate,
-      slug: w.slug || `evento-${w.id}`,
-      cardStyle: w.cardStyle as any,
-      eventType: (w.eventType || (w.slug && (w.slug.toLowerCase().startsWith('xv') || w.slug.toLowerCase().includes('quince') || w.slug.toLowerCase().includes('15')) ? 'xv' : 'bodas')) as any,
-      isPublished: w.isPublished ?? true,
+      coupleNames: hydrated.coupleNames,
+      hashtag: hydrated.hashtag || '',
+      eventDate: hydrated.eventDate,
+      slug: hydrated.slug || `evento-${w.id}`,
+      cardStyle: hydrated.cardStyle as any,
+      eventType: hydrated.eventType as any,
+      isPublished: hydrated.isPublished ?? true,
       status: w.status || 'active',
       clientEmail: w.clientEmail || '',
       totalGuests: guestList.length,
       confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
-      coverPhoto: w.coverPhoto,
+      coverPhoto: hydrated.coverPhoto,
     };
   });
 }
@@ -1222,6 +1277,10 @@ export async function updateWeddingStatus(weddingId: number, status: string, cli
 }
 
 export async function createWedding(data: typeof weddingSettings.$inferInsert) {
+  const eventType = resolveEventType(data.eventType);
+  const hashtagIsCustom = data.hashtagIsCustom === true;
+  const waxSealTextIsCustom = data.waxSealTextIsCustom === true;
+
   if (!data.slug) {
     const cleanNames = (data.coupleNames || 'boda')
       .toLowerCase()
@@ -1235,6 +1294,11 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
   // Ensure non-null column defaults are present
   const payload: typeof weddingSettings.$inferInsert = {
     coupleNames: data.coupleNames || 'Sofía & Alejandro',
+    eventType,
+    hashtag: hashtagIsCustom && data.hashtag
+      ? data.hashtag
+      : generateEventHashtag(data.coupleNames, eventType, data.eventDate),
+    hashtagIsCustom,
     eventDate: data.eventDate || '2026-11-28',
     eventTime: data.eventTime || '17:00',
     ceremonyVenue: data.ceremonyVenue || 'Parroquia San Francisco de Asís',
@@ -1243,14 +1307,30 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
     receptionAddress: data.receptionAddress || 'Km 14.5 Carretera Real, Valle Encantado',
     coverPhoto: data.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
     cardStyle: data.cardStyle || 'classic-gold',
+    waxSealText: waxSealTextIsCustom && data.waxSealText
+      ? data.waxSealText
+      : generateDynamicInitials(data.coupleNames, eventType),
+    waxSealTextIsCustom,
     isPublished: data.isPublished ?? true,
     ...data,
   };
 
+  // Explicitly re-apply generated values after the spread so omitted or stale
+  // client defaults can never replace the event-specific values.
+  payload.eventType = eventType;
+  payload.hashtagIsCustom = hashtagIsCustom;
+  payload.hashtag = hashtagIsCustom && data.hashtag
+    ? data.hashtag
+    : generateEventHashtag(payload.coupleNames, eventType, payload.eventDate);
+  payload.waxSealTextIsCustom = waxSealTextIsCustom;
+  payload.waxSealText = waxSealTextIsCustom && data.waxSealText
+    ? data.waxSealText
+    : generateDynamicInitials(payload.coupleNames, eventType);
+
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
       const inserted = await db.insert(weddingSettings).values(payload).returning();
-      if (inserted.length > 0) return inserted[0];
+      if (inserted.length > 0) return hydrateWeddingAutoFields(inserted[0] as any);
     }
   } catch (err) {
     console.warn('createWedding database insert warning, falling back to memory state:', err);
@@ -1264,7 +1344,7 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
     updatedAt: new Date(),
   };
   memoryState.weddings.push(newWedding);
-  return newWedding;
+  return hydrateWeddingAutoFields(newWedding as any);
 }
 
 export async function deleteWedding(weddingId: number, ownerUid?: string) {

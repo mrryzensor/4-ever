@@ -80,6 +80,7 @@ export interface WeddingSettings {
   isPublished?: boolean;
   coupleNames: string;
   hashtag: string;
+  hashtagIsCustom?: boolean;
   eventDate: string;
   eventTime: string;
   ceremonyVenue: string;
@@ -119,6 +120,7 @@ export interface WeddingSettings {
   cardStyle: CardStyleId;
   envelopeColor: string;
   waxSealText: string;
+  waxSealTextIsCustom?: boolean;
   waxSealColor: string;
   audioUrl: string;
   audioTitle: string;

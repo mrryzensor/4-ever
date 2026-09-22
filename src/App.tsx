@@ -67,6 +67,8 @@ import { DemoStyleBar } from './components/DemoStyleBar.tsx';
 import { ToastContainer } from './components/ToastContainer.tsx';
 import { toast } from './lib/toast.ts';
 import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
+import { formatHeroDate } from './lib/dateFormatters.ts';
+import { getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 import { CardStyle } from './types.ts';
@@ -236,7 +238,7 @@ export default function App() {
 
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('event') || params.get('tipo');
-      if (cat === 'xv' || cat === 'quince') return 'xv';
+      if (cat && resolveEventType(cat) === 'xv') return 'xv';
       if (cat === 'bodas' || cat === 'boda') return 'bodas';
 
       const pathSlug = getPathSlug()?.toLowerCase();
@@ -261,7 +263,7 @@ export default function App() {
 
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('event') || params.get('tipo');
-      const isXv = cat === 'xv' || cat === 'quince' || (eventCategory === 'xv' && !cat);
+      const isXv = (cat ? resolveEventType(cat) === 'xv' : eventCategory === 'xv');
       const isDemo = checkIsDemoUrl();
       if (isDemo) return isXv ? 5 : 1;
       const w = params.get('w') || params.get('wedding');
@@ -285,6 +287,10 @@ export default function App() {
     }
     return eventCategory === 'xv' ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS;
   });
+
+  // Once an event is loaded, its persisted type is the source of truth for
+  // the editor and invitation. URL/local state is only used while loading.
+  const settingsEventCategory = resolveEventType(settings?.eventType, settings?.slug);
 
   const switchEventCategory = (category: EventCategory) => {
     setEventCategory(category);
@@ -332,7 +338,7 @@ export default function App() {
       } else if (pathname === '/demo' || pathname === '/demostracion' || authQuery === 'demo' || hash === '#demo') {
         setIsViewingDemo(true);
         const eventParam = search.get('event') || search.get('tipo');
-        const isXv = eventParam === 'xv' || eventParam === 'quince' || (eventCategory === 'xv' && !eventParam);
+        const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
         const targetCategory = isXv ? 'xv' : 'bodas';
         setEventCategory(targetCategory);
         setCurrentWeddingId(isXv ? 5 : 1);
@@ -382,42 +388,71 @@ export default function App() {
   // Update theme-reactive scrollbars whenever wedding style changes
   useEffect(() => {
     if (settings?.cardStyle) {
-      if (eventCategory === 'xv') {
+      if (settingsEventCategory === 'xv') {
         applyXvThemeScrollbar(settings.cardStyle);
       } else {
         applyThemeScrollbar(settings.cardStyle);
       }
     }
-  }, [settings?.cardStyle, eventCategory]);
+  }, [settings?.cardStyle, settingsEventCategory]);
 
-  // Update dynamic browser tab title (titlebar) & client meta description
+  // Keep browser title and share metadata synchronized with the resolved event.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const coupleNames = settings?.coupleNames?.trim() || (eventCategory === 'xv' ? 'Valeria Montserrat' : 'Sofía & Alejandro');
+    const presentation = getEventPresentation(settings?.eventType, settings?.slug);
+    const coupleNames = settings?.coupleNames?.trim() || presentation.defaultName;
+    const formattedDate = formatHeroDate(
+      settings?.eventDate || '2026-11-28',
+      settings?.heroDateFormat || 'literal-short',
+      settings?.heroCustomDateText,
+    );
+    const location = settings?.receptionVenue || settings?.ceremonyVenue || 'nuestra celebración';
+    const invitationDescription = `${settings?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.'} • ${formattedDate} en ${location}. Toca aquí para ver los detalles y confirmar tu asistencia.`;
+    const previewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
+    const demoMode = (isViewingDemo || (!currentUser && currentWeddingId === 1 && !getPathSlug())) && !previewEmbed;
 
-    if (currentView === 'portal') {
-      document.title = '2date Atelier | Plataforma Integral de Invitaciones Digitales & RSVP';
-    } else if (currentView === 'landing') {
-      document.title = eventCategory === 'xv'
-        ? 'Atelier XV Años | Invitaciones Digitales de Quinceañera & Gala Real'
-        : 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
+    let title = '2date Atelier | Invitaciones Digitales & RSVP';
+    let description = 'Invitaciones digitales interactivas con música, cuenta regresiva, confirmación RSVP, itinerario y galería para bodas y XV Años.';
+
+    if (currentView === 'landing') {
+      title = presentation.landingTitle;
+      description = presentation.landingDescription;
     } else if (currentView === 'ceo') {
-      document.title = 'Supervisión Centralizada Master — Atelier CEO';
+      title = 'Supervisión Centralizada Master — Atelier CEO';
+      description = 'Supervisión y administración centralizada de eventos, usuarios e invitaciones.';
     } else if (currentView === 'admin') {
-      document.title = `Atelier de Diseño & Configuración — ${coupleNames}`;
+      title = `${presentation.label} — Atelier de Diseño & Configuración | ${coupleNames}`;
+      description = `Edita la invitación de ${presentation.label.toLowerCase()} de ${coupleNames}.`;
+    } else if (currentView === 'invitation') {
+      title = presentation.invitationTitle(coupleNames, activeGuest?.fullName);
+      description = invitationDescription;
     } else if (currentView === 'dashboard') {
-      document.title = `Mis Eventos — ${coupleNames}`;
-      if (activeGuest?.fullName) {
-        document.title = eventCategory === 'xv'
-          ? `👑 ¡${activeGuest.fullName}, invitación a los XV Años de ${coupleNames}!`
-          : `💌 ¡${activeGuest.fullName}, invitación a la Boda de ${coupleNames}!`;
-      } else {
-        document.title = eventCategory === 'xv'
-          ? `👑 Mis XV Años — ${coupleNames}`
-          : `💍 Boda de ${coupleNames} — Invitación de Boda`;
-      }
+      title = `Mis Eventos — ${coupleNames}`;
+      description = 'Administra tus invitaciones, eventos, invitados y confirmaciones RSVP.';
     }
-  }, [currentView, settings?.coupleNames, activeGuest?.fullName, eventCategory]);
+
+    document.title = title;
+
+    const setMeta = (selector: string, content: string) => {
+      const element = document.querySelector<HTMLMetaElement>(selector);
+      if (element) element.setAttribute('content', content);
+    };
+    setMeta('meta[name="description"]', description);
+    setMeta('meta[property="og:title"]', title);
+    setMeta('meta[property="og:description"]', description);
+    setMeta('meta[property="og:site_name"]', presentation.siteName(coupleNames));
+    setMeta('meta[name="twitter:title"]', title);
+    setMeta('meta[name="twitter:description"]', description);
+
+    if (settings?.id && currentView === 'invitation' && !demoMode) {
+      const identifier = settings.slug || String(settings.id);
+      const ogImageUrl = `${window.location.origin}/api/og-image?wedding=${encodeURIComponent(identifier)}`;
+      setMeta('meta[property="og:image"]', ogImageUrl);
+      setMeta('meta[property="og:image:secure_url"]', ogImageUrl);
+      setMeta('meta[name="twitter:image"]', ogImageUrl);
+      setMeta('meta[property="og:url"]', window.location.href);
+    }
+  }, [currentView, settings?.id, settings?.slug, settings?.eventType, settings?.coupleNames, settings?.eventDate, settings?.eventTime, settings?.welcomeSubtitle, settings?.receptionVenue, settings?.ceremonyVenue, settings?.heroDateFormat, settings?.heroCustomDateText, activeGuest?.fullName, eventCategory, isViewingDemo, currentUser?.uid, currentWeddingId]);
 
   const toggleFullscreen = async () => {
     try {
@@ -492,7 +527,7 @@ export default function App() {
     // Check if URL is pointing to demo
     const isDemo = checkIsDemoUrl();
     if (isDemo) {
-      const isXv = eventParam === 'xv' || eventParam === 'quince' || (eventCategory === 'xv' && !eventParam);
+      const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
       const targetCategory = isXv ? 'xv' : 'bodas';
       setEventCategory(targetCategory);
       setCurrentWeddingId(isXv ? 5 : 1);
@@ -535,7 +570,7 @@ export default function App() {
     } else if (modeParam === 'admin') {
       setCurrentView(weddingParam ? 'admin' : 'dashboard');
     } else if (eventParam) {
-      const isXv = eventParam === 'xv' || eventParam === 'quince';
+      const isXv = resolveEventType(eventParam) === 'xv';
       const targetCategory = isXv ? 'xv' : 'bodas';
       setEventCategory(targetCategory);
       setCurrentWeddingId(isXv ? 5 : 1);
@@ -615,13 +650,8 @@ export default function App() {
           const data = await res.json();
           if (data && typeof data === 'object') {
             // Determine if the returned event data is XV or Bodas
-            const isXvData =
-              data.eventType === 'xv' ||
-              data.category === 'xv' ||
-              (weddingParam && (weddingParam.toLowerCase().startsWith('xv') || weddingParam.toLowerCase().includes('quince') || weddingParam.toLowerCase().includes('15'))) ||
-              (data.slug && (data.slug.toLowerCase().startsWith('xv') || data.slug.toLowerCase().includes('quince') || data.slug.toLowerCase().includes('15')));
-
-            const resolvedCategory = isXvData ? 'xv' : (data.eventType || 'bodas');
+            const resolvedCategory = resolveEventType(data.eventType ?? data.category, data.slug ?? weddingParam);
+            const isXvData = resolvedCategory === 'xv';
 
             if (eventCategory !== resolvedCategory) {
               setEventCategory(resolvedCategory);
@@ -756,8 +786,7 @@ export default function App() {
   const handleSelectWedding = (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => {
     setIsViewingDemo(false);
     setCurrentWeddingId(weddingId);
-    const isXv = eventType === 'xv' || (typeof eventType === 'string' && (eventType.toLowerCase().includes('xv') || eventType.toLowerCase().includes('quince') || eventType.toLowerCase().includes('15'))) || weddingId === 5;
-    const resolvedCat = isXv ? 'xv' : (eventType || 'bodas');
+    const resolvedCat = resolveEventType(eventType);
     setEventCategory(resolvedCat as EventCategory);
     try { localStorage.setItem('atelier_event_category', resolvedCat); } catch (e) {}
 
@@ -1020,7 +1049,7 @@ export default function App() {
 
   // 3. ADMIN / ATELIER FULL-PAGE VIEW
   if (currentView === 'admin') {
-    const isXvAdmin = eventCategory === 'xv' || settings?.eventType === 'xv';
+    const isXvAdmin = settingsEventCategory === 'xv';
 
     if (loadingWedding || !settings) {
       return (
@@ -1099,23 +1128,23 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 1.6 }}
           className="w-16 h-16 rounded-full aspect-square shrink-0 circle-badge bg-[#FAF9F0] border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] mb-4 shadow-sm"
         >
-          {eventCategory === 'xv' ? (
+          {settingsEventCategory === 'xv' ? (
             <Sparkles className="w-8 h-8 text-pink-500" />
           ) : (
             <Heart className="w-8 h-8 fill-current text-[#7D8C7A]" />
           )}
         </motion.div>
         <p className="font-serif italic text-xl tracking-wider text-[#5A5A40]">
-          {eventCategory === 'xv' ? 'Cargando Invitación de XV Años...' : 'Cargando Invitación de Boda...'}
+          {settingsEventCategory === 'xv' ? 'Cargando Invitación de XV Años...' : 'Cargando Invitación de Boda...'}
         </p>
         <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
-          {eventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
+          {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
         </p>
       </div>
     );
   }
 
-  const activeTheme = eventCategory === 'xv'
+  const activeTheme = settingsEventCategory === 'xv'
     ? (XV_CARD_THEMES[settings.cardStyle] || XV_CARD_THEMES['romantic-floral'])
     : (CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold']);
 
@@ -1129,7 +1158,7 @@ export default function App() {
     >
       {/* Interactive Demo Style Selector Bar in Demo Mode */}
       {isDemoMode && (
-        eventCategory === 'xv' ? (
+        settingsEventCategory === 'xv' ? (
           <XvDemoStyleBar
             currentStyle={settings.cardStyle}
             coupleNames={settings.coupleNames}
@@ -1215,7 +1244,7 @@ export default function App() {
       )}
 
       {/* Floating Audio Player Widget (Bottom Left) */}
-      {eventCategory === 'xv' ? (
+      {settingsEventCategory === 'xv' ? (
         <XvAudioPlayer
           settings={settings}
           audioUrl={settings?.audioUrl}
@@ -1238,7 +1267,7 @@ export default function App() {
           songTitle={settings?.audioTitle || 'Nuestra Canción'}
           artistName={settings?.coupleNames || 'Música de Boda'}
           eventTitle="Música de Boda"
-          eventCategory={eventCategory}
+          eventCategory={settingsEventCategory}
           isAdmin={!isDemoMode && Boolean(currentUser)}
           onUpdateSettings={handleUpdateSettings}
           onAudioUpdated={(newUrl, newTitle) => {
@@ -1253,7 +1282,7 @@ export default function App() {
       {/* Hero / Main Envelope Section - Full Viewport Landing Flow with Fused Interactive Details */}
       <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
         {/* 1. Portada, sobre interactivo y Sección de Detalles Fusionada (Ceremonia, Fiesta, Itinerario, DressCode, Regalos con detalles inline) */}
-        {eventCategory === 'xv' ? (
+        {settingsEventCategory === 'xv' ? (
           <XvEnvelopeCard
             settings={settings}
             guest={activeGuest}
@@ -1279,7 +1308,7 @@ export default function App() {
 
         {/* 2. Galería Interactiva de Fotos */}
         {settings.showPhotoGallery !== false && (
-          eventCategory === 'xv' ? (
+          settingsEventCategory === 'xv' ? (
             <XvPhotoGallery
               weddingId={settings.id}
               guestName={activeGuest?.fullName}
@@ -1302,7 +1331,7 @@ export default function App() {
 
         {/* Video Memories Section (Opcional) */}
         {settings.showVideoMemories === true && (
-          eventCategory === 'xv' ? (
+          settingsEventCategory === 'xv' ? (
             <XvVideoSection
               weddingId={settings.id}
               isAdmin={!isDemoMode && Boolean(currentUser)}
@@ -1318,7 +1347,7 @@ export default function App() {
         )}
 
         {/* 7. Confirmación de Asistencia Inline (Amplio, elegante, sin modales) */}
-        {eventCategory === 'xv' ? (
+        {settingsEventCategory === 'xv' ? (
           <XvRsvpSection
             initialGuest={activeGuest}
             settings={settings}
@@ -1352,7 +1381,7 @@ export default function App() {
 
         {/* Guestbook & Wishes (Opcional - por defecto desactivado en modo simple) */}
         {settings.showGuestbook === true && (
-          eventCategory === 'xv' ? (
+          settingsEventCategory === 'xv' ? (
             <XvGuestbookSection
               weddingId={settings.id}
               defaultAuthor={activeGuest?.fullName}

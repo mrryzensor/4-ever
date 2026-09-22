@@ -56,6 +56,7 @@ import {
 import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
+import { getEventPresentation } from './src/lib/eventUtils.ts';
 
 // Setup uploads volume storage directory (compatible with Docker volumes and local env)
 const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
@@ -81,6 +82,13 @@ const upload = multer({
     fileSize: 25 * 1024 * 1024, // 25MB max for audio / high-res photos
   },
 });
+
+const escapeHtml = (value: unknown): string => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 async function startServer() {
   const app = express();
@@ -1153,27 +1161,32 @@ async function startServer() {
 
       const pathLower = originalPath;
       const eventQuery = (req.query.event || req.query.tipo || '').toString().toLowerCase();
-      const isXvRoute = pathLower === '/xv' || pathLower === '/quince' || pathLower === '/quinceanera' || eventQuery === 'xv' || eventQuery === 'quince';
+      const isXvRoute = pathLower === '/xv' || pathLower === '/quince' || pathLower === '/quinceanera' || ['xv', 'quince', 'quinceanera', 'quinceañera', '15', '15anos', '15años'].includes(eventQuery);
       const isBodaRoute = pathLower === '/boda' || pathLower === '/bodas' || eventQuery === 'bodas' || eventQuery === 'boda';
       const isPortalRoute = (pathLower === '/' || pathLower === '/portal' || pathLower === '/index.html') && !isXvRoute && !isBodaRoute && !weddingParam && !guestCodeParam;
 
       const isLandingRequest = !weddingParam && !guestCodeParam && (isPortalRoute || isXvRoute || isBodaRoute || req.query.mode === 'landing');
+      const routeEventType = isXvRoute ? 'xv' : isBodaRoute ? 'bodas' : undefined;
+      let presentation = getEventPresentation(
+        wedding?.eventType ?? routeEventType ?? eventQuery,
+        wedding?.slug ?? weddingParam,
+      );
 
       let title = '2date Atelier | Plataforma Integral de Invitaciones Digitales & RSVP';
       let description = 'Plataforma de alta costura para invitaciones digitales interactivas con sobre 3D, música personalizada, confirmación RSVP y galería para Bodas, XV Años y Eventos Especiales.';
       let ogImageUrl = `${baseUrl}/Logo.webp`;
       let ogImageAlt = '2date Atelier - Invitaciones Digitales & RSVP para Todo Tipo de Eventos';
 
-      if (isXvRoute && !weddingParam) {
-        title = 'Atelier XV Años | Invitaciones Digitales de Quinceañera & Gala Real';
-        description = 'Invitaciones interactivas de XV Años con sobre 3D, tiara animada, cronograma de vals, zapatilla de cristal, música y confirmación RSVP.';
-        ogImageUrl = 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80';
-        ogImageAlt = 'Atelier XV Años - Invitaciones de Quinceañera & Gala Real';
-      } else if (isBodaRoute && !weddingParam) {
-        title = 'Atelier Nupcial Digital | Invitaciones de Boda Elegantes e Interactivas';
-        description = 'Crea y comparte tu invitación de boda digital de lujo con música personalizada, confirmación de asistencia RSVP en tiempo real, itinerario interactivo y galería de fotos colaborativa.';
-        ogImageUrl = `${baseUrl}/og-landing.png`;
-        ogImageAlt = 'Atelier Nupcial Digital - Invitaciones de Boda Elegantes & RSVP';
+      if (isLandingRequest && (isXvRoute || isBodaRoute)) {
+        title = presentation.landingTitle;
+        description = presentation.landingDescription;
+        if (presentation.type === 'xv') {
+          ogImageUrl = 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80';
+          ogImageAlt = 'Atelier XV Años - Invitaciones de Quinceañera';
+        } else {
+          ogImageUrl = `${baseUrl}/og-landing.png`;
+          ogImageAlt = 'Atelier Nupcial Digital - Invitaciones de Boda';
+        }
       }
 
       if (!isLandingRequest) {
@@ -1181,12 +1194,14 @@ async function startServer() {
           wedding = await getWeddingSettings();
         }
 
+        presentation = getEventPresentation(wedding?.eventType, wedding?.slug ?? weddingParam);
+
         let guest = null;
         if (guestCodeParam && wedding) {
           guest = await getGuestByCode(guestCodeParam, wedding.id);
         }
 
-        const coupleNames = wedding?.coupleNames || 'Nuestra Boda';
+        const coupleNames = wedding?.coupleNames || presentation.defaultName;
         const formattedDate = formatHeroDate(
           wedding?.eventDate || '2026-11-28',
           wedding?.heroDateFormat || 'literal-short',
@@ -1200,37 +1215,42 @@ async function startServer() {
 
         // Dynamic Title for social sharing (WhatsApp, Facebook, iMessage, Twitter/X)
         const guestName = guest?.name || guest?.fullName;
-        if (guestName) {
-          title = `💌 ¡${guestName}, tienes una invitación para la Boda de ${coupleNames}!`;
-        } else {
-          title = `💍 Boda de ${coupleNames} — Invitación Oficial`;
-        }
+        title = presentation.invitationTitle(coupleNames, guestName);
 
         // Dynamic Subtitle / Description with event date, venue, city & personalized welcome
         const locationPart = cityOrAddress ? `${venue} (${cityOrAddress})` : venue;
         description = `${welcomeSubtitle} • ${formattedDate} en ${locationPart}. Toca aquí para ver itinerario, mapa y confirmar tu asistencia.`;
-        ogImageAlt = `Invitación de Boda de ${coupleNames} - ${formattedDate}`;
+        ogImageAlt = presentation.imageAlt(coupleNames, formattedDate);
       }
 
+      const safeTitle = escapeHtml(title);
+      const safeDescription = escapeHtml(description);
+      const siteName = isPortalRoute
+        ? '2date Atelier'
+        : presentation.siteName(wedding?.coupleNames || presentation.defaultName);
+      const safeSiteName = escapeHtml(siteName);
+      const safeImageUrl = escapeHtml(ogImageUrl);
+      const safeImageAlt = escapeHtml(ogImageAlt);
+      const safeUrl = escapeHtml(`${baseUrl}${req.originalUrl}`);
       const dynamicTags = `
     <!-- Dynamic Social Media & WhatsApp Rich Previews -->
-    <title>${title}</title>
-    <meta name="description" content="${description}" />
-    <meta property="og:site_name" content="Boda de ${wedding?.coupleNames || 'Sofía & Alejandro'}" />
+    <title>${safeTitle}</title>
+    <meta name="description" content="${safeDescription}" />
+    <meta property="og:site_name" content="${safeSiteName}" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="${title}" />
-    <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${ogImageUrl}" />
-    <meta property="og:image:secure_url" content="${ogImageUrl}" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeDescription}" />
+    <meta property="og:image" content="${safeImageUrl}" />
+    <meta property="og:image:secure_url" content="${safeImageUrl}" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="${ogImageAlt}" />
-    <meta property="og:url" content="${baseUrl}${req.originalUrl}" />
+    <meta property="og:image:alt" content="${safeImageAlt}" />
+    <meta property="og:url" content="${safeUrl}" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${title}" />
-    <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${ogImageUrl}" />
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeDescription}" />
+    <meta name="twitter:image" content="${safeImageUrl}" />
       `;
 
       // Replace existing generic tags
@@ -1293,4 +1313,3 @@ async function startServer() {
 }
 
 startServer();
-

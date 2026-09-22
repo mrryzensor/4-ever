@@ -3,6 +3,7 @@ import { Volume2, VolumeX, Play, Pause, Music, Upload, Check, Disc3, Zap, Loader
 import { WeddingSettings } from '../types.ts';
 import { optimizeAudioClient, formatBytes, AudioOptimizationResult } from '../lib/mediaOptimizer.ts';
 import { getStreamAudioUrl } from '../lib/audioStream.ts';
+import { getEventPresentation } from '../lib/eventUtils.ts';
 
 interface AudioPlayerProps {
   settings?: WeddingSettings;
@@ -75,18 +76,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const isXv =
-    eventCategory === 'xv' ||
-    settings?.eventType === 'xv' ||
-    (settings?.slug && settings.slug.toLowerCase().startsWith('xv'));
+  const eventPresentation = getEventPresentation(settings?.eventType, settings?.slug);
+  const isXv = eventPresentation.type === 'xv';
 
   const effectiveEventLabel = (() => {
     if (eventTitle) return eventTitle;
-    if (isXv) return 'Música de XV Años';
-    if (settings?.eventType === 'bautizos') return 'Música de Bautizo';
-    if (settings?.eventType === 'graduaciones') return 'Música de Graduación';
-    if (settings?.eventType === 'bodas' || eventCategory === 'bodas') return 'Música de Boda';
-    return 'Música del Evento';
+    return isXv ? 'Música de XV Años' : 'Música de Boda';
   })();
 
   const presetSongs = isXv ? XV_PRESET_SONGS : WEDDING_PRESET_SONGS;
@@ -414,4 +409,3 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     </>
   );
 };
-

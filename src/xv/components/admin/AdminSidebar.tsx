@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { GuestStats, WeddingSettings } from '../../../types.ts';
+import { getDisplayedWaxSealText } from '../../../lib/eventUtils.ts';
 
 interface AdminSidebarProps {
   activeTab: 'guests' | 'settings' | 'import' | 'gallery';
@@ -106,7 +107,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           {!isCollapsed ? (
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-[#FAF9F0] border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] shrink-0 shadow-2xs font-serif font-bold text-xs">
-                {settings.waxSealText || 'W'}
+                {getDisplayedWaxSealText(settings)}
               </div>
               <div className="min-w-0">
                 <span className="text-xs font-serif font-bold text-stone-900 block truncate">
@@ -119,7 +120,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </div>
           ) : (
             <div className="w-8 h-8 rounded-xl bg-[#FAF9F0] border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] mx-auto shadow-2xs font-serif font-bold text-xs">
-              {settings.waxSealText || 'W'}
+              {getDisplayedWaxSealText(settings)}
             </div>
           )}
 
@@ -305,7 +306,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               <div className="p-4 bg-[#FAF9F0] border-b border-[#E5E2D0] flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-8 h-8 rounded-xl bg-[#5A5A40] text-white flex items-center justify-center font-serif font-bold text-xs shadow-xs">
-                    {settings.waxSealText || 'XV'}
+                    {getDisplayedWaxSealText(settings)}
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-xs font-serif font-bold text-stone-900 truncate">

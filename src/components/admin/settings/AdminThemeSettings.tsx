@@ -4,6 +4,7 @@ import { WeddingSettings, CardStyleId } from '../../../types.ts';
 import { CARD_THEMES } from '../../../lib/themes.ts';
 import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../AnimatedSvgs.tsx';
 import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
+import { getDisplayedWaxSealText } from '../../../lib/eventUtils.ts';
 
 interface AdminThemeSettingsProps {
   settings: WeddingSettings;
@@ -166,7 +167,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           </label>
           <input
             type="text"
-            value={settings.waxSealText}
+            value={getDisplayedWaxSealText(settings)}
             onChange={(e) =>
               onChange({ waxSealText: e.target.value })
             }

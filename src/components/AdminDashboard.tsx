@@ -11,6 +11,7 @@ import { AdminSettingsTab } from './admin/AdminSettingsTab.tsx';
 import { AdminGalleryTab } from './admin/AdminGalleryTab.tsx';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../lib/toast.ts';
+import { applyWeddingSettingsChange } from '../lib/eventUtils.ts';
 
 interface AdminDashboardProps {
   settings: WeddingSettings;
@@ -212,7 +213,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="min-h-screen bg-[#FDFCF0] text-[#3D3D3D] flex flex-col font-sans selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40]">
       {/* 1. Universal Top SaaS Header & Breadcrumb Bar */}
       <AdminHeader
-        settings={settings}
+        settings={tempSettings}
         currentUser={propUser}
         onBackToDashboard={onBackToDashboard}
         onBackToInvitation={onBackToInvitation}
@@ -230,7 +231,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           onSelectTab={setActiveTab}
           stats={stats}
           totalGuests={stats.totalGuests}
-          settings={settings}
+          settings={tempSettings}
           onBackToInvitation={onBackToInvitation}
           onCopyInvitationLink={handleCopyInvitationLink}
           copiedLink={copiedLink}
@@ -300,7 +301,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <AdminSettingsTab
               settings={tempSettings}
               onChange={(updated) =>
-                setTempSettings((prev) => ({ ...prev, ...updated }))
+                setTempSettings((prev) => applyWeddingSettingsChange(prev, updated))
               }
               atelierViewMode={atelierViewMode}
               setAtelierViewMode={setAtelierViewMode}
