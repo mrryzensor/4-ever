@@ -173,6 +173,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_url TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_title TEXT DEFAULT 'Álbum en Google Photos';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_type TEXT DEFAULT 'google_photos';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_drive_photo_selection_mode TEXT DEFAULT 'all';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_drive_photo_ids TEXT DEFAULT '[]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]';

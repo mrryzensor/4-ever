@@ -190,6 +190,8 @@ export interface WeddingSettings {
   galleryExternalAlbumUrl?: string; // Link a álbum en Google Photos, Instagram, Facebook, X, etc.
   galleryExternalAlbumTitle?: string; // Título del álbum externo
   galleryExternalAlbumType?: 'google_photos' | 'instagram' | 'facebook' | 'x' | 'drive' | 'custom';
+  galleryDrivePhotoSelectionMode?: 'all' | 'selected'; // all usa IDs como exclusiones; selected usa IDs como inclusiones
+  galleryDrivePhotoIds?: string; // JSON de IDs seleccionados/excluidos de la carpeta compartida
   showVideoMemories?: boolean; // Recuerdos en video
   showGuestbook?: boolean; // Libro de firmas y deseos
   showHotels?: boolean; // Hospedaje y hoteles recomendados

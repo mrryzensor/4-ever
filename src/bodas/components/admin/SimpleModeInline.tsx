@@ -33,6 +33,7 @@ import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../..
 import { WEDDING_HERO_PRESETS } from './adminConstants.ts';
 import { CARD_THEMES } from '../../../lib/themes.ts';
 import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
+import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -1094,6 +1095,11 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                       )}
                     </div>
 
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E5E2D0] bg-white p-3">
+                      <DrivePhotoPicker settings={settings} onChange={onChange} defaultDestination="hero" />
+                      <span className="text-[10px] text-stone-500">Las fotos elegidas se integran al pase automático de la portada.</span>
+                    </div>
+
                     {/* Choose from Uploaded Gallery Photos */}
                     {galleryPhotos.length > 0 && (
                       <div className="pt-2 border-t border-[#E5E2D0]">
@@ -1284,6 +1290,13 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
                   />
                 </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#E5E2D0] bg-white p-3">
+                <div>
+                  <p className="text-xs font-semibold text-stone-800">Fotos visibles en la galería</p>
+                  <p className="text-[10px] text-stone-500">Por defecto se incluyen todas las fotos del álbum; puedes crear una selección o excluir fotos.</p>
+                </div>
+                <DrivePhotoPicker settings={settings} onChange={onChange} />
               </div>
             </div>
 
@@ -1812,7 +1825,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   <input
                     type="url"
                     value={settings.galleryExternalAlbumUrl || ''}
-                    onChange={(e) => onChange({ galleryExternalAlbumUrl: e.target.value })}
+                    onChange={(e) => onChange({ galleryExternalAlbumUrl: e.target.value, galleryDrivePhotoSelectionMode: 'all', galleryDrivePhotoIds: '[]' })}
                     placeholder="https://photos.app.goo.gl/..."
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
                   />

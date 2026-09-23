@@ -5,6 +5,7 @@ export interface DriveGalleryPhoto {
   id: string;
   name: string;
   thumbnailUrl: string;
+  fullUrl: string;
   openUrl: string;
 }
 

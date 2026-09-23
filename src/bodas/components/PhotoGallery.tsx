@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -29,6 +29,9 @@ import { GalleryPhoto, PhotoComment, WeddingSettings } from '../../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
+import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
+
+type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string };
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -52,9 +55,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   isAdmin = false,
   settings,
 }) => {
-  const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [uploadedPhotos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const thumbnailRailRef = useRef<HTMLDivElement>(null);
+  const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
 
   // Comments state for the active photo
   const [comments, setComments] = useState<PhotoComment[]>([]);
@@ -71,11 +76,63 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     setMobileCommentsOpen(false);
   }, [activePhotoIndex]);
 
-  const activePhoto = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
+  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
+  const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
+  const driveSelectionMode = settings?.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
+  const driveSelectionIds = useMemo(() => {
+    try {
+      const parsed = JSON.parse(settings?.galleryDrivePhotoIds || '[]');
+      return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []);
+    } catch {
+      return new Set<string>();
+    }
+  }, [settings?.galleryDrivePhotoIds]);
+  const photos = useMemo<CarouselPhoto[]>(() => [
+    ...uploadedPhotos,
+    ...driveGallery.photos
+      .filter((photo) => driveSelectionMode === 'all' ? !driveSelectionIds.has(photo.id) : driveSelectionIds.has(photo.id))
+      .map((photo, index) => ({
+        id: -(index + 1),
+        weddingId,
+        url: photo.fullUrl || photo.thumbnailUrl,
+        thumbnailUrl: photo.thumbnailUrl,
+        caption: photo.name,
+        authorName: 'Carpeta compartida',
+        category: 'recuerdos' as const,
+        likesCount: 0,
+        approved: true,
+        createdAt: '',
+        driveOpenUrl: photo.openUrl,
+      })),
+  ], [driveGallery.photos, driveSelectionIds, driveSelectionMode, uploadedPhotos, weddingId]);
+  const activePhoto: CarouselPhoto | null = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
+
+  useEffect(() => {
+    if (activePhotoIndex === null) return;
+    thumbnailRailRef.current
+      ?.querySelector<HTMLElement>(`[data-thumbnail-index="${activePhotoIndex}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [activePhotoIndex, photos.length]);
+
+  const scrollThumbnailRail = (direction: -1 | 1) => {
+    if (!thumbnailRailRef.current) return;
+    thumbnailRailRef.current.scrollBy({
+      left: direction * Math.max(220, thumbnailRailRef.current.clientWidth * 0.75),
+      behavior: 'smooth',
+    });
+  };
+
+  const scrollLandingThumbnailRail = (direction: -1 | 1) => {
+    if (!landingThumbnailRailRef.current) return;
+    landingThumbnailRailRef.current.scrollBy({
+      left: direction * Math.max(220, landingThumbnailRailRef.current.clientWidth * 0.75),
+      behavior: 'smooth',
+    });
+  };
 
   // Fetch comments when active photo changes
   useEffect(() => {
-    if (!activePhoto) {
+    if (!activePhoto || activePhoto.driveOpenUrl) {
       setComments([]);
       return;
     }
@@ -97,7 +154,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     };
 
     fetchComments();
-  }, [activePhoto?.id, weddingId]);
+  }, [activePhoto?.id, activePhoto?.driveOpenUrl, weddingId]);
 
   // Bulk load comments for all photos to animate during auto-play
   useEffect(() => {
@@ -189,6 +246,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handleLike = async (photoId: number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (photoId < 0) return;
     if (likedPhotoIds.includes(photoId)) return; // Prevent multiple likes in session
 
     setLikedPhotoIds((prev) => [...prev, photoId]);
@@ -206,7 +264,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePhoto || !newCommentText.trim() || isSubmittingComment) return;
+    if (!activePhoto || activePhoto.driveOpenUrl || !newCommentText.trim() || isSubmittingComment) return;
 
     const guestDisplayName = authorInputName.trim() || 'Invitado Especial';
     const payload = {
@@ -357,7 +415,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     return () => window.removeEventListener('paste', handlePaste);
   }, [weddingId, authorInputName, guestName, guestCode, uploadCaption]);
 
-  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
   const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
@@ -366,6 +423,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [photoRatios, setPhotoRatios] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    const visibleIndex = activePhotoIndex ?? carouselIndex;
+    landingThumbnailRailRef.current
+      ?.querySelector<HTMLElement>(`[data-gallery-thumbnail-index="${visibleIndex}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [activePhotoIndex, carouselIndex, photos.length]);
 
   // Auto-play timer (slides every 4.5 seconds when active and not hovered)
   useEffect(() => {
@@ -654,7 +718,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
                 <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
                 <span className="text-stone-500">/</span>
-                <span>{photos.length}</span>
+                <span>{driveGallery.hasMore ? `${photos.length}+` : photos.length}</span>
               </div>
 
               {photos.length > 1 && (
@@ -689,29 +753,32 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         );
       })()}
 
-          {/* Horizontal Thumbnails Strip Slider */}
+          {/* Navigable thumbnail rail */}
           {photos.length > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-2 no-scrollbar">
-              {photos.map((photo, idx) => (
-                <button
-                  key={photo.id}
-                  type="button"
-                  onClick={() => setCarouselIndex(idx)}
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex
+            <div className="mt-4 flex items-center gap-1 py-2 px-1">
+              <button type="button" onClick={() => scrollLandingThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronLeft className="h-5 w-5" /></button>
+              <div ref={landingThumbnailRailRef} className="flex min-w-0 flex-1 items-center justify-start gap-2.5 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+                {photos.map((photo, idx) => (
+                  <button
+                    key={photo.id}
+                    data-gallery-thumbnail-index={idx}
+                    type="button"
+                    onClick={() => setCarouselIndex(idx)}
+                    aria-label={`Ver foto ${idx + 1} de ${photos.length}`}
+                    aria-current={idx === carouselIndex ? 'true' : undefined}
+                    className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex
                       ? isDark
                         ? 'border-[#C5A059] ring-2 ring-[#C5A059]/40 scale-105 opacity-100 shadow-md'
                         : 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 scale-105 opacity-100 shadow-md'
-                      : 'border-transparent opacity-45 hover:opacity-85 hover:scale-100'
+                      : 'border-transparent opacity-50 hover:opacity-90'
                     }`}
-                >
-                  <img
-                    src={photo.url}
-                    alt="Miniatura"
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </button>
-              ))}
+                  >
+                    <img src={photo.thumbnailUrl || photo.url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                ))}
+                {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className={`flex h-12 shrink-0 items-center gap-2 rounded-xl border px-3 text-xs font-semibold disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}>{driveGallery.loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más</button>}
+              </div>
+              <button type="button" onClick={() => scrollLandingThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronRight className="h-5 w-5" /></button>
             </div>
           )}
 
@@ -881,12 +948,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   {/* Top Bar Actions: High-res Download & Close Button */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
                     <a
-                      href={activePhoto.url}
+                      href={activePhoto.driveOpenUrl || activePhoto.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
                       className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-lg cursor-pointer transition-all hover:scale-105"
-                      title="Abrir imagen original"
+                      title={activePhoto.driveOpenUrl ? 'Abrir foto en Google Drive' : 'Abrir imagen original'}
                     >
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
@@ -1080,22 +1147,30 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       </div>
                     </div>
 
-                    {/* Desktop Thumbnails Carousel Bar */}
+                    {/* Navigable thumbnail rail */}
                     {photos.length > 1 && (
-                      <div className="hidden sm:flex w-full pt-2 items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
-                        {photos.map((p, idx) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => setActivePhotoIndex(idx)}
-                            className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === activePhotoIndex
-                              ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100'
-                              : 'border-transparent opacity-40 hover:opacity-80'
-                              }`}
-                          >
-                            <img src={p.url} alt="Miniatura" className="w-full h-full object-cover" />
-                          </button>
-                        ))}
+                      <div className="flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
+                        <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
+                        <div ref={thumbnailRailRef} className="flex min-w-0 flex-1 items-center justify-start gap-2 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+                          {photos.map((p, idx) => (
+                            <button
+                              key={p.id}
+                              data-thumbnail-index={idx}
+                              type="button"
+                              onClick={() => setActivePhotoIndex(idx)}
+                              aria-label={`Ver foto ${idx + 1} de ${photos.length}`}
+                              aria-current={idx === activePhotoIndex ? 'true' : undefined}
+                              className={`relative h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${idx === activePhotoIndex
+                                ? 'border-amber-400 ring-2 ring-amber-400/40 opacity-100'
+                                : 'border-transparent opacity-50 hover:opacity-90'
+                                }`}
+                            >
+                              <img src={p.thumbnailUrl || p.url} alt={`Miniatura ${idx + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                            </button>
+                          ))}
+                          {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/60 px-3 text-[10px] font-semibold text-white disabled:opacity-60">{driveGallery.loadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Cargar más</button>}
+                        </div>
+                        <button type="button" onClick={() => scrollThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronRight className="h-5 w-5" /></button>
                       </div>
                     )}
                   </div>
@@ -1321,7 +1396,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         </button>
 
                         <a
-                          href={activePhoto.url}
+                          href={activePhoto.driveOpenUrl || activePhoto.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           download

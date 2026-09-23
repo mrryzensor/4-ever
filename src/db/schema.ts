@@ -117,6 +117,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   galleryExternalAlbumUrl: text('gallery_external_album_url').default(''),
   galleryExternalAlbumTitle: text('gallery_external_album_title').default('Álbum en Google Photos'),
   galleryExternalAlbumType: text('gallery_external_album_type').default('google_photos'),
+  galleryDrivePhotoSelectionMode: text('gallery_drive_photo_selection_mode').default('all'),
+  galleryDrivePhotoIds: text('gallery_drive_photo_ids').default('[]'),
   showVideoMemories: boolean('show_video_memories').default(false),
   showGuestbook: boolean('show_guestbook').default(false),
   showHotels: boolean('show_hotels').default(false),
