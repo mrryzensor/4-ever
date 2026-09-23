@@ -1171,8 +1171,6 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 </AnimatePresence>
               </div>
             )}
-          </div>
-
           {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION (Fully Clickable) */}
           {settings.showDressCode !== false && (
             <div
@@ -1496,6 +1494,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               {inlineGallery}
             </div>
           )}
+          </div>
         </div>
       </section>
     </div>
