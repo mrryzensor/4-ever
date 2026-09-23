@@ -27,6 +27,7 @@ import {
   Info,
   ShieldCheck,
   Footprints,
+  Loader2,
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
@@ -382,6 +383,25 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   }, [heroPhotoList, settings.heroAutoplayInterval]);
 
   const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
+  const [isHeroImageLoading, setIsHeroImageLoading] = useState(true);
+
+  useEffect(() => {
+    let isCurrentImage = true;
+    setIsHeroImageLoading(true);
+    const image = new Image();
+    const finishLoading = () => {
+      if (isCurrentImage) setIsHeroImageLoading(false);
+    };
+    image.onload = finishLoading;
+    image.onerror = finishLoading;
+    image.src = currentCoverImage;
+    if (image.complete && image.naturalWidth > 0) finishLoading();
+    return () => {
+      isCurrentImage = false;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [currentCoverImage]);
 
   const scrollToContent = () => (document.getElementById('detalles-xv') || document.getElementById('detalles-boda'))?.scrollIntoView({ behavior: 'smooth' });
   const familyPlacement = settings.heroCourtPlacement || 'hero';
@@ -475,6 +495,24 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
           <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={14} />
         </motion.div>
+
+        <AnimatePresence>
+          {isHeroImageLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/35"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex items-center gap-3 rounded-full border border-white/20 bg-black/60 px-5 py-3 text-sm text-white shadow-xl backdrop-blur-md">
+                <Loader2 className="h-5 w-5 animate-spin text-amber-300" />
+                <span className="font-serif">Cargando portada…</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-6 sm:pt-10 pb-16">
           <div className="min-h-4">

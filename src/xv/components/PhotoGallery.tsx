@@ -113,9 +113,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   useEffect(() => {
     if (activePhotoIndex === null) return;
-    thumbnailRailRef.current
-      ?.querySelector<HTMLElement>(`[data-thumbnail-index="${activePhotoIndex}"]`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    const rail = thumbnailRailRef.current;
+    const thumbnail = rail?.querySelector<HTMLElement>(`[data-thumbnail-index="${activePhotoIndex}"]`);
+    if (!rail || !thumbnail) return;
+    const offset = thumbnail.getBoundingClientRect().left - rail.getBoundingClientRect().left;
+    rail.scrollTo({
+      left: Math.max(0, rail.scrollLeft + offset - (rail.clientWidth - thumbnail.clientWidth) / 2),
+      behavior: 'smooth',
+    });
   }, [activePhotoIndex, carouselPhotos.length]);
 
   const scrollThumbnailRail = (direction: -1 | 1) => {
@@ -428,9 +433,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   useEffect(() => {
     const visibleIndex = activePhotoIndex ?? carouselIndex;
-    landingThumbnailRailRef.current
-      ?.querySelector<HTMLElement>(`[data-gallery-thumbnail-index="${visibleIndex}"]`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    const rail = landingThumbnailRailRef.current;
+    const thumbnail = rail?.querySelector<HTMLElement>(`[data-gallery-thumbnail-index="${visibleIndex}"]`);
+    if (!rail || !thumbnail) return;
+    const offset = thumbnail.getBoundingClientRect().left - rail.getBoundingClientRect().left;
+    rail.scrollTo({
+      left: Math.max(0, rail.scrollLeft + offset - (rail.clientWidth - thumbnail.clientWidth) / 2),
+      behavior: 'smooth',
+    });
   }, [activePhotoIndex, carouselIndex, carouselPhotos.length]);
 
   // Auto-play timer (slides every 4.5 seconds when active and not hovered)
