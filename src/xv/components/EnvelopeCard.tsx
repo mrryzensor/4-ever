@@ -407,18 +407,24 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   const scrollToContent = () => (document.getElementById('detalles-xv') || document.getElementById('detalles-boda'))?.scrollIntoView({ behavior: 'smooth' });
   const familyPlacement = settings.heroCourtPlacement || 'hero';
-  const renderCourtCard = () => familyPlacement === 'hero'
+  const hasCourtInfo = Boolean(
+    (settings.heroShowBrideParents && settings.heroBrideParents?.trim())
+    || (settings.heroShowGroomParents && settings.heroGroomParents?.trim())
+    || (settings.heroShowPadrinos && settings.heroPadrinos?.trim())
+    || (settings.heroShowWitnesses && settings.heroWitnesses?.trim())
+  );
+  const renderCourtCard = () => familyPlacement === 'hero' && hasCourtInfo
     ? <HeroCourtCard settings={settings} theme={theme} eventType="xv" />
     : null;
-  const renderFamilyPage = () => (
+  const renderFamilyPage = () => familyPlacement !== 'hero' && hasCourtInfo ? (
     <section
       id="familia-de-honor"
       className="relative left-1/2 z-10 flex min-h-screen w-screen max-w-none -translate-x-1/2 items-center justify-center px-4 py-16 sm:py-20"
       style={{ backgroundColor: theme.bgHex }}
     >
-      <HeroCourtCard settings={settings} theme={theme} eventType="xv" />
+      <HeroCourtCard settings={settings} theme={theme} eventType="xv" fullPage />
     </section>
-  );
+  ) : null;
   const renderCountdownPage = () => (
     <section
       id="cuenta-regresiva"

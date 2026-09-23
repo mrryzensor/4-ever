@@ -36,6 +36,7 @@ import { CARD_THEMES } from '../../../lib/themes.ts';
 import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
 import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSectionsStep.tsx';
+import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -665,10 +666,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     </div>
                     <div>
                       <h5 className="text-xs sm:text-sm font-serif font-bold text-stone-900">
-                        Cortejo, Familia &amp; Padrinos en Portada
+                        Cortejo, Familia &amp; Padrinos
                       </h5>
                       <p className="text-[11px] text-stone-500">
-                        Opcional • Puedes destacar a los padres, padrinos y testigos en la cabecera (Hero)
+                        Opcional • Elige si se muestran en el Hero o en una página independiente
                       </p>
                     </div>
                   </div>
@@ -677,49 +678,9 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   </span>
                 </div>
 
-                {/* Configuración de Ubicación y Título */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-white rounded-2xl border border-[#E5E2D0] shadow-2xs">
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
-                      Ubicación del Card en Portada
-                    </label>
-                    <div className="grid grid-cols-3 gap-1 p-1 bg-[#FAF9F0] rounded-xl border border-[#E5E2D0]">
-                      <button
-                        type="button"
-                        onClick={() => onChange({ heroCourtPosition: 'above-names' })}
-                        className={`py-1.5 px-1.5 rounded-lg text-[10px] font-medium transition-all text-center ${
-                          settings.heroCourtPosition === 'above-names'
-                            ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                            : 'text-[#5A5A40] hover:bg-white/80'
-                        }`}
-                      >
-                        Arriba
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onChange({ heroCourtPosition: 'below-names' })}
-                        className={`py-1.5 px-1.5 rounded-lg text-[10px] font-medium transition-all text-center ${
-                          !settings.heroCourtPosition || settings.heroCourtPosition === 'below-names'
-                            ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                            : 'text-[#5A5A40] hover:bg-white/80'
-                        }`}
-                      >
-                        Centro
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onChange({ heroCourtPosition: 'below-quote' })}
-                        className={`py-1.5 px-1.5 rounded-lg text-[10px] font-medium transition-all text-center ${
-                          settings.heroCourtPosition === 'below-quote'
-                            ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                            : 'text-[#5A5A40] hover:bg-white/80'
-                        }`}
-                      >
-                        Abajo
-                      </button>
-                    </div>
-                  </div>
-
+                {/* Configuración de ubicación y título */}
+                <div className="space-y-3 rounded-2xl border border-[#E5E2D0] bg-white p-3 shadow-2xs">
+                  <HeroCourtPlacementControl settings={settings} onChange={onChange} />
                   <div>
                     <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
                       Título Superior de Bendición

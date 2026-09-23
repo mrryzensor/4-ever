@@ -36,6 +36,7 @@ import { CARD_THEMES } from '../../../lib/themes.ts';
 import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
 import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSectionsStep.tsx';
+import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -661,10 +662,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     <Users className="w-4 h-4 text-[#5A5A40]" />
                     <div>
                       <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block">
-                        Padrinos en la Portada (Hero)
+                        Familia y Padrinos en la Invitación
                       </span>
                       <span className="text-[10px] text-stone-500">
-                        Opcional • Se mostrarán con distinción en la cabecera principal de la invitación
+                        Opcional • Elige si se muestran en el Hero o en una página independiente
                       </span>
                     </div>
                   </div>
@@ -678,6 +679,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     <div className="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#5A5A40]"></div>
                   </label>
                 </div>
+
+                <HeroCourtPlacementControl settings={settings} onChange={onChange} />
 
                 {settings.heroShowPadrinos && (
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 animate-fadeIn">
