@@ -1585,7 +1585,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   6. Galería de Fotos & Álbumes en la Nube
                 </h4>
                 <p className="text-xs text-stone-500">
-                  Sube fotos aquí o enlaza una carpeta pública de Google Drive para mostrar sus imágenes directamente en la invitación. Otros álbumes se abren desde su enlace.
+                  Sube fotos aquí o enlaza una carpeta pública de Google Drive para integrar sus imágenes en el carrusel. Otros álbumes se abren desde su enlace.
                 </p>
               </div>
               <span className="text-[10px] uppercase font-bold tracking-widest bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -1819,7 +1819,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </div>
               </div>
               <p className="text-[11px] leading-relaxed text-stone-500">
-                Para mostrar fotos de Drive dentro de la invitación, comparte la carpeta como “Cualquier persona con el enlace: lector” y configura GOOGLE_DRIVE_API_KEY en el servidor. Google Photos y otros enlaces seguirán disponibles para abrir el álbum externo.
+                Para integrar fotos de Drive en el carrusel, comparte la carpeta como “Cualquier persona con el enlace: lector” y configura GOOGLE_DRIVE_API_KEY en el servidor. Google Photos y otros enlaces seguirán disponibles para abrir el álbum externo.
               </p>
             </div>
           </div>

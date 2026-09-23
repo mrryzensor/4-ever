@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -29,7 +29,9 @@ import { GalleryPhoto, PhotoComment, WeddingSettings } from '../../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
-import { DriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
+import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
+
+type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string };
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -53,6 +55,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   isAdmin = false,
   settings,
 }) => {
+  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
+  const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
+  const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -72,11 +77,27 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [likedPhotoIds, setLikedPhotoIds] = useState<number[]>([]);
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
 
-  const activePhoto = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
+  const carouselPhotos = useMemo<CarouselPhoto[]>(() => [
+    ...photos,
+    ...driveGallery.photos.map((photo, index) => ({
+      id: -(index + 1),
+      weddingId,
+      url: photo.thumbnailUrl,
+      caption: photo.name,
+      authorName: 'Carpeta compartida',
+      category: 'recuerdos' as const,
+      likesCount: 0,
+      approved: true,
+      createdAt: '',
+      driveOpenUrl: photo.openUrl,
+    })),
+  ], [driveGallery.photos, photos, weddingId]);
+
+  const activePhoto = activePhotoIndex !== null && carouselPhotos[activePhotoIndex] ? carouselPhotos[activePhotoIndex] : null;
 
   // Fetch comments when active photo changes
   useEffect(() => {
-    if (!activePhoto) {
+    if (!activePhoto || activePhoto.driveOpenUrl) {
       setComments([]);
       return;
     }
@@ -98,7 +119,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     };
 
     fetchComments();
-  }, [activePhoto?.id, weddingId]);
+  }, [activePhoto?.id, activePhoto?.driveOpenUrl, weddingId]);
 
   // Bulk load comments for all photos to animate during auto-play
   useEffect(() => {
@@ -131,14 +152,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handlePrevPhoto = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (photos.length === 0) return;
-    setActivePhotoIndex((prev) => (prev === null || prev === 0 ? photos.length - 1 : prev - 1));
+    if (carouselPhotos.length === 0) return;
+    setActivePhotoIndex((prev) => (prev === null || prev === 0 ? carouselPhotos.length - 1 : prev - 1));
   };
 
   const handleNextPhoto = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (photos.length === 0) return;
-    setActivePhotoIndex((prev) => (prev === null || prev === photos.length - 1 ? 0 : prev + 1));
+    if (carouselPhotos.length === 0) return;
+    setActivePhotoIndex((prev) => (prev === null || prev === carouselPhotos.length - 1 ? 0 : prev + 1));
   };
 
   // Keyboard arrow navigation (Left / Right / Escape)
@@ -165,7 +186,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activePhotoIndex, photos.length]);
+  }, [activePhotoIndex, carouselPhotos.length]);
 
 
   const fetchPhotos = async () => {
@@ -207,7 +228,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePhoto || !newCommentText.trim() || isSubmittingComment) return;
+    if (!activePhoto || activePhoto.driveOpenUrl || !newCommentText.trim() || isSubmittingComment) return;
 
     const guestDisplayName = authorInputName.trim() || 'Invitado Especial';
     const payload = {
@@ -358,8 +379,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     return () => window.removeEventListener('paste', handlePaste);
   }, [weddingId, authorInputName, guestName, guestCode, uploadCaption]);
 
-  const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
-  const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
 
@@ -370,12 +389,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   // Auto-play timer (slides every 4.5 seconds when active and not hovered)
   useEffect(() => {
-    if (!isAutoPlay || isHovered || photos.length <= 1 || activePhotoIndex !== null) return;
+    if (!isAutoPlay || isHovered || carouselPhotos.length <= 1 || activePhotoIndex !== null) return;
     const interval = setInterval(() => {
-      setCarouselIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+      setCarouselIndex((prev) => (prev === carouselPhotos.length - 1 ? 0 : prev + 1));
     }, 4500);
     return () => clearInterval(interval);
-  }, [isAutoPlay, isHovered, photos.length, activePhotoIndex]);
+  }, [isAutoPlay, isHovered, carouselPhotos.length, activePhotoIndex]);
+
+  useEffect(() => {
+    setCarouselIndex(0);
+    setActivePhotoIndex(null);
+  }, [weddingId, effectiveAlbumUrl]);
+
+  useEffect(() => {
+    if (carouselIndex >= carouselPhotos.length) setCarouselIndex(0);
+  }, [carouselIndex, carouselPhotos.length]);
 
   const handleImageLoad = (photoId: number, e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
@@ -386,16 +414,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   };
 
   const handlePrevCarousel = () => {
-    if (photos.length === 0) return;
-    setCarouselIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+    if (carouselPhotos.length === 0) return;
+    setCarouselIndex((prev) => (prev === 0 ? carouselPhotos.length - 1 : prev - 1));
   };
 
   const handleNextCarousel = () => {
-    if (photos.length === 0) return;
-    setCarouselIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+    if (carouselPhotos.length === 0) return;
+    setCarouselIndex((prev) => (prev === carouselPhotos.length - 1 ? 0 : prev + 1));
   };
 
-  const currentCarouselPhoto = photos[carouselIndex] || photos[0];
+  const currentCarouselPhoto = carouselPhotos[carouselIndex] || carouselPhotos[0];
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
@@ -444,7 +472,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   {effectiveAlbumTitle}
                 </div>
                 <div className={`text-[11px] truncate ${isDark ? 'text-stone-400' : 'text-amber-800/80'}`}>
-                  Fotos compartidas en la nube; las carpetas públicas de Drive también aparecen aquí
+                  {driveGallery.isDriveFolder ? 'Fotos de Drive integradas en este carrusel' : 'Álbum en la nube para ver todas las fotos compartidas'}
                 </div>
               </div>
             </div>
@@ -464,23 +492,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         )}
       </div>
 
-      {effectiveAlbumUrl && (
-        <DriveFolderPhotos
-          folderUrl={effectiveAlbumUrl}
-          title={effectiveAlbumTitle}
-          cardStyle={cardStyle}
-          eventType="xv"
-          weddingId={weddingId}
-        />
+      {driveGallery.isDriveFolder && driveGallery.error && (
+        <p role="status" className="mx-auto mb-5 max-w-2xl rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-xs text-amber-900">
+          {driveGallery.error} Puedes abrir la carpeta compartida desde el enlace anterior.
+        </p>
       )}
 
       {/* Interactive Carousel Slider Container */}
-      {loading ? (
+      {(loading || driveGallery.loading) && carouselPhotos.length === 0 ? (
         <div className={`py-20 text-center text-sm flex items-center justify-center gap-2 ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
           <Loader2 className={`w-4 h-4 animate-spin ${isDark ? 'text-[#C5A059]' : 'text-amber-700'}`} />
           <span>Cargando fotos de la galería...</span>
         </div>
-      ) : photos.length === 0 ? (
+      ) : carouselPhotos.length === 0 ? (
         <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${isDark
             ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
             : 'bg-white/70 border-[#E5E2D0] text-stone-800'
@@ -557,6 +581,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
                         {/* Top Action Bar: Likes & Comments count at top-right */}
                         <div className="flex justify-end items-center pointer-events-auto w-full">
+                          {currentCarouselPhoto.driveOpenUrl ? (
+                            <a
+                              href={currentCarouselPhoto.driveOpenUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white border border-white/20 inline-flex items-center gap-1.5"
+                            >
+                              Abrir en Drive <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          ) : (
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
@@ -581,6 +616,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               </span>
                             </button>
                           </div>
+                          )}
                         </div>
 
                         {/* Bottom Area: Animated Comments + Badge + Caption */}
@@ -618,7 +654,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           {/* Category Badge positioned nicely above caption */}
                           <div className="mb-1.5">
                             <span className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
-                              {currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Recuerdo de Mis XV'}
+                              {currentCarouselPhoto.driveOpenUrl ? 'Google Drive' : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Recuerdo de Mis XV'}
                             </span>
                           </div>
 
@@ -628,7 +664,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             </p>
                           )}
                           <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
-                            {currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de la Quinceañera'}
+                            {currentCarouselPhoto.driveOpenUrl ? 'Fotos compartidas' : currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de la Quinceañera'}
                           </p>
                         </div>
                       </div>
@@ -637,7 +673,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 </AnimatePresence>
 
             {/* Left Carousel Navigation Button */}
-            {photos.length > 1 && (
+            {carouselPhotos.length > 1 && (
               <button
                 type="button"
                 onClick={handlePrevCarousel}
@@ -649,7 +685,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             )}
 
             {/* Right Carousel Navigation Button */}
-            {photos.length > 1 && (
+            {carouselPhotos.length > 1 && (
               <button
                 type="button"
                 onClick={handleNextCarousel}
@@ -665,10 +701,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
                 <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
                 <span className="text-stone-500">/</span>
-                <span>{photos.length}</span>
+                <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
               </div>
 
-              {photos.length > 1 && (
+              {carouselPhotos.length > 1 && (
                 <button
                   type="button"
                   onClick={(e) => {
@@ -701,9 +737,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       })()}
 
           {/* Horizontal Thumbnails Strip Slider */}
-          {photos.length > 1 && (
+          {carouselPhotos.length > 1 && (
             <div className="mt-4 flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-2 no-scrollbar">
-              {photos.map((photo, idx) => (
+              {carouselPhotos.map((photo, idx) => (
                 <button
                   key={photo.id}
                   type="button"
@@ -751,6 +787,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               >
                 <Camera className="w-4 h-4" />
                 <span>Añadir Foto Oficial</span>
+              </button>
+            )}
+            {driveGallery.hasMore && (
+              <button
+                type="button"
+                onClick={() => void driveGallery.loadMore()}
+                disabled={driveGallery.loadingMore}
+                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold border transition-all disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}
+              >
+                {driveGallery.loadingMore && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Cargar más fotos de Drive
               </button>
             )}
           </div>
@@ -892,12 +939,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   {/* Top Bar Actions: High-res Download & Close Button */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
                     <a
-                      href={activePhoto.url}
+                      href={activePhoto.driveOpenUrl || activePhoto.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
                       className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-lg cursor-pointer transition-all hover:scale-105"
-                      title="Abrir imagen original"
+                      title={activePhoto.driveOpenUrl ? 'Abrir foto en Google Drive' : 'Abrir imagen original'}
                     >
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                     </a>
@@ -918,11 +965,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
                       <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
                       <span className="text-stone-500">/</span>
-                      <span>{photos.length}</span>
+                      <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
                     </div>
 
                     {/* Left Carousel Navigation Button */}
-                    {photos.length > 1 && (
+                    {carouselPhotos.length > 1 && (
                       <button
                         type="button"
                         onClick={handlePrevPhoto}
@@ -934,7 +981,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     )}
 
                     {/* Right Carousel Navigation Button */}
-                    {photos.length > 1 && (
+                    {carouselPhotos.length > 1 && (
                       <button
                         type="button"
                         onClick={handleNextPhoto}
@@ -995,7 +1042,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     </div>
 
                     {/* MOBILE FLOATING ACTION COLUMN - Directly over the photo on the right */}
-                    <div className="lg:hidden absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3 select-none">
+                    {!activePhoto.driveOpenUrl && <div className="lg:hidden absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3 select-none">
                       {/* Like Button directly over the photo */}
                       <button
                         type="button"
@@ -1037,13 +1084,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         <MessageCircle className="w-5 h-5 text-amber-400" />
                         <span className="text-[10px] font-bold mt-0.5 leading-none">{comments.length}</span>
                       </button>
-                    </div>
+                    </div>}
 
                     {/* MOBILE BOTTOM GRADIENT OVERLAY - Subtle & Elegant (Photo is the real protagonist) */}
                     <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none transition-opacity duration-300 ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
                       <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 px-4 pr-16 text-left">
                         <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
-                          {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de Mis XV'}
+                          {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de Mis XV'}
                         </span>
 
                         <h3 className="text-sm font-serif font-semibold text-white leading-snug truncate drop-shadow-md">
@@ -1057,7 +1104,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         )}
 
                         {/* Sutil Comment Preview: Only 1 compact line if there are comments */}
-                        {comments.length > 0 && (
+                        {comments.length > 0 && !activePhoto.driveOpenUrl && (
                           <div 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1072,7 +1119,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         )}
 
                         {/* Sutil Trigger: Tap to comment or view all */}
-                        <button
+                        {!activePhoto.driveOpenUrl && <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1087,14 +1134,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
                             {comments.length}
                           </span>
-                        </button>
+                        </button>}
                       </div>
                     </div>
 
                     {/* Desktop Thumbnails Carousel Bar */}
-                    {photos.length > 1 && (
+                    {carouselPhotos.length > 1 && (
                       <div className="hidden sm:flex w-full pt-2 items-center justify-center gap-2 overflow-x-auto pb-1 max-w-2xl px-4 no-scrollbar shrink-0 z-20">
-                        {photos.map((p, idx) => (
+                        {carouselPhotos.map((p, idx) => (
                           <button
                             key={p.id}
                             type="button"
@@ -1113,7 +1160,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                   {/* MOBILE COMMENTS SLIDE-UP SHEET (Translucent Frosted Glass, Non-intrusive) */}
                   <AnimatePresence>
-                    {mobileCommentsOpen && (
+                    {mobileCommentsOpen && !activePhoto.driveOpenUrl && (
                       <>
                         {/* Tap backdrop to close */}
                         <div 
@@ -1241,11 +1288,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   </AnimatePresence>
 
                   {/* DESKTOP SIDEBAR PANEL - 100% full experience on desktop */}
-                  <div className="hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
+                  <div className={activePhoto.driveOpenUrl ? 'hidden' : 'hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden'}>
                     {/* Header & Photo Title */}
                     <div className="p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0">
                       <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
-                        {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de Mis XV'}
+                        {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de Mis XV'}
                       </span>
                       <h3 className="text-xl font-serif font-semibold text-white leading-snug">
                         {activePhoto.caption || 'Recuerdo de Mis Quince Años'}
@@ -1327,7 +1374,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         </button>
 
                         <a
-                          href={activePhoto.url}
+                          href={activePhoto.driveOpenUrl || activePhoto.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           download

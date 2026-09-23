@@ -808,7 +808,6 @@ async function startServer() {
     }
 
     const driveUrl = new URL('https://www.googleapis.com/drive/v3/files');
-    driveUrl.searchParams.set('key', apiKey);
     driveUrl.searchParams.set('q', `'${folderId}' in parents and trashed = false and mimeType contains 'image/'`);
     driveUrl.searchParams.set('pageSize', '100');
     driveUrl.searchParams.set('orderBy', 'createdTime desc');
@@ -817,7 +816,7 @@ async function startServer() {
     driveUrl.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,thumbnailLink,resourceKey,createdTime)');
     if (pageToken) driveUrl.searchParams.set('pageToken', pageToken);
 
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
     if (resourceKey) headers['X-Goog-Drive-Resource-Keys'] = `${folderId}/${resourceKey}`;
 
     try {
