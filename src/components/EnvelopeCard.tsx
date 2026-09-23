@@ -641,7 +641,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </div>
 
           {/* Ordered flexible cards keep the integrated gallery at its selected position. */}
-          <div className="flex flex-col md:flex-row md:flex-wrap gap-8 text-left my-8 items-start">
+          <div className="flex flex-col md:flex-row md:flex-wrap justify-center gap-8 text-left my-8 items-start">
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
