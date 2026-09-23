@@ -306,7 +306,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               {/* Upload Custom Audio */}
               <div className="pt-4 border-t border-[#E5E2D0]">
                 <label className="text-[10px] font-bold text-[#5A5A40] uppercase tracking-widest block mb-2">
-                  O subir canción propia (MP3, WAV, M4A)
+                  O subir canción propia (MP3, M4A/AAC, OGG/Opus, WebM/Opus, WAV, FLAC)
                 </label>
                 <input
                   type="text"
@@ -336,12 +336,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                           ⚡ Auto-optimización en Frontend
                         </span>
                       </div>
-                      <span className="text-[10px] text-[#7D8C7A] mt-1 font-mono">Máx. 25MB (se procesa en el cliente)</span>
+                      <span className="text-[10px] text-[#7D8C7A] mt-1 font-mono">Máx. 25 MB · la reproducción depende del navegador</span>
                     </>
                   )}
                   <input
                     type="file"
-                    accept="audio/*"
+                    accept="audio/*,.mp3,.m4a,.mp4,.aac,.wav,.wave,.ogg,.oga,.opus,.webm,.weba,.flac"
                     onChange={handleFileUpload}
                     disabled={uploading || isOptimizing}
                     className="hidden"
@@ -379,4 +379,3 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     </>
   );
 };
-

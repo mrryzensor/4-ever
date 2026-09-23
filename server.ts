@@ -70,6 +70,23 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const AUDIO_MIME_TYPES: Record<string, string> = {
+  '.aac': 'audio/aac',
+  '.aif': 'audio/aiff',
+  '.aiff': 'audio/aiff',
+  '.flac': 'audio/flac',
+  '.m4a': 'audio/mp4',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'audio/mp4',
+  '.oga': 'audio/ogg',
+  '.ogg': 'audio/ogg',
+  '.opus': 'audio/ogg; codecs=opus',
+  '.wav': 'audio/wav',
+  '.wave': 'audio/wav',
+  '.webm': 'audio/webm',
+  '.weba': 'audio/webm',
+};
+
 // Multer storage for audio, images, and guest photo uploads
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
@@ -1744,7 +1761,7 @@ async function startServer() {
         const stat = fs.statSync(localPath);
         const total = stat.size;
         const ext = path.extname(localPath).toLowerCase();
-        const mimeType = ext === '.ogg' ? 'audio/ogg' : ext === '.wav' ? 'audio/wav' : ext === '.m4a' || ext === '.mp4' ? 'audio/mp4' : 'audio/mpeg';
+        const mimeType = AUDIO_MIME_TYPES[ext] || 'application/octet-stream';
 
         const range = req.headers.range;
         if (range) {
