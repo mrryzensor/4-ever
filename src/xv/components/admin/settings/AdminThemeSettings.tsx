@@ -209,6 +209,29 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           />
         </div>
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#E5E2D0] pt-4">
+        <div className="sm:col-span-2">
+          <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">Texto de confirmación RSVP:</label>
+          <textarea
+            value={settings.rsvpDeadlineMessage || ''}
+            onChange={(e) => onChange({ rsvpDeadlineMessage: e.target.value })}
+            placeholder="Por favor confirma tu asistencia antes del {date}."
+            rows={2}
+            className="w-full resize-y bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+          />
+          <span className="mt-1 block text-[10px] text-[#7D8C7A]">Usa {'{date}'} o {'{fecha}'} para insertar la fecha límite automáticamente.</span>
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">Texto del botón RSVP:</label>
+          <input
+            type="text"
+            value={settings.rsvpButtonText || ''}
+            onChange={(e) => onChange({ rsvpButtonText: e.target.value })}
+            placeholder="Confirmar asistencia"
+            className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+          />
+        </div>
+      </div>
     </div>
   );
 };

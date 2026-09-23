@@ -31,7 +31,8 @@ import {
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
-import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
+import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
+import { formatHeroDate, formatRsvpDeadlineMessage, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
   AnimatedWeddingRings,
@@ -125,6 +126,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     fontDisplay: fontTheme.fontDisplay,
     fontBody: fontTheme.fontBody,
   };
+  const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
   const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
     ? (settings.colorPaletteStyle === 'dark-luxury' || settings.colorPaletteStyle === 'royal-navy' || settings.colorPaletteStyle === 'emerald-botanical')
     : (settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical');
@@ -382,7 +384,38 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const currentCoverImage = heroPhotoList[activeHeroPhotoIndex] || heroPhotoList[0];
 
   const scrollToContent = () => (document.getElementById('detalles-xv') || document.getElementById('detalles-boda'))?.scrollIntoView({ behavior: 'smooth' });
-  const renderCourtCard = () => <HeroCourtCard settings={settings} theme={theme} eventType="xv" />;
+  const familyPlacement = settings.heroCourtPlacement || 'hero';
+  const renderCourtCard = () => familyPlacement === 'hero'
+    ? <HeroCourtCard settings={settings} theme={theme} eventType="xv" />
+    : null;
+  const renderFamilyPage = () => (
+    <section
+      id="familia-de-honor"
+      className="relative left-1/2 z-10 flex min-h-screen w-screen max-w-none -translate-x-1/2 items-center justify-center px-4 py-16 sm:py-20"
+      style={{ backgroundColor: theme.bgHex }}
+    >
+      <HeroCourtCard settings={settings} theme={theme} eventType="xv" />
+    </section>
+  );
+  const renderCountdownPage = () => (
+    <section
+      id="cuenta-regresiva"
+      className="relative z-10 flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-16 sm:py-20"
+      style={{ backgroundColor: theme.bgHex }}
+    >
+      <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={18} />
+      <div className="relative z-10 w-full">
+        <AnimatedCountdown
+          settings={settings}
+          guest={guest}
+          cardStyle={settings.cardStyle}
+          customStyle={settings.countdownStyle}
+          customTitle={settings.countdownTitle}
+          showGuestsBadge={settings.showCountdownGuestsBadge}
+        />
+      </div>
+    </section>
+  );
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
@@ -460,10 +493,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <p className="text-base sm:text-xl font-serif italic text-white/95 leading-relaxed drop-shadow-md">{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>
             {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
-            {settings.heroShowRsvpButton && (
+            {settings.heroShowRsvpButton && settings.showRsvpSection !== false && onOpenRsvp && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex gap-3 mt-6">
                 <button onClick={onOpenRsvp} className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-serif font-semibold text-sm uppercase shadow-xl hover:brightness-110 transition-all flex items-center gap-2">
-                  <Heart className="w-4 h-4 fill-white" /> Confirmar Asistencia
+                  <Heart className="w-4 h-4 fill-white" /> {settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
                 </button>
               </motion.div>
             )}
@@ -474,6 +507,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </motion.div>
         </motion.div>
       </div>
+
+      {(familyPlacement === 'after-hero' || (familyPlacement === 'after-countdown' && settings.showCountdown === false)) && renderFamilyPage()}
+      {settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderCountdownPage()}
+      {familyPlacement === 'after-countdown' && settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderFamilyPage()}
 
       {/* 2. INVITATION DETAILS SECTION - FUSED INTERACTIVE SECTION WITH INLINE EXPANSIONS */}
       <section
@@ -492,7 +529,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
         <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto text-center overflow-visible">
           {/* Animated SVG Countdown Section sitting right on the transition wave */}
-          {settings.showCountdown !== false && (
+          {settings.showCountdown !== false && settings.countdownPlacement !== 'after-hero' && (
             <div className="-mt-28 sm:-mt-36 md:-mt-44 mb-6 sm:mb-12 relative z-20 flex justify-center">
               <AnimatedCountdown
                 settings={settings}
@@ -504,6 +541,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               />
             </div>
           )}
+          {familyPlacement === 'after-countdown' && settings.countdownPlacement !== 'after-hero' && settings.showCountdown !== false && renderFamilyPage()}
 
           {/* Section Header: Story & Quote Banner */}
           <div className="mb-8 sm:mb-12 flex flex-col items-center overflow-visible">
@@ -545,6 +583,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('ceremony')}
+              style={{ order: detailSectionOrder.indexOf('ceremony'), display: settings.showLocations === false ? 'none' : undefined }}
               className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -574,7 +613,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </div>
 
               {/* Action Toolbar */}
-              <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between gap-2">
+              <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -652,6 +691,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('reception')}
+              style={{ order: detailSectionOrder.indexOf('reception'), display: settings.showLocations === false ? 'none' : undefined }}
               className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -698,6 +738,22 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <span>{expandedSection === 'reception' ? 'Ocultar Mapa' : 'Ver Mapa y Rutas'}</span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'reception' ? 'rotate-180' : ''}`} />
                 </button>
+
+                {settings.showRsvpSection !== false && onOpenRsvp && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenRsvp();
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                      isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
+                    }`}
+                  >
+                    <Heart className="h-3.5 w-3.5 fill-current" />
+                    {settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
+                  </button>
+                )}
 
                 {settings.receptionMapsUrl && (
                   <a
@@ -757,6 +813,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 onClick={() => toggleSection('itinerary')}
+                style={{ order: detailSectionOrder.indexOf('itinerary') }}
                 className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
@@ -898,6 +955,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry !== false && (
               <div
                 onClick={() => toggleSection('gifts')}
+                style={{ order: detailSectionOrder.indexOf('gifts') }}
                 className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
@@ -1055,6 +1113,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               onClick={() => toggleSection('dresscode')}
+              style={{ order: detailSectionOrder.indexOf('dress-code') }}
               className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -1262,7 +1321,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 </AnimatePresence>
 
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40">
-                  Favor de confirmar asistencia antes del <strong>{settings.rsvpDeadline || '15 de Noviembre'}</strong>
+                  {formatRsvpDeadlineMessage(settings.rsvpDeadlineMessage, settings.rsvpDeadline)}
                 </p>
               </div>
             </div>
@@ -1272,6 +1331,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               onClick={() => toggleSection('tips')}
+              style={{ order: detailSectionOrder.indexOf('tips') }}
               className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Guest, WeddingSettings } from '../types.ts';
 import { DEMO_GUESTS } from '../data/demoGuests.ts';
+import { formatRsvpDeadlineMessage } from '../lib/dateFormatters.ts';
 
 // Helper for comprehensive fuzzy/multi-token matching
 const matchGuestTokens = (guest: Guest, search: string) => {
@@ -321,8 +322,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             color={activeTheme.accentColorHex}
           />
 
-          <p className={`text-sm sm:text-base font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-            Por favor confírmanos tu asistencia antes del <strong className="font-semibold">{settings.rsvpDeadline || 'la fecha límite'}</strong> para coordinar todos los preparativos de la recepción.
+          <p className={`whitespace-pre-line text-sm sm:text-base font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+            {formatRsvpDeadlineMessage(settings.rsvpDeadlineMessage, settings.rsvpDeadline)}
           </p>
         </div>
 

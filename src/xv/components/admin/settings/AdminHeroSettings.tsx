@@ -776,7 +776,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </p>
 
             {/* Names */}
-            {settings.heroCourtPosition === 'above-names' && (
+            {settings.heroCourtPlacement !== 'after-hero' && settings.heroCourtPlacement !== 'after-countdown' && settings.heroCourtPosition === 'above-names' && (
               <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
             )}
             <h2 className="text-2xl sm:text-4xl font-serif italic text-white tracking-tight drop-shadow-lg">
@@ -784,7 +784,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </h2>
 
             {/* Familia, padrinos y testigos con el mismo tema que la invitación */}
-            {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && (
+            {settings.heroCourtPlacement !== 'after-hero' && settings.heroCourtPlacement !== 'after-countdown' && (!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && (
               <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
             )}
 
@@ -809,7 +809,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 </p>
               )}
             </div>
-            {settings.heroCourtPosition === 'below-quote' && (
+            {settings.heroCourtPlacement !== 'after-hero' && settings.heroCourtPlacement !== 'after-countdown' && settings.heroCourtPosition === 'below-quote' && (
               <HeroCourtCard settings={settings} theme={miniCourtTheme} eventType="xv" compact />
             )}
           </div>
@@ -903,6 +903,23 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
             {/* Padrinos en Portada (Opcional) */}
             <div className="sm:col-span-2 p-4 bg-[#FAF9F0] rounded-2xl border border-[#E5E2D0] space-y-3">
+              <div>
+                <label className="text-[11px] font-semibold text-[#5A5A40] block mb-1">
+                  Dónde mostrar padres, padrinos y testigos:
+                </label>
+                <select
+                  value={settings.heroCourtPlacement || 'hero'}
+                  onChange={(e) => onChange({ heroCourtPlacement: e.target.value as WeddingSettings['heroCourtPlacement'] })}
+                  className="w-full rounded-xl border border-[#E5E2D0] bg-white px-3 py-2 text-xs text-stone-800 outline-none focus:border-[#5A5A40]"
+                >
+                  <option value="hero">En la portada (posición elegida arriba)</option>
+                  <option value="after-countdown">En una página después del contador</option>
+                  <option value="after-hero">En una página justo después del Hero</option>
+                </select>
+                <span className="mt-1 block text-[9px] text-[#7D8C7A]">
+                  Si el contador está oculto, “después del contador” se mostrará después del Hero.
+                </span>
+              </div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-xl bg-white border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] shadow-2xs">
@@ -1003,6 +1020,17 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
         {settings.showCountdown !== false && (
           <div className="space-y-4 pt-1">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#1a1a1a]">Ubicación del contador:</label>
+              <select
+                value={settings.countdownPlacement || 'transition'}
+                onChange={(e) => onChange({ countdownPlacement: e.target.value as WeddingSettings['countdownPlacement'] })}
+                className="w-full rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] px-3.5 py-2.5 text-xs text-stone-800 outline-none focus:border-[#5A5A40]"
+              >
+                <option value="transition">Sobre la transición entre portada e información</option>
+                <option value="after-hero">En una sección completa después del Hero</option>
+              </select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-[#1a1a1a] block mb-1.5">

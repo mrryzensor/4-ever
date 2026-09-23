@@ -1921,6 +1921,31 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+                  Texto mostrado antes del formulario
+                </label>
+                <textarea
+                  value={settings.rsvpDeadlineMessage || ''}
+                  onChange={(e) => onChange({ rsvpDeadlineMessage: e.target.value })}
+                  placeholder="Confirma tu asistencia antes del {date}."
+                  rows={2}
+                  className="w-full resize-y px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white text-xs text-stone-800"
+                />
+                <span className="mt-1 block text-[10px] text-stone-500">{'{date}'} o {'{fecha}'} se sustituye por la fecha límite elegida.</span>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Texto del botón</label>
+                <input
+                  type="text"
+                  value={settings.rsvpButtonText || ''}
+                  onChange={(e) => onChange({ rsvpButtonText: e.target.value })}
+                  placeholder="Confirmar asistencia"
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white text-xs text-stone-800"
+                />
+              </div>
+            </div>
           </div>
         )}
 

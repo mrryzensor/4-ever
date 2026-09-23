@@ -71,6 +71,18 @@ export interface UserProfile {
 
 export type EventType = 'bodas' | 'xv';
 
+export type LandingSectionId = 'invitation' | 'gallery' | 'video' | 'hotels' | 'guestbook' | 'rsvp';
+export type DetailSectionId = 'ceremony' | 'reception' | 'itinerary' | 'gifts' | 'dress-code' | 'tips';
+
+export interface HotelRecommendation {
+  name: string;
+  address?: string;
+  mapsUrl?: string;
+  bookingUrl?: string;
+  phone?: string;
+  notes?: string;
+}
+
 export interface WeddingSettings {
   id: number;
   eventType?: EventType; // 'bodas' | 'xv' (defaults to 'bodas')
@@ -150,11 +162,13 @@ export interface WeddingSettings {
   heroWitnesses?: string; // e.g. 'David Ruiz & Andrea Morales'
   // Ubicación y Título de la tarjeta de Cortejo / Familia en Hero
   heroCourtPosition?: 'below-names' | 'above-names' | 'below-quote'; // Posición del card en el Hero
+  heroCourtPlacement?: 'hero' | 'after-hero' | 'after-countdown';
   heroCourtTitle?: string; // Título superior del card (e.g. 'Con la bendición de Dios y de nuestras familias')
   // Countdown Settings
   showCountdown?: boolean; // Mostrar contador regresivo animado en la transición de portada
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.
   countdownTitle?: string; // 'Faltan' | 'Falta' | 'Sólo faltan' | 'Mis XV Años' | etc.
+  countdownPlacement?: 'transition' | 'after-hero';
   showCountdownGuestsBadge?: boolean; // Mostrar placa de invitados y acompañantes bajo el contador
   // Modular Style Mix & Match Settings (Modo Avanzado / Atelier)
   colorPaletteStyle?: string; // 'auto' | CardStyleId - Paleta cromática adoptada
@@ -179,10 +193,16 @@ export interface WeddingSettings {
   showVideoMemories?: boolean; // Recuerdos en video
   showGuestbook?: boolean; // Libro de firmas y deseos
   showHotels?: boolean; // Hospedaje y hoteles recomendados
+  hotelsTitle?: string;
+  hotelRecommendations?: string; // JSON array of HotelRecommendation
+  landingSectionOrder?: string; // JSON array of LandingSectionId
+  detailSectionOrder?: string; // JSON array of DetailSectionId
   showTips?: boolean; // Tips & Recomendaciones para invitados
   tipsTitle?: string; // Título de la sección de tips
   tipsList?: WeddingTipItem[] | string; // Lista de tips configurables
   showRsvpSection?: boolean; // Confirmación de asistencia
+  rsvpDeadlineMessage?: string; // Supports {date} placeholder
+  rsvpButtonText?: string;
   // Bank Account & Transfer Quick Settings (Perú & Latam)
   bankName?: string;
   bankBeneficiary?: string;

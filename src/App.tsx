@@ -26,7 +26,7 @@ import {
   Maximize2,
   Minimize2
 } from 'lucide-react';
-import { WeddingSettings, Guest, UserProfile, PlanId } from './types.ts';
+import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId } from './types.ts';
 import { AudioPlayer } from './components/AudioPlayer.tsx';
 import { EnvelopeCard } from './components/EnvelopeCard.tsx';
 import { RsvpSection } from './components/RsvpSection.tsx';
@@ -36,6 +36,7 @@ import { ItinerarySection } from './components/ItinerarySection.tsx';
 import { DressCodeSection } from './components/DressCodeSection.tsx';
 import { LocationsSection } from './components/LocationsSection.tsx';
 import { GiftRegistrySection } from './components/GiftRegistrySection.tsx';
+import { HotelsSection } from './components/HotelsSection.tsx';
 import { GuestbookSection } from './components/GuestbookSection.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { LandingPage } from './components/LandingPage.tsx';
@@ -70,6 +71,7 @@ import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
 import { formatHeroDate } from './lib/dateFormatters.ts';
 import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
+import { getLandingSectionOrder } from './lib/sectionOrder.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 import { CardStyle } from './types.ts';
 
@@ -1150,6 +1152,74 @@ export default function App() {
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
   const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !isPreviewEmbed;
+  const openInlineRsvp = () => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' });
+  const handleRsvpSuccess = (updated: Guest) => {
+    setActiveGuest(updated);
+    if (settings.id && updated) {
+      try {
+        localStorage.setItem(`rsvp_guest_${settings.id}`, JSON.stringify(updated));
+      } catch (error) {
+        console.warn('Could not save guest to localStorage:', error);
+      }
+    }
+  };
+
+  const landingSections: Record<LandingSectionId, React.ReactNode> = {
+    invitation: (
+      <section id="seccion-invitacion" key="invitation">
+        {settingsEventCategory === 'xv' ? (
+          <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} />
+        ) : (
+          <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} />
+        )}
+      </section>
+    ),
+    gallery: settings.showPhotoGallery !== false ? (
+      settingsEventCategory === 'xv' ? (
+        <XvPhotoGallery
+          key="gallery"
+          weddingId={settings.id}
+          guestName={activeGuest?.fullName}
+          guestCode={activeGuest?.accessCode}
+          cardStyle={settings.cardStyle}
+          isAdmin={!isDemoMode && Boolean(currentUser)}
+          settings={settings}
+        />
+      ) : (
+        <PhotoGallery
+          key="gallery"
+          weddingId={settings.id}
+          guestName={activeGuest?.fullName}
+          guestCode={activeGuest?.accessCode}
+          cardStyle={settings.cardStyle}
+          isAdmin={!isDemoMode && Boolean(currentUser)}
+          settings={settings}
+        />
+      )
+    ) : null,
+    video: settings.showVideoMemories === true ? (
+      settingsEventCategory === 'xv' ? (
+        <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} />
+      ) : (
+        <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} />
+      )
+    ) : null,
+    hotels: <HotelsSection key="hotels" settings={settings} eventType={settingsEventCategory} />,
+    rsvp: settings.showRsvpSection !== false ? (
+      settingsEventCategory === 'xv' ? (
+        <XvRsvpSection key="rsvp" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} />
+      ) : (
+        <RsvpSection key="rsvp" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} />
+      )
+    ) : null,
+    guestbook: settings.showGuestbook === true ? (
+      settingsEventCategory === 'xv' ? (
+        <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} />
+      ) : (
+        <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} />
+      )
+    ) : null,
+  };
 
   return (
     <div
@@ -1279,122 +1349,10 @@ export default function App() {
         />
       )}
 
-      {/* Hero / Main Envelope Section - Full Viewport Landing Flow with Fused Interactive Details */}
       <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
-        {/* 1. Portada, sobre interactivo y Sección de Detalles Fusionada (Ceremonia, Fiesta, Itinerario, DressCode, Regalos con detalles inline) */}
-        {settingsEventCategory === 'xv' ? (
-          <XvEnvelopeCard
-            settings={settings}
-            guest={activeGuest}
-            onOpenRsvp={() => {
-              const el = document.getElementById('rsvp');
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          />
-        ) : (
-          <EnvelopeCard
-            settings={settings}
-            guest={activeGuest}
-            onOpenRsvp={() => {
-              const el = document.getElementById('rsvp');
-              if (el) {
-                el.scrollIntoView({ behavior: 'smooth' });
-              }
-            }}
-          />
-        )}
-
-        {/* 2. Galería Interactiva de Fotos */}
-        {settings.showPhotoGallery !== false && (
-          settingsEventCategory === 'xv' ? (
-            <XvPhotoGallery
-              weddingId={settings.id}
-              guestName={activeGuest?.fullName}
-              guestCode={activeGuest?.accessCode}
-              cardStyle={settings.cardStyle}
-              isAdmin={!isDemoMode && Boolean(currentUser)}
-              settings={settings}
-            />
-          ) : (
-            <PhotoGallery
-              weddingId={settings.id}
-              guestName={activeGuest?.fullName}
-              guestCode={activeGuest?.accessCode}
-              cardStyle={settings.cardStyle}
-              isAdmin={!isDemoMode && Boolean(currentUser)}
-              settings={settings}
-            />
-          )
-        )}
-
-        {/* Video Memories Section (Opcional) */}
-        {settings.showVideoMemories === true && (
-          settingsEventCategory === 'xv' ? (
-            <XvVideoSection
-              weddingId={settings.id}
-              isAdmin={!isDemoMode && Boolean(currentUser)}
-              cardStyle={settings.cardStyle}
-            />
-          ) : (
-            <VideoSection
-              weddingId={settings.id}
-              isAdmin={!isDemoMode && Boolean(currentUser)}
-              cardStyle={settings.cardStyle}
-            />
-          )
-        )}
-
-        {/* 7. Confirmación de Asistencia Inline (Amplio, elegante, sin modales) */}
-        {settingsEventCategory === 'xv' ? (
-          <XvRsvpSection
-            initialGuest={activeGuest}
-            settings={settings}
-            onRsvpSuccess={(updated) => {
-              setActiveGuest(updated);
-              if (settings?.id && updated) {
-                try {
-                  localStorage.setItem(`rsvp_guest_${settings.id}`, JSON.stringify(updated));
-                } catch (e) {
-                  console.warn('Could not save guest to localStorage:', e);
-                }
-              }
-            }}
-          />
-        ) : (
-          <RsvpSection
-            initialGuest={activeGuest}
-            settings={settings}
-            onRsvpSuccess={(updated) => {
-              setActiveGuest(updated);
-              if (settings?.id && updated) {
-                try {
-                  localStorage.setItem(`rsvp_guest_${settings.id}`, JSON.stringify(updated));
-                } catch (e) {
-                  console.warn('Could not save guest to localStorage:', e);
-                }
-              }
-            }}
-          />
-        )}
-
-        {/* Guestbook & Wishes (Opcional - por defecto desactivado en modo simple) */}
-        {settings.showGuestbook === true && (
-          settingsEventCategory === 'xv' ? (
-            <XvGuestbookSection
-              weddingId={settings.id}
-              defaultAuthor={activeGuest?.fullName}
-              cardStyle={settings.cardStyle}
-            />
-          ) : (
-            <GuestbookSection
-              weddingId={settings.id}
-              defaultAuthor={activeGuest?.fullName}
-              cardStyle={settings.cardStyle}
-            />
-          )
-        )}
+        {getLandingSectionOrder(settings.landingSectionOrder).map((sectionId) => (
+          <React.Fragment key={sectionId}>{landingSections[sectionId]}</React.Fragment>
+        ))}
       </main>
 
       {/* Scroll to top button */}

@@ -199,6 +199,15 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_position TEXT DEFAULT 'below-names';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_title TEXT DEFAULT 'Con la bendición de Dios y de nuestras familias';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_placement TEXT DEFAULT 'hero';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS countdown_placement TEXT DEFAULT 'transition';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_hotels BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hotels_title TEXT DEFAULT 'Hospedaje recomendado';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hotel_recommendations TEXT DEFAULT '[]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS landing_section_order TEXT DEFAULT '["invitation","gallery","video","hotels","guestbook","rsvp"]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS detail_section_order TEXT DEFAULT '["ceremony","reception","itinerary","gifts","dress-code","tips"]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_deadline_message TEXT DEFAULT 'Por favor confirma tu asistencia antes del {date}.';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_text TEXT DEFAULT 'Confirmar asistencia';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

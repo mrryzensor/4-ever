@@ -766,9 +766,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           {/* Rendered Hero hierarchy */}
           {(() => {
             const miniCourtTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-            const renderMiniCourtCard = () => (
-              <HeroCourtCard settings={settings} theme={miniCourtTheme} compact />
-            );
+            const renderMiniCourtCard = () => settings.heroCourtPlacement && settings.heroCourtPlacement !== 'hero'
+              ? null
+              : <HeroCourtCard settings={settings} theme={miniCourtTheme} compact />;
 
             return (
               <div className="relative z-10 py-6 text-center flex flex-col items-center justify-center space-y-3">
@@ -919,7 +919,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                       Cortejo, Familia & Padrinos en Portada (Hero)
                     </span>
                     <span className="text-[10px] text-[#7D8C7A]">
-                      Opcional y exclusivo para bodas • Despliega con distinción ornamental bajo los novios
+                      Opcional para bodas y XV • Puedes destacarlos en la portada o en una sección propia
                     </span>
                   </div>
                 </div>
@@ -988,6 +988,26 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   />
                   <span className="text-[9px] text-[#7D8C7A] mt-1 block">
                     Encabezado dorado que corona la tarjeta en portada
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3.5 p-3.5 bg-white rounded-xl border border-[#E5E2D0] shadow-2xs">
+                <div>
+                  <label className="text-[11px] font-bold text-[#1a1a1a] block mb-1">
+                    Dónde mostrar padres, padrinos y testigos:
+                  </label>
+                  <select
+                    value={settings.heroCourtPlacement || 'hero'}
+                    onChange={(e) => onChange({ heroCourtPlacement: e.target.value as WeddingSettings['heroCourtPlacement'] })}
+                    className="w-full rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] px-3 py-2 text-xs text-stone-800 outline-none focus:border-[#5A5A40]"
+                  >
+                    <option value="hero">En la portada (posición elegida arriba)</option>
+                    <option value="after-countdown">En una página después del contador</option>
+                    <option value="after-hero">En una página justo después del Hero</option>
+                  </select>
+                  <span className="mt-1 block text-[9px] text-[#7D8C7A]">
+                    Si el contador está oculto, “después del contador” se mostrará justo después del Hero.
                   </span>
                 </div>
               </div>
@@ -1215,6 +1235,17 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
         {settings.showCountdown !== false && (
           <div className="space-y-4 pt-1">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-[#1a1a1a]">Ubicación del contador:</label>
+              <select
+                value={settings.countdownPlacement || 'transition'}
+                onChange={(e) => onChange({ countdownPlacement: e.target.value as WeddingSettings['countdownPlacement'] })}
+                className="w-full rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] px-3.5 py-2.5 text-xs text-stone-800 outline-none focus:border-[#5A5A40]"
+              >
+                <option value="transition">Sobre la transición entre portada e información</option>
+                <option value="after-hero">En una sección completa después del Hero</option>
+              </select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-[#1a1a1a] block mb-1.5">

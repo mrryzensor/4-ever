@@ -11,8 +11,11 @@ import {
   MessageSquareHeart,
   CheckCircle,
   Lightbulb,
+  Building2,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
+import { AdminSectionOrder } from './AdminSectionOrder.tsx';
+import { AdminHotelsSettings } from './AdminHotelsSettings.tsx';
 
 interface AdminSectionTogglesProps {
   settings: WeddingSettings;
@@ -32,6 +35,7 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
       showPhotoGallery: true,
       showVideoMemories: true,
       showGuestbook: true,
+      showHotels: true,
       showRsvpSection: true,
     });
   };
@@ -45,6 +49,7 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
       showPhotoGallery: false,
       showVideoMemories: false,
       showGuestbook: false,
+      showHotels: false,
       showRsvpSection: true,
     });
   };
@@ -326,7 +331,34 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
             </p>
           </div>
         </label>
+
+        {/* 10. Hoteles */}
+        <label
+          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+            settings.showHotels === true
+              ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
+              : 'bg-white border-[#E5E2D0] opacity-60 hover:opacity-100'
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={settings.showHotels === true}
+            onChange={(e) => onChange({ showHotels: e.target.checked })}
+            className="mt-0.5 w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer shrink-0"
+          />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-[#5A5A40]" />
+              <span className="text-xs font-bold text-[#1a1a1a]">Hoteles y hospedaje</span>
+            </div>
+            <p className="text-[10px] text-[#7D8C7A] mt-0.5 leading-snug">
+              Recomendaciones, ubicación y enlaces de reserva.
+            </p>
+          </div>
+        </label>
       </div>
+      <AdminSectionOrder settings={settings} onChange={onChange} />
+      <AdminHotelsSettings settings={settings} onChange={onChange} />
     </div>
   );
 };

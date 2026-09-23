@@ -288,3 +288,12 @@ export function formatHeroDate(
     return '28.11.2026';
   }
 }
+
+export function formatRsvpDeadlineMessage(message: string | undefined, deadline: string | undefined): string {
+  const formattedDate = deadline ? formatHeroDate(deadline, 'literal-short') : '';
+  const fallback = formattedDate
+    ? `Por favor confirma tu asistencia antes del ${formattedDate}.`
+    : 'Por favor confirma tu asistencia.';
+  const template = message?.trim() || fallback;
+  return template.replace(/\{(?:date|fecha)\}/gi, formattedDate || 'la fecha límite');
+}
