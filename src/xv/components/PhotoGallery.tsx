@@ -5,7 +5,6 @@ import {
   Camera,
   Heart,
   ExternalLink,
-  Globe,
   Loader2,
   X,
   Sparkles,
@@ -91,12 +90,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   guestCode = '',
   cardStyle = 'classic-gold',
   externalAlbumUrl,
-  externalAlbumTitle,
   isAdmin = false,
   settings,
 }) => {
   const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
-  const effectiveAlbumTitle = externalAlbumTitle || settings?.galleryExternalAlbumTitle || 'Álbum Fotográfico Completo';
   const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
   const drivePhotoSelectionMode = settings?.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
   const drivePhotoSelectionIds = useMemo(() => {
@@ -651,49 +648,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           Desliza o usa los botones para revivir mi sesión de fotos de quince años y mis recuerdos favoritos.
         </p>
 
-        {/* External Cloud Album Banner (Google Photos, Apple Photos, Drive, etc.) */}
-        {effectiveAlbumUrl && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`mt-6 max-w-lg mx-auto rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs border ${isDark
-                ? 'bg-[#282B25] border-[#C5A059]/40 text-stone-100'
-                : 'bg-amber-50/90 border-amber-300/80 text-amber-950'
-              }`}
-          >
-            <div className="flex items-center gap-3 text-left">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? 'bg-[#C5A059]/20 text-[#C5A059]' : 'bg-amber-200/80 text-amber-900'
-                }`}>
-                <Globe className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <div className={`text-xs font-serif font-bold truncate ${isDark ? 'text-[#FDFCF0]' : 'text-amber-950'}`}>
-                  {effectiveAlbumTitle}
-                </div>
-                <div className={`text-[11px] truncate ${isDark ? 'text-stone-400' : 'text-amber-800/80'}`}>
-                  {driveGallery.isDriveFolder ? 'Fotos de Drive integradas en este carrusel' : 'Álbum en la nube para ver todas las fotos compartidas'}
-                </div>
-              </div>
-            </div>
-            <a
-              href={effectiveAlbumUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 shadow-xs transition-colors ${isDark
-                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
-                  : 'bg-amber-800 hover:bg-amber-900 text-amber-50'
-                }`}
-            >
-              <span>Abrir Álbum</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </motion.div>
-        )}
       </div>
 
       {driveGallery.isDriveFolder && driveGallery.error && (
         <p role="status" className="mx-auto mb-5 max-w-2xl rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-center text-xs text-amber-900">
-          {driveGallery.error} Puedes abrir la carpeta compartida desde el enlace anterior.
+          {driveGallery.error}
         </p>
       )}
 

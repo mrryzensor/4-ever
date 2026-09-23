@@ -641,14 +641,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </p>
           </div>
 
-          {/* FUSED INTERACTIVE CARDS GRID - items-start ensures expanding one card only expands that single card without stretching siblings */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left my-8 items-start">
+          {/* Ordered flexible cards keep the integrated gallery at its selected position. */}
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-8 text-left my-8 items-start">
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('ceremony')}
               style={{ order: detailSectionOrder.indexOf('ceremony') * 2, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -756,7 +756,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             <div
               onClick={() => toggleSection('reception')}
               style={{ order: detailSectionOrder.indexOf('reception') * 2, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -878,7 +878,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div
                 onClick={() => toggleSection('itinerary')}
                 style={{ order: detailSectionOrder.indexOf('itinerary') * 2 }}
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
@@ -1020,7 +1020,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div
                 onClick={() => toggleSection('gifts')}
                 style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
@@ -1178,7 +1178,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             <div
               onClick={() => toggleSection('dresscode')}
               style={{ order: detailSectionOrder.indexOf('dress-code') * 2 }}
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -1396,7 +1396,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             <div
               onClick={() => toggleSection('tips')}
               style={{ order: detailSectionOrder.indexOf('tips') * 2 }}
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -1490,8 +1490,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           )}
           {inlineGallery && settings.showPhotoGallery !== false && (
             <div
-              style={{ order: (detailSectionOrder.indexOf(settings.galleryAfterDetailSection || 'reception') * 2) + 1, gridColumn: '1 / -1' }}
-              className="w-full min-w-0"
+              style={{ order: (detailSectionOrder.indexOf(settings.galleryAfterDetailSection || 'reception') * 2) + 1 }}
+              className="w-full md:basis-full min-w-0"
             >
               {inlineGallery}
             </div>

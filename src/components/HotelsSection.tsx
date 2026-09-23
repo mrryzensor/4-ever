@@ -67,11 +67,11 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
           </p>
         </header>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap justify-center gap-4">
           {hotels.map((hotel, index) => (
             <article
               key={`${hotel.name}-${index}`}
-              className={`flex h-full flex-col rounded-3xl border p-5 shadow-sm ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || ''}`}
+              className={`w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333333%-0.667rem)] flex h-full flex-col rounded-3xl border p-5 shadow-sm ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || ''}`}
             >
               <div className="mb-4 flex items-start gap-3">
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${theme.cardHeaderShapeClass || theme.accentClass}`}>
@@ -90,17 +90,17 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
 
               <div className="mt-auto flex flex-wrap gap-2 pt-3">
                 {safeWebUrl(hotel.mapsUrl) && (
-                  <a href={safeWebUrl(hotel.mapsUrl)} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a href={safeWebUrl(hotel.mapsUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <MapPin className="h-3.5 w-3.5" /> Ver mapa
                   </a>
                 )}
                 {safeWebUrl(hotel.bookingUrl) && (
-                  <a href={safeWebUrl(hotel.bookingUrl)} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a href={safeWebUrl(hotel.bookingUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <ExternalLink className="h-3.5 w-3.5" /> Reservar
                   </a>
                 )}
                 {hotel.phone && (
-                  <a href={`tel:${hotel.phone}`} className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a href={`tel:${hotel.phone}`} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <Phone className="h-3.5 w-3.5" /> Llamar
                   </a>
                 )}
