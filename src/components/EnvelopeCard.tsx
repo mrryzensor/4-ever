@@ -412,25 +412,43 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     || (settings.heroShowPadrinos && settings.heroPadrinos?.trim())
     || (settings.heroShowWitnesses && settings.heroWitnesses?.trim())
   );
+  const familyPageStartsAfterHero = hasCourtInfo && (
+    familyPlacement === 'after-hero'
+    || (familyPlacement === 'after-countdown' && settings.showCountdown === false)
+  );
+  const countdownPageStartsAfterHero = settings.countdownPlacement === 'after-hero'
+    && settings.showCountdown !== false
+    && !familyPageStartsAfterHero;
+  const renderHeroTransitionDivider = () => (
+    <div className="pointer-events-none absolute left-0 right-0 -top-16 z-0 w-full overflow-hidden leading-none sm:-top-22 md:-top-28 lg:-top-32">
+      <FixDateAnimatedTransitionDivider
+        fillColor={theme.bgHex}
+        accentColor={theme.accentColorHex}
+        cardStyle={activeWaveStyle}
+      />
+    </div>
+  );
   const renderCourtCard = () => familyPlacement === 'hero' && hasCourtInfo
     ? <HeroCourtCard settings={settings} theme={theme} />
     : null;
-  const renderFamilyPage = () => familyPlacement !== 'hero' && hasCourtInfo ? (
+  const renderFamilyPage = (showHeroTransition = false) => familyPlacement !== 'hero' && hasCourtInfo ? (
     <section
       id="familia-de-honor"
       className="relative left-1/2 z-10 flex min-h-screen w-screen max-w-none -translate-x-1/2 items-center justify-center px-4 py-16 sm:py-20"
       style={{ backgroundColor: theme.bgHex }}
     >
+      {showHeroTransition && renderHeroTransitionDivider()}
       <HeroCourtCard settings={settings} theme={theme} fullPage />
     </section>
   ) : null;
-  const renderCountdownPage = () => (
+  const renderCountdownPage = (showHeroTransition = false) => (
     <section
       id="cuenta-regresiva"
-      className="relative z-10 flex min-h-screen w-full items-center justify-center overflow-hidden px-4 py-16 sm:py-20"
+      className={`relative z-10 flex min-h-screen w-full items-center justify-center px-4 py-16 sm:py-20 ${showHeroTransition ? 'overflow-visible' : 'overflow-hidden'}`}
       style={{ backgroundColor: theme.bgHex }}
     >
       <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={18} />
+      {showHeroTransition && renderHeroTransitionDivider()}
       <div className="relative z-10 w-full">
         <AnimatedCountdown
           settings={settings}
@@ -553,8 +571,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         </motion.div>
       </div>
 
-      {(familyPlacement === 'after-hero' || (familyPlacement === 'after-countdown' && settings.showCountdown === false)) && renderFamilyPage()}
-      {settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderCountdownPage()}
+      {(familyPlacement === 'after-hero' || (familyPlacement === 'after-countdown' && settings.showCountdown === false)) && renderFamilyPage(familyPageStartsAfterHero)}
+      {settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderCountdownPage(countdownPageStartsAfterHero)}
       {familyPlacement === 'after-countdown' && settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderFamilyPage()}
 
       {/* 2. INVITATION DETAILS SECTION - FUSED INTERACTIVE SECTION WITH INLINE EXPANSIONS */}
