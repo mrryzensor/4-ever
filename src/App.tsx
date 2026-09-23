@@ -314,6 +314,7 @@ export default function App() {
 
   const [loadingWedding, setLoadingWedding] = useState(false);
   const [activeGuest, setActiveGuest] = useState<Guest | null>(null);
+  const [isInlineRsvpOpen, setIsInlineRsvpOpen] = useState(false);
   const [showRsvpModal, setShowRsvpModal] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1153,6 +1154,7 @@ export default function App() {
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
   const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !isPreviewEmbed;
   const openInlineRsvp = () => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' });
+  const toggleInlineRsvp = () => setIsInlineRsvpOpen((isOpen) => !isOpen);
   const handleRsvpSuccess = (updated: Guest) => {
     setActiveGuest(updated);
     if (settings.id && updated) {
@@ -1188,14 +1190,19 @@ export default function App() {
     )
   ) : null;
   const galleryInEventDetails = settings.galleryPlacement === 'event-details' && settings.showPhotoGallery !== false;
+  const inlineRsvp = isInlineRsvpOpen && settings.showRsvpSection !== false
+    ? settingsEventCategory === 'xv'
+      ? <XvRsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
+      : <RsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
+    : null;
 
   const landingSections: Record<LandingSectionId, React.ReactNode> = {
     invitation: (
       <section id="seccion-invitacion" key="invitation">
         {settingsEventCategory === 'xv' ? (
-          <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
+          <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         ) : (
-          <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
+          <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         )}
       </section>
     ),

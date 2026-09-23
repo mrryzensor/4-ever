@@ -62,6 +62,9 @@ interface EnvelopeCardProps {
   settings: WeddingSettings;
   guest?: Guest | null;
   onOpenRsvp?: () => void;
+  onToggleInlineRsvp?: () => void;
+  isInlineRsvpOpen?: boolean;
+  inlineRsvp?: React.ReactNode;
   inlineGallery?: React.ReactNode;
 }
 
@@ -100,6 +103,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   settings,
   guest,
   onOpenRsvp,
+  onToggleInlineRsvp,
+  isInlineRsvpOpen = false,
+  inlineRsvp,
   inlineGallery,
 }) => {
   const heroContainerRef = useRef<HTMLDivElement>(null);
@@ -807,14 +813,17 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onOpenRsvp();
+                      onToggleInlineRsvp?.();
                     }}
+                    aria-expanded={isInlineRsvpOpen}
                     className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                      isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
+                      isInlineRsvpOpen
+                        ? 'bg-stone-700 text-white hover:bg-stone-800'
+                        : isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
                     }`}
                   >
                     <Heart className="h-3.5 w-3.5 fill-current" />
-                    {settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
+                    {isInlineRsvpOpen ? 'Cerrar confirmación' : settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
                   </button>
                 )}
 
@@ -867,6 +876,19 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <span>Abrir en Waze</span>
                       </a>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {isInlineRsvpOpen && inlineRsvp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-5 overflow-hidden border-t border-stone-200/50 pt-4 dark:border-stone-700/50"
+                  >
+                    {inlineRsvp}
                   </motion.div>
                 )}
               </AnimatePresence>

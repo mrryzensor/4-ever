@@ -50,12 +50,14 @@ interface RsvpSectionProps {
   initialGuest?: Guest | null;
   settings: WeddingSettings;
   onRsvpSuccess: (updatedGuest: Guest) => void;
+  inline?: boolean;
 }
 
 export const RsvpSection: React.FC<RsvpSectionProps> = ({
   initialGuest,
   settings,
   onRsvpSuccess,
+  inline = false,
 }) => {
   const [guest, setGuest] = useState<Guest | null>(initialGuest || null);
   const [fullName, setFullName] = useState(initialGuest?.fullName || '');
@@ -302,25 +304,25 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const maxSelectablePasses = guest?.allocatedPasses ? Math.max(guest.allocatedPasses, 1) : 6;
 
   return (
-    <section id="rsvp" className={`w-full py-10 sm:py-14 px-4 sm:px-6 lg:px-12 transition-colors duration-500 ${activeTheme.bgClass}`}>
-      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto">
+    <section id={inline ? 'rsvp-inline' : 'rsvp'} className={`w-full ${inline ? 'py-2 px-0' : 'py-10 sm:py-14 px-4 sm:px-6 lg:px-12'} transition-colors duration-500 ${inline ? '' : activeTheme.bgClass}`}>
+      <div className={`w-full ${inline ? '' : 'max-w-7xl 2xl:max-w-[1600px] mx-auto'}`}>
         
         {/* Section Header */}
-        <div className="text-center mb-8 sm:mb-10">
+        <div className={`text-center ${inline ? 'mb-4' : 'mb-8 sm:mb-10'}`}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border mb-4 shadow-2xs" style={{ borderColor: activeTheme.accentColorHex, color: activeTheme.accentColorHex }}>
             <CalendarCheck className="w-4 h-4" />
             <span className="text-xs uppercase tracking-[0.25em] font-semibold">Confirmación de Asistencia</span>
           </div>
 
-          <h2 className={`text-3xl sm:text-4xl md:text-5xl font-serif font-normal tracking-tight ${activeTheme.textPrimaryClass}`}>
+          <h2 className={`${inline ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl md:text-5xl'} font-serif font-normal tracking-tight ${activeTheme.textPrimaryClass}`}>
             Acompáñame a Celebrar Mis XV Años
           </h2>
 
-          <StyleSpecificDivider
+          {!inline && <StyleSpecificDivider
             cardStyle={settings.cardStyle}
             className="w-48 sm:w-64 h-8 mx-auto mt-4"
             color={activeTheme.accentColorHex}
-          />
+          />}
 
           <p className={`whitespace-pre-line text-sm sm:text-base font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
             {formatRsvpDeadlineMessage(settings.rsvpDeadlineMessage, settings.rsvpDeadline)}
@@ -328,7 +330,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         </div>
 
         {/* Main Inline Card Container (Broad and spacious) */}
-        <div className={`w-full rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 md:p-14 border shadow-xl transition-all ${activeTheme.cardBgClass}`}>
+        <div className={`w-full ${inline ? 'rounded-2xl p-4 sm:p-6 shadow-md' : 'rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 md:p-14 shadow-xl'} border transition-all ${activeTheme.cardBgClass}`}>
           {isSuccess ? (
             /* Success View */
             <div className="text-center py-10 sm:py-14 animate-fadeIn">
