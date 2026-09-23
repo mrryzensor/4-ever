@@ -832,7 +832,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
           {/* Navigable thumbnail rail */}
           {photos.length > 1 && (
-            <div className="mt-4 flex items-center gap-1 py-2 px-1">
+            <div className="mt-4 flex w-full max-w-full min-w-0 items-center gap-1 py-2 px-1">
               <button type="button" onClick={() => scrollLandingThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronLeft className="h-5 w-5" /></button>
               <div ref={landingThumbnailRailRef} className="flex min-w-0 flex-1 items-center justify-start gap-2.5 overflow-x-auto px-1 no-scrollbar scroll-smooth">
                 {photos.map((photo, idx) => (
