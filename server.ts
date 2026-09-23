@@ -29,6 +29,10 @@ import {
   getAllPhotoCommentsForWedding,
   addPhotoComment,
   deletePhotoComment,
+  getDrivePhotoLikesCount,
+  likeDrivePhoto,
+  getDrivePhotoComments,
+  addDrivePhotoComment,
   getAllVideos,
   addWeddingVideo,
   deleteWeddingVideo,
@@ -778,6 +782,8 @@ async function startServer() {
     resourceKey: string,
     variant: 'thumbnail' | 'full',
   ) => createHmac('sha256', secret).update(`${eventId}:${folderId}:${fileId}:stable:${variant}:${resourceKey}`).digest('hex');
+  const signDrivePhotoInteraction = (secret: string, eventId: number, folderId: string, fileId: string) =>
+    createHmac('sha256', secret).update(`drive-photo-interactions:${eventId}:${folderId}:${fileId}`).digest('hex');
   const createStableDriveAssetUrl = (
     secret: string,
     eventId: number,
@@ -960,6 +966,7 @@ async function startServer() {
           name: file.name || 'Foto compartida',
           thumbnailUrl: createStableDriveAssetUrl(apiKey, weddingId, rootFolderId, file.id, resourceKey, 'thumbnail'),
           fullUrl: createStableDriveAssetUrl(apiKey, weddingId, rootFolderId, file.id, resourceKey, 'full'),
+          interactionToken: signDrivePhotoInteraction(apiKey, weddingId, rootFolderId, file.id),
           openUrl: openUrl.toString(),
         }];
       });
@@ -1124,11 +1131,12 @@ async function startServer() {
           name: file.name || 'Foto compartida',
           thumbnailUrl: createStableDriveAssetUrl(apiKey, weddingId, folderId, file.id, fileResourceKey, 'thumbnail'),
           fullUrl: createStableDriveAssetUrl(apiKey, weddingId, folderId, file.id, fileResourceKey, 'full'),
+          interactionToken: signDrivePhotoInteraction(apiKey, weddingId, folderId, file.id),
           openUrl: openUrl.toString(),
         };
       };
 
-      const photos: Array<{ id: string; name: string; thumbnailUrl: string; fullUrl: string; openUrl: string }> = [];
+      const photos: Array<{ id: string; name: string; thumbnailUrl: string; fullUrl: string; interactionToken: string; openUrl: string }> = [];
       let currentFolderIndex = cursorFolderIndex;
       let currentDrivePageToken = drivePageToken || undefined;
       let nextPageToken: string | undefined;
@@ -1214,6 +1222,95 @@ async function startServer() {
     } catch (error) {
       console.error('Google Drive photo listing failed:', error instanceof Error ? error.message : 'Unknown error');
       return res.status(502).json({ code: 'drive_unavailable', error: 'No pudimos conectar con Google Drive en este momento.' });
+    }
+  });
+
+  const authorizeDrivePhotoInteraction = async (req: any, res: any): Promise<number | null> => {
+    const apiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+    const { folderId, fileId } = req.params;
+    const weddingId = Number(req.query.weddingId);
+    const signature = typeof req.query.signature === 'string' ? req.query.signature : '';
+    if (!apiKey) {
+      res.status(503).json({ error: 'La integración con Google Drive aún no está configurada.' });
+      return null;
+    }
+    if (
+      !/^[A-Za-z0-9_-]{1,200}$/.test(folderId) ||
+      !/^[A-Za-z0-9_-]{1,200}$/.test(fileId) ||
+      !Number.isSafeInteger(weddingId) || weddingId < 1 ||
+      !/^[a-f0-9]{64}$/.test(signature)
+    ) {
+      res.status(400).json({ error: 'La referencia de esta foto no es válida.' });
+      return null;
+    }
+
+    const eventSettings = await getWeddingSettings(weddingId);
+    const configuredFolder = parseDriveFolderUrl(eventSettings?.galleryExternalAlbumUrl);
+    if (!configuredFolder || configuredFolder.folderId !== folderId) {
+      res.status(404).json({ error: 'Esta foto no pertenece a la carpeta configurada para el evento.' });
+      return null;
+    }
+
+    const expectedSignature = signDrivePhotoInteraction(apiKey, weddingId, folderId, fileId);
+    if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+      res.status(403).json({ error: 'No se pudo validar el acceso a esta foto.' });
+      return null;
+    }
+    return weddingId;
+  };
+
+  app.get('/api/drive-folders/:folderId/photos/:fileId/interactions', async (req, res) => {
+    try {
+      const weddingId = await authorizeDrivePhotoInteraction(req, res);
+      if (weddingId === null) return;
+      const { fileId } = req.params;
+      const [likesCount, comments] = await Promise.all([
+        getDrivePhotoLikesCount(weddingId, fileId),
+        getDrivePhotoComments(weddingId, fileId),
+      ]);
+      return res.json({ likesCount, comments });
+    } catch (error: any) {
+      console.error('Failed to load Drive photo interactions:', error);
+      return res.status(500).json({ error: 'No se pudieron cargar las interacciones de esta foto.' });
+    }
+  });
+
+  app.post('/api/drive-folders/:folderId/photos/:fileId/like', async (req, res) => {
+    try {
+      const weddingId = await authorizeDrivePhotoInteraction(req, res);
+      if (weddingId === null) return;
+      const likesCount = await likeDrivePhoto(weddingId, req.params.fileId);
+      return res.json({ likesCount });
+    } catch (error: any) {
+      console.error('Failed to like Drive photo:', error);
+      return res.status(500).json({ error: 'No se pudo registrar el “Me gusta”.' });
+    }
+  });
+
+  app.post('/api/drive-folders/:folderId/photos/:fileId/comments', async (req, res) => {
+    try {
+      const weddingId = await authorizeDrivePhotoInteraction(req, res);
+      if (weddingId === null) return;
+      const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+      const guestName = typeof req.body?.guestName === 'string' ? req.body.guestName.trim() : '';
+      const guestCode = typeof req.body?.guestCode === 'string' ? req.body.guestCode.trim() : '';
+      if (!message || message.length > 2000) {
+        return res.status(400).json({ error: 'El comentario debe tener entre 1 y 2000 caracteres.' });
+      }
+      if (guestName.length > 100 || guestCode.length > 128) {
+        return res.status(400).json({ error: 'El nombre o código del invitado es demasiado largo.' });
+      }
+      const comment = await addDrivePhotoComment({
+        weddingId,
+        driveFileId: req.params.fileId,
+        guestName: guestName || 'Invitado Especial',
+        guestCode: guestCode || null,
+        message,
+      });
+      return res.status(201).json(comment);
+    } catch (error: any) {
+      console.error('Failed to comment on Drive photo:', error);
+      return res.status(500).json({ error: 'No se pudo guardar el comentario.' });
     }
   });
 

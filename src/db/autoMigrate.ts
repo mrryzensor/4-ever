@@ -265,6 +265,28 @@ export async function autoMigrateDatabase() {
           created_at TIMESTAMP DEFAULT NOW()
         );
 
+        -- Google Drive photo engagement remains stable across carousel ordering.
+        CREATE TABLE IF NOT EXISTS drive_photo_interactions (
+          id SERIAL PRIMARY KEY,
+          wedding_id INTEGER NOT NULL,
+          drive_file_id TEXT NOT NULL,
+          likes_count INTEGER NOT NULL DEFAULT 0,
+          created_at TIMESTAMP DEFAULT NOW(),
+          CONSTRAINT drive_photo_interactions_event_file_unique UNIQUE (wedding_id, drive_file_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS drive_photo_comments (
+          id SERIAL PRIMARY KEY,
+          wedding_id INTEGER NOT NULL,
+          drive_file_id TEXT NOT NULL,
+          guest_name TEXT NOT NULL DEFAULT 'Invitado Especial',
+          guest_code TEXT,
+          message TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS drive_photo_comments_event_file_created_idx
+          ON drive_photo_comments (wedding_id, drive_file_id, created_at);
+
         -- 6. Wedding Videos Table
         CREATE TABLE IF NOT EXISTS wedding_videos (
           id SERIAL PRIMARY KEY,

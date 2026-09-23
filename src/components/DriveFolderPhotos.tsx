@@ -6,6 +6,7 @@ export interface DriveGalleryPhoto {
   name: string;
   thumbnailUrl: string;
   fullUrl: string;
+  interactionToken: string;
   openUrl: string;
 }
 
@@ -87,6 +88,7 @@ export function useDriveFolderPhotos(folderUrl: string | undefined, weddingId: n
 
   return {
     photos,
+    folderId: folder?.folderId,
     loading,
     loadingMore,
     error,

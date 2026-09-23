@@ -31,7 +31,7 @@ import { CARD_THEMES } from '../../lib/themes.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
 import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
 
-type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string };
+type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string; driveFileId?: string; driveInteractionToken?: string };
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -68,6 +68,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [authorInputName, setAuthorInputName] = useState(guestName || '');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [likedPhotoIds, setLikedPhotoIds] = useState<number[]>([]);
+  const [likedDrivePhotoIds, setLikedDrivePhotoIds] = useState<string[]>([]);
+  const [drivePhotoLikesById, setDrivePhotoLikesById] = useState<Record<string, number>>({});
+  const [drivePhotoCommentsById, setDrivePhotoCommentsById] = useState<Record<string, PhotoComment[]>>({});
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
   const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
 
@@ -103,9 +106,20 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         approved: true,
         createdAt: '',
         driveOpenUrl: photo.openUrl,
+        driveFileId: photo.id,
+        driveInteractionToken: photo.interactionToken,
       })),
   ], [driveGallery.photos, driveSelectionIds, driveSelectionMode, uploadedPhotos, weddingId]);
   const activePhoto: CarouselPhoto | null = activePhotoIndex !== null && photos[activePhotoIndex] ? photos[activePhotoIndex] : null;
+  const getCommentsForPhoto = (photo?: CarouselPhoto | null) => photo
+    ? photo.driveFileId ? drivePhotoCommentsById[photo.driveFileId] || [] : photoCommentsMap[photo.id] || []
+    : [];
+  const getLikesCountForPhoto = (photo: CarouselPhoto) => photo.driveFileId
+    ? drivePhotoLikesById[photo.driveFileId] ?? photo.likesCount ?? 0
+    : photo.likesCount || 0;
+  const hasLikedPhoto = (photo: CarouselPhoto) => photo.driveFileId
+    ? likedDrivePhotoIds.includes(photo.driveFileId)
+    : likedPhotoIds.includes(photo.id);
 
   useEffect(() => {
     if (activePhotoIndex === null) return;
@@ -137,29 +151,46 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   // Fetch comments when active photo changes
   useEffect(() => {
-    if (!activePhoto || activePhoto.driveOpenUrl) {
+    if (!activePhoto) {
       setComments([]);
       return;
     }
+    let cancelled = false;
+    setComments([]);
 
     const fetchComments = async () => {
       try {
         setLoadingComments(true);
-        const res = await fetch(`/api/gallery/${activePhoto.id}/comments?weddingId=${weddingId}`);
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setComments(data);
-          setPhotoCommentsMap((prev) => ({ ...prev, [activePhoto.id]: data }));
+        if (activePhoto.driveFileId) {
+          if (!driveGallery.folderId || !activePhoto.driveInteractionToken) { setComments([]); return; }
+          const query = new URLSearchParams({ weddingId: String(weddingId), signature: activePhoto.driveInteractionToken });
+          const res = await fetch(`/api/drive-folders/${encodeURIComponent(driveGallery.folderId)}/photos/${encodeURIComponent(activePhoto.driveFileId)}/interactions?${query}`);
+          if (!res.ok) throw new Error('No se pudieron cargar las interacciones de Drive.');
+          const data = await res.json() as { likesCount?: number; comments?: PhotoComment[] };
+          if (cancelled) return;
+          const driveComments = Array.isArray(data.comments) ? data.comments : [];
+          setComments(driveComments);
+          setDrivePhotoCommentsById((prev) => ({ ...prev, [activePhoto.driveFileId!]: driveComments }));
+          setDrivePhotoLikesById((prev) => ({ ...prev, [activePhoto.driveFileId!]: Number(data.likesCount) || 0 }));
+        } else {
+          const res = await fetch(`/api/gallery/${activePhoto.id}/comments?weddingId=${weddingId}`);
+          const data = await res.json();
+          if (cancelled) return;
+          if (Array.isArray(data)) {
+            setComments(data);
+            setPhotoCommentsMap((prev) => ({ ...prev, [activePhoto.id]: data }));
+          }
         }
       } catch (err) {
-        console.error('Error loading comments:', err);
+        if (!cancelled) console.error('Error loading comments:', err);
       } finally {
-        setLoadingComments(false);
+        if (!cancelled) setLoadingComments(false);
       }
     };
 
-    fetchComments();
-  }, [activePhoto?.id, activePhoto?.driveOpenUrl, weddingId]);
+    void fetchComments();
+    return () => { cancelled = true; };
+  }, [activePhoto?.id, activePhoto?.driveFileId, activePhoto?.driveInteractionToken, driveGallery.folderId, weddingId]);
 
   // Bulk load comments for all photos to animate during auto-play
   useEffect(() => {
@@ -249,9 +280,27 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     fetchPhotos();
   }, [weddingId]);
 
-  const handleLike = async (photoId: number, e?: React.MouseEvent) => {
+  const handleLike = async (photo: CarouselPhoto, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (photoId < 0) return;
+    if (photo.driveFileId) {
+      if (likedDrivePhotoIds.includes(photo.driveFileId) || !driveGallery.folderId || !photo.driveInteractionToken) return;
+      const fileId = photo.driveFileId;
+      setLikedDrivePhotoIds((prev) => [...prev, fileId]);
+      setDrivePhotoLikesById((prev) => ({ ...prev, [fileId]: (prev[fileId] ?? photo.likesCount ?? 0) + 1 }));
+      const query = new URLSearchParams({ weddingId: String(weddingId), signature: photo.driveInteractionToken });
+      try {
+        const response = await fetch(`/api/drive-folders/${encodeURIComponent(driveGallery.folderId)}/photos/${encodeURIComponent(fileId)}/like?${query}`, { method: 'POST' });
+        if (!response.ok) throw new Error('No se pudo registrar el “Me gusta”.');
+        const data = await response.json() as { likesCount?: number };
+        setDrivePhotoLikesById((prev) => ({ ...prev, [fileId]: Number(data.likesCount) || prev[fileId] || 0 }));
+      } catch (err) {
+        setLikedDrivePhotoIds((prev) => prev.filter((id) => id !== fileId));
+        setDrivePhotoLikesById((prev) => ({ ...prev, [fileId]: Math.max(0, (prev[fileId] || 1) - 1) }));
+        console.error('Error liking Drive photo:', err);
+      }
+      return;
+    }
+    const photoId = photo.id;
     if (likedPhotoIds.includes(photoId)) return; // Prevent multiple likes in session
 
     setLikedPhotoIds((prev) => [...prev, photoId]);
@@ -269,7 +318,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePhoto || activePhoto.driveOpenUrl || !newCommentText.trim() || isSubmittingComment) return;
+    if (!activePhoto || !newCommentText.trim() || isSubmittingComment) return;
 
     const guestDisplayName = authorInputName.trim() || 'Invitado Especial';
     const payload = {
@@ -281,14 +330,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     try {
       setIsSubmittingComment(true);
-      const res = await fetch(`/api/gallery/${activePhoto.id}/comments`, {
+      const url = activePhoto.driveFileId && driveGallery.folderId && activePhoto.driveInteractionToken
+        ? `/api/drive-folders/${encodeURIComponent(driveGallery.folderId)}/photos/${encodeURIComponent(activePhoto.driveFileId)}/comments?${new URLSearchParams({ weddingId: String(weddingId), signature: activePhoto.driveInteractionToken })}`
+        : `/api/gallery/${activePhoto.id}/comments`;
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+      if (!res.ok) throw new Error('No se pudo guardar el comentario.');
       const createdComment = await res.json();
       if (createdComment && createdComment.id) {
         setComments((prev) => [...prev, createdComment]);
+        if (activePhoto.driveFileId) {
+          setDrivePhotoCommentsById((prev) => ({ ...prev, [activePhoto.driveFileId!]: [...(prev[activePhoto.driveFileId!] || []), createdComment] }));
+        } else {
+          setPhotoCommentsMap((prev) => ({ ...prev, [activePhoto.id]: [...(prev[activePhoto.id] || []), createdComment] }));
+        }
         setNewCommentText('');
       }
     } catch (err) {
@@ -428,6 +486,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [photoRatios, setPhotoRatios] = useState<Record<number, number>>({});
+  const [loadedDrivePhotoIds, setLoadedDrivePhotoIds] = useState<string[]>([]);
 
   useEffect(() => {
     const visibleIndex = activePhotoIndex ?? carouselIndex;
@@ -444,17 +503,24 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Auto-play timer (slides every 4.5 seconds when active and not hovered)
   useEffect(() => {
     if (!isAutoPlay || isHovered || photos.length <= 1 || activePhotoIndex !== null) return;
-    const interval = setInterval(() => {
+    const activeDrivePhotoId = photos[carouselIndex]?.driveFileId;
+    if (activeDrivePhotoId && !loadedDrivePhotoIds.includes(activeDrivePhotoId)) return;
+    const timer = setTimeout(() => {
       setCarouselIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
     }, 4500);
-    return () => clearInterval(interval);
-  }, [isAutoPlay, isHovered, photos.length, activePhotoIndex]);
+    return () => clearTimeout(timer);
+  }, [isAutoPlay, isHovered, photos.length, activePhotoIndex, carouselIndex, photos, loadedDrivePhotoIds]);
 
-  const handleImageLoad = (photoId: number, e: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleImageLoad = async (photoId: number, e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     if (img.naturalWidth && img.naturalHeight) {
       const ratio = img.naturalWidth / img.naturalHeight;
       setPhotoRatios((prev) => ({ ...prev, [photoId]: ratio }));
+      const photo = photos.find((item) => item.id === photoId);
+      if (photo?.driveFileId) {
+        try { await img.decode(); } catch { /* onLoad already confirms the image bytes arrived */ }
+        setLoadedDrivePhotoIds((prev) => prev.includes(photo.driveFileId!) ? prev : [...prev, photo.driveFileId!]);
+      }
     }
   };
 
@@ -620,14 +686,15 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
                         {/* Top Action Bar: Likes & Comments count at top-right */}
                         <div className="flex justify-end items-center pointer-events-auto w-full">
+                          {currentCarouselPhoto.driveOpenUrl && <a href={currentCarouselPhoto.driveOpenUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="mr-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white border border-white/20 inline-flex items-center gap-1.5">Abrir en Drive <ExternalLink className="w-3.5 h-3.5" /></a>}
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={(e) => handleLike(currentCarouselPhoto.id, e)}
+                              onClick={(e) => handleLike(currentCarouselPhoto, e)}
                               className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-rose-600/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer shadow-sm"
                             >
                               <Heart className="w-4 h-4 fill-rose-500 text-rose-500 shrink-0" />
-                              <span>{currentCarouselPhoto.likesCount}</span>
+                              <span>{getLikesCountForPhoto(currentCarouselPhoto)}</span>
                             </button>
 
                             <button
@@ -638,8 +705,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             >
                               <MessageCircle className="w-3.5 h-3.5 text-amber-300" />
                               <span>
-                                {(photoCommentsMap[currentCarouselPhoto.id]?.length || 0) > 0
-                                  ? `${photoCommentsMap[currentCarouselPhoto.id].length} Comentarios`
+                                {(getCommentsForPhoto(currentCarouselPhoto).length || 0) > 0
+                                  ? `${getCommentsForPhoto(currentCarouselPhoto).length} Comentarios`
                                   : 'Comentar'}
                               </span>
                             </button>
@@ -648,9 +715,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                         {/* Bottom Area: Animated Comments + Badge + Caption */}
                         <div className="space-y-2 pointer-events-auto max-w-2xl">
-                          {photoCommentsMap[currentCarouselPhoto.id] && photoCommentsMap[currentCarouselPhoto.id].length > 0 && (
+                          {getCommentsForPhoto(currentCarouselPhoto).length > 0 && (
                             <div className="space-y-2 mb-3">
-                              {photoCommentsMap[currentCarouselPhoto.id].slice(0, 2).map((comm, cIdx) => {
+                              {getCommentsForPhoto(currentCarouselPhoto).slice(0, 2).map((comm, cIdx) => {
                                 const commentText = (comm && (comm.comment || (comm as any).message)) ? String(comm.comment || (comm as any).message) : '';
                                 if (!commentText) return null;
                                 return (
@@ -662,11 +729,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     className="flex items-start gap-2.5 px-4 py-2.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 text-xs text-stone-200 shadow-2xl max-w-xl"
                                   >
                                     <div className="w-6 h-6 rounded-full bg-amber-500/30 text-amber-300 font-bold flex items-center justify-center text-[11px] shrink-0 border border-amber-400/40 mt-0.5">
-                                      {comm.authorName?.charAt(0).toUpperCase() || 'I'}
+                                      {comm.guestName?.charAt(0).toUpperCase() || 'I'}
                                     </div>
                                     <div className="min-w-0 flex-1">
                                       <span className="font-semibold text-amber-300 mr-1.5">
-                                        {comm.authorName || 'Invitado'}:
+                                        {comm.guestName || 'Invitado'}:
                                       </span>
                                       <span className="italic text-stone-100 line-clamp-2 leading-snug">
                                         "{commentText.length > 120 ? commentText.slice(0, 117) + '...' : commentText}"
@@ -1067,10 +1134,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleLike(activePhoto.id);
+                          handleLike(activePhoto);
                         }}
                         className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${
-                          likedPhotoIds.includes(activePhoto.id)
+                          hasLikedPhoto(activePhoto)
                             ? 'bg-rose-950/80 border-rose-500 text-rose-200 ring-2 ring-rose-500/40 scale-105'
                             : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
                         }`}
@@ -1078,12 +1145,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       >
                         <Heart
                           className={`w-5 h-5 transition-transform ${
-                            likedPhotoIds.includes(activePhoto.id)
+                            hasLikedPhoto(activePhoto)
                               ? 'fill-rose-500 text-rose-500 scale-110'
                               : 'fill-rose-500 text-rose-500'
                           }`}
                         />
-                        <span className="text-[10px] font-bold mt-0.5 leading-none">{activePhoto.likesCount}</span>
+                        <span className="text-[10px] font-bold mt-0.5 leading-none">{getLikesCountForPhoto(activePhoto)}</span>
                       </button>
 
                       {/* Comments Toggle Button directly over the photo */}
@@ -1388,20 +1455,20 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <div className="flex items-center justify-between gap-3">
                         <button
                           type="button"
-                          onClick={() => handleLike(activePhoto.id)}
-                          className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${likedPhotoIds.includes(activePhoto.id)
+                          onClick={() => handleLike(activePhoto)}
+                          className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${hasLikedPhoto(activePhoto)
                               ? 'bg-rose-950/60 border-rose-600 text-rose-200'
                               : 'bg-stone-800 hover:bg-rose-950/40 text-stone-100 hover:text-rose-300 border-stone-700'
                             }`}
                         >
                           <Heart
-                            className={`w-4 h-4 shrink-0 transition-transform ${likedPhotoIds.includes(activePhoto.id)
+                            className={`w-4 h-4 shrink-0 transition-transform ${hasLikedPhoto(activePhoto)
                                 ? 'fill-rose-500 text-rose-500 scale-110'
                                 : 'fill-rose-500 text-rose-500'
                               }`}
                           />
                           <span>
-                            {activePhoto.likesCount} {activePhoto.likesCount === 1 ? 'Me gusta' : 'Me gusta'}
+                            {getLikesCountForPhoto(activePhoto)} Me gusta
                           </span>
                         </button>
 

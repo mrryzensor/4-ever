@@ -47,6 +47,22 @@
   div svg {
     flex-shrink: 0;
   }
+
+  button:not(:disabled),
+  a:not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* Strict circular geometry preservation for mobile & desktop */
@@ -204,5 +220,4 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
 

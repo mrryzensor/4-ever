@@ -1,4 +1,4 @@
-import { boolean, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, serial, text, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Users table (Firebase Auth or Local Auth linked)
@@ -223,6 +223,30 @@ export const photoComments = pgTable('photo_comments', {
   message: text('message').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// Engagement for public Google Drive photos is keyed by event and Drive file ID,
+// never by a carousel position or the synthetic gallery photo ID.
+export const drivePhotoInteractions = pgTable('drive_photo_interactions', {
+  id: serial('id').primaryKey(),
+  weddingId: integer('wedding_id').notNull(),
+  driveFileId: text('drive_file_id').notNull(),
+  likesCount: integer('likes_count').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  eventFileUnique: uniqueIndex('drive_photo_interactions_event_file_uidx').on(table.weddingId, table.driveFileId),
+}));
+
+export const drivePhotoComments = pgTable('drive_photo_comments', {
+  id: serial('id').primaryKey(),
+  weddingId: integer('wedding_id').notNull(),
+  driveFileId: text('drive_file_id').notNull(),
+  guestName: text('guest_name').notNull().default('Invitado Especial'),
+  guestCode: text('guest_code'),
+  message: text('message').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  eventFileCreatedIdx: index('drive_photo_comments_event_file_created_idx').on(table.weddingId, table.driveFileId, table.createdAt),
+}));
 
 // Relations
 export const usersRelations = relations(users, () => ({}));

@@ -5,11 +5,13 @@ import {
   guests,
   galleryPhotos,
   photoComments,
+  drivePhotoInteractions,
+  drivePhotoComments,
   weddingVideos,
   guestbookWishes,
   users
 } from './schema.ts';
-import { eq, desc, asc, ilike, or, and } from 'drizzle-orm';
+import { eq, desc, asc, ilike, or, and, sql } from 'drizzle-orm';
 import {
   generateDynamicInitials,
   generateEventHashtag,
@@ -570,7 +572,17 @@ const memoryState = {
       message: 'La selección de flores está divina Sofí, todo un acierto 🌸',
       createdAt: new Date(),
     }
-  ] as any[]
+  ] as any[],
+  drivePhotoLikes: [] as Array<{ weddingId: number; driveFileId: string; likesCount: number }>,
+  drivePhotoComments: [] as Array<{
+    id: number;
+    weddingId: number;
+    driveFileId: string;
+    guestName: string;
+    guestCode: string | null;
+    message: string;
+    createdAt: Date;
+  }>,
 };
 
 // Check if PostgreSQL is available
@@ -1928,6 +1940,105 @@ export async function likePhoto(id: number) {
     return found;
   }
   return null;
+}
+
+export async function getDrivePhotoLikesCount(weddingId: number, driveFileId: string) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db
+        .select({ likesCount: drivePhotoInteractions.likesCount })
+        .from(drivePhotoInteractions)
+        .where(and(
+          eq(drivePhotoInteractions.weddingId, weddingId),
+          eq(drivePhotoInteractions.driveFileId, driveFileId),
+        ))
+        .limit(1);
+      return rows[0]?.likesCount || 0;
+    }
+  } catch (err) {
+    console.warn('getDrivePhotoLikesCount fallback to memory');
+  }
+
+  return memoryState.drivePhotoLikes.find((photo) =>
+    photo.weddingId === weddingId && photo.driveFileId === driveFileId,
+  )?.likesCount || 0;
+}
+
+export async function likeDrivePhoto(weddingId: number, driveFileId: string) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db
+        .insert(drivePhotoInteractions)
+        .values({ weddingId, driveFileId, likesCount: 1 })
+        .onConflictDoUpdate({
+          target: [drivePhotoInteractions.weddingId, drivePhotoInteractions.driveFileId],
+          set: { likesCount: sql`${drivePhotoInteractions.likesCount} + 1` },
+        })
+        .returning({ likesCount: drivePhotoInteractions.likesCount });
+      return rows[0]?.likesCount || 0;
+    }
+  } catch (err) {
+    console.warn('likeDrivePhoto fallback to memory');
+  }
+
+  const existing = memoryState.drivePhotoLikes.find((photo) =>
+    photo.weddingId === weddingId && photo.driveFileId === driveFileId,
+  );
+  if (existing) existing.likesCount += 1;
+  else memoryState.drivePhotoLikes.push({ weddingId, driveFileId, likesCount: 1 });
+  return existing?.likesCount || 1;
+}
+
+export async function getDrivePhotoComments(weddingId: number, driveFileId: string) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db
+        .select()
+        .from(drivePhotoComments)
+        .where(and(
+          eq(drivePhotoComments.weddingId, weddingId),
+          eq(drivePhotoComments.driveFileId, driveFileId),
+        ))
+        .orderBy(asc(drivePhotoComments.createdAt), asc(drivePhotoComments.id));
+      return rows.map((comment) => ({ ...comment, photoId: -1 }));
+    }
+  } catch (err) {
+    console.warn('getDrivePhotoComments fallback to memory');
+  }
+
+  return memoryState.drivePhotoComments
+    .filter((comment) => comment.weddingId === weddingId && comment.driveFileId === driveFileId)
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    .map((comment) => ({ ...comment, photoId: -1 }));
+}
+
+export async function addDrivePhotoComment(data: {
+  weddingId: number;
+  driveFileId: string;
+  guestName: string;
+  guestCode?: string | null;
+  message: string;
+}) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const inserted = await db.insert(drivePhotoComments).values(data).returning();
+      if (inserted.length > 0) return { ...inserted[0], photoId: -1 };
+    }
+  } catch (err) {
+    console.warn('addDrivePhotoComment fallback to memory');
+  }
+
+  const comment = {
+    id: memoryState.drivePhotoComments.length + 1,
+    weddingId: data.weddingId,
+    driveFileId: data.driveFileId,
+    guestName: data.guestName,
+    guestCode: data.guestCode || null,
+    message: data.message,
+    createdAt: new Date(),
+  };
+  memoryState.drivePhotoComments.push(comment);
+  return { ...comment, photoId: -1 };
 }
 
 export async function deleteGalleryPhoto(id: number) {
