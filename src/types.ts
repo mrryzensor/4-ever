@@ -199,6 +199,8 @@ export interface WeddingSettings {
   hotelRecommendations?: string; // JSON array of HotelRecommendation
   landingSectionOrder?: string; // JSON array of LandingSectionId
   detailSectionOrder?: string; // JSON array of DetailSectionId
+  galleryPlacement?: 'landing' | 'event-details'; // Ubicación de la galería
+  galleryAfterDetailSection?: DetailSectionId; // Tarjeta informativa tras la que se intercala la galería
   showTips?: boolean; // Tips & Recomendaciones para invitados
   tipsTitle?: string; // Título de la sección de tips
   tipsList?: WeddingTipItem[] | string; // Lista de tips configurables

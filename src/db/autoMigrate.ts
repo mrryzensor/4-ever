@@ -214,6 +214,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hotel_recommendations TEXT DEFAULT '[]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS landing_section_order TEXT DEFAULT '["invitation","gallery","video","hotels","guestbook","rsvp"]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS detail_section_order TEXT DEFAULT '["ceremony","reception","itinerary","gifts","dress-code","tips"]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_placement TEXT DEFAULT 'landing';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_after_detail_section TEXT DEFAULT 'reception';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_deadline_message TEXT DEFAULT 'Por favor confirma tu asistencia antes del {date}.';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_text TEXT DEFAULT 'Confirmar asistencia';
 

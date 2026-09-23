@@ -1164,39 +1164,42 @@ export default function App() {
     }
   };
 
+  const gallerySection: React.ReactNode = settings.showPhotoGallery !== false ? (
+    settingsEventCategory === 'xv' ? (
+      <XvPhotoGallery
+        key="gallery"
+        weddingId={settings.id}
+        guestName={activeGuest?.fullName}
+        guestCode={activeGuest?.accessCode}
+        cardStyle={settings.cardStyle}
+        isAdmin={!isDemoMode && Boolean(currentUser)}
+        settings={settings}
+      />
+    ) : (
+      <PhotoGallery
+        key="gallery"
+        weddingId={settings.id}
+        guestName={activeGuest?.fullName}
+        guestCode={activeGuest?.accessCode}
+        cardStyle={settings.cardStyle}
+        isAdmin={!isDemoMode && Boolean(currentUser)}
+        settings={settings}
+      />
+    )
+  ) : null;
+  const galleryInEventDetails = settings.galleryPlacement === 'event-details' && settings.showPhotoGallery !== false;
+
   const landingSections: Record<LandingSectionId, React.ReactNode> = {
     invitation: (
       <section id="seccion-invitacion" key="invitation">
         {settingsEventCategory === 'xv' ? (
-          <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} />
+          <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         ) : (
-          <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} />
+          <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         )}
       </section>
     ),
-    gallery: settings.showPhotoGallery !== false ? (
-      settingsEventCategory === 'xv' ? (
-        <XvPhotoGallery
-          key="gallery"
-          weddingId={settings.id}
-          guestName={activeGuest?.fullName}
-          guestCode={activeGuest?.accessCode}
-          cardStyle={settings.cardStyle}
-          isAdmin={!isDemoMode && Boolean(currentUser)}
-          settings={settings}
-        />
-      ) : (
-        <PhotoGallery
-          key="gallery"
-          weddingId={settings.id}
-          guestName={activeGuest?.fullName}
-          guestCode={activeGuest?.accessCode}
-          cardStyle={settings.cardStyle}
-          isAdmin={!isDemoMode && Boolean(currentUser)}
-          settings={settings}
-        />
-      )
-    ) : null,
+    gallery: galleryInEventDetails ? null : gallerySection,
     video: settings.showVideoMemories === true ? (
       settingsEventCategory === 'xv' ? (
         <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} />

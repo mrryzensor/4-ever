@@ -134,6 +134,8 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   hotelRecommendations: '[]',
   landingSectionOrder: '["invitation","gallery","video","hotels","guestbook","rsvp"]',
   detailSectionOrder: '["ceremony","reception","itinerary","gifts","dress-code","tips"]',
+  galleryPlacement: 'landing',
+  galleryAfterDetailSection: 'reception',
   showRsvpSection: true,
   bankName: 'BBVA',
   bankBeneficiary: 'Sofía Martínez / Alejandro Ruiz',

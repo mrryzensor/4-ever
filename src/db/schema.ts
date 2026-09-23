@@ -126,6 +126,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   hotelRecommendations: text('hotel_recommendations').default('[]'),
   landingSectionOrder: text('landing_section_order').default('["invitation","gallery","video","hotels","guestbook","rsvp"]'),
   detailSectionOrder: text('detail_section_order').default('["ceremony","reception","itinerary","gifts","dress-code","tips"]'),
+  galleryPlacement: text('gallery_placement').default('landing'),
+  galleryAfterDetailSection: text('gallery_after_detail_section').default('reception'),
   showTips: boolean('show_tips').default(true),
   tipsTitle: text('tips_title').default('Tips & Recomendaciones para Invitados'),
   tipsList: text('tips_list').default('[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]'),

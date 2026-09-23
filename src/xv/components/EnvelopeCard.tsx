@@ -64,6 +64,7 @@ interface EnvelopeCardProps {
   settings: WeddingSettings;
   guest?: Guest | null;
   onOpenRsvp?: () => void;
+  inlineGallery?: React.ReactNode;
 }
 
 const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold') => {
@@ -101,6 +102,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   settings,
   guest,
   onOpenRsvp,
+  inlineGallery,
 }) => {
   const heroContainerRef = useRef<HTMLDivElement>(null);
   
@@ -621,7 +623,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('ceremony')}
-              style={{ order: detailSectionOrder.indexOf('ceremony'), display: settings.showLocations === false ? 'none' : undefined }}
+              style={{ order: detailSectionOrder.indexOf('ceremony') * 2, display: settings.showLocations === false ? 'none' : undefined }}
               className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -729,7 +731,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('reception')}
-              style={{ order: detailSectionOrder.indexOf('reception'), display: settings.showLocations === false ? 'none' : undefined }}
+              style={{ order: detailSectionOrder.indexOf('reception') * 2, display: settings.showLocations === false ? 'none' : undefined }}
               className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -851,7 +853,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 onClick={() => toggleSection('itinerary')}
-                style={{ order: detailSectionOrder.indexOf('itinerary') }}
+                style={{ order: detailSectionOrder.indexOf('itinerary') * 2 }}
                 className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
@@ -993,7 +995,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry !== false && (
               <div
                 onClick={() => toggleSection('gifts')}
-                style={{ order: detailSectionOrder.indexOf('gifts') }}
+                style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
                 className={`p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
@@ -1151,7 +1153,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               onClick={() => toggleSection('dresscode')}
-              style={{ order: detailSectionOrder.indexOf('dress-code') }}
+              style={{ order: detailSectionOrder.indexOf('dress-code') * 2 }}
               className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -1369,7 +1371,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               onClick={() => toggleSection('tips')}
-              style={{ order: detailSectionOrder.indexOf('tips') }}
+              style={{ order: detailSectionOrder.indexOf('tips') * 2 }}
               className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -1460,6 +1462,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   )}
                 </AnimatePresence>
               </div>
+            </div>
+          )}
+          {inlineGallery && settings.showPhotoGallery !== false && (
+            <div
+              style={{ order: (detailSectionOrder.indexOf(settings.galleryAfterDetailSection || 'reception') * 2) + 1, gridColumn: '1 / -1' }}
+              className="w-full min-w-0"
+            >
+              {inlineGallery}
             </div>
           )}
         </div>

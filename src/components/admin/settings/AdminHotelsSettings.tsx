@@ -55,7 +55,7 @@ export const AdminHotelsSettings: React.FC<AdminHotelsSettingsProps> = ({ settin
         <button
           type="button"
           onClick={() => save([...hotels, { name: '' }])}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] px-3 py-2 text-xs font-semibold text-[#5A5A40] hover:bg-[#F0EEDC]"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] px-3 py-2 text-xs font-semibold text-[#5A5A40] hover:bg-[#F0EEDC]"
         >
           <Plus className="h-3.5 w-3.5" /> Agregar hotel
         </button>
@@ -85,7 +85,7 @@ export const AdminHotelsSettings: React.FC<AdminHotelsSettingsProps> = ({ settin
                   type="button"
                   onClick={() => save(hotels.filter((_, hotelIndex) => hotelIndex !== index))}
                   aria-label={`Eliminar hotel ${index + 1}`}
-                  className="rounded-lg p-2 text-rose-600 hover:bg-rose-50"
+                  className="cursor-pointer rounded-lg p-2 text-rose-600 hover:bg-rose-50"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

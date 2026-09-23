@@ -130,6 +130,8 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   hotelRecommendations: '[]',
   landingSectionOrder: '["invitation","gallery","video","hotels","guestbook","rsvp"]',
   detailSectionOrder: '["ceremony","reception","itinerary","gifts","dress-code","tips"]',
+  galleryPlacement: 'landing',
+  galleryAfterDetailSection: 'reception',
   showRsvpSection: true,
   bankName: 'BBVA',
   bankBeneficiary: 'Valeria Montserrat Gómez',

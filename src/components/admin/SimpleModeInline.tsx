@@ -27,6 +27,7 @@ import {
   BookOpen,
   MessageSquare,
   Users,
+  ListOrdered,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../types.ts';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../lib/mediaOptimizer.ts';
@@ -34,6 +35,7 @@ import { WEDDING_HERO_PRESETS } from './adminConstants.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
 import { DrivePhotoPicker } from '../DrivePhotoPicker.tsx';
+import { SimpleModeSectionsStep } from './SimpleModeSectionsStep.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -71,7 +73,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   settingsSavedToast,
 }) => {
   const [activeStep, setActiveStep] = useState<
-    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'confirmacion'
+    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'secciones' | 'confirmacion'
   >('datos');
 
   // Photo optimization state for Cover Photo
@@ -528,7 +530,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     { id: 'galeria', label: '6. Galería de Fotos', icon: Camera, desc: 'Subir fotos de los novios', isOptional: false },
     { id: 'video', label: '7. Video de Historia', icon: Film, desc: 'YouTube / Reels / TikTok', isOptional: true, isEnabled: settings.showVideoMemories === true },
     { id: 'libro', label: '8. Libro de Firmas', icon: BookOpen, desc: 'Deseos y dedicatorias', isOptional: true, isEnabled: settings.showGuestbook === true },
-    { id: 'confirmacion', label: '9. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', isOptional: false },
+    { id: 'secciones', label: '9. Secciones', icon: ListOrdered, desc: 'Orden, galería y hoteles', isOptional: false },
+    { id: 'confirmacion', label: '10. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', isOptional: false },
   ];
 
   return (
@@ -555,7 +558,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
         </div>
 
         {/* Interactive Step Pills */}
-        <div className="mt-4 pt-3.5 border-t border-[#E5E2D0]/80 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-1.5 w-full min-w-0">
+        <div className="mt-4 pt-3.5 border-t border-[#E5E2D0]/80 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-10 gap-1.5 w-full min-w-0">
           {stepsList.map((step) => {
             const Icon = step.icon;
             const isActive = activeStep === step.id;
@@ -2092,6 +2095,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             )}
           </div>
         )}
+
+        {activeStep === 'secciones' && <SimpleModeSectionsStep settings={settings} onChange={onChange} />}
 
         {/* STEP 7: CONFIRMACIÓN RSVP */}
         {activeStep === 'confirmacion' && (
