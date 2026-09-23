@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -36,6 +36,37 @@ type CarouselPhoto = GalleryPhoto & {
   driveFileId?: string;
   driveInteractionToken?: string;
 };
+
+const getCarouselPhotoLoadKey = (photo: CarouselPhoto) =>
+  photo.driveFileId || `gallery:${photo.weddingId}:${photo.id}`;
+
+const preloadCarouselImage = (url: string) => new Promise<void>((resolve, reject) => {
+  const image = new Image();
+  let settled = false;
+  const finish = async () => {
+    if (settled) return;
+    if (!image.naturalWidth) {
+      settled = true;
+      reject(new Error('La imagen no pudo cargarse'));
+      return;
+    }
+    try { await image.decode(); } catch { /* onload confirms the bytes arrived */ }
+    if (!settled) {
+      settled = true;
+      resolve();
+    }
+  };
+  image.onload = () => { void finish(); };
+  image.onerror = () => {
+    if (!settled) {
+      settled = true;
+      reject(new Error('La imagen no pudo cargarse'));
+    }
+  };
+  image.referrerPolicy = 'no-referrer';
+  image.src = url;
+  if (image.complete) void finish();
+});
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -503,7 +534,41 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [photoRatios, setPhotoRatios] = useState<Record<number, number>>({});
-  const [loadedDrivePhotoIds, setLoadedDrivePhotoIds] = useState<string[]>([]);
+  const [loadedCarouselPhotoKeys, setLoadedCarouselPhotoKeys] = useState<string[]>([]);
+  const [isLoadingNextPhoto, setIsLoadingNextPhoto] = useState(false);
+  const [carouselLoadError, setCarouselLoadError] = useState(false);
+  const carouselNavigationRequestRef = useRef(0);
+  const autoplayIntervalMs = Math.max(2, Number(settings?.heroAutoplayInterval) || 5) * 1000;
+  const currentCarouselPhoto = carouselPhotos[carouselIndex] || carouselPhotos[0];
+  const currentCarouselPhotoKey = currentCarouselPhoto ? getCarouselPhotoLoadKey(currentCarouselPhoto) : null;
+  const isCurrentCarouselPhotoLoaded = !currentCarouselPhotoKey || loadedCarouselPhotoKeys.includes(currentCarouselPhotoKey);
+
+  const navigateToCarouselPhoto = useCallback(async (nextIndex: number) => {
+    const targetPhoto = carouselPhotos[nextIndex];
+    if (!targetPhoto) return;
+    const requestId = ++carouselNavigationRequestRef.current;
+    const targetKey = getCarouselPhotoLoadKey(targetPhoto);
+    setCarouselLoadError(false);
+
+    if (!loadedCarouselPhotoKeys.includes(targetKey)) {
+      setIsLoadingNextPhoto(true);
+      try {
+        await preloadCarouselImage(targetPhoto.url);
+      } catch {
+        if (requestId === carouselNavigationRequestRef.current) {
+          setIsLoadingNextPhoto(false);
+          setCarouselLoadError(true);
+        }
+        return;
+      }
+      if (requestId !== carouselNavigationRequestRef.current) return;
+      setLoadedCarouselPhotoKeys((previous) => previous.includes(targetKey) ? previous : [...previous, targetKey]);
+    }
+
+    if (requestId !== carouselNavigationRequestRef.current) return;
+    setCarouselIndex(nextIndex);
+    setIsLoadingNextPhoto(false);
+  }, [carouselPhotos, loadedCarouselPhotoKeys]);
 
   useEffect(() => {
     const visibleIndex = activePhotoIndex ?? carouselIndex;
@@ -517,25 +582,27 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     });
   }, [activePhotoIndex, carouselIndex, carouselPhotos.length]);
 
-  // Auto-play timer (slides every 4.5 seconds when active and not hovered)
+  // Start a fresh configured interval only after the current image is fully loaded.
   useEffect(() => {
-    if (!isAutoPlay || isHovered || carouselPhotos.length <= 1 || activePhotoIndex !== null) return;
-    const activeDrivePhotoId = carouselPhotos[carouselIndex]?.driveFileId;
-    if (activeDrivePhotoId && !loadedDrivePhotoIds.includes(activeDrivePhotoId)) return;
+    if (!isAutoPlay || isHovered || carouselPhotos.length <= 1 || activePhotoIndex !== null || isLoadingNextPhoto || carouselLoadError || !isCurrentCarouselPhotoLoaded) return;
     const timer = setTimeout(() => {
-      setCarouselIndex((prev) => (prev === carouselPhotos.length - 1 ? 0 : prev + 1));
-    }, 4500);
+      void navigateToCarouselPhoto(carouselIndex === carouselPhotos.length - 1 ? 0 : carouselIndex + 1);
+    }, autoplayIntervalMs);
     return () => clearTimeout(timer);
-  }, [isAutoPlay, isHovered, carouselPhotos.length, activePhotoIndex, carouselIndex, carouselPhotos, loadedDrivePhotoIds]);
+  }, [isAutoPlay, isHovered, carouselPhotos.length, activePhotoIndex, carouselIndex, autoplayIntervalMs, isLoadingNextPhoto, carouselLoadError, isCurrentCarouselPhotoLoaded, navigateToCarouselPhoto]);
 
   useEffect(() => {
     setCarouselIndex(0);
     setActivePhotoIndex(null);
+    setLoadedCarouselPhotoKeys([]);
+    setIsLoadingNextPhoto(false);
+    setCarouselLoadError(false);
+    carouselNavigationRequestRef.current += 1;
   }, [weddingId, effectiveAlbumUrl]);
 
   useEffect(() => {
-    if (carouselIndex >= carouselPhotos.length) setCarouselIndex(0);
-  }, [carouselIndex, carouselPhotos.length]);
+    if (carouselIndex >= carouselPhotos.length) void navigateToCarouselPhoto(0);
+  }, [carouselIndex, carouselPhotos.length, navigateToCarouselPhoto]);
 
   const handleImageLoad = async (photoId: number, e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
@@ -543,24 +610,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       const ratio = img.naturalWidth / img.naturalHeight;
       setPhotoRatios((prev) => ({ ...prev, [photoId]: ratio }));
       const photo = carouselPhotos.find((item) => item.id === photoId);
-      if (photo?.driveFileId) {
+      if (photo) {
         try { await img.decode(); } catch { /* onLoad already confirms the image bytes arrived */ }
-        setLoadedDrivePhotoIds((prev) => prev.includes(photo.driveFileId!) ? prev : [...prev, photo.driveFileId!]);
+        const photoKey = getCarouselPhotoLoadKey(photo);
+        setLoadedCarouselPhotoKeys((prev) => prev.includes(photoKey) ? prev : [...prev, photoKey]);
       }
     }
   };
 
   const handlePrevCarousel = () => {
     if (carouselPhotos.length === 0) return;
-    setCarouselIndex((prev) => (prev === 0 ? carouselPhotos.length - 1 : prev - 1));
+    void navigateToCarouselPhoto(carouselIndex === 0 ? carouselPhotos.length - 1 : carouselIndex - 1);
   };
 
   const handleNextCarousel = () => {
     if (carouselPhotos.length === 0) return;
-    setCarouselIndex((prev) => (prev === carouselPhotos.length - 1 ? 0 : prev + 1));
+    void navigateToCarouselPhoto(carouselIndex === carouselPhotos.length - 1 ? 0 : carouselIndex + 1);
   };
-
-  const currentCarouselPhoto = carouselPhotos[carouselIndex] || carouselPhotos[0];
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
@@ -710,9 +776,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         src={currentCarouselPhoto.url}
                         alt={currentCarouselPhoto.caption || 'Foto de boda'}
                         onLoad={(e) => handleImageLoad(currentCarouselPhoto.id, e)}
+                        onError={() => setCarouselLoadError(true)}
                         className="relative z-10 w-full h-full object-contain sm:object-cover transition-transform duration-700 group-hover:scale-103"
                         referrerPolicy="no-referrer"
                       />
+
+                      {(!isCurrentCarouselPhotoLoaded || isLoadingNextPhoto) && !carouselLoadError && (
+                        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/25 pointer-events-none" role="status" aria-live="polite">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-black/75 px-4 py-2 text-xs text-white shadow-lg">
+                            <Loader2 className="h-4 w-4 animate-spin text-amber-300" /> Cargando foto...
+                          </span>
+                        </div>
+                      )}
+                      {carouselLoadError && (
+                        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 pointer-events-none" role="status" aria-live="polite">
+                          <span className="rounded-full bg-black/80 px-4 py-2 text-xs text-white shadow-lg">No se pudo cargar la foto. Intenta nuevamente.</span>
+                        </div>
+                      )}
 
                       {/* Gradient Overlay at bottom for caption, comments and badges */}
                       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/95 via-black/35 to-transparent flex flex-col justify-between p-4 sm:p-6 text-white pointer-events-none">
@@ -872,7 +952,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     key={photo.id}
                     data-gallery-thumbnail-index={idx}
                     type="button"
-                    onClick={() => setCarouselIndex(idx)}
+                    onClick={() => void navigateToCarouselPhoto(idx)}
                     aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
                     aria-current={idx === carouselIndex ? 'true' : undefined}
                     className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex

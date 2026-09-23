@@ -1032,16 +1032,15 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     </div>
 
                     {/* Auto-play Timer Interval Control */}
-                    {currentHeroList.length > 1 && (
-                      <div className="p-3 bg-white rounded-xl border border-[#E5E2D0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="p-3 bg-white rounded-xl border border-[#E5E2D0] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                           <div>
                             <span className="text-xs font-bold text-stone-800">
-                              Tiempo de transición del Hero:
+                              Intervalo del pase automático:
                             </span>
                             <p className="text-[10px] text-stone-500">
-                              Cada cuántos segundos cambia la foto automáticamente
+                              Segundos entre fotos de portada y galería
                             </p>
                           </div>
                         </div>
@@ -1062,8 +1061,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                             </button>
                           ))}
                         </div>
-                      </div>
-                    )}
+                    </div>
 
                     {/* Upload new photo for Hero */}
                     <div className="space-y-2">
