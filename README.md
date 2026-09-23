@@ -37,10 +37,23 @@ Configura las siguientes variables de entorno en tu aplicación en Coolify:
 | `SQL_DB_NAME` | `2date_db` | Nombre de la base de datos (**2date_db**) |
 | `SQL_USER` | `tu_usuario_postgres` | Usuario de la base de datos |
 | `SQL_PASSWORD` | `tu_password_seguro` | Contraseña de PostgreSQL |
+| `GOOGLE_DRIVE_API_KEY` | *(opcional)* | API key solo del servidor para mostrar fotos de carpetas públicas de Drive dentro de la galería |
 
 > 💡 **Auto-Creación de Tablas**: Al iniciar el contenedor en Coolify, el script `autoMigrateDatabase()` se conecta automáticamente a tu PostgreSQL y crea todas las tablas de la base de datos `2date_db` con sus índices y datos semilla iniciales sin requerir migraciones manuales.
 
-### 2. Volúmenes Persistentes (Almacenamiento de Fotos y Audio)
+### 2. Galería desde una carpeta compartida de Google Drive (opcional)
+
+Al guardar una URL `https://drive.google.com/drive/folders/...` en el campo de álbum externo, sus imágenes aparecerán también dentro de la invitación. El enlace continúa disponible para abrir la carpeta completa. Esta integración requiere que la carpeta esté compartida con **“Cualquier persona con el enlace: lector”** y que el servidor tenga una API key; Google permite listar archivos de carpetas públicas con `files.list` y una API key ([documentación oficial](https://developers.google.com/workspace/drive/api/guides/search-files)).
+
+1. En [Google Cloud Console](https://console.cloud.google.com/), crea o selecciona un proyecto.
+2. En **APIs y servicios → Biblioteca**, habilita **Google Drive API**.
+3. En **APIs y servicios → Credenciales**, crea una **Clave de API**. Restringe la clave a **Google Drive API**. Si tu servidor tiene una IP de salida fija, limita también la clave a esa IP; la clave se utiliza exclusivamente en el servidor.
+4. En Coolify, agrega `GOOGLE_DRIVE_API_KEY` como variable/secret de entorno de la aplicación, guarda y reinicia o redepliega el servicio. Para desarrollo local, agrega esa variable a `.env`.
+5. En Drive, comparte la carpeta como **Cualquier persona con el enlace → Lector**. Copia su URL en el campo de álbum de la galería.
+
+No pongas la clave en código frontend ni uses un nombre `VITE_GOOGLE_DRIVE_API_KEY`: el servidor la necesita para consultar Drive y no debe enviarse al navegador. Las URL de Google Photos siguen funcionando como enlace externo, pero la API actual de Google Photos ya no permite enumerar álbumes compartidos de forma general; esta integración inline es específicamente para carpetas de Drive ([cambios oficiales de Google Photos](https://developers.google.com/photos/support/updates)).
+
+### 3. Volúmenes Persistentes (Almacenamiento de Fotos y Audio)
 
 En la sección **Storage / Persistent Storage** de Coolify, mapea el directorio de subidas:
 

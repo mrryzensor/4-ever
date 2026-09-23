@@ -29,6 +29,7 @@ import { GalleryPhoto, PhotoComment, WeddingSettings } from '../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { optimizeImageClient } from '../lib/mediaOptimizer.ts';
+import { DriveFolderPhotos } from './DriveFolderPhotos.tsx';
 
 interface PhotoGalleryProps {
   weddingId?: number;
@@ -443,7 +444,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   {effectiveAlbumTitle}
                 </div>
                 <div className={`text-[11px] truncate ${isDark ? 'text-stone-400' : 'text-amber-800/80'}`}>
-                  Álbum oficial en la nube para ver todas las fotos en alta resolución
+                  Fotos compartidas en la nube; las carpetas públicas de Drive también aparecen aquí
                 </div>
               </div>
             </div>
@@ -462,6 +463,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           </motion.div>
         )}
       </div>
+
+      {effectiveAlbumUrl && (
+        <DriveFolderPhotos
+          folderUrl={effectiveAlbumUrl}
+          title={effectiveAlbumTitle}
+          cardStyle={cardStyle}
+          eventType="bodas"
+          weddingId={weddingId}
+        />
+      )}
 
       {/* Interactive Carousel Slider Container */}
       {loading ? (

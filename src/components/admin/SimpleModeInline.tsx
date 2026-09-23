@@ -1585,7 +1585,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   6. Galería de Fotos & Álbumes en la Nube
                 </h4>
                 <p className="text-xs text-stone-500">
-                  Sube las fotos oficiales que verán tus invitados o enlaza un álbum compartido en Google Photos / Drive.
+                  Sube fotos aquí o enlaza una carpeta pública de Google Drive para mostrar sus imágenes directamente en la invitación. Otros álbumes se abren desde su enlace.
                 </p>
               </div>
               <span className="text-[10px] uppercase font-bold tracking-widest bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -1788,7 +1788,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               <div className="flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-[#5A5A40]" />
                 <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wider">
-                  Enlace Opcional a Álbum en la Nube (Google Photos / Drive / Apple)
+                  Carpeta de Google Drive o enlace externo
                 </h5>
               </div>
 
@@ -1813,11 +1813,14 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     type="url"
                     value={settings.galleryExternalAlbumUrl || ''}
                     onChange={(e) => onChange({ galleryExternalAlbumUrl: e.target.value })}
-                    placeholder="https://photos.app.goo.gl/..."
+                    placeholder="https://drive.google.com/drive/folders/... o enlace de álbum"
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
                   />
                 </div>
               </div>
+              <p className="text-[11px] leading-relaxed text-stone-500">
+                Para mostrar fotos de Drive dentro de la invitación, comparte la carpeta como “Cualquier persona con el enlace: lector” y configura GOOGLE_DRIVE_API_KEY en el servidor. Google Photos y otros enlaces seguirán disponibles para abrir el álbum externo.
+              </p>
             </div>
           </div>
         )}

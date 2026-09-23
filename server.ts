@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import {
   getWeddingSettings,
@@ -57,6 +58,7 @@ import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
 import { getEventPresentation } from './src/lib/eventUtils.ts';
+import { parseDriveFolderUrl } from './src/lib/driveFolder.ts';
 
 // Setup uploads volume storage directory (compatible with Docker volumes and local env)
 const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
@@ -765,6 +767,163 @@ async function startServer() {
   app.post('/api/rsvp/register-open', handleOpenRsvp);
   app.post('/api/rsvp/register', handleOpenRsvp);
   app.post('/api/rsvp/open', handleOpenRsvp);
+
+  const signDriveThumbnail = (secret: string, eventId: number, folderId: string, fileId: string, source: string) =>
+    createHmac('sha256', secret).update(`${eventId}:${folderId}:${fileId}:${source}`).digest('hex');
+
+  // Public Drive folders can back the invitation gallery without exposing the API key to browsers.
+  app.get('/api/drive-folders/:folderId/photos', async (req, res) => {
+    const apiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+    if (!apiKey) {
+      return res.status(503).json({
+        code: 'drive_not_configured',
+        error: 'La galería de Drive aún no está configurada en el servidor.',
+      });
+    }
+
+    const folderId = req.params.folderId;
+    if (!/^[A-Za-z0-9_-]{1,200}$/.test(folderId)) {
+      return res.status(400).json({ code: 'invalid_folder', error: 'El enlace de la carpeta de Drive no es válido.' });
+    }
+
+    const weddingId = Number(req.query.weddingId);
+    if (!Number.isSafeInteger(weddingId) || weddingId < 1) {
+      return res.status(400).json({ code: 'invalid_event', error: 'No se pudo identificar el evento de esta galería.' });
+    }
+
+    const eventSettings = await getWeddingSettings(weddingId);
+    const configuredFolder = parseDriveFolderUrl(eventSettings?.galleryExternalAlbumUrl);
+    if (!configuredFolder || configuredFolder.folderId !== folderId) {
+      return res.status(404).json({ code: 'folder_not_configured', error: 'Esta carpeta no está configurada para el evento.' });
+    }
+
+    const resourceKey = typeof req.query.resourceKey === 'string' ? req.query.resourceKey : '';
+    if (resourceKey && !/^[A-Za-z0-9_-]{1,512}$/.test(resourceKey)) {
+      return res.status(400).json({ code: 'invalid_resource_key', error: 'La clave de acceso de la carpeta no es válida.' });
+    }
+
+    const pageToken = typeof req.query.pageToken === 'string' ? req.query.pageToken : '';
+    if (pageToken.length > 2048 || (pageToken && !/^[A-Za-z0-9_./+=-]+$/.test(pageToken))) {
+      return res.status(400).json({ code: 'invalid_page_token', error: 'No se pudo continuar la lista de fotos.' });
+    }
+
+    const driveUrl = new URL('https://www.googleapis.com/drive/v3/files');
+    driveUrl.searchParams.set('key', apiKey);
+    driveUrl.searchParams.set('q', `'${folderId}' in parents and trashed = false and mimeType contains 'image/'`);
+    driveUrl.searchParams.set('pageSize', '100');
+    driveUrl.searchParams.set('orderBy', 'createdTime desc');
+    driveUrl.searchParams.set('supportsAllDrives', 'true');
+    driveUrl.searchParams.set('includeItemsFromAllDrives', 'true');
+    driveUrl.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,thumbnailLink,resourceKey,createdTime)');
+    if (pageToken) driveUrl.searchParams.set('pageToken', pageToken);
+
+    const headers: Record<string, string> = {};
+    if (resourceKey) headers['X-Goog-Drive-Resource-Keys'] = `${folderId}/${resourceKey}`;
+
+    try {
+      const driveResponse = await fetch(driveUrl, { headers, signal: AbortSignal.timeout(12000) });
+      if (!driveResponse.ok) {
+        console.warn(`Google Drive photo listing returned HTTP ${driveResponse.status}.`);
+        if (driveResponse.status === 403) {
+          return res.status(403).json({
+            code: 'drive_folder_forbidden',
+            error: 'No se pudo leer la carpeta. Compártela como “Cualquier persona con el enlace: lector” y verifica que Drive API esté habilitada.',
+          });
+        }
+        if (driveResponse.status === 404) {
+          return res.status(404).json({ code: 'drive_folder_not_found', error: 'No encontramos esa carpeta de Drive.' });
+        }
+        return res.status(502).json({ code: 'drive_request_failed', error: 'Google Drive no pudo responder. Inténtalo de nuevo más tarde.' });
+      }
+
+      const result = await driveResponse.json() as {
+        nextPageToken?: string;
+        files?: Array<{ id: string; name?: string; mimeType?: string; thumbnailLink?: string; resourceKey?: string }>;
+      };
+      const photos = (result.files || [])
+        .filter((file) => file.id && file.mimeType?.startsWith('image/') && file.thumbnailLink)
+        .map((file) => {
+          const thumbnailUrl = new URL(file.thumbnailLink!);
+          if (thumbnailUrl.protocol !== 'https:' || !thumbnailUrl.hostname.endsWith('.googleusercontent.com')) return null;
+          const encodedSource = Buffer.from(thumbnailUrl.toString()).toString('base64url');
+          const signature = signDriveThumbnail(apiKey, weddingId, folderId, file.id, encodedSource);
+          const proxyUrl = new URL(
+            `/api/drive-folders/${encodeURIComponent(folderId)}/photos/${encodeURIComponent(file.id)}/thumbnail`,
+            'https://local.invalid',
+          );
+          proxyUrl.searchParams.set('weddingId', String(weddingId));
+          proxyUrl.searchParams.set('source', encodedSource);
+          proxyUrl.searchParams.set('signature', signature);
+          return {
+            id: file.id,
+            name: file.name || 'Foto compartida',
+            thumbnailUrl: `${proxyUrl.pathname}${proxyUrl.search}`,
+            openUrl: `https://drive.google.com/file/d/${encodeURIComponent(file.id)}/view${file.resourceKey ? `?resourcekey=${encodeURIComponent(file.resourceKey)}` : ''}`,
+          };
+        })
+        .filter((photo): photo is NonNullable<typeof photo> => photo !== null);
+
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
+      return res.json({ photos, nextPageToken: result.nextPageToken });
+    } catch (error) {
+      console.error('Google Drive photo listing failed:', error instanceof Error ? error.message : 'Unknown error');
+      return res.status(502).json({ code: 'drive_unavailable', error: 'No pudimos conectar con Google Drive en este momento.' });
+    }
+  });
+
+  app.get('/api/drive-folders/:folderId/photos/:fileId/thumbnail', async (req, res) => {
+    const apiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+    const { folderId, fileId } = req.params;
+    const weddingId = Number(req.query.weddingId);
+    const source = typeof req.query.source === 'string' ? req.query.source : '';
+    const signature = typeof req.query.signature === 'string' ? req.query.signature : '';
+
+    if (!apiKey) return res.sendStatus(503);
+    if (!/^[A-Za-z0-9_-]{1,200}$/.test(folderId) || !/^[A-Za-z0-9_-]{1,200}$/.test(fileId)) {
+      return res.sendStatus(400);
+    }
+    if (!Number.isSafeInteger(weddingId) || weddingId < 1 || source.length > 4096 || !/^[a-f0-9]{64}$/.test(signature)) {
+      return res.sendStatus(400);
+    }
+
+    const expectedSignature = signDriveThumbnail(apiKey, weddingId, folderId, fileId, source);
+    if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+      return res.sendStatus(403);
+    }
+
+    const eventSettings = await getWeddingSettings(weddingId);
+    const configuredFolder = parseDriveFolderUrl(eventSettings?.galleryExternalAlbumUrl);
+    if (!configuredFolder || configuredFolder.folderId !== folderId) return res.sendStatus(404);
+
+    try {
+      const thumbnailUrl = new URL(Buffer.from(source, 'base64url').toString('utf8'));
+      if (thumbnailUrl.protocol !== 'https:' || !thumbnailUrl.hostname.endsWith('.googleusercontent.com')) {
+        return res.sendStatus(400);
+      }
+
+      const thumbnailResponse = await fetch(thumbnailUrl, {
+        signal: AbortSignal.timeout(10000),
+        redirect: 'error',
+      });
+      if (!thumbnailResponse.ok) return res.sendStatus(502);
+
+      const contentType = thumbnailResponse.headers.get('content-type')?.split(';')[0].trim() || '';
+      if (!/^image\/(avif|gif|jpeg|png|webp)$/i.test(contentType)) return res.sendStatus(502);
+
+      const image = Buffer.from(await thumbnailResponse.arrayBuffer());
+      if (image.length === 0 || image.length > 10 * 1024 * 1024) return res.sendStatus(502);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', String(image.length));
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800');
+      return res.send(image);
+    } catch (error) {
+      console.warn('Google Drive thumbnail proxy failed:', error instanceof Error ? error.message : 'Unknown error');
+      return res.sendStatus(502);
+    }
+  });
 
   // 4. Interactive Photo Gallery & Uploads
   app.get('/api/gallery', async (req, res) => {
