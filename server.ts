@@ -774,6 +774,8 @@ async function startServer() {
 
   const signDriveThumbnail = (secret: string, eventId: number, folderId: string, fileId: string, source: string) =>
     createHmac('sha256', secret).update(`${eventId}:${folderId}:${fileId}:${source}`).digest('hex');
+  const DRIVE_IMAGE_WIDTHS = [640, 960, 1440, 1920] as const;
+  type DriveImageWidth = (typeof DRIVE_IMAGE_WIDTHS)[number];
   const signStableDriveAsset = (
     secret: string,
     eventId: number,
@@ -781,7 +783,8 @@ async function startServer() {
     fileId: string,
     resourceKey: string,
     variant: 'thumbnail' | 'full',
-  ) => createHmac('sha256', secret).update(`${eventId}:${folderId}:${fileId}:stable:${variant}:${resourceKey}`).digest('hex');
+    width?: DriveImageWidth,
+  ) => createHmac('sha256', secret).update(`${eventId}:${folderId}:${fileId}:stable:${variant}:${resourceKey}${width ? `:${width}` : ''}`).digest('hex');
   const signDrivePhotoInteraction = (secret: string, eventId: number, folderId: string, fileId: string) =>
     createHmac('sha256', secret).update(`drive-photo-interactions:${eventId}:${folderId}:${fileId}`).digest('hex');
   const createStableDriveAssetUrl = (
@@ -791,6 +794,7 @@ async function startServer() {
     fileId: string,
     resourceKey: string,
     variant: 'thumbnail' | 'full',
+    width?: DriveImageWidth,
   ) => {
     const url = new URL(
       `/api/drive-folders/${encodeURIComponent(folderId)}/photos/${encodeURIComponent(fileId)}/thumbnail`,
@@ -799,9 +803,15 @@ async function startServer() {
     url.searchParams.set('weddingId', String(eventId));
     url.searchParams.set('resourceKey', resourceKey);
     url.searchParams.set('variant', variant);
-    url.searchParams.set('signature', signStableDriveAsset(secret, eventId, folderId, fileId, resourceKey, variant));
+    if (width) url.searchParams.set('width', String(width));
+    url.searchParams.set('signature', signStableDriveAsset(secret, eventId, folderId, fileId, resourceKey, variant, width));
     return `${url.pathname}${url.search}`;
   };
+  const createResponsiveDriveAssetUrls = (secret: string, eventId: number, folderId: string, fileId: string, resourceKey: string) =>
+    Object.fromEntries(DRIVE_IMAGE_WIDTHS.map((width) => [
+      width,
+      createStableDriveAssetUrl(secret, eventId, folderId, fileId, resourceKey, 'full', width),
+    ])) as Record<DriveImageWidth, string>;
   type DriveBrowsePayload = {
     eventId: number;
     rootFolderId: string;
@@ -966,6 +976,7 @@ async function startServer() {
           name: file.name || 'Foto compartida',
           thumbnailUrl: createStableDriveAssetUrl(apiKey, weddingId, rootFolderId, file.id, resourceKey, 'thumbnail'),
           fullUrl: createStableDriveAssetUrl(apiKey, weddingId, rootFolderId, file.id, resourceKey, 'full'),
+          responsiveUrls: createResponsiveDriveAssetUrls(apiKey, weddingId, rootFolderId, file.id, resourceKey),
           interactionToken: signDrivePhotoInteraction(apiKey, weddingId, rootFolderId, file.id),
           openUrl: openUrl.toString(),
         }];
@@ -1131,6 +1142,7 @@ async function startServer() {
           name: file.name || 'Foto compartida',
           thumbnailUrl: createStableDriveAssetUrl(apiKey, weddingId, folderId, file.id, fileResourceKey, 'thumbnail'),
           fullUrl: createStableDriveAssetUrl(apiKey, weddingId, folderId, file.id, fileResourceKey, 'full'),
+          responsiveUrls: createResponsiveDriveAssetUrls(apiKey, weddingId, folderId, file.id, fileResourceKey),
           interactionToken: signDrivePhotoInteraction(apiKey, weddingId, folderId, file.id),
           openUrl: openUrl.toString(),
         };
@@ -1322,6 +1334,8 @@ async function startServer() {
     const resourceKey = typeof req.query.resourceKey === 'string' ? req.query.resourceKey : '';
     const variantParam = typeof req.query.variant === 'string' ? req.query.variant : 'thumbnail';
     const variant = variantParam === 'full' ? 'full' : 'thumbnail';
+    const widthParam = typeof req.query.width === 'string' ? req.query.width : '';
+    const width = widthParam ? Number(widthParam) as DriveImageWidth : undefined;
     const signature = typeof req.query.signature === 'string' ? req.query.signature : '';
 
     if (!apiKey) return res.sendStatus(503);
@@ -1331,6 +1345,7 @@ async function startServer() {
     if (
       !Number.isSafeInteger(weddingId) || weddingId < 1 || source.length > 4096 ||
       !['thumbnail', 'full'].includes(variantParam) ||
+      (widthParam && (source || !DRIVE_IMAGE_WIDTHS.includes(width as DriveImageWidth) || variant !== 'full')) ||
       (resourceKey && !/^[A-Za-z0-9_-]{1,512}$/.test(resourceKey)) ||
       !/^[a-f0-9]{64}$/.test(signature)
     ) {
@@ -1339,7 +1354,7 @@ async function startServer() {
 
     const expectedSignature = source
       ? signDriveThumbnail(apiKey, weddingId, folderId, fileId, source)
-      : signStableDriveAsset(apiKey, weddingId, folderId, fileId, resourceKey, variant);
+      : signStableDriveAsset(apiKey, weddingId, folderId, fileId, resourceKey, variant, width);
     if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
       return res.sendStatus(403);
     }
@@ -1358,45 +1373,33 @@ async function startServer() {
 
       if (!source && variant === 'full') {
         const metadataUrl = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
-        metadataUrl.searchParams.set('fields', 'id,mimeType,size,webContentLink,thumbnailLink,resourceKey');
+        metadataUrl.searchParams.set('fields', 'id,mimeType,thumbnailLink,resourceKey');
         metadataUrl.searchParams.set('supportsAllDrives', 'true');
         const metadataResponse = await fetch(metadataUrl, { headers: driveHeaders, signal: AbortSignal.timeout(10000) });
         if (!metadataResponse.ok) return res.sendStatus(metadataResponse.status === 404 ? 404 : 502);
         const metadata = await metadataResponse.json() as {
           mimeType?: string;
-          size?: string;
-          webContentLink?: string;
           thumbnailLink?: string;
         };
-        if (!metadata.mimeType?.startsWith('image/')) return res.sendStatus(404);
-        if (Number(metadata.size || 0) > 40 * 1024 * 1024) return res.sendStatus(413);
+        if (!metadata.mimeType?.startsWith('image/') || !metadata.thumbnailLink) return res.sendStatus(404);
 
-        const apiDownloadUrl = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
-        apiDownloadUrl.searchParams.set('alt', 'media');
-        apiDownloadUrl.searchParams.set('supportsAllDrives', 'true');
-        const publicDownloadUrl = new URL(`https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`);
-        if (resourceKey) publicDownloadUrl.searchParams.set('resourcekey', resourceKey);
-        const downloadUrls = [apiDownloadUrl.toString()];
-        if (metadata.webContentLink) downloadUrls.push(metadata.webContentLink);
-        downloadUrls.push(publicDownloadUrl.toString());
-        if (metadata.thumbnailLink) {
-          const highResolutionThumbnail = new URL(metadata.thumbnailLink);
-          if (highResolutionThumbnail.protocol === 'https:' && highResolutionThumbnail.hostname.endsWith('.googleusercontent.com')) {
-            if (/=s\d+(?:-[a-z-]+)?$/i.test(highResolutionThumbnail.pathname)) {
-              highResolutionThumbnail.pathname = highResolutionThumbnail.pathname.replace(/=s\d+(?:-[a-z-]+)?$/i, '=s2000');
-            } else {
-              highResolutionThumbnail.pathname = `${highResolutionThumbnail.pathname}=s2000`;
-            }
-            downloadUrls.push(highResolutionThumbnail.toString());
-          }
+        const highResolutionThumbnail = new URL(metadata.thumbnailLink);
+        if (highResolutionThumbnail.protocol !== 'https:' || !highResolutionThumbnail.hostname.endsWith('.googleusercontent.com')) {
+          return res.sendStatus(400);
         }
+        const requestedWidth = width || 1920;
+        if (/=s\d+(?:-[a-z-]+)?$/i.test(highResolutionThumbnail.pathname)) {
+          highResolutionThumbnail.pathname = highResolutionThumbnail.pathname.replace(/=s\d+(?:-[a-z-]+)?$/i, `=s${requestedWidth}`);
+        } else {
+          highResolutionThumbnail.pathname = `${highResolutionThumbnail.pathname}=s${requestedWidth}`;
+        }
+        const downloadUrls = [highResolutionThumbnail.toString()];
 
         let image: Buffer | null = null;
         let contentType = '';
         for (const downloadUrl of downloadUrls) {
           let parsedDownloadUrl = new URL(downloadUrl);
           let downloadResponse: Response | null = null;
-          let initialRequest = true;
           for (let redirectCount = 0; redirectCount <= 5; redirectCount += 1) {
             const hostname = parsedDownloadUrl.hostname.toLowerCase();
             const trustedGoogleHost = hostname === 'www.googleapis.com'
@@ -1406,11 +1409,9 @@ async function startServer() {
               || hostname.endsWith('.googleusercontent.com');
             if (parsedDownloadUrl.protocol !== 'https:' || !trustedGoogleHost) break;
             const response = await fetch(parsedDownloadUrl, {
-              headers: initialRequest && downloadUrl === apiDownloadUrl.toString() ? driveHeaders : undefined,
               redirect: 'manual',
               signal: AbortSignal.timeout(30000),
             });
-            initialRequest = false;
             const location = response.headers.get('location');
             if ([301, 302, 303, 307, 308].includes(response.status) && location && redirectCount < 5) {
               parsedDownloadUrl = new URL(location, parsedDownloadUrl);

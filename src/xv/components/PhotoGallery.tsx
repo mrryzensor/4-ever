@@ -31,13 +31,20 @@ import { CARD_THEMES } from '../../lib/themes.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
 import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
 
-type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string; driveFileId?: string; driveInteractionToken?: string };
+type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string; driveFileId?: string; driveInteractionToken?: string; responsiveUrls?: Record<640 | 960 | 1440 | 1920, string> };
 
+const DRIVE_IMAGE_WIDTHS = [640, 960, 1440, 1920] as const;
 const getCarouselPhotoLoadKey = (photo: CarouselPhoto) =>
   photo.driveFileId || `gallery:${photo.weddingId}:${photo.id}`;
+const getCarouselImageAttributes = (photo: CarouselPhoto) => photo.responsiveUrls ? ({
+  src: photo.responsiveUrls[1920] || photo.url,
+  srcSet: DRIVE_IMAGE_WIDTHS.map((width) => `${photo.responsiveUrls![width]} ${width}w`).join(', '),
+  sizes: '(max-width: 640px) 94vw, (max-width: 1280px) 84vw, 1500px',
+}) : ({ src: photo.url });
 
-const preloadCarouselImage = (url: string) => new Promise<void>((resolve, reject) => {
+const preloadCarouselImage = (photo: CarouselPhoto) => new Promise<void>((resolve, reject) => {
   const image = new Image();
+  const attributes = getCarouselImageAttributes(photo);
   let settled = false;
   const finish = async () => {
     if (settled) return;
@@ -60,7 +67,9 @@ const preloadCarouselImage = (url: string) => new Promise<void>((resolve, reject
     }
   };
   image.referrerPolicy = 'no-referrer';
-  image.src = url;
+  image.sizes = attributes.sizes || '';
+  image.srcset = attributes.srcSet || '';
+  image.src = attributes.src;
   if (image.complete) void finish();
 });
 
@@ -142,6 +151,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       driveOpenUrl: photo.openUrl,
       driveFileId: photo.id,
       driveInteractionToken: photo.interactionToken,
+      responsiveUrls: photo.responsiveUrls,
     })),
   ], [driveGallery.photos, drivePhotoSelectionIds, drivePhotoSelectionMode, photos, weddingId]);
 
@@ -539,7 +549,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     if (!loadedCarouselPhotoKeys.includes(targetKey)) {
       setIsLoadingNextPhoto(true);
       try {
-        await preloadCarouselImage(targetPhoto.url);
+        await preloadCarouselImage(targetPhoto);
       } catch {
         if (requestId === carouselNavigationRequestRef.current) {
           setIsLoadingNextPhoto(false);
@@ -755,11 +765,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       {/* Blurred Ambient Glow Background for aesthetic framing */}
                       <div
                         className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-40 scale-110"
-                        style={{ backgroundImage: `url(${currentCarouselPhoto.url})` }}
+                        style={{ backgroundImage: `url(${currentCarouselPhoto.thumbnailUrl || currentCarouselPhoto.url})` }}
                       />
 
                       <img
-                        src={currentCarouselPhoto.url}
+                        {...getCarouselImageAttributes(currentCarouselPhoto)}
                         alt={currentCarouselPhoto.caption || 'Foto de XV Años'}
                         onLoad={(e) => handleImageLoad(currentCarouselPhoto.id, e)}
                         onError={() => setCarouselLoadError(true)}
@@ -1206,7 +1216,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           className="flex flex-col items-center justify-center h-full w-full relative"
                         >
                           <img
-                            src={activePhoto.url}
+                            {...getCarouselImageAttributes(activePhoto)}
                             alt={activePhoto.caption || 'Foto de XV Años'}
                             className="h-full w-full max-h-[100vh] lg:max-h-[75vh] object-contain sm:rounded-xl shadow-2xl"
                             referrerPolicy="no-referrer"

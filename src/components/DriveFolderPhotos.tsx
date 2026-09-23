@@ -6,6 +6,7 @@ export interface DriveGalleryPhoto {
   name: string;
   thumbnailUrl: string;
   fullUrl: string;
+  responsiveUrls?: Record<640 | 960 | 1440 | 1920, string>;
   interactionToken: string;
   openUrl: string;
 }
