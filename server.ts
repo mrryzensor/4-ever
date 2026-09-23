@@ -803,67 +803,202 @@ async function startServer() {
     }
 
     const pageToken = typeof req.query.pageToken === 'string' ? req.query.pageToken : '';
-    if (pageToken.length > 2048 || (pageToken && !/^[A-Za-z0-9_./+=-]+$/.test(pageToken))) {
+    if (pageToken.length > 4096 || (pageToken && !/^[A-Za-z0-9_./+=-]+$/.test(pageToken))) {
       return res.status(400).json({ code: 'invalid_page_token', error: 'No se pudo continuar la lista de fotos.' });
     }
 
-    const driveUrl = new URL('https://www.googleapis.com/drive/v3/files');
-    driveUrl.searchParams.set('q', `'${folderId}' in parents and trashed = false and mimeType contains 'image/'`);
-    driveUrl.searchParams.set('pageSize', '100');
-    driveUrl.searchParams.set('orderBy', 'createdTime desc');
-    driveUrl.searchParams.set('supportsAllDrives', 'true');
-    driveUrl.searchParams.set('includeItemsFromAllDrives', 'true');
-    driveUrl.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,thumbnailLink,resourceKey,createdTime)');
-    if (pageToken) driveUrl.searchParams.set('pageToken', pageToken);
-
-    const headers: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
-    if (resourceKey) headers['X-Goog-Drive-Resource-Keys'] = `${folderId}/${resourceKey}`;
-
     try {
-      const driveResponse = await fetch(driveUrl, { headers, signal: AbortSignal.timeout(12000) });
-      if (!driveResponse.ok) {
-        console.warn(`Google Drive photo listing returned HTTP ${driveResponse.status}.`);
-        if (driveResponse.status === 403) {
-          return res.status(403).json({
-            code: 'drive_folder_forbidden',
-            error: 'No se pudo leer la carpeta. Compártela como “Cualquier persona con el enlace: lector” y verifica que Drive API esté habilitada.',
-          });
+      let cursorFolderIndex = 0;
+      let cursorFolderId = '';
+      let drivePageToken = '';
+      if (pageToken.startsWith('v1_')) {
+        try {
+          const cursor = JSON.parse(Buffer.from(pageToken.slice(3), 'base64url').toString('utf8')) as {
+            folderIndex?: number;
+            folderId?: string;
+            drivePageToken?: string;
+          };
+          if (
+            !Number.isSafeInteger(cursor.folderIndex) ||
+            (cursor.folderIndex as number) < 0 ||
+            typeof cursor.folderId !== 'string' ||
+            (cursor.drivePageToken && (cursor.drivePageToken.length > 2048 || !/^[A-Za-z0-9_./+=-]+$/.test(cursor.drivePageToken)))
+          ) {
+            return res.status(400).json({ code: 'invalid_page_token', error: 'No se pudo continuar la lista de fotos.' });
+          }
+          cursorFolderIndex = cursor.folderIndex as number;
+          cursorFolderId = cursor.folderId;
+          drivePageToken = cursor.drivePageToken || '';
+        } catch {
+          return res.status(400).json({ code: 'invalid_page_token', error: 'No se pudo continuar la lista de fotos.' });
         }
-        if (driveResponse.status === 404) {
-          return res.status(404).json({ code: 'drive_folder_not_found', error: 'No encontramos esa carpeta de Drive.' });
-        }
-        return res.status(502).json({ code: 'drive_request_failed', error: 'Google Drive no pudo responder. Inténtalo de nuevo más tarde.' });
+      } else {
+        // Accept a Drive page token from clients that were already open during deployment.
+        drivePageToken = pageToken;
       }
 
-      const result = await driveResponse.json() as {
-        nextPageToken?: string;
-        files?: Array<{ id: string; name?: string; mimeType?: string; thumbnailLink?: string; resourceKey?: string }>;
+      const apiHeaders: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
+      const resourceKeysByFolder = new Map<string, string>();
+      if (resourceKey) {
+        resourceKeysByFolder.set(folderId, resourceKey);
+        apiHeaders['X-Goog-Drive-Resource-Keys'] = `${folderId}/${resourceKey}`;
+      }
+
+      // Shared albums often keep photos inside an immediate child folder.
+      // Enumerate those folders, then list each parent separately (Drive can reject
+      // combined parent queries when access is inherited from a shared root).
+      const folderIds = [folderId];
+      const foldersUrl = new URL('https://www.googleapis.com/drive/v3/files');
+      foldersUrl.searchParams.set('q', `'${folderId}' in parents and trashed = false and mimeType = 'application/vnd.google-apps.folder'`);
+      foldersUrl.searchParams.set('pageSize', '1000');
+      foldersUrl.searchParams.set('supportsAllDrives', 'true');
+      foldersUrl.searchParams.set('includeItemsFromAllDrives', 'true');
+      foldersUrl.searchParams.set('fields', 'nextPageToken,files(id,mimeType,resourceKey)');
+
+      let folderPageToken: string | undefined;
+      do {
+        if (folderPageToken) foldersUrl.searchParams.set('pageToken', folderPageToken);
+        const foldersResponse = await fetch(foldersUrl, { headers: apiHeaders, signal: AbortSignal.timeout(12000) });
+        if (!foldersResponse.ok) {
+          console.warn(`Google Drive child-folder listing returned HTTP ${foldersResponse.status}.`);
+          if (foldersResponse.status === 403) {
+            return res.status(403).json({
+              code: 'drive_folder_forbidden',
+              error: 'No se pudo leer la carpeta. Compártela como “Cualquier persona con el enlace: lector” y verifica que Drive API esté habilitada.',
+            });
+          }
+          if (foldersResponse.status === 404) {
+            return res.status(404).json({ code: 'drive_folder_not_found', error: 'No encontramos esa carpeta de Drive.' });
+          }
+          return res.status(502).json({ code: 'drive_request_failed', error: 'Google Drive no pudo responder. Inténtalo de nuevo más tarde.' });
+        }
+
+        const folderResult = await foldersResponse.json() as {
+          nextPageToken?: string;
+          files?: Array<{ id: string; mimeType?: string; resourceKey?: string }>;
+        };
+        for (const folder of folderResult.files || []) {
+          if (
+            folder.mimeType === 'application/vnd.google-apps.folder' &&
+            /^[A-Za-z0-9_-]{1,200}$/.test(folder.id)
+          ) {
+            folderIds.push(folder.id);
+            if (folder.resourceKey && /^[A-Za-z0-9_-]{1,512}$/.test(folder.resourceKey)) {
+              resourceKeysByFolder.set(folder.id, folder.resourceKey);
+            }
+          }
+        }
+        folderPageToken = folderResult.nextPageToken;
+      } while (folderPageToken);
+
+      if (cursorFolderId && folderIds[cursorFolderIndex] !== cursorFolderId) {
+        return res.status(400).json({ code: 'stale_page_token', error: 'La carpeta cambió mientras cargábamos las fotos. Recarga la galería.' });
+      }
+
+      const toGalleryPhoto = (file: { id: string; name?: string; mimeType?: string; thumbnailLink?: string; resourceKey?: string }) => {
+        if (!file.id || !file.mimeType?.startsWith('image/') || !file.thumbnailLink) return null;
+        const thumbnailUrl = new URL(file.thumbnailLink);
+        if (thumbnailUrl.protocol !== 'https:' || !thumbnailUrl.hostname.endsWith('.googleusercontent.com')) return null;
+        const encodedSource = Buffer.from(thumbnailUrl.toString()).toString('base64url');
+        const signature = signDriveThumbnail(apiKey, weddingId, folderId, file.id, encodedSource);
+        const proxyUrl = new URL(
+          `/api/drive-folders/${encodeURIComponent(folderId)}/photos/${encodeURIComponent(file.id)}/thumbnail`,
+          'https://local.invalid',
+        );
+        proxyUrl.searchParams.set('weddingId', String(weddingId));
+        proxyUrl.searchParams.set('source', encodedSource);
+        proxyUrl.searchParams.set('signature', signature);
+        return {
+          id: file.id,
+          name: file.name || 'Foto compartida',
+          thumbnailUrl: `${proxyUrl.pathname}${proxyUrl.search}`,
+          openUrl: `https://drive.google.com/file/d/${encodeURIComponent(file.id)}/view${file.resourceKey ? `?resourcekey=${encodeURIComponent(file.resourceKey)}` : ''}`,
+        };
       };
-      const photos = (result.files || [])
-        .filter((file) => file.id && file.mimeType?.startsWith('image/') && file.thumbnailLink)
-        .map((file) => {
-          const thumbnailUrl = new URL(file.thumbnailLink!);
-          if (thumbnailUrl.protocol !== 'https:' || !thumbnailUrl.hostname.endsWith('.googleusercontent.com')) return null;
-          const encodedSource = Buffer.from(thumbnailUrl.toString()).toString('base64url');
-          const signature = signDriveThumbnail(apiKey, weddingId, folderId, file.id, encodedSource);
-          const proxyUrl = new URL(
-            `/api/drive-folders/${encodeURIComponent(folderId)}/photos/${encodeURIComponent(file.id)}/thumbnail`,
-            'https://local.invalid',
-          );
-          proxyUrl.searchParams.set('weddingId', String(weddingId));
-          proxyUrl.searchParams.set('source', encodedSource);
-          proxyUrl.searchParams.set('signature', signature);
-          return {
-            id: file.id,
-            name: file.name || 'Foto compartida',
-            thumbnailUrl: `${proxyUrl.pathname}${proxyUrl.search}`,
-            openUrl: `https://drive.google.com/file/d/${encodeURIComponent(file.id)}/view${file.resourceKey ? `?resourcekey=${encodeURIComponent(file.resourceKey)}` : ''}`,
-          };
-        })
-        .filter((photo): photo is NonNullable<typeof photo> => photo !== null);
+
+      const photos: Array<{ id: string; name: string; thumbnailUrl: string; openUrl: string }> = [];
+      let currentFolderIndex = cursorFolderIndex;
+      let currentDrivePageToken = drivePageToken || undefined;
+      let nextPageToken: string | undefined;
+      let folderRequests = 0;
+
+      while (currentFolderIndex < folderIds.length && photos.length < 100 && folderRequests < 25) {
+        const currentFolderId = folderIds[currentFolderIndex];
+        const driveUrl = new URL('https://www.googleapis.com/drive/v3/files');
+        driveUrl.searchParams.set('q', `'${currentFolderId}' in parents and trashed = false and mimeType contains 'image/'`);
+        driveUrl.searchParams.set('pageSize', String(Math.max(1, 100 - photos.length)));
+        driveUrl.searchParams.set('orderBy', 'createdTime desc');
+        driveUrl.searchParams.set('supportsAllDrives', 'true');
+        driveUrl.searchParams.set('includeItemsFromAllDrives', 'true');
+        driveUrl.searchParams.set('fields', 'nextPageToken,files(id,name,mimeType,thumbnailLink,resourceKey,createdTime)');
+        if (currentDrivePageToken) driveUrl.searchParams.set('pageToken', currentDrivePageToken);
+
+        const headers: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
+        const keyPairs = [folderId, currentFolderId]
+          .filter((id, index, all) => all.indexOf(id) === index)
+          .flatMap((id) => {
+            const key = resourceKeysByFolder.get(id);
+            return key ? [`${id}/${key}`] : [];
+          });
+        if (keyPairs.length) headers['X-Goog-Drive-Resource-Keys'] = keyPairs.join(',');
+
+        const driveResponse = await fetch(driveUrl, { headers, signal: AbortSignal.timeout(12000) });
+        folderRequests += 1;
+        if (!driveResponse.ok) {
+          console.warn(`Google Drive photo listing returned HTTP ${driveResponse.status}.`);
+          if (driveResponse.status === 403) {
+            return res.status(403).json({
+              code: 'drive_folder_forbidden',
+              error: 'No se pudo leer la carpeta. Compártela como “Cualquier persona con el enlace: lector” y verifica que Drive API esté habilitada.',
+            });
+          }
+          if (driveResponse.status === 404) {
+            return res.status(404).json({ code: 'drive_folder_not_found', error: 'No encontramos esa carpeta de Drive.' });
+          }
+          return res.status(502).json({ code: 'drive_request_failed', error: 'Google Drive no pudo responder. Inténtalo de nuevo más tarde.' });
+        }
+
+        const result = await driveResponse.json() as {
+          nextPageToken?: string;
+          files?: Array<{ id: string; name?: string; mimeType?: string; thumbnailLink?: string; resourceKey?: string }>;
+        };
+        for (const file of result.files || []) {
+          const photo = toGalleryPhoto(file);
+          if (photo) photos.push(photo);
+        }
+
+        if (result.nextPageToken) {
+          currentDrivePageToken = result.nextPageToken;
+          if (photos.length >= 100 || folderRequests >= 25) {
+            nextPageToken = `v1_${Buffer.from(JSON.stringify({
+              folderIndex: currentFolderIndex,
+              folderId: currentFolderId,
+              drivePageToken: currentDrivePageToken,
+            })).toString('base64url')}`;
+          }
+        } else {
+          currentFolderIndex += 1;
+          currentDrivePageToken = undefined;
+          if (photos.length >= 100 && currentFolderIndex < folderIds.length) {
+            nextPageToken = `v1_${Buffer.from(JSON.stringify({
+              folderIndex: currentFolderIndex,
+              folderId: folderIds[currentFolderIndex],
+            })).toString('base64url')}`;
+          }
+        }
+        if (nextPageToken) break;
+      }
+
+      if (!nextPageToken && currentFolderIndex < folderIds.length) {
+        nextPageToken = `v1_${Buffer.from(JSON.stringify({
+          folderIndex: currentFolderIndex,
+          folderId: folderIds[currentFolderIndex],
+          ...(currentDrivePageToken ? { drivePageToken: currentDrivePageToken } : {}),
+        })).toString('base64url')}`;
+      }
 
       res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120');
-      return res.json({ photos, nextPageToken: result.nextPageToken });
+      return res.json({ photos, nextPageToken });
     } catch (error) {
       console.error('Google Drive photo listing failed:', error instanceof Error ? error.message : 'Unknown error');
       return res.status(502).json({ code: 'drive_unavailable', error: 'No pudimos conectar con Google Drive en este momento.' });

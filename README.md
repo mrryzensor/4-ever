@@ -43,7 +43,7 @@ Configura las siguientes variables de entorno en tu aplicación en Coolify:
 
 ### 2. Galería desde una carpeta compartida de Google Drive (opcional)
 
-Al guardar una URL `https://drive.google.com/drive/folders/...` en el campo de álbum externo, sus imágenes se integran en el mismo carrusel de la galería. El enlace continúa disponible para abrir la carpeta completa. Esta integración requiere que la carpeta esté compartida con **“Cualquier persona con el enlace: lector”** y que el servidor tenga una API key; Google permite listar archivos de carpetas públicas con `files.list` y una API key ([documentación oficial](https://developers.google.com/workspace/drive/api/guides/search-files)).
+Al guardar una URL `https://drive.google.com/drive/folders/...` en el campo de álbum externo, sus imágenes se integran en el mismo carrusel de la galería, incluso si están dentro de una subcarpeta inmediata. El enlace continúa disponible para abrir la carpeta completa. Esta integración requiere que la carpeta esté compartida con **“Cualquier persona con el enlace: lector”** y que el servidor tenga una API key; Google permite listar archivos de carpetas públicas con `files.list` y una API key ([documentación oficial](https://developers.google.com/workspace/drive/api/guides/search-files)).
 
 1. En [Google Cloud Console](https://console.cloud.google.com/projectcreate), crea o selecciona un proyecto.
 2. Con el proyecto correcto seleccionado, habilita [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com).
