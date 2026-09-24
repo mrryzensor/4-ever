@@ -1264,11 +1264,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
               initial={{ opacity: 0.75, y: -2 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.25 }}
-              className={`font-bold font-serif tabular-nums leading-none ${layout === 'circle'
-                ? 'text-2xl sm:text-3xl md:text-4xl'
-                : layout === 'banner'
-                  ? 'text-2xl sm:text-3xl md:text-4xl'
-                  : 'text-2xl sm:text-3xl md:text-4xl'} ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+              className={`font-bold font-serif tabular-nums leading-none text-3xl sm:text-4xl md:text-5xl ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
               style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
             >
               {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
@@ -1285,9 +1281,15 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     </div>
   );
   const renderCountdownHeading = (layout: string) => (
-    <div className={`flex flex-col ${layout === 'editorial' ? 'items-center md:items-start text-center md:text-left' : 'items-center text-center'}`}>
+    <div className="mx-auto flex w-full flex-col items-center text-center">
+      <time
+        dateTime={settings.eventDate || undefined}
+        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans tracking-wide ${layout === 'circle' ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} ${isDark ? 'text-stone-300' : 'text-stone-600'}`}
+      >
+        {formattedEventDate}
+      </time>
       <span
-        className={`font-serif italic tracking-wide ${layout === 'circle' ? 'text-2xl sm:text-3xl' : 'text-2xl sm:text-3xl md:text-4xl'} ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
+        className={`mt-1 font-serif italic tracking-wide text-3xl sm:text-4xl md:text-5xl ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
         style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}
       >
         {displayTitle}
@@ -1296,12 +1298,6 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
         <path d="M5 4 C20 1, 25 7, 30 4 C35 1, 40 7, 55 4" stroke={resolvedTheme.accentColorHex} strokeWidth="1.2" strokeLinecap="round" />
         <circle cx="30" cy="4" r="1.5" fill={resolvedTheme.accentColorHex} />
       </svg>
-      <time
-        dateTime={settings.eventDate || undefined}
-        className={`mt-1.5 max-w-[12rem] text-balance leading-snug font-sans tracking-wide ${layout === 'circle' ? 'text-[10px] sm:max-w-[14rem] sm:text-xs' : 'text-xs sm:text-sm'} ${isDark ? 'text-stone-300' : 'text-stone-600'}`}
-      >
-        {formattedEventDate}
-      </time>
     </div>
   );
   const renderCountdownHeart = () => (
@@ -1316,15 +1312,15 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   );
 
   return (
-    <div className={`relative flex flex-col items-center justify-center select-none ${className}`}>
+    <div className={`relative flex w-full flex-col items-center justify-center select-none ${className}`}>
       {countdownLayout === 'circle' ? (
-        <div className="relative flex h-[18rem] w-[18rem] items-center justify-center sm:h-[20rem] sm:w-[20rem] md:h-[22rem] md:w-[22rem]">
+        <div className="relative mx-auto flex aspect-square h-auto w-[calc(100vw-3rem)] max-w-[20rem] items-center justify-center sm:w-96 sm:max-w-none md:w-[26rem]">
           {renderSvgSurround()}
           <motion.div
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className={`relative z-10 flex h-[15rem] w-[15rem] flex-col items-center justify-center rounded-full border p-4 text-center shadow-2xl transition-all sm:h-[17rem] sm:w-[17rem] md:h-[18rem] md:w-[18rem] ${isDark
+            className={`relative z-10 flex h-[86%] w-[86%] flex-col items-center justify-center rounded-full border p-4 text-center shadow-2xl transition-all ${isDark
               ? 'bg-stone-900/95 border-amber-400/40 text-white shadow-black/60'
               : 'bg-white/95 border-stone-200/80 text-stone-800 shadow-stone-400/25'}`}
             style={{ backdropFilter: 'blur(8px)' }}
@@ -1342,7 +1338,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           className={`w-full max-w-4xl rounded-3xl border px-5 py-6 shadow-xl sm:px-8 sm:py-8 ${isDark ? 'border-amber-400/30 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
           style={{ borderTopColor: resolvedTheme.accentColorHex, borderTopWidth: 3, backdropFilter: 'blur(8px)' }}
         >
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10">
+          <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 text-center">
             {renderCountdownHeading('editorial')}
             <div className="w-full flex-1">{renderTimeUnits('editorial')}</div>
           </div>
@@ -1353,7 +1349,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65 }}
-          className={`w-full max-w-3xl rounded-3xl border p-5 text-center shadow-xl sm:p-8 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          className={`mx-auto w-full max-w-3xl rounded-3xl border p-5 text-center shadow-xl sm:p-8 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
           style={{ borderColor: `${resolvedTheme.accentColorHex}55`, backdropFilter: 'blur(8px)' }}
         >
           {renderCountdownHeading('tiles')}
@@ -1365,7 +1361,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65 }}
-          className="w-full max-w-4xl px-2 py-5 text-center sm:px-6 sm:py-7"
+          className="mx-auto w-full max-w-4xl px-2 py-5 text-center sm:px-6 sm:py-7"
         >
           {renderCountdownHeading('banner')}
           <div className={`mx-auto mt-5 max-w-3xl border-y py-4 sm:py-5 ${isDark ? 'border-white/20' : 'border-stone-300/80'}`}>
