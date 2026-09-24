@@ -441,6 +441,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         fillColor={theme.bgHex}
         accentColor={activeWaveAccentColor}
         cardStyle={activeWaveStyle}
+        effect={settings.transitionEffect || 'wave'}
       />
     </div>
   );
@@ -603,6 +604,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             fillColor={theme.bgHex}
             accentColor={activeWaveAccentColor}
             cardStyle={activeWaveStyle}
+            effect={settings.transitionEffect || 'wave'}
           />
         </div>
 

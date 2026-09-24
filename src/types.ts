@@ -168,6 +168,7 @@ export interface WeddingSettings {
   // Countdown Settings
   showCountdown?: boolean; // Mostrar contador regresivo animado en la transición de portada
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.
+  countdownLayout?: 'circle' | 'editorial' | 'tiles' | 'banner';
   countdownTitle?: string; // 'Faltan' | 'Falta' | 'Sólo faltan' | 'Mis XV Años' | etc.
   countdownPlacement?: 'transition' | 'after-hero';
   showCountdownGuestsBadge?: boolean; // Mostrar placa de invitados y acompañantes bajo el contador
@@ -179,6 +180,7 @@ export interface WeddingSettings {
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
   frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido
+  transitionEffect?: 'wave' | 'petals' | 'sparkles' | 'drape' | 'orbit';
   heroIconStyle?: string; // 'auto' | 'wedding-rings' | 'twin-swans' | 'boho-sun' | 'royal-crown' | 'tiara' | 'none'
   ambientParticleStyle?: string; // 'auto' | 'petals' | 'gold-sparkles' | 'champagne-bubbles' | 'fireflies' | 'stars' | 'none'
   sealStyle?: string; // 'auto' | CardStyleId - Textura y estilo del sello de lacre digital

@@ -1230,10 +1230,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-serif text-[#1a1a1a] font-bold">
-                Cuenta Regresiva Animada (SVG)
+                Cuenta Regresiva Animada
               </h3>
               <p className="text-xs text-[#7D8C7A]">
-                Contador dinámico situado sobre la ola ondulada de transición entre la portada y la invitación.
+                Contador dinámico sobre la transición entre la portada y la invitación.
               </p>
             </div>
           </div>
@@ -1295,10 +1295,41 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               </div>
             </div>
 
+            <div>
+              <label className="text-xs font-bold text-[#1a1a1a] block mb-2">Diseño y tamaño del contador:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                {[
+                  { id: 'circle', name: 'Círculo editorial', desc: 'Emblema amplio con marco animado' },
+                  { id: 'editorial', name: 'Panel editorial', desc: 'Título y cifras en una tarjeta horizontal' },
+                  { id: 'tiles', name: 'Bloques destacados', desc: 'Cada unidad de tiempo en su propia tarjeta' },
+                  { id: 'banner', name: 'Franja minimalista', desc: 'Fecha y cifras sin tarjeta circular' },
+                ].map((layout) => {
+                  const isSelected = (settings.countdownLayout || 'circle') === layout.id;
+                  return (
+                    <button
+                      key={layout.id}
+                      type="button"
+                      onClick={() => onChange({ countdownLayout: layout.id as NonNullable<WeddingSettings['countdownLayout']> })}
+                      className={`rounded-2xl border p-3 text-left transition-all cursor-pointer ${isSelected
+                        ? 'border-[#5A5A40] bg-[#FAF9F0] shadow-sm ring-2 ring-[#5A5A40]/30'
+                        : 'border-[#E5E2D0] bg-white hover:bg-[#FAF9F0]/60'}`}
+                    >
+                      <span className="mb-1 flex items-center justify-between gap-2 text-xs font-bold text-[#1a1a1a]">
+                        {layout.name}
+                        {isSelected && <span className="h-2 w-2 rounded-full bg-[#5A5A40]" />}
+                      </span>
+                      <span className="text-[10px] text-[#7D8C7A]">{layout.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[10px] text-[#7D8C7A]">La fecha de este contador usa el formato seleccionado en la sección de fecha de portada.</p>
+            </div>
+
             {/* Selector de Estilos Visuales de SVG */}
             <div>
               <label className="text-xs font-bold text-[#1a1a1a] block mb-2">
-                Estilo de Arte SVG Animado:
+                Motivo decorativo y acentos del contador:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                 {[

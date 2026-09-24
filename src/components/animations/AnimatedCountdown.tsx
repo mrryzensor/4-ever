@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Heart, Check } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
-import { parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
+import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 
 interface AnimatedCountdownProps {
   settings: WeddingSettings;
@@ -1235,139 +1235,145 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   const passesCount = guest ? (guest.confirmedPasses || guest.allocatedPasses || 1) : 0;
   const companionsCount = Math.max(0, passesCount - 1);
   const shouldShowGuestBadge = Boolean(guest) && (showGuestsBadge !== undefined ? showGuestsBadge : (settings.showCountdownGuestsBadge !== false));
+  const requestedLayout = settings.countdownLayout || 'circle';
+  const countdownLayout = ['circle', 'editorial', 'tiles', 'banner'].includes(requestedLayout)
+    ? requestedLayout
+    : 'circle';
+  const formattedEventDate = formatHeroDate(
+    settings.eventDate,
+    settings.heroDateFormat || 'dd.mm.aaaa',
+    settings.heroCustomDateText,
+  );
+  const timeUnits = [
+    { key: 'days', value: timeLeft.days, label: 'días' },
+    { key: 'hours', value: timeLeft.hours, label: 'horas' },
+    { key: 'minutes', value: timeLeft.minutes, label: 'min' },
+    { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
+  ];
+  const renderTimeUnits = (layout: string) => (
+    <div className={`grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-center ${layout === 'circle' ? 'gap-1 sm:gap-2 px-1 sm:px-2' : 'gap-2 sm:gap-3'}`}>
+      {timeUnits.map((unit, index) => (
+        <React.Fragment key={unit.key}>
+          <div
+            className={`flex min-w-0 flex-col items-center justify-center ${layout === 'tiles'
+              ? `rounded-xl border px-1.5 py-2 sm:py-3 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-white/70'}`
+              : ''}`}
+          >
+            <motion.span
+              key={`${unit.key}-${unit.value}`}
+              initial={{ opacity: 0.75, y: -2 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className={`font-bold font-serif tabular-nums leading-none ${layout === 'circle'
+                ? 'text-2xl sm:text-3xl md:text-4xl'
+                : layout === 'banner'
+                  ? 'text-2xl sm:text-3xl md:text-4xl'
+                  : 'text-2xl sm:text-3xl md:text-4xl'} ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+              style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
+            >
+              {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
+            </motion.span>
+            <span className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-stone-500 font-sans">
+              {unit.label}
+            </span>
+          </div>
+          {index < timeUnits.length - 1 && layout !== 'tiles' && (
+            <div className={`hidden sm:block h-8 w-px justify-self-center ${isDark ? 'bg-white/15' : 'bg-stone-300/70'}`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+  const renderCountdownHeading = (layout: string) => (
+    <div className={`flex flex-col ${layout === 'editorial' ? 'items-center md:items-start text-center md:text-left' : 'items-center text-center'}`}>
+      <span
+        className={`font-serif italic tracking-wide ${layout === 'circle' ? 'text-2xl sm:text-3xl' : 'text-2xl sm:text-3xl md:text-4xl'} ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
+        style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}
+      >
+        {displayTitle}
+      </span>
+      <svg viewBox="0 0 60 8" className={`mt-1 h-2 overflow-visible ${layout === 'circle' ? 'w-12 sm:w-14' : 'w-14 sm:w-16'}`} fill="none" aria-hidden="true">
+        <path d="M5 4 C20 1, 25 7, 30 4 C35 1, 40 7, 55 4" stroke={resolvedTheme.accentColorHex} strokeWidth="1.2" strokeLinecap="round" />
+        <circle cx="30" cy="4" r="1.5" fill={resolvedTheme.accentColorHex} />
+      </svg>
+      <time
+        dateTime={settings.eventDate || undefined}
+        className={`mt-1.5 max-w-[12rem] text-balance leading-snug font-sans tracking-wide ${layout === 'circle' ? 'text-[10px] sm:max-w-[14rem] sm:text-xs' : 'text-xs sm:text-sm'} ${isDark ? 'text-stone-300' : 'text-stone-600'}`}
+      >
+        {formattedEventDate}
+      </time>
+    </div>
+  );
+  const renderCountdownHeart = () => (
+    <motion.div
+      animate={{ scale: [1, 1.18, 1] }}
+      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      className="mt-2 flex items-center justify-center"
+      aria-hidden="true"
+    >
+      <Heart className="h-4 w-4" style={{ fill: resolvedTheme.accentColorHex, color: resolvedTheme.accentColorHex }} />
+    </motion.div>
+  );
 
   return (
     <div className={`relative flex flex-col items-center justify-center select-none ${className}`}>
-      {/* Central Circular Countdown Card Container */}
-      <div className="relative w-64 h-64 sm:w-72 sm:h-72 md:w-80 md:h-80 flex items-center justify-center">
-        {/* Animated SVG Outer Frame */}
-        {renderSvgSurround()}
-
-        {/* Circular Card Body with Multi-layered Drop Shadow */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className={`relative z-10 w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 rounded-full flex flex-col items-center justify-center p-3 text-center border shadow-2xl transition-all ${
-            isDark
-              ? 'bg-stone-900/95 border-amber-400/40 text-white shadow-black/60'
-              : 'bg-white/95 border-stone-200/80 text-stone-800 shadow-stone-400/25'
-          }`}
-          style={{
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          {/* Header Title with Ornamental Underline Flourish */}
-          <div className="flex flex-col items-center mb-1 sm:mb-2">
-            <span
-              className={`text-lg sm:text-2xl font-serif italic tracking-wide ${
-                isDark ? 'text-amber-200' : 'text-stone-800'
-              }`}
-              style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}
-            >
-              {displayTitle}
-            </span>
-            {/* Delicate Flourish Vector Underline */}
-            <svg viewBox="0 0 60 8" className="w-10 sm:w-12 h-2 overflow-visible" fill="none">
-              <path
-                d="M5 4 C20 1, 25 7, 30 4 C35 1, 40 7, 55 4"
-                stroke={resolvedTheme.accentColorHex}
-                strokeWidth="1.2"
-                strokeLinecap="round"
-              />
-              <circle cx="30" cy="4" r="1.5" fill={resolvedTheme.accentColorHex} />
-            </svg>
-          </div>
-
-          {/* Time Columns Grid with Vertical Hairline Dividers */}
-          <div className="flex items-center justify-center gap-1 sm:gap-2.5 px-2 my-1">
-            {/* 1. Días */}
-            <div className="flex flex-col items-center min-w-[28px] sm:min-w-[34px]">
-              <span
-                className={`text-lg sm:text-2xl font-bold font-serif leading-none ${
-                  isDark ? 'text-white' : 'text-stone-900'
-                }`}
-              >
-                {timeLeft.days}
-              </span>
-              <span className="text-[9px] sm:text-[10px] tracking-wider text-stone-500 uppercase font-sans mt-0.5">
-                días
-              </span>
-            </div>
-
-            {/* Divider 1 */}
-            <div className={`h-6 sm:h-7 w-px ${isDark ? 'bg-stone-700' : 'bg-stone-200'}`} />
-
-            {/* 2. Horas */}
-            <div className="flex flex-col items-center min-w-[28px] sm:min-w-[34px]">
-              <span
-                className={`text-lg sm:text-2xl font-bold font-serif leading-none ${
-                  isDark ? 'text-white' : 'text-stone-900'
-                }`}
-              >
-                {timeLeft.hours}
-              </span>
-              <span className="text-[9px] sm:text-[10px] tracking-wider text-stone-500 uppercase font-sans mt-0.5">
-                hs
-              </span>
-            </div>
-
-            {/* Divider 2 */}
-            <div className={`h-6 sm:h-7 w-px ${isDark ? 'bg-stone-700' : 'bg-stone-200'}`} />
-
-            {/* 3. Minutos */}
-            <div className="flex flex-col items-center min-w-[28px] sm:min-w-[34px]">
-              <span
-                className={`text-lg sm:text-2xl font-bold font-serif leading-none ${
-                  isDark ? 'text-white' : 'text-stone-900'
-                }`}
-              >
-                {timeLeft.minutes}
-              </span>
-              <span className="text-[9px] sm:text-[10px] tracking-wider text-stone-500 uppercase font-sans mt-0.5">
-                min
-              </span>
-            </div>
-
-            {/* Divider 3 */}
-            <div className={`h-6 sm:h-7 w-px ${isDark ? 'bg-stone-700' : 'bg-stone-200'}`} />
-
-            {/* 4. Segundos */}
-            <div className="flex flex-col items-center min-w-[28px] sm:min-w-[34px]">
-              <motion.span
-                key={timeLeft.seconds}
-                initial={{ opacity: 0.7, y: -2 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`text-lg sm:text-2xl font-bold font-serif leading-none ${
-                  isDark ? 'text-amber-400' : 'text-stone-900'
-                }`}
-              >
-                {timeLeft.seconds}
-              </motion.span>
-              <span className="text-[9px] sm:text-[10px] tracking-wider text-stone-500 uppercase font-sans mt-0.5">
-                seg
-              </span>
-            </div>
-          </div>
-
-          {/* Rhythmic Pulsing Heart at Bottom of Circle */}
+      {countdownLayout === 'circle' ? (
+        <div className="relative flex h-[18rem] w-[18rem] items-center justify-center sm:h-[20rem] sm:w-[20rem] md:h-[22rem] md:w-[22rem]">
+          {renderSvgSurround()}
           <motion.div
-            animate={{ scale: [1, 1.22, 1, 1.28, 1] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-            className="mt-1.5 sm:mt-2.5 flex items-center justify-center cursor-pointer"
-            title="Con amor"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            className={`relative z-10 flex h-[15rem] w-[15rem] flex-col items-center justify-center rounded-full border p-4 text-center shadow-2xl transition-all sm:h-[17rem] sm:w-[17rem] md:h-[18rem] md:w-[18rem] ${isDark
+              ? 'bg-stone-900/95 border-amber-400/40 text-white shadow-black/60'
+              : 'bg-white/95 border-stone-200/80 text-stone-800 shadow-stone-400/25'}`}
+            style={{ backdropFilter: 'blur(8px)' }}
           >
-            <Heart
-              className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors"
-              style={{
-                fill: resolvedTheme.accentColorHex,
-                color: resolvedTheme.accentColorHex,
-              }}
-            />
+            {renderCountdownHeading('circle')}
+            <div className="mt-3 w-full">{renderTimeUnits('circle')}</div>
+            {renderCountdownHeart()}
           </motion.div>
+        </div>
+      ) : countdownLayout === 'editorial' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`w-full max-w-4xl rounded-3xl border px-5 py-6 shadow-xl sm:px-8 sm:py-8 ${isDark ? 'border-amber-400/30 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderTopColor: resolvedTheme.accentColorHex, borderTopWidth: 3, backdropFilter: 'blur(8px)' }}
+        >
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-10">
+            {renderCountdownHeading('editorial')}
+            <div className="w-full flex-1">{renderTimeUnits('editorial')}</div>
+          </div>
+          {renderCountdownHeart()}
         </motion.div>
-      </div>
+      ) : countdownLayout === 'tiles' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`w-full max-w-3xl rounded-3xl border p-5 text-center shadow-xl sm:p-8 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}55`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('tiles')}
+          <div className="mt-6">{renderTimeUnits('tiles')}</div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className="w-full max-w-4xl px-2 py-5 text-center sm:px-6 sm:py-7"
+        >
+          {renderCountdownHeading('banner')}
+          <div className={`mx-auto mt-5 max-w-3xl border-y py-4 sm:py-5 ${isDark ? 'border-white/20' : 'border-stone-300/80'}`}>
+            {renderTimeUnits('banner')}
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      )}
 
       {/* Guest Information & Passes Badge - Only shown when guest is identified (via link or returning session) */}
       {shouldShowGuestBadge && guest && (

@@ -142,6 +142,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
                     fillColor={currentT.bgHex}
                     accentColor={waveAccentColor}
                     cardStyle={activeWaveStyle}
+                    effect={settings.transitionEffect || 'wave'}
                     className="w-full h-12"
                   />
                 </div>

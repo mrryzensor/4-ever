@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 
 const WAVE_PROFILES: Record<string, {
   cycles: number;
@@ -69,15 +69,125 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
   fillColor?: string;
   accentColor?: string;
   cardStyle?: string;
+  effect?: string;
 }> = ({
   className = 'w-full',
   svgClassName = 'w-full h-32 sm:h-44 md:h-56 lg:h-64 block preserve-3d',
   fillColor = '#FDFCF0',
   accentColor = '#7D8C7A',
   cardStyle: rawCardStyle = 'classic-gold',
+  effect: rawEffect = 'wave',
 }) => {
   const cardStyle = (rawCardStyle && rawCardStyle !== 'auto') ? rawCardStyle : 'classic-gold';
   const wavePaths = [0, 1, 2, 3].map((layer) => buildWavePath(cardStyle, layer));
+  const reducedMotion = useReducedMotion();
+  const effect = ['wave', 'petals', 'sparkles', 'drape', 'orbit'].includes(rawEffect) ? rawEffect : 'wave';
+
+  if (effect !== 'wave') {
+    const effectPaths: Record<string, string> = {
+      petals: 'M0 116 C170 102 250 84 390 100 C540 118 620 139 770 119 C940 96 1030 79 1180 94 C1300 106 1360 120 1440 108 L1440 240 L0 240 Z',
+      sparkles: 'M0 108 C260 108 390 119 610 108 C810 98 1000 88 1180 101 C1290 110 1370 108 1440 102 L1440 240 L0 240 Z',
+      drape: 'M0 76 C160 76 170 142 360 142 C550 142 550 75 720 75 C890 75 890 142 1080 142 C1270 142 1280 76 1440 76 L1440 240 L0 240 Z',
+      orbit: 'M0 126 C260 126 340 74 720 74 C1100 74 1180 126 1440 126 L1440 240 L0 240 Z',
+    };
+    const shape = effectPaths[effect];
+    const petals = Array.from({ length: 16 }, (_, index) => ({
+      x: 54 + ((index * 173) % 1332),
+      y: 18 + ((index * 37) % 72),
+      delay: (index % 8) * 0.35,
+      rotation: (index * 41) % 180,
+    }));
+    const sparkles = Array.from({ length: 18 }, (_, index) => ({
+      x: 42 + ((index * 157) % 1356),
+      y: 18 + ((index * 29) % 76),
+      delay: (index % 9) * 0.22,
+    }));
+
+    return (
+      <div className={`relative w-full overflow-hidden leading-none z-10 ${className}`} data-transition-effect={effect}>
+        <svg
+          viewBox="0 0 1440 240"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className={svgClassName}
+          preserveAspectRatio="none"
+          data-wave-style={cardStyle}
+          data-transition-effect={effect}
+        >
+          {effect === 'drape' && (
+            <motion.path
+              d="M0 87 C160 87 170 153 360 153 C550 153 550 86 720 86 C890 86 890 153 1080 153 C1270 153 1280 87 1440 87 L1440 240 L0 240 Z"
+              fill={accentColor}
+              fillOpacity="0.12"
+              animate={reducedMotion ? undefined : { y: [-3, 3, -3] }}
+              transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
+          <motion.path
+            d={shape}
+            fill={fillColor}
+            animate={reducedMotion ? undefined : { y: [-2, 2, -2] }}
+            transition={{ duration: effect === 'drape' ? 8 : 6, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <path
+            d={effect === 'drape'
+              ? 'M0 76 C160 76 170 142 360 142 C550 142 550 75 720 75 C890 75 890 142 1080 142 C1270 142 1280 76 1440 76'
+              : effect === 'orbit'
+                ? 'M0 126 C260 126 340 74 720 74 C1100 74 1180 126 1440 126'
+                : effect === 'sparkles'
+                  ? 'M0 108 C260 108 390 119 610 108 C810 98 1000 88 1180 101 C1290 110 1370 108 1440 102'
+                  : 'M0 116 C170 102 250 84 390 100 C540 118 620 139 770 119 C940 96 1030 79 1180 94 C1300 106 1360 120 1440 108'}
+            stroke={accentColor}
+            strokeWidth="2"
+            strokeOpacity="0.38"
+          />
+
+          {effect === 'petals' && petals.map((petal, index) => (
+            <motion.g
+              key={`petal-${index}`}
+              animate={reducedMotion ? undefined : { y: [0, -18, 8, 0], x: [0, 8, -5, 0], rotate: [0, 28, -18, 0], opacity: [0.35, 0.9, 0.55, 0.35] }}
+              transition={{ duration: 5 + (index % 4), delay: petal.delay, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path
+                d="M0 0 C-8 -5 -5 -14 0 -18 C5 -14 8 -5 0 0 Z"
+                transform={`translate(${petal.x} ${petal.y}) rotate(${petal.rotation})`}
+                fill={index % 3 === 0 ? accentColor : '#D8A69A'}
+                fillOpacity="0.78"
+              />
+            </motion.g>
+          ))}
+
+          {effect === 'sparkles' && sparkles.map((sparkle, index) => (
+            <motion.g
+              key={`sparkle-${index}`}
+              animate={reducedMotion ? undefined : { opacity: [0.25, 1, 0.35], scale: [0.72, 1.2, 0.72], y: [0, -5, 0] }}
+              transition={{ duration: 2.4 + (index % 3) * 0.6, delay: sparkle.delay, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: `${sparkle.x}px ${sparkle.y}px` }}
+            >
+              <path d={`M${sparkle.x} ${sparkle.y - 7} L${sparkle.x + 2} ${sparkle.y - 2} L${sparkle.x + 7} ${sparkle.y} L${sparkle.x + 2} ${sparkle.y + 2} L${sparkle.x} ${sparkle.y + 7} L${sparkle.x - 2} ${sparkle.y + 2} L${sparkle.x - 7} ${sparkle.y} L${sparkle.x - 2} ${sparkle.y - 2} Z`} fill={index % 3 === 0 ? '#D4A373' : accentColor} />
+            </motion.g>
+          ))}
+
+          {effect === 'orbit' && (
+            <g>
+              <motion.ellipse
+                cx="720" cy="98" rx="175" ry="39" stroke={accentColor} strokeWidth="1.5" strokeOpacity="0.34" strokeDasharray="5 8"
+                animate={reducedMotion ? undefined : { rotate: [0, 360] }} transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
+                style={{ transformOrigin: '720px 98px' }}
+              />
+              <motion.ellipse
+                cx="720" cy="98" rx="125" ry="28" stroke={accentColor} strokeWidth="1" strokeOpacity="0.3"
+                animate={reducedMotion ? undefined : { rotate: [360, 0] }} transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+                style={{ transformOrigin: '720px 98px' }}
+              />
+              <motion.circle cx="895" cy="98" r="4" fill={accentColor} animate={reducedMotion ? undefined : { opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }} transition={{ duration: 2.5, repeat: Infinity }} />
+            </g>
+          )}
+        </svg>
+      </div>
+    );
+  }
+
   return (
     <div className={`relative w-full overflow-hidden leading-none z-10 ${className}`}>
       {/* Dynamic Animated Multi-layered SVG Wave */}
@@ -88,6 +198,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
         className={svgClassName}
         preserveAspectRatio="none"
         data-wave-style={cardStyle}
+        data-transition-effect="wave"
       >
         <defs>
           <linearGradient id={`waveSoftTint-${cardStyle}`} x1="0%" y1="0%" x2="0%" y2="100%">

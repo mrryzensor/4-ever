@@ -56,6 +56,14 @@ const PARTICLE_OPTIONS = [
   { id: 'none', label: 'Desactivado', desc: 'Sin partículas en el fondo' },
 ];
 
+const TRANSITION_EFFECT_OPTIONS = [
+  { id: 'wave', label: 'Olas orgánicas', desc: 'Capas fluidas con silueta según la plantilla' },
+  { id: 'petals', label: 'Pétalos flotantes', desc: 'Pétalos animados sobre un borde suave' },
+  { id: 'sparkles', label: 'Destellos', desc: 'Brillos que aparecen y se desplazan' },
+  { id: 'drape', label: 'Cortinaje', desc: 'Pliegues elegantes que enmarcan el contenido' },
+  { id: 'orbit', label: 'Órbitas', desc: 'Arcos luminosos alrededor de un domo' },
+] as const;
+
 export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
   settings,
   onChange,
@@ -74,9 +82,11 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       customBgColor: '',
       fontPairStyle: 'auto',
       countdownStyle: 'auto',
+      countdownLayout: 'circle',
       dividerStyle: 'auto',
       frameOrnamentStyle: 'auto',
       transitionWaveStyle: 'auto',
+      transitionEffect: 'wave',
       heroIconStyle: 'auto',
       ambientParticleStyle: 'auto',
       sealStyle: 'auto',
@@ -92,9 +102,11 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     !!settings.customBgColor ||
     (settings.fontPairStyle && settings.fontPairStyle !== 'auto') ||
     (settings.countdownStyle && settings.countdownStyle !== 'auto') ||
+    (settings.countdownLayout && settings.countdownLayout !== 'circle') ||
     (settings.dividerStyle && settings.dividerStyle !== 'auto') ||
     (settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto') ||
     (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto') ||
+    (settings.transitionEffect && settings.transitionEffect !== 'wave') ||
     (settings.heroIconStyle && settings.heroIconStyle !== 'auto') ||
     (settings.ambientParticleStyle && settings.ambientParticleStyle !== 'auto') ||
     (settings.sealStyle && settings.sealStyle !== 'auto');
@@ -626,12 +638,12 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Compass className="w-4 h-4 text-cyan-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                6. Ola de Transición Orgánica (Hero ➔ Contenido)
+                6. Transición Animada (Hero ➔ Contenido)
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
-                {settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
-                  ? `Estilo: ${CARD_THEMES[settings.transitionWaveStyle as CardStyleId]?.name || settings.transitionWaveStyle}`
-                  : 'Automático (del estilo base)'}
+                {`${TRANSITION_EFFECT_OPTIONS.find((option) => option.id === (settings.transitionEffect || 'wave'))?.label || 'Olas orgánicas'} · ${settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
+                  ? CARD_THEMES[settings.transitionWaveStyle as CardStyleId]?.name || settings.transitionWaveStyle
+                  : 'paleta automática'}`}
               </span>
             </div>
           </div>
@@ -644,6 +656,32 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
 
         {openSection === 'waves' && (
           <div className="p-4 space-y-3 border-t border-stone-200">
+            <div>
+              <span className="mb-2 block text-xs font-bold text-stone-800">Tipo de efecto animado</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {TRANSITION_EFFECT_OPTIONS.map((option) => {
+                  const isSelected = (settings.transitionEffect || 'wave') === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => onChange({ transitionEffect: option.id })}
+                      className={`rounded-xl border p-3 text-left transition-all cursor-pointer ${isSelected
+                        ? 'border-cyan-600 bg-cyan-50/50 ring-1 ring-cyan-500'
+                        : 'border-stone-200 hover:border-stone-300'}`}
+                    >
+                      <span className="flex items-center justify-between gap-2 text-xs font-semibold text-stone-800">
+                        {option.label}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-cyan-600 shrink-0" />}
+                      </span>
+                      <span className="mt-1 block text-[10px] text-stone-500">{option.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="border-t border-stone-200 pt-3">
+              <span className="mb-2 block text-xs font-bold text-stone-800">Paleta y silueta según plantilla</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               <button
                 type="button"
@@ -660,7 +698,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                     <Check className="w-3.5 h-3.5 text-cyan-600" />
                   )}
                 </div>
-                <span className="text-[10px] text-stone-500 block mt-1">Ola del tema activo</span>
+                <span className="text-[10px] text-stone-500 block mt-1">Colores de la plantilla activa</span>
               </button>
 
               {STYLE_KEYS.map((key) => {
@@ -685,6 +723,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                   </button>
                 );
               })}
+            </div>
             </div>
           </div>
         )}
