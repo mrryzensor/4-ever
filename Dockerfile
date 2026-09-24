@@ -47,13 +47,14 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile && pnpm store prune
 
-# Copy built application and client assets from builder.
-# Keep ownership scoped to the copied runtime files; recursively chowning
-# /app also walks the entire production node_modules tree on every build.
-COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
-COPY --from=builder --chown=appuser:nodejs /app/public ./public
-COPY --from=builder --chown=appuser:nodejs /app/Logo.webp ./Logo.webp
-COPY --from=builder --chown=appuser:nodejs /app/Logo.png ./Logo.png
+# Copy built application and client assets from builder
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/Logo.webp ./Logo.webp
+COPY --from=builder /app/Logo.png ./Logo.png
+
+# Ensure permissions
+RUN chown -R appuser:nodejs /app
 
 USER appuser
 
