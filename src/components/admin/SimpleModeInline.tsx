@@ -693,6 +693,18 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                       className="w-full px-3 py-1.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white text-xs font-serif text-stone-800"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1">
+                      Título principal de la página de Familia y Cortejo
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.heroCourtPageHeading ?? (settings.eventType === 'xv' ? 'Con quienes celebramos mis XV' : 'Con quienes celebramos este día')}
+                      onChange={(e) => onChange({ heroCourtPageHeading: e.target.value })}
+                      placeholder={settings.eventType === 'xv' ? 'Con quienes celebramos mis XV' : 'Con quienes celebramos este día'}
+                      className="w-full px-3 py-1.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white text-xs font-serif text-stone-800"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">

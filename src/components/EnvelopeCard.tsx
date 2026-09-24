@@ -33,7 +33,7 @@ import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, W
 import { CARD_THEMES } from '../lib/themes.ts';
 import { HeroCourtCard } from './HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../lib/sectionOrder.ts';
-import { formatHeroDate, formatRsvpDeadlineMessage, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
+import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
   AnimatedWeddingRings,
@@ -808,25 +808,6 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'reception' ? 'rotate-180' : ''}`} />
                 </button>
 
-                {settings.showRsvpSection !== false && onOpenRsvp && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleInlineRsvp?.();
-                    }}
-                    aria-expanded={isInlineRsvpOpen}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-                      isInlineRsvpOpen
-                        ? 'bg-stone-700 text-white hover:bg-stone-800'
-                        : isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
-                    }`}
-                  >
-                    <Heart className="h-3.5 w-3.5 fill-current" />
-                    {isInlineRsvpOpen ? 'Cerrar confirmación' : settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
-                  </button>
-                )}
-
                 {settings.receptionMapsUrl && (
                   <a
                     href={settings.receptionMapsUrl}
@@ -879,20 +860,44 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </motion.div>
                 )}
               </AnimatePresence>
-              <AnimatePresence>
-                {isInlineRsvpOpen && inlineRsvp && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-5 overflow-hidden border-t border-stone-200/50 pt-4 dark:border-stone-700/50"
-                  >
-                    {inlineRsvp}
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
+            {settings.showRsvpSection !== false && onToggleInlineRsvp && (
+              <div
+                style={{ order: detailSectionOrder.indexOf('reception') * 2 + 0.5, display: settings.showLocations === false ? 'none' : undefined }}
+                className="flex w-full flex-col items-center gap-4 text-center"
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleInlineRsvp();
+                  }}
+                  aria-expanded={isInlineRsvpOpen}
+                  aria-controls="rsvp-inline"
+                  className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-10 py-4 text-base font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl cursor-pointer sm:px-14 sm:py-5 sm:text-lg ${
+                    isInlineRsvpOpen
+                      ? 'bg-stone-700 text-white hover:bg-stone-800'
+                      : isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
+                  }`}
+                >
+                  <Heart className="h-5 w-5 fill-current" />
+                  {isInlineRsvpOpen ? 'Cerrar confirmación' : settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
+                </button>
+                <AnimatePresence>
+                  {isInlineRsvpOpen && inlineRsvp && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full overflow-hidden text-left"
+                    >
+                      {inlineRsvp}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline - Fully Clickable) */}
             {settings.showItinerary !== false && itineraryList.length > 0 && (
@@ -1403,9 +1408,6 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   )}
                 </AnimatePresence>
 
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40">
-                  {formatRsvpDeadlineMessage(settings.rsvpDeadlineMessage, settings.rsvpDeadline)}
-                </p>
               </div>
             </div>
           )}

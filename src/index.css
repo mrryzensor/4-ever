@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Keep template-styled controls intact on mobile browsers that otherwise apply native button skins. */
+.public-invitation button {
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: light;
+}
+
+.public-invitation button,
+.public-invitation [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer base {
   html,
   body {
@@ -220,4 +232,3 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-

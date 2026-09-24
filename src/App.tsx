@@ -1233,7 +1233,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
+      className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
       style={{ backgroundColor: activeTheme.bgHex }}
     >
       {/* Interactive Demo Style Selector Bar in Demo Mode */}

@@ -100,6 +100,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   heroCourtPosition: 'below-names',
   heroCourtPlacement: 'hero',
   heroCourtTitle: 'Con la bendición de mi familia',
+  heroCourtPageHeading: 'Con quienes celebramos mis XV',
   showCountdown: true,
   countdownStyle: 'auto',
   countdownTitle: 'Faltan',

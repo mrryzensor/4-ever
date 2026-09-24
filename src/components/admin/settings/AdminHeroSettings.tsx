@@ -990,6 +990,21 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     Encabezado dorado que corona la tarjeta en portada
                   </span>
                 </div>
+                <div>
+                  <label className="text-[11px] font-bold text-[#1a1a1a] block mb-1">
+                    Título principal de la página de Familia y Cortejo:
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.heroCourtPageHeading ?? (settings.eventType === 'xv' ? 'Con quienes celebramos mis XV' : 'Con quienes celebramos este día')}
+                    onChange={(e) => onChange({ heroCourtPageHeading: e.target.value })}
+                    placeholder={settings.eventType === 'xv' ? 'Con quienes celebramos mis XV' : 'Con quienes celebramos este día'}
+                    className="w-full bg-[#FAF9F0] focus:bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-serif"
+                  />
+                  <span className="text-[9px] text-[#7D8C7A] mt-1 block">
+                    Se usa como encabezado grande cuando esta sección se muestra en una página independiente.
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3.5 p-3.5 bg-white rounded-xl border border-[#E5E2D0] shadow-2xs">

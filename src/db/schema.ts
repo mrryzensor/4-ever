@@ -90,6 +90,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   heroCourtPosition: text('hero_court_position').default('below-names'),
   heroCourtPlacement: text('hero_court_placement').default('hero'),
   heroCourtTitle: text('hero_court_title').default('Con la bendición de Dios y de nuestras familias'),
+  heroCourtPageHeading: text('hero_court_page_heading').default('Con quienes celebramos este día'),
   showCountdown: boolean('show_countdown').default(true),
   countdownStyle: text('countdown_style').default('auto'),
   countdownTitle: text('countdown_title').default('Faltan'),

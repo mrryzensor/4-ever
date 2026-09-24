@@ -324,7 +324,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
             color={activeTheme.accentColorHex}
           />}
 
-          <p className={`whitespace-pre-line text-sm sm:text-base font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+          <p className={`whitespace-pre-line text-base sm:text-lg font-semibold font-serif max-w-xl mx-auto mt-3 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
             {formatRsvpDeadlineMessage(settings.rsvpDeadlineMessage, settings.rsvpDeadline)}
           </p>
         </div>
@@ -709,7 +709,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   {submitting ? (
                     <span>Procesando confirmación...</span>
                   ) : (
-                    <span>Confirmar Respuesta</span>
+                    <span>{settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}</span>
                   )}
                 </button>
               </div>

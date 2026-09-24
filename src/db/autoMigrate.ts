@@ -207,6 +207,7 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_witnesses TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_position TEXT DEFAULT 'below-names';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_title TEXT DEFAULT 'Con la bendición de Dios y de nuestras familias';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_page_heading TEXT DEFAULT 'Con quienes celebramos este día';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_court_placement TEXT DEFAULT 'hero';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS countdown_placement TEXT DEFAULT 'transition';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_hotels BOOLEAN DEFAULT false;

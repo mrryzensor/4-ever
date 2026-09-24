@@ -164,6 +164,7 @@ export interface WeddingSettings {
   heroCourtPosition?: 'below-names' | 'above-names' | 'below-quote'; // Posición del card en el Hero
   heroCourtPlacement?: 'hero' | 'after-hero' | 'after-countdown';
   heroCourtTitle?: string; // Título superior del card (e.g. 'Con la bendición de Dios y de nuestras familias')
+  heroCourtPageHeading?: string; // Título principal de la página independiente de familia y cortejo
   // Countdown Settings
   showCountdown?: boolean; // Mostrar contador regresivo animado en la transición de portada
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.

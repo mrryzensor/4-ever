@@ -104,6 +104,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   heroCourtPosition: 'below-names',
   heroCourtPlacement: 'hero',
   heroCourtTitle: 'Con la bendición de Dios y de nuestras familias',
+  heroCourtPageHeading: 'Con quienes celebramos este día',
   showCountdown: true,
   countdownStyle: 'auto',
   countdownTitle: 'Faltan',
