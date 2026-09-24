@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 /* Keep template-styled controls intact on mobile browsers that otherwise apply native button skins. */
+.public-invitation {
+  color-scheme: light;
+}
+
 .public-invitation button {
-  -webkit-appearance: none;
-  appearance: none;
+  -webkit-appearance: none !important;
+  appearance: none !important;
   color-scheme: light;
 }
 

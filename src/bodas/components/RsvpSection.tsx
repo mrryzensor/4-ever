@@ -475,11 +475,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     onClick={() => setStatus('confirmed')}
                     className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
                       status === 'confirmed'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30 shadow-sm'
-                        : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                        ? isDark
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-200 ring-2 ring-emerald-500/30 shadow-sm'
+                          : 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/30 shadow-sm'
+                        : isDark
+                          ? 'bg-stone-900 border-stone-800 text-stone-400 hover:bg-stone-800/50'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                     }`}
                   >
-                    <CheckCircle className={`w-6 h-6 shrink-0 ${status === 'confirmed' ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-400'}`} />
+                    <CheckCircle className={`w-6 h-6 shrink-0 ${status === 'confirmed' ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : 'text-stone-400'}`} />
                     <div className="text-left">
                       <span className="text-sm sm:text-base font-bold block">Sí, con mucho gusto asistiré</span>
                       <span className="text-xs opacity-75">Confirmo mi asistencia a la celebración</span>
@@ -491,11 +495,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     onClick={() => setStatus('declined')}
                     className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
                       status === 'declined'
-                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/30 shadow-sm'
-                        : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800/50'
+                        ? isDark
+                          ? 'bg-rose-950/40 border-rose-500 text-rose-200 ring-2 ring-rose-500/30 shadow-sm'
+                          : 'bg-rose-50 border-rose-500 text-rose-900 ring-2 ring-rose-500/30 shadow-sm'
+                        : isDark
+                          ? 'bg-stone-900 border-stone-800 text-stone-400 hover:bg-stone-800/50'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                     }`}
                   >
-                    <XCircle className={`w-6 h-6 shrink-0 ${status === 'declined' ? 'text-rose-600 dark:text-rose-400' : 'text-stone-400'}`} />
+                    <XCircle className={`w-6 h-6 shrink-0 ${status === 'declined' ? (isDark ? 'text-rose-400' : 'text-rose-600') : 'text-stone-400'}`} />
                     <div className="text-left">
                       <span className="text-sm sm:text-base font-bold block">No podré asistir</span>
                       <span className="text-xs opacity-75">No podré acompañarlos esta vez</span>
