@@ -114,6 +114,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
+  const lightboxNavigationRequestRef = useRef(0);
 
   // Comments state for the active photo
   const [comments, setComments] = useState<PhotoComment[]>([]);
@@ -276,17 +277,36 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     }
   }, [guestName]);
 
-  const handlePrevPhoto = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (carouselPhotos.length === 0) return;
-    setActivePhotoIndex((prev) => (prev === null || prev === 0 ? carouselPhotos.length - 1 : prev - 1));
-  };
+  const closePhotoViewer = useCallback(() => {
+    lightboxNavigationRequestRef.current += 1;
+    setActivePhotoIndex(null);
+  }, []);
 
-  const handleNextPhoto = (e?: React.MouseEvent) => {
+  const openPhotoAtIndex = useCallback(async (index: number) => {
+    const photo = carouselPhotos[index];
+    if (!photo) return;
+    const requestId = ++lightboxNavigationRequestRef.current;
+    try {
+      await preloadCarouselImage(photo);
+    } catch {
+      return;
+    }
+    if (requestId === lightboxNavigationRequestRef.current) setActivePhotoIndex(index);
+  }, [carouselPhotos]);
+
+  const handlePrevPhoto = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (carouselPhotos.length === 0) return;
-    setActivePhotoIndex((prev) => (prev === null || prev === carouselPhotos.length - 1 ? 0 : prev + 1));
-  };
+    const currentIndex = activePhotoIndex ?? 0;
+    void openPhotoAtIndex(currentIndex === 0 ? carouselPhotos.length - 1 : currentIndex - 1);
+  }, [activePhotoIndex, carouselPhotos.length, openPhotoAtIndex]);
+
+  const handleNextPhoto = useCallback((e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (carouselPhotos.length === 0) return;
+    const currentIndex = activePhotoIndex ?? 0;
+    void openPhotoAtIndex(currentIndex === carouselPhotos.length - 1 ? 0 : currentIndex + 1);
+  }, [activePhotoIndex, carouselPhotos.length, openPhotoAtIndex]);
 
   // Keyboard arrow navigation (Left / Right / Escape)
   useEffect(() => {
@@ -306,13 +326,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         handleNextPhoto();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        setActivePhotoIndex(null);
+        closePhotoViewer();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activePhotoIndex, carouselPhotos.length]);
+  }, [activePhotoIndex, handlePrevPhoto, handleNextPhoto, closePhotoViewer]);
 
 
   const fetchPhotos = async () => {
@@ -565,7 +585,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       } catch {
         if (requestId === carouselNavigationRequestRef.current) {
           setIsLoadingNextPhoto(false);
-          setCarouselLoadError(true);
         }
         return;
       }
@@ -576,6 +595,24 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     if (requestId !== carouselNavigationRequestRef.current) return;
     setCarouselIndex(nextIndex);
     setIsLoadingNextPhoto(false);
+  }, [carouselPhotos, loadedCarouselPhotoKeys]);
+
+  // Decode the first image in the background while guests are still exploring
+  // earlier sections, so it is ready when they reach the gallery.
+  useEffect(() => {
+    const firstPhoto = carouselPhotos[0];
+    if (!firstPhoto) return;
+    const photoKey = getCarouselPhotoLoadKey(firstPhoto);
+    if (loadedCarouselPhotoKeys.includes(photoKey)) return;
+
+    let cancelled = false;
+    void preloadCarouselImage(firstPhoto).then(() => {
+      if (!cancelled) {
+        setLoadedCarouselPhotoKeys((previous) => previous.includes(photoKey) ? previous : [...previous, photoKey]);
+      }
+    }).catch(() => undefined);
+
+    return () => { cancelled = true; };
   }, [carouselPhotos, loadedCarouselPhotoKeys]);
 
   useEffect(() => {
@@ -601,12 +638,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   useEffect(() => {
     setCarouselIndex(0);
-    setActivePhotoIndex(null);
+    closePhotoViewer();
     setLoadedCarouselPhotoKeys([]);
     setIsLoadingNextPhoto(false);
     setCarouselLoadError(false);
     carouselNavigationRequestRef.current += 1;
-  }, [weddingId, effectiveAlbumUrl]);
+  }, [weddingId, effectiveAlbumUrl, closePhotoViewer]);
 
   useEffect(() => {
     if (carouselIndex >= carouselPhotos.length) void navigateToCarouselPhoto(0);
@@ -669,9 +706,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       {/* Interactive Carousel Slider Container */}
       {(loading || driveGallery.loading) && carouselPhotos.length === 0 ? (
-        <div className={`py-20 text-center text-sm flex items-center justify-center gap-2 ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
-          <Loader2 className={`w-4 h-4 animate-spin ${isDark ? 'text-[#C5A059]' : 'text-amber-700'}`} />
-          <span>Cargando fotos de la galería...</span>
+        <div className={`mx-auto flex aspect-[16/9] w-full max-w-6xl items-center justify-center rounded-3xl border ${isDark ? 'border-[#5A5A40]/60 bg-[#282B25]/60 text-[#C5A059]/60' : 'border-[#E5E2D0] bg-white/45 text-[#7D8C7A]/60'}`} aria-hidden="true">
+          <Camera className="h-10 w-10" />
         </div>
       ) : carouselPhotos.length === 0 ? (
         <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${isDark
@@ -715,7 +751,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.45, ease: 'easeInOut' }}
-                      onClick={() => setActivePhotoIndex(carouselIndex)}
+                      onClick={() => void openPhotoAtIndex(carouselIndex)}
                       className="w-full h-full cursor-pointer relative flex items-center justify-center bg-stone-950"
                     >
                       {/* Blurred Ambient Glow Background for aesthetic framing */}
@@ -729,17 +765,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         alt={currentCarouselPhoto.caption || 'Foto de boda'}
                         onLoad={(e) => handleImageLoad(currentCarouselPhoto.id, e)}
                         onError={() => setCarouselLoadError(true)}
-                        className="relative z-10 w-full h-full object-contain sm:object-cover transition-transform duration-700 group-hover:scale-103"
+                        className={`relative z-10 w-full h-full object-contain sm:object-cover transition-[opacity,transform] duration-700 group-hover:scale-103 ${isCurrentCarouselPhotoLoaded ? 'opacity-100' : 'opacity-0'}`}
                         referrerPolicy="no-referrer"
                       />
 
-                      {(!isCurrentCarouselPhotoLoaded || isLoadingNextPhoto) && !carouselLoadError && (
-                        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/25 pointer-events-none" role="status" aria-live="polite">
-                          <span className="inline-flex items-center gap-2 rounded-full bg-black/75 px-4 py-2 text-xs text-white shadow-lg">
-                            <Loader2 className="h-4 w-4 animate-spin text-amber-300" /> Cargando foto...
-                          </span>
-                        </div>
-                      )}
                       {carouselLoadError && (
                         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/45 pointer-events-none" role="status" aria-live="polite">
                           <span className="rounded-full bg-black/80 px-4 py-2 text-xs text-white shadow-lg">No se pudo cargar la foto. Intenta nuevamente.</span>
@@ -762,7 +791,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                             <button
                               type="button"
-                              onClick={() => setActivePhotoIndex(carouselIndex)}
+                              onClick={() => void openPhotoAtIndex(carouselIndex)}
                               className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md hover:bg-amber-500/80 text-white transition-colors flex items-center gap-1.5 text-xs border border-white/20 cursor-pointer shadow-sm"
                               title="Ver en pantalla completa con comentarios"
                             >
@@ -927,7 +956,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => setActivePhotoIndex(carouselIndex)}
+              onClick={() => void openPhotoAtIndex(carouselIndex)}
               className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
                 ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
                 : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
@@ -1090,7 +1119,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setActivePhotoIndex(null)}
+                onClick={closePhotoViewer}
                 className="fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
               >
                 <div
@@ -1111,7 +1140,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     </a>}
                     <button
                       type="button"
-                      onClick={() => setActivePhotoIndex(null)}
+                      onClick={closePhotoViewer}
                       className="w-10 h-10 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
                       title="Cerrar galería (Esc)"
                     >
@@ -1174,6 +1203,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           <img
                             {...getCarouselImageAttributes(activePhoto)}
                             alt={activePhoto.caption || 'Foto de boda'}
+                            onLoad={(e) => handleImageLoad(activePhoto.id, e)}
                             className="h-full w-full max-h-[100vh] lg:max-h-[75vh] object-contain sm:rounded-xl shadow-2xl"
                             referrerPolicy="no-referrer"
                           />
@@ -1307,7 +1337,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               key={p.id}
                               data-thumbnail-index={idx}
                               type="button"
-                              onClick={() => setActivePhotoIndex(idx)}
+                              onClick={() => void openPhotoAtIndex(idx)}
                               aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
                               aria-current={idx === activePhotoIndex ? 'true' : undefined}
                               className={`relative h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${idx === activePhotoIndex

@@ -78,6 +78,25 @@ import { CardStyle } from './types.ts';
 type AppView = 'portal' | 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
 type EventCategory = 'bodas' | 'xv';
 
+const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop';
+
+const getPrimaryHeroImage = (settings?: WeddingSettings | null) => {
+  if (typeof settings?.heroPhotos === 'string' && settings.heroPhotos.trim()) {
+    try {
+      const parsed = JSON.parse(settings.heroPhotos);
+      if (Array.isArray(parsed)) {
+        const firstPhoto = parsed.find((photo) => typeof photo === 'string' && photo.trim());
+        if (firstPhoto) return firstPhoto.trim();
+      }
+    } catch {
+      const firstPhoto = settings.heroPhotos.split(',').map((photo) => photo.trim()).find(Boolean);
+      if (firstPhoto) return firstPhoto;
+    }
+  }
+
+  return settings?.coverPhoto?.trim() || DEFAULT_HERO_IMAGE;
+};
+
 export default function App() {
   // Helper to extract path slug e.g. "/bodasergioylore" -> "bodasergioylore"
   const getPathSlug = () => {
@@ -313,6 +332,7 @@ export default function App() {
   };
 
   const [loadingWedding, setLoadingWedding] = useState(false);
+  const [readyHeroResourceKey, setReadyHeroResourceKey] = useState<string | null>(null);
   const [activeGuest, setActiveGuest] = useState<Guest | null>(null);
   const [isInlineRsvpOpen, setIsInlineRsvpOpen] = useState(false);
   const [showRsvpModal, setShowRsvpModal] = useState(false);
@@ -727,6 +747,61 @@ export default function App() {
     fetchWeddingConfig();
   }, [currentWeddingId]);
 
+  const primaryHeroImage = getPrimaryHeroImage(settings);
+  const heroTheme = settingsEventCategory === 'xv'
+    ? (XV_CARD_THEMES[settings?.cardStyle] || XV_CARD_THEMES['romantic-floral'])
+    : (CARD_THEMES[settings?.cardStyle] || CARD_THEMES['classic-gold']);
+  const heroFontFamily = heroTheme.fontDisplay.match(/font-\["([^"]+)"\]/)?.[1]?.replaceAll('_', ' ') || 'Playfair Display';
+  const heroResourceKey = `${settingsEventCategory}:${currentWeddingId}:${primaryHeroImage}:${heroFontFamily}`;
+
+  // Keep the invitation's single loading screen visible until the first hero
+  // image is decoded and the typography used above it is ready to render.
+  useEffect(() => {
+    if (currentView !== 'invitation' || loadingWedding || readyHeroResourceKey === heroResourceKey) return;
+
+    let cancelled = false;
+    let imageSettled = false;
+    const image = new Image();
+    const imageReady = new Promise<void>((resolve) => {
+      const finish = () => {
+        if (imageSettled) return;
+        imageSettled = true;
+        resolve();
+      };
+      const finishAfterDecode = () => {
+        if (typeof image.decode === 'function' && image.naturalWidth > 0) {
+          void image.decode().catch(() => undefined).finally(finish);
+        } else {
+          finish();
+        }
+      };
+
+      image.onload = finishAfterDecode;
+      image.onerror = finish;
+      image.src = primaryHeroImage;
+      if (image.complete) finishAfterDecode();
+    });
+
+    const fontsReady = typeof document !== 'undefined' && document.fonts
+      ? Promise.allSettled([
+          document.fonts.load(`400 48px "${heroFontFamily}"`),
+          document.fonts.load('400 16px "Cormorant Garamond"'),
+          document.fonts.load('400 16px "Plus Jakarta Sans"'),
+          document.fonts.ready,
+        ]).then(() => undefined)
+      : Promise.resolve();
+
+    void Promise.all([imageReady, fontsReady]).then(() => {
+      if (!cancelled) setReadyHeroResourceKey(heroResourceKey);
+    });
+
+    return () => {
+      cancelled = true;
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [currentView, loadingWedding, heroResourceKey, primaryHeroImage, heroFontFamily, readyHeroResourceKey]);
+
   // Sync user profile to backend & localStorage
   const handleAuthSuccess = async (user: UserProfile, directToAdmin = false) => {
     setCurrentUser(user);
@@ -1123,7 +1198,7 @@ export default function App() {
   }
 
   // Loading state for wedding invitation view
-  if (loadingWedding || !settings) {
+  if (loadingWedding || !settings || (currentView === 'invitation' && readyHeroResourceKey !== heroResourceKey)) {
     return (
       <div className="min-h-screen bg-[#FDFCF0] flex flex-col items-center justify-center text-[#3D3D3D]">
         <motion.div
@@ -1138,7 +1213,7 @@ export default function App() {
           )}
         </motion.div>
         <p className="font-serif italic text-xl tracking-wider text-[#5A5A40]">
-          {settingsEventCategory === 'xv' ? 'Cargando Invitación de XV Años...' : 'Cargando Invitación de Boda...'}
+          Preparando tu invitación...
         </p>
         <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
           {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
