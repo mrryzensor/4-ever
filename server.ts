@@ -4,7 +4,6 @@ import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { createServer as createViteServer } from 'vite';
 import {
   getWeddingSettings,
   updateWeddingSettings,
@@ -58,6 +57,7 @@ import {
   deleteWeddingByCeo,
   updateWeddingStatus,
 } from './src/db/queries.ts';
+import { pool } from './src/db/index.ts';
 import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
@@ -138,16 +138,16 @@ async function startServer() {
   // ENVIRONMENT CREDENTIALS FOR FIXED PROFILES
   // ----------------------------------------------------
   const CEO_EMAIL = (process.env.CEO_EMAIL || process.env.ADMIN_EMAIL || 'daviex14@gmail.com').toLowerCase().trim();
-  const CEO_PASSWORD = process.env.CEO_PASSWORD || process.env.ADMIN_PASSWORD || 'MasterCEO2026!';
+  const CEO_PASSWORD = process.env.CEO_PASSWORD || process.env.ADMIN_PASSWORD || '';
   const CEO_NAME = process.env.CEO_NAME || 'Daviex (CEO Master)';
 
   const PLANNER_EMAIL = (process.env.PLANNER_EMAIL || 'planner@atelier.com').toLowerCase().trim();
-  const PLANNER_PASSWORD = process.env.PLANNER_PASSWORD || 'PlannerPro2026!';
+  const PLANNER_PASSWORD = process.env.PLANNER_PASSWORD || '';
   const PLANNER_NAME = process.env.PLANNER_NAME || 'Valeria Mendoza';
   const PLANNER_AGENCY = process.env.PLANNER_AGENCY || 'Valeria Events Atelier';
 
   const COUPLE_EMAIL = (process.env.COUPLE_EMAIL || 'novios@weddingatelier.com').toLowerCase().trim();
-  const COUPLE_PASSWORD = process.env.COUPLE_PASSWORD || 'Novios2026!';
+  const COUPLE_PASSWORD = process.env.COUPLE_PASSWORD || '';
   const COUPLE_NAME = process.env.COUPLE_NAME || 'Sofía & Alejandro';
 
   // ----------------------------------------------------
@@ -2025,6 +2025,7 @@ async function startServer() {
 
   // Vite development middleware vs Static Production
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'custom',
@@ -2062,10 +2063,41 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const httpServer = app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n  ➜  Local:   http://localhost:${PORT}`);
     console.log(`  ➜  Network: http://0.0.0.0:${PORT}\n`);
   });
+
+  let isShuttingDown = false;
+  const shutdown = (signal: string) => {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    console.log(`Received ${signal}; shutting down gracefully.`);
+
+    const forceExit = setTimeout(() => {
+      console.error('Graceful shutdown timed out; forcing exit.');
+      process.exit(1);
+    }, 10_000);
+    forceExit.unref();
+
+    httpServer.close(async (error) => {
+      try {
+        await pool.end();
+      } catch (poolError) {
+        console.error('Error closing PostgreSQL pool:', poolError);
+        process.exitCode = 1;
+      } finally {
+        clearTimeout(forceExit);
+        if (error) {
+          console.error('Error closing HTTP server:', error);
+          process.exitCode = 1;
+        }
+      }
+    });
+  };
+
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
 }
 
 startServer();
