@@ -33,6 +33,7 @@ import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, W
 import { CARD_THEMES } from '../lib/themes.ts';
 import { HeroCourtCard } from './HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../lib/sectionOrder.ts';
+import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
@@ -133,7 +134,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     fontDisplay: fontTheme.fontDisplay,
     fontBody: fontTheme.fontBody,
   };
+  const themeDisplayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
+  const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
+  const receptionCardOrder = detailSectionOrder.indexOf('reception') * 2;
+  const rsvpButtonOrder = detailSectionOrder.indexOf('rsvp') * 2;
   const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
     ? (settings.colorPaletteStyle === 'dark-luxury' || settings.colorPaletteStyle === 'royal-navy' || settings.colorPaletteStyle === 'emerald-botanical')
     : (settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical');
@@ -631,7 +636,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </span>
             </div>
 
-            <h2 className={`text-2xl sm:text-4xl md:text-5xl italic leading-tight max-w-4xl mx-auto font-normal ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+            <h2 style={{ fontFamily: themeDisplayFontFamily }} className={`text-2xl sm:text-4xl md:text-5xl italic leading-tight max-w-4xl mx-auto font-normal ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
               "{settings.welcomeMessage || '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor'}"
             </h2>
             
@@ -760,7 +765,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               onClick={() => toggleSection('reception')}
-              style={{ order: detailSectionOrder.indexOf('reception') * 2, display: settings.showLocations === false ? 'none' : undefined }}
+              style={{ order: receptionCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
               className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
@@ -863,7 +868,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </div>
             {settings.showRsvpSection !== false && onToggleInlineRsvp && (
               <div
-                style={{ order: detailSectionOrder.indexOf('reception') * 2 + 0.5, display: settings.showLocations === false ? 'none' : undefined }}
+                style={{ order: rsvpButtonOrder, display: settings.showLocations === false ? 'none' : undefined }}
                 className="flex w-full flex-col items-center gap-4 text-center"
               >
                 <button
@@ -874,11 +879,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   }}
                   aria-expanded={isInlineRsvpOpen}
                   aria-controls="rsvp-inline"
-                  className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-full px-10 py-4 text-base font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl cursor-pointer sm:px-14 sm:py-5 sm:text-lg ${
-                    isInlineRsvpOpen
-                      ? 'bg-stone-700 text-white hover:bg-stone-800'
-                      : isDark ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]' : 'bg-amber-600 text-white hover:bg-amber-700'
-                  }`}
+                  className={rsvpButtonPresentation.className}
+                  style={rsvpButtonPresentation.style}
                 >
                   <Heart className="h-5 w-5 fill-current" />
                   {isInlineRsvpOpen ? 'Cerrar confirmación' : settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}

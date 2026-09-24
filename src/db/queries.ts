@@ -619,7 +619,7 @@ const DEMO_XV_DB_FIELDS = [
   'showVideoMemories', 'showGuestbook',
   'showHotels', 'hotelsTitle', 'hotelRecommendations', 'landingSectionOrder',
   'detailSectionOrder', 'galleryPlacement', 'galleryAfterDetailSection',
-  'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText',
+  'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle',
   'bankName', 'bankBeneficiary',
   'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency',
   'enableBankTransfer', 'enableStoreRegistry', 'enableEnvelopeGift',

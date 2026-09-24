@@ -37,6 +37,7 @@ import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
 import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSectionsStep.tsx';
 import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
+import { RsvpButtonStyleField } from '../../../components/admin/settings/RsvpButtonStyleField.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -1967,6 +1968,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   className="w-full px-4 py-2.5 rounded-xl border border-[#E5E2D0] bg-[#FAF9F0] focus:bg-white text-xs text-stone-800"
                 />
               </div>
+              <RsvpButtonStyleField settings={settings} onChange={onChange} />
             </div>
           </div>
         )}

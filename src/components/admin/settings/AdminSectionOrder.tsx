@@ -25,7 +25,8 @@ const LANDING_LABELS: Record<(typeof DEFAULT_LANDING_SECTION_ORDER)[number], str
 
 const DETAIL_LABELS: Record<(typeof DEFAULT_DETAIL_SECTION_ORDER)[number], string> = {
   ceremony: 'Ceremonia',
-  reception: 'Lugar de celebración',
+  reception: 'Recepción y brindis (lugar de celebración)',
+  rsvp: 'Botón de confirmar asistencia',
   itinerary: 'Itinerario',
   gifts: 'Regalos y cuentas',
   'dress-code': 'Vestimenta',
@@ -83,7 +84,7 @@ export const AdminSectionOrder: React.FC<AdminSectionOrderProps> = ({ settings, 
       <div className="mb-4">
         <h4 className="font-serif text-sm font-bold text-stone-900">Orden de las secciones</h4>
         <p className="mt-1 text-[11px] leading-relaxed text-stone-600">
-          Usa las flechas para decidir qué aparece primero. El orden se guarda con la invitación; al integrar la galería en la información del evento, su posición se configura por separado.
+          Usa las flechas para decidir qué aparece primero. El botón RSVP se ordena aquí junto a las tarjetas; si la galería se integra entre los detalles, su posición se configura por separado.
         </p>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
@@ -116,7 +117,7 @@ export const AdminSectionOrder: React.FC<AdminSectionOrderProps> = ({ settings, 
               onChange={(event) => onChange({ galleryAfterDetailSection: event.target.value as WeddingSettings['galleryAfterDetailSection'] })}
               className="w-full cursor-pointer rounded-lg border border-[#E5E2D0] bg-[#FAF9F0] px-3 py-2 text-xs text-stone-800"
             >
-              {DEFAULT_DETAIL_SECTION_ORDER.map((id) => <option key={id} value={id}>{DETAIL_LABELS[id]}</option>)}
+              {DEFAULT_DETAIL_SECTION_ORDER.filter((id) => id !== 'rsvp').map((id) => <option key={id} value={id}>{DETAIL_LABELS[id]}</option>)}
             </select>
           </label>
         )}

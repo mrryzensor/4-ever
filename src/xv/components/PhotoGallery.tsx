@@ -674,20 +674,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
             Las fotografías y recuerdos oficiales de los quince años serán compartidos aquí por la quinceañera.
           </p>
-          {effectiveAlbumUrl && (
-            <a
-              href={effectiveAlbumUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`mt-4 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-medium shadow-xs transition-colors ${isDark
-                  ? 'bg-[#C5A059] text-stone-950 font-bold hover:bg-[#d8b46d]'
-                  : 'bg-[#5A5A40] text-white hover:bg-[#484833]'
-                }`}
-            >
-              <span>Ver Álbum en la Nube</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
         </div>
       ) : (
         <div className="w-full mx-auto flex flex-col items-center">
@@ -754,7 +740,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         {/* Top Action Bar: Likes & Comments count at top-right */}
                         <div className="flex justify-end items-center pointer-events-auto w-full">
                           <div className="flex items-center gap-2">
-                            {currentCarouselPhoto.driveOpenUrl && <a href={currentCarouselPhoto.driveOpenUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white border border-white/20 inline-flex items-center gap-1.5">Abrir en Drive <ExternalLink className="w-3.5 h-3.5" /></a>}
                             <button
                               type="button"
                               onClick={(e) => handleLike(currentCarouselPhoto, e)}
@@ -1102,16 +1087,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 >
                   {/* Top Bar Actions: High-res Download & Close Button */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
-                    <a
-                      href={activePhoto.driveOpenUrl || activePhoto.url}
+                    {!activePhoto.driveOpenUrl && <a
+                      href={activePhoto.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
                       className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-lg cursor-pointer transition-all hover:scale-105"
-                      title={activePhoto.driveOpenUrl ? 'Abrir foto en Google Drive' : 'Abrir imagen original'}
+                      title="Abrir imagen original"
                     >
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </a>
+                    </a>}
                     <button
                       type="button"
                       onClick={() => setActivePhotoIndex(null)}
@@ -1545,8 +1530,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           </span>
                         </button>
 
-                        <a
-                          href={activePhoto.driveOpenUrl || activePhoto.url}
+                        {!activePhoto.driveOpenUrl && <a
+                          href={activePhoto.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           download
@@ -1554,7 +1539,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           title="Abrir imagen original en alta resolución"
                         >
                           <ExternalLink className="w-5 h-5" />
-                        </a>
+                        </a>}
                       </div>
 
                       <form onSubmit={handleAddComment} className="space-y-3">

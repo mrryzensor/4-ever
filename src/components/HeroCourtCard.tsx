@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CardThemeConfig, EventType, WeddingSettings } from '../types.ts';
+import { getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
 
 interface HeroCourtCardProps {
   settings: WeddingSettings;
@@ -53,6 +54,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
   const pageHeading = settings.heroCourtPageHeading?.trim() || (
     isXv ? 'Con quienes celebramos mis XV' : 'Con quienes celebramos este día'
   );
+  const displayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
   const spacing = compact ? 'my-2 px-3 py-2' : 'my-3 sm:my-4 px-4 py-3 sm:px-6 sm:py-4';
   const titleSize = compact ? 'text-[8px]' : 'text-[9px] sm:text-xs';
   const nameSize = compact ? 'text-[10px]' : 'text-xs sm:text-sm md:text-base';
@@ -77,7 +79,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em]" style={{ color: theme.accentColorHex }}>
             {isXv ? 'Familia y padrinos de honor' : 'Familia y cortejo de honor'}
           </p>
-          <h2 className={`mx-auto max-w-5xl text-4xl leading-tight sm:text-5xl md:text-6xl lg:text-7xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+          <h2 style={{ fontFamily: displayFontFamily }} className={`mx-auto max-w-5xl text-4xl leading-tight sm:text-5xl md:text-6xl lg:text-7xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
             {pageHeading}
           </h2>
           <p className={`mx-auto mt-4 max-w-3xl text-base italic sm:text-lg md:text-xl ${theme.textSecondaryClass} ${theme.fontBody}`}>
@@ -93,7 +95,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                 <span className="text-xs font-semibold uppercase tracking-[0.22em] sm:text-sm" style={{ color: theme.accentColorHex }}>
                   {item.title}
                 </span>
-                <p className={`mt-3 break-words text-2xl font-medium italic leading-snug sm:text-3xl md:text-4xl lg:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                <p style={{ fontFamily: displayFontFamily }} className={`mt-3 break-words text-2xl font-medium italic leading-snug sm:text-3xl md:text-4xl lg:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {item.names}
                 </p>
               </article>
@@ -130,7 +132,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                   >
                     {item.title}
                   </span>
-                  <p className={`mt-0.5 break-words font-medium italic leading-snug ${nameSize} ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                  <p style={{ fontFamily: displayFontFamily }} className={`mt-0.5 break-words font-medium italic leading-snug ${nameSize} ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                     {item.names}
                   </p>
                 </div>

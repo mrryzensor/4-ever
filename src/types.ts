@@ -72,7 +72,7 @@ export interface UserProfile {
 export type EventType = 'bodas' | 'xv';
 
 export type LandingSectionId = 'invitation' | 'gallery' | 'video' | 'hotels' | 'guestbook' | 'rsvp';
-export type DetailSectionId = 'ceremony' | 'reception' | 'itinerary' | 'gifts' | 'dress-code' | 'tips';
+export type DetailSectionId = 'ceremony' | 'reception' | 'rsvp' | 'itinerary' | 'gifts' | 'dress-code' | 'tips';
 
 export interface HotelRecommendation {
   name: string;
@@ -208,6 +208,7 @@ export interface WeddingSettings {
   showRsvpSection?: boolean; // Confirmación de asistencia
   rsvpDeadlineMessage?: string; // Supports {date} placeholder
   rsvpButtonText?: string;
+  rsvpButtonStyle?: 'auto' | 'soft' | 'outline' | 'editorial' | 'art-deco';
   // Bank Account & Transfer Quick Settings (Perú & Latam)
   bankName?: string;
   bankBeneficiary?: string;

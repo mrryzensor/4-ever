@@ -5,6 +5,7 @@ import { CARD_THEMES } from '../../../lib/themes.ts';
 import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../AnimatedSvgs.tsx';
 import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
 import { getDisplayedWaxSealText } from '../../../lib/eventUtils.ts';
+import { RsvpButtonStyleField } from './RsvpButtonStyleField.tsx';
 
 interface AdminThemeSettingsProps {
   settings: WeddingSettings;
@@ -231,6 +232,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
             className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
           />
         </div>
+        <RsvpButtonStyleField settings={settings} onChange={onChange} />
       </div>
     </div>
   );
