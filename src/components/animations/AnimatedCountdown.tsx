@@ -1251,32 +1251,30 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
   ];
   const renderTimeUnits = (layout: string) => (
-    <div className={`flex w-full items-center ${layout === 'circle' ? 'gap-1 sm:gap-2 px-1 sm:px-2' : 'gap-2 sm:gap-3'}`}>
+    <div className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'px-1 sm:px-2' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}>
       {timeUnits.map((unit, index) => (
-        <React.Fragment key={unit.key}>
-          <div
-            className={`flex min-w-0 flex-1 flex-col items-center justify-center text-center ${layout === 'tiles'
-              ? `rounded-xl border px-1.5 py-2 sm:py-3 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-white/70'}`
+        <div
+          key={unit.key}
+          className={`flex w-full min-w-0 flex-col items-center justify-center text-center ${layout === 'tiles'
+            ? `rounded-xl border px-1.5 py-2 sm:py-3 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-white/70'}`
+            : index > 0
+              ? `border-l ${isDark ? 'border-white/15' : 'border-stone-300/70'}`
               : ''}`}
+        >
+          <motion.span
+            key={`${unit.key}-${unit.value}`}
+            initial={{ opacity: 0.75, y: -2 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className={`font-bold font-serif tabular-nums leading-none text-3xl sm:text-4xl md:text-5xl ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+            style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
           >
-            <motion.span
-              key={`${unit.key}-${unit.value}`}
-              initial={{ opacity: 0.75, y: -2 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-              className={`font-bold font-serif tabular-nums leading-none text-3xl sm:text-4xl md:text-5xl ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
-              style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
-            >
-              {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
-            </motion.span>
-            <span className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-stone-500 font-sans">
-              {unit.label}
-            </span>
-          </div>
-          {index < timeUnits.length - 1 && layout !== 'tiles' && (
-            <div className={`hidden h-8 w-px shrink-0 sm:block ${isDark ? 'bg-white/15' : 'bg-stone-300/70'}`} />
-          )}
-        </React.Fragment>
+            {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
+          </motion.span>
+          <span className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-stone-500 font-sans">
+            {unit.label}
+          </span>
+        </div>
       ))}
     </div>
   );
