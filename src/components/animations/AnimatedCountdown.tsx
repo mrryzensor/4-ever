@@ -1251,11 +1251,11 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
   ];
   const renderTimeUnits = (layout: string) => (
-    <div className={`grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-center ${layout === 'circle' ? 'gap-1 sm:gap-2 px-1 sm:px-2' : 'gap-2 sm:gap-3'}`}>
+    <div className={`flex w-full items-center ${layout === 'circle' ? 'gap-1 sm:gap-2 px-1 sm:px-2' : 'gap-2 sm:gap-3'}`}>
       {timeUnits.map((unit, index) => (
         <React.Fragment key={unit.key}>
           <div
-            className={`flex min-w-0 flex-col items-center justify-center ${layout === 'tiles'
+            className={`flex min-w-0 flex-1 flex-col items-center justify-center text-center ${layout === 'tiles'
               ? `rounded-xl border px-1.5 py-2 sm:py-3 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-white/70'}`
               : ''}`}
           >
@@ -1274,7 +1274,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             </span>
           </div>
           {index < timeUnits.length - 1 && layout !== 'tiles' && (
-            <div className={`hidden sm:block h-8 w-px justify-self-center ${isDark ? 'bg-white/15' : 'bg-stone-300/70'}`} />
+            <div className={`hidden h-8 w-px shrink-0 sm:block ${isDark ? 'bg-white/15' : 'bg-stone-300/70'}`} />
           )}
         </React.Fragment>
       ))}
@@ -1314,13 +1314,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   return (
     <div className={`relative flex w-full flex-col items-center justify-center select-none ${className}`}>
       {countdownLayout === 'circle' ? (
-        <div className="relative mx-auto flex aspect-square h-auto w-[calc(100vw-3rem)] max-w-[20rem] items-center justify-center sm:w-96 sm:max-w-none md:w-[26rem]">
+        <div className="relative mx-auto flex aspect-square h-auto w-full max-w-[22rem] items-center justify-center sm:max-w-[24rem] md:max-w-[26rem]">
           {renderSvgSurround()}
           <motion.div
             initial={{ opacity: 0, scale: 0.94 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
-            className={`relative z-10 flex h-[86%] w-[86%] flex-col items-center justify-center rounded-full border p-4 text-center shadow-2xl transition-all ${isDark
+            className={`relative z-10 flex h-[90%] w-[90%] flex-col items-center justify-center rounded-full border p-4 text-center shadow-2xl transition-all ${isDark
               ? 'bg-stone-900/95 border-amber-400/40 text-white shadow-black/60'
               : 'bg-white/95 border-stone-200/80 text-stone-800 shadow-stone-400/25'}`}
             style={{ backdropFilter: 'blur(8px)' }}
