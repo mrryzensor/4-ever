@@ -2,13 +2,13 @@
 
 /* Keep template-styled controls intact on mobile browsers that otherwise apply native button skins. */
 .public-invitation {
-  color-scheme: light;
+  color-scheme: only light;
 }
 
 .public-invitation button {
   -webkit-appearance: none !important;
   appearance: none !important;
-  color-scheme: light;
+  color-scheme: only light;
 }
 
 .public-invitation button,
@@ -114,6 +114,7 @@
 }
 
 :root {
+  color-scheme: only light;
   --scrollbar-track: rgba(229, 226, 208, 0.45);
   --scrollbar-thumb: rgba(125, 140, 122, 0.7);
   --scrollbar-thumb-hover: rgba(90, 90, 64, 0.95);

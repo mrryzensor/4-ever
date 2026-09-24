@@ -3,43 +3,39 @@ import { motion } from 'motion/react';
 
 const WAVE_PROFILES: Record<string, {
   cycles: number;
-  phase: number;
   amplitude: number;
-  slope: number;
   ripple: number;
+  asymmetry: number;
 }> = {
-  'classic-gold': { cycles: 1, phase: 0.25, amplitude: 1, slope: 0, ripple: 0.14 },
-  'romantic-floral': { cycles: 1.35, phase: -0.45, amplitude: 0.84, slope: 3, ripple: 0.18 },
-  'boho-chic': { cycles: 0.72, phase: 0.55, amplitude: 1.2, slope: 20, ripple: 0.1 },
-  'minimal-editorial': { cycles: 0.9, phase: -0.2, amplitude: 0.42, slope: -4, ripple: 0.04 },
-  'dark-luxury': { cycles: 0.78, phase: 1.15, amplitude: 1.38, slope: -22, ripple: 0.24 },
-  'watercolor-garden': { cycles: 1.18, phase: -0.9, amplitude: 1.05, slope: 12, ripple: 0.22 },
-  'royal-navy': { cycles: 1, phase: 1.6, amplitude: 0.88, slope: -16, ripple: 0.3 },
-  'terracotta-sunset': { cycles: 0.64, phase: 1.9, amplitude: 1.2, slope: 22, ripple: 0.08 },
-  'lavender-provence': { cycles: 1.58, phase: 0.45, amplitude: 0.72, slope: 0, ripple: 0.12 },
-  'emerald-botanical': { cycles: 1.08, phase: 2.2, amplitude: 1.05, slope: -10, ripple: 0.2 },
-  'coastal-breeze': { cycles: 1.42, phase: -1.25, amplitude: 0.95, slope: 6, ripple: 0.1 },
-  'champagne-glam': { cycles: 1.82, phase: 0, amplitude: 0.68, slope: 4, ripple: 0.26 },
+  'classic-gold': { cycles: 1, amplitude: 1, ripple: 0.14, asymmetry: 0 },
+  'romantic-floral': { cycles: 1, amplitude: 0.84, ripple: 0.3, asymmetry: 12 },
+  'boho-chic': { cycles: 0.5, amplitude: 1.2, ripple: 0.08, asymmetry: 24 },
+  'minimal-editorial': { cycles: 0.5, amplitude: 0.42, ripple: 0.04, asymmetry: -4 },
+  'dark-luxury': { cycles: 1, amplitude: 1.38, ripple: 0.24, asymmetry: -22 },
+  'watercolor-garden': { cycles: 1.5, amplitude: 1.05, ripple: 0.22, asymmetry: 10 },
+  'royal-navy': { cycles: 1, amplitude: 0.88, ripple: 0.3, asymmetry: -16 },
+  'terracotta-sunset': { cycles: 0.5, amplitude: 1.2, ripple: 0.08, asymmetry: 22 },
+  'lavender-provence': { cycles: 2, amplitude: 0.72, ripple: 0.12, asymmetry: 0 },
+  'emerald-botanical': { cycles: 1.5, amplitude: 1.05, ripple: 0.2, asymmetry: -10 },
+  'coastal-breeze': { cycles: 2, amplitude: 0.95, ripple: 0.1, asymmetry: 6 },
+  'champagne-glam': { cycles: 2, amplitude: 0.68, ripple: 0.26, asymmetry: 4 },
 };
 
 const buildWavePath = (style: string, layer: number) => {
   const profile = WAVE_PROFILES[style] || WAVE_PROFILES['classic-gold'];
-  const baselines = [60, 95, 135, 120];
-  const amplitudes = [34, 28, 27, 38];
-  const phaseOffsets = [0.2, -0.4, 0.55, 0];
-  const frequencyOffsets = [0.04, -0.06, 0.08, 0];
+  const baselines = [92, 100, 108, 116];
+  const amplitudes = [34, 31, 28, 25];
   const baseline = baselines[layer];
   const amplitude = amplitudes[layer] * profile.amplitude;
-  const frequency = profile.cycles + frequencyOffsets[layer];
-  const phase = profile.phase + phaseOffsets[layer];
+  const frequency = profile.cycles;
   const pointCount = 9;
   const points = Array.from({ length: pointCount }, (_, index) => {
     const progress = index / (pointCount - 1);
-    const angle = progress * Math.PI * 2 * frequency + phase;
+    const angle = progress * Math.PI * 2 * frequency;
     const y = baseline
       + Math.sin(angle) * amplitude
-      + Math.sin(angle * 2 + phase) * amplitude * profile.ripple
-      + profile.slope * (progress - 0.5);
+      + Math.sin(angle * 2) * amplitude * profile.ripple
+      + Math.sin(progress * Math.PI * 2) * Math.sin(progress * Math.PI) * profile.asymmetry;
     return { x: progress * 1440, y };
   });
 
@@ -95,9 +91,9 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
       >
         <defs>
           <linearGradient id={`waveSoftTint-${cardStyle}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={accentColor} stopOpacity="0.28" />
-            <stop offset="50%" stopColor={accentColor} stopOpacity="0.14" />
-            <stop offset="100%" stopColor={fillColor} stopOpacity="0.05" />
+            <stop offset="0%" stopColor={accentColor} stopOpacity="0.2" />
+            <stop offset="50%" stopColor={accentColor} stopOpacity="0.1" />
+            <stop offset="100%" stopColor={fillColor} stopOpacity="0.02" />
           </linearGradient>
           <filter id={`waveShadow-${cardStyle}`} x="-5%" y="-10%" width="110%" height="130%">
             <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="#000000" floodOpacity="0.08" />
@@ -108,7 +104,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
         <motion.path
           d={wavePaths[0]}
           fill={fillColor}
-          fillOpacity="0.4"
+          fillOpacity="0.3"
           animate={{
             y: [-6, 6, -6],
             scaleY: [0.95, 1.05, 0.95],
@@ -120,10 +116,10 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
         <motion.path
           d={wavePaths[1]}
           fill={fillColor}
-          fillOpacity="0.65"
+          fillOpacity="0.48"
           stroke={accentColor}
           strokeWidth="1.5"
-          strokeOpacity="0.35"
+          strokeOpacity="0.22"
           animate={{
             y: [5, -5, 5],
             scaleY: [1.04, 0.96, 1.04],
@@ -137,7 +133,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
           fill={`url(#waveSoftTint-${cardStyle})`}
           stroke={accentColor}
           strokeWidth="1"
-          strokeOpacity="0.25"
+          strokeOpacity="0.16"
           animate={{
             y: [-4, 4, -4],
           }}
