@@ -100,6 +100,15 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
       {/* Live Atelier Preview Panel of Selected Style */}
       {(() => {
         const currentT = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+        const activeWaveStyle = settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
+          ? settings.transitionWaveStyle
+          : settings.cardStyle;
+        const activeWaveTheme = CARD_THEMES[activeWaveStyle as CardStyleId] || currentT;
+        const waveAccentColor = settings.customAccentColor
+          || ((settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
+            ? CARD_THEMES[settings.colorPaletteStyle as CardStyleId]?.accentColorHex
+            : activeWaveTheme.accentColorHex)
+          || currentT.accentColorHex;
         return (
           <div className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -129,7 +138,12 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
                   Pase de Sección Orgánico (Hero ➔ Contenido)
                 </span>
                 <div className="h-16 flex items-center justify-center overflow-hidden rounded-xl bg-stone-900/5 p-2">
-                  <FixDateAnimatedTransitionDivider fillColor={currentT.bgHex} className="w-full h-12" />
+                  <FixDateAnimatedTransitionDivider
+                    fillColor={currentT.bgHex}
+                    accentColor={waveAccentColor}
+                    cardStyle={activeWaveStyle}
+                    className="w-full h-12"
+                  />
                 </div>
               </div>
 

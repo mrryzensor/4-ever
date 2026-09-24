@@ -136,6 +136,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const activeWaveStyle = (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto')
     ? settings.transitionWaveStyle
     : settings.cardStyle;
+  const activeWaveTheme = CARD_THEMES[activeWaveStyle as CardStyleId] || baseTheme;
+  const activeWaveAccentColor = settings.customAccentColor
+    || ((settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
+      ? colorTheme.accentColorHex
+      : activeWaveTheme.accentColorHex);
 
   const [expandedSection, setExpandedSection] = useState<'none' | 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips'>('none');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -574,7 +579,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         <div className="absolute left-0 right-0 -top-16 sm:-top-22 md:-top-28 lg:-top-32 pointer-events-none w-full leading-none overflow-hidden z-0">
           <FixDateAnimatedTransitionDivider
             fillColor={theme.bgHex}
-            accentColor={theme.accentColorHex}
+            accentColor={activeWaveAccentColor}
             cardStyle={activeWaveStyle}
           />
         </div>

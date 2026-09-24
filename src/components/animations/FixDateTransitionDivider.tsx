@@ -1,6 +1,68 @@
 import React from 'react';
 import { motion } from 'motion/react';
 
+const WAVE_PROFILES: Record<string, {
+  cycles: number;
+  phase: number;
+  amplitude: number;
+  slope: number;
+  ripple: number;
+}> = {
+  'classic-gold': { cycles: 1, phase: 0.25, amplitude: 1, slope: 0, ripple: 0.14 },
+  'romantic-floral': { cycles: 1.35, phase: -0.45, amplitude: 0.84, slope: 3, ripple: 0.18 },
+  'boho-chic': { cycles: 0.72, phase: 0.55, amplitude: 1.2, slope: 20, ripple: 0.1 },
+  'minimal-editorial': { cycles: 0.9, phase: -0.2, amplitude: 0.42, slope: -4, ripple: 0.04 },
+  'dark-luxury': { cycles: 0.78, phase: 1.15, amplitude: 1.38, slope: -22, ripple: 0.24 },
+  'watercolor-garden': { cycles: 1.18, phase: -0.9, amplitude: 1.05, slope: 12, ripple: 0.22 },
+  'royal-navy': { cycles: 1, phase: 1.6, amplitude: 0.88, slope: -16, ripple: 0.3 },
+  'terracotta-sunset': { cycles: 0.64, phase: 1.9, amplitude: 1.2, slope: 22, ripple: 0.08 },
+  'lavender-provence': { cycles: 1.58, phase: 0.45, amplitude: 0.72, slope: 0, ripple: 0.12 },
+  'emerald-botanical': { cycles: 1.08, phase: 2.2, amplitude: 1.05, slope: -10, ripple: 0.2 },
+  'coastal-breeze': { cycles: 1.42, phase: -1.25, amplitude: 0.95, slope: 6, ripple: 0.1 },
+  'champagne-glam': { cycles: 1.82, phase: 0, amplitude: 0.68, slope: 4, ripple: 0.26 },
+};
+
+const buildWavePath = (style: string, layer: number) => {
+  const profile = WAVE_PROFILES[style] || WAVE_PROFILES['classic-gold'];
+  const baselines = [60, 95, 135, 120];
+  const amplitudes = [34, 28, 27, 38];
+  const phaseOffsets = [0.2, -0.4, 0.55, 0];
+  const frequencyOffsets = [0.04, -0.06, 0.08, 0];
+  const baseline = baselines[layer];
+  const amplitude = amplitudes[layer] * profile.amplitude;
+  const frequency = profile.cycles + frequencyOffsets[layer];
+  const phase = profile.phase + phaseOffsets[layer];
+  const pointCount = 9;
+  const points = Array.from({ length: pointCount }, (_, index) => {
+    const progress = index / (pointCount - 1);
+    const angle = progress * Math.PI * 2 * frequency + phase;
+    const y = baseline
+      + Math.sin(angle) * amplitude
+      + Math.sin(angle * 2 + phase) * amplitude * profile.ripple
+      + profile.slope * (progress - 0.5);
+    return { x: progress * 1440, y };
+  });
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const previous = points[Math.max(0, index - 1)];
+    const start = points[index];
+    const end = points[index + 1];
+    const next = points[Math.min(points.length - 1, index + 2)];
+    const control1 = {
+      x: start.x + (end.x - previous.x) / 6,
+      y: start.y + (end.y - previous.y) / 6,
+    };
+    const control2 = {
+      x: end.x - (next.x - start.x) / 6,
+      y: end.y - (next.y - start.y) / 6,
+    };
+    path += ` C ${control1.x} ${control1.y}, ${control2.x} ${control2.y}, ${end.x} ${end.y}`;
+  }
+
+  return `${path} L 1440 250 L 0 250 Z`;
+};
+
 /**
  * Organic Animated Transition Wave Divider
  * Connects the Hero section seamlessly into the body with flowing SVG waves & theme-specific crest accents for all 12 designs!
@@ -19,6 +81,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
   cardStyle: rawCardStyle = 'classic-gold',
 }) => {
   const cardStyle = (rawCardStyle && rawCardStyle !== 'auto') ? rawCardStyle : 'classic-gold';
+  const wavePaths = [0, 1, 2, 3].map((layer) => buildWavePath(cardStyle, layer));
   return (
     <div className={`relative w-full overflow-hidden leading-none z-10 ${className}`}>
       {/* Dynamic Animated Multi-layered SVG Wave */}
@@ -28,6 +91,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
         xmlns="http://www.w3.org/2000/svg"
         className={svgClassName}
         preserveAspectRatio="none"
+        data-wave-style={cardStyle}
       >
         <defs>
           <linearGradient id={`waveSoftTint-${cardStyle}`} x1="0%" y1="0%" x2="0%" y2="100%">
@@ -42,7 +106,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
 
         {/* Layer 1: Background gentle translucent flowing wave into Hero */}
         <motion.path
-          d="M0 60 C 320 130, 640 20, 960 80 C 1200 120, 1360 40, 1440 55 L 1440 250 L 0 250 Z"
+          d={wavePaths[0]}
           fill={fillColor}
           fillOpacity="0.4"
           animate={{
@@ -54,7 +118,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
 
         {/* Layer 2: Mid wave with accent shimmer & delicate line contour */}
         <motion.path
-          d="M0 95 C 260 45, 540 145, 880 75 C 1140 35, 1320 115, 1440 90 L 1440 250 L 0 250 Z"
+          d={wavePaths[1]}
           fill={fillColor}
           fillOpacity="0.65"
           stroke={accentColor}
@@ -69,7 +133,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
 
         {/* Layer 3: Contrast Wave reaching down into Content Section with soft tint */}
         <motion.path
-          d="M0 135 C 340 85, 680 185, 1020 120 C 1220 90, 1360 155, 1440 130 L 1440 250 L 0 250 Z"
+          d={wavePaths[2]}
           fill={`url(#waveSoftTint-${cardStyle})`}
           stroke={accentColor}
           strokeWidth="1"
@@ -82,7 +146,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
 
         {/* Layer 4: Main Solid Wave blending 100% seamlessly into Content */}
         <motion.path
-          d="M0 120 C 380 65, 760 155, 1140 100 C 1280 80, 1380 125, 1440 115 L 1440 250 L 0 250 Z"
+          d={wavePaths[3]}
           fill={fillColor}
           animate={{
             y: [-3, 3, -3],
