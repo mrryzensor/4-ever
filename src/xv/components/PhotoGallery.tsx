@@ -643,11 +643,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'
-          }`}>
-          Desliza o usa los botones para revivir mi sesión de fotos de quince años y mis recuerdos favoritos.
-        </p>
-
       </div>
 
       {driveGallery.isDriveFolder && driveGallery.error && (
@@ -886,7 +881,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           {carouselPhotos.length > 1 && (
             <div className="mt-4 flex w-full max-w-full min-w-0 items-center gap-1 py-2 px-1">
               <button type="button" onClick={() => scrollLandingThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronLeft className="h-5 w-5" /></button>
-              <div ref={landingThumbnailRailRef} className="flex min-w-0 flex-1 items-center justify-start gap-2.5 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+              <div ref={landingThumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+                <div className="flex w-max min-w-full items-center justify-center gap-2.5">
                 {carouselPhotos.map((photo, idx) => (
                   <button
                     key={photo.id}
@@ -906,6 +902,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   </button>
                 ))}
                 {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className={`flex h-12 shrink-0 items-center gap-2 rounded-xl border px-3 text-xs font-semibold disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}>{driveGallery.loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más</button>}
+                </div>
               </div>
               <button type="button" onClick={() => scrollLandingThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronRight className="h-5 w-5" /></button>
             </div>
@@ -1291,7 +1288,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     {carouselPhotos.length > 1 && (
                       <div className="flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
                         <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
-                        <div ref={thumbnailRailRef} className="flex min-w-0 flex-1 items-center justify-start gap-2 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+                        <div ref={thumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
+                          <div className="flex w-max min-w-full items-center justify-center gap-2">
                           {carouselPhotos.map((p, idx) => (
                             <button
                               key={p.id}
@@ -1309,6 +1307,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             </button>
                           ))}
                           {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/60 px-3 text-[10px] font-semibold text-white disabled:opacity-60">{driveGallery.loadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Cargar más</button>}
+                          </div>
                         </div>
                         <button type="button" onClick={() => scrollThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronRight className="h-5 w-5" /></button>
                       </div>
