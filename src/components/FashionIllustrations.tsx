@@ -1,6 +1,18 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import womanVectorSource from '../../VestidoMujer.svg?raw';
+import manVectorSource from '../../TrajeVaron.svg?raw';
+
+const createManVectorUrl = (suitColor: string) => {
+  const safeColor = /^#[\da-f]{6}$/i.test(suitColor) ? suitColor : '#1F457D';
+  const svg = manVectorSource
+    .replace(/<\?xml[\s\S]*?\?>\s*/, '')
+    .replace(/<!--([\s\S]*?)-->\s*/g, '')
+    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#FEFDFD" transform="translate\(0,0\)"\/>/, '')
+    .replace('fill="#1F457D"', `fill="${safeColor}"`);
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+};
 
 const createWomanVectorUrl = (dressColor: string) => {
   const safeColor = /^#[\da-f]{6}$/i.test(dressColor) ? dressColor : '#154690';
@@ -59,9 +71,18 @@ export const ManFashionIllustration: React.FC<ManFashionIllustrationProps> = ({
   const jacketDark = shade(suitColor, -30);
   const jacketLight = shade(suitColor, 22);
   const isGuayabera = outfitType === 'guayabera';
+  const manIllustrationUrl = React.useMemo(() => createManVectorUrl(suitColor), [suitColor]);
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
+      {(['tuxedo', 'suit', 'guayabera', 'blazer'] as const).includes(outfitType) ? (
+        <img
+          alt="Ilustración de caballero con traje formal"
+          src={manIllustrationUrl}
+          className="absolute top-0 h-[92%] w-[125%] max-w-none object-fill"
+          style={{ left: '50%', transform: 'translateX(-50%)' }}
+        />
+      ) : (
       <svg viewBox="0 0 240 500" className="h-full w-full overflow-visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
           <linearGradient id={`suit-${id}`} x1="58" y1="112" x2="181" y2="425" gradientUnits="userSpaceOnUse">
@@ -139,6 +160,7 @@ export const ManFashionIllustration: React.FC<ManFashionIllustrationProps> = ({
         )}
         <path d="M89 292 Q120 302 151 292" fill="none" stroke={jacketLight} strokeWidth="1.4" opacity=".5" />
       </svg>
+      )}
       <FigureBadge dark>Caballero</FigureBadge>
     </div>
   );
