@@ -1,28 +1,95 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import womanVectorSource from '../../VestidoMujer.svg?raw';
-import manVectorSource from '../../TrajeVaron.svg?raw';
 
-const createManVectorUrl = (suitColor: string) => {
-  const safeColor = /^#[\da-f]{6}$/i.test(suitColor) ? suitColor : '#1F457D';
-  const svg = manVectorSource
+type FashionVector = {
+  path: string;
+  garmentFills: readonly string[];
+  removeFills?: readonly string[];
+};
+
+const manVectors: Record<ManFashionIllustrationProps['outfitType'], FashionVector> = {
+  suit: { path: '/trajes/svg/TrajeVaronClasico.svg', garmentFills: ['#1F457D'] },
+  tuxedo: { path: '/trajes/svg/TrajeVaronSmoking.svg', garmentFills: ['#252527', '#27272A'] },
+  guayabera: {
+    path: '/trajes/svg/TrajeVaronGuayaberaFormal.svg',
+    garmentFills: ['#29324D'],
+    // El trazado sobre croma verde dejó estos restos además del fondo principal.
+    removeFills: ['#03F905', '#05F707', '#07F709'],
+  },
+  blazer: { path: '/trajes/svg/TrajeVaronBlazerPantalon.svg', garmentFills: ['#1A3D7C'] },
+};
+
+const womanVectors: Record<WomanFashionIllustrationProps['outfitType'], FashionVector> = {
+  'long-gown': { path: '/trajes/svg/VestidoGala.svg', garmentFills: ['#154690'] },
+  cocktail: { path: '/trajes/svg/VestidoCoctelMidi.svg', garmentFills: ['#164384', '#184282', '#19478E'] },
+  jumpsuit: { path: '/trajes/svg/VestidoEnterizoPalazzo.svg', garmentFills: ['#15428A'] },
+  boho: { path: '/trajes/svg/VestidoBohoFluido.svg', garmentFills: ['#174493'] },
+};
+
+const svgSourceCache = new Map<string, Promise<string>>();
+
+const getSvgSource = (path: string) => {
+  let source = svgSourceCache.get(path);
+  if (!source) {
+    source = fetch(path).then((response) => {
+      if (!response.ok) throw new Error(`No se pudo cargar ${path}`);
+      return response.text();
+    }).catch((error) => {
+      svgSourceCache.delete(path);
+      throw error;
+    });
+    svgSourceCache.set(path, source);
+  }
+  return source;
+};
+
+const luminance = (color: string) => {
+  const channels = color.slice(1).match(/[\da-f]{2}/gi)?.map((channel) => parseInt(channel, 16)) ?? [0, 0, 0];
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+};
+
+const recolorFashionSvg = (source: string, color: string, garmentFills: readonly string[], removeFills: readonly string[] = []) => {
+  const safeColor = /^#[\da-f]{6}$/i.test(color) ? color : garmentFills[0];
+  const baseLuminance = Math.max(1, luminance(garmentFills[0]));
+  let svg = source
     .replace(/<\?xml[\s\S]*?\?>\s*/, '')
     .replace(/<!--([\s\S]*?)-->\s*/g, '')
-    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#FEFDFD" transform="translate\(0,0\)"\/>/, '')
-    .replace('fill="#1F457D"', `fill="${safeColor}"`);
+    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#[\da-f]{6}" transform="translate\(0,0\)"\/>/, '');
+
+  if (removeFills.length) {
+    const fillsToRemove = new Set(removeFills.map((fill) => fill.toLowerCase()));
+    svg = svg.replace(/<path\b[^>]*\/>/g, (path) => {
+      const fill = path.match(/\bfill="(#[\da-f]{6})"/i)?.[1].toLowerCase();
+      return fill && fillsToRemove.has(fill) ? '' : path;
+    });
+  }
+
+  for (const originalFill of garmentFills) {
+    const ratio = luminance(originalFill) / baseLuminance;
+    const channels = safeColor.slice(1).match(/[\da-f]{2}/gi)?.map((channel) => Math.min(255, Math.round(parseInt(channel, 16) * ratio))) ?? [31, 69, 125];
+    const variantColor = `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+    svg = svg.replaceAll(`fill="${originalFill}"`, `fill="${variantColor}"`);
+  }
 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 };
 
-const createWomanVectorUrl = (dressColor: string) => {
-  const safeColor = /^#[\da-f]{6}$/i.test(dressColor) ? dressColor : '#154690';
-  const svg = womanVectorSource
-    .replace(/<\?xml[\s\S]*?\?>\s*/, '')
-    .replace(/<!--([\s\S]*?)-->\s*/g, '')
-    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#FDFDFD" transform="translate\(0,0\)"\/>/, '')
-    .replace('fill="#154690"', `fill="${safeColor}"`);
+const useFashionVector = (variant: FashionVector, color: string) => {
+  const requestKey = `${variant.path}|${color}`;
+  const [loadedVector, setLoadedVector] = React.useState<{ key: string; src: string } | null>(null);
 
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  React.useEffect(() => {
+    let cancelled = false;
+    getSvgSource(variant.path)
+      .then((source) => {
+        if (!cancelled) setLoadedVector({ key: requestKey, src: recolorFashionSvg(source, color, variant.garmentFills, variant.removeFills) });
+      })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [variant, color, requestKey]);
+
+  const isReady = loadedVector?.key === requestKey;
+  return { src: isReady ? loadedVector.src : variant.path, isReady };
 };
 
 export interface ManFashionIllustrationProps {
@@ -71,15 +138,15 @@ export const ManFashionIllustration: React.FC<ManFashionIllustrationProps> = ({
   const jacketDark = shade(suitColor, -30);
   const jacketLight = shade(suitColor, 22);
   const isGuayabera = outfitType === 'guayabera';
-  const manIllustrationUrl = React.useMemo(() => createManVectorUrl(suitColor), [suitColor]);
+  const manVector = useFashionVector(manVectors[outfitType], suitColor);
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
       {(['tuxedo', 'suit', 'guayabera', 'blazer'] as const).includes(outfitType) ? (
         <img
           alt="Ilustración de caballero con traje formal"
-          src={manIllustrationUrl}
-          className="absolute top-0 h-[92%] w-[125%] max-w-none object-fill"
+          src={manVector.src}
+          className={`absolute top-0 h-[92%] w-[125%] max-w-none object-fill ${manVector.isReady ? '' : 'mix-blend-multiply'}`}
           style={{ left: '50%', transform: 'translateX(-50%)' }}
         />
       ) : (
@@ -180,15 +247,15 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
   const isCocktail = outfitType === 'cocktail';
   const isJumpsuit = outfitType === 'jumpsuit';
   const isBoho = outfitType === 'boho';
-  const womanIllustrationUrl = React.useMemo(() => createWomanVectorUrl(dressColor), [dressColor]);
+  const womanVector = useFashionVector(womanVectors[outfitType], dressColor);
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
       {(['long-gown', 'cocktail', 'jumpsuit', 'boho'] as const).includes(outfitType) ? (
         <img
           alt="Ilustración de dama con vestido de gala"
-          src={womanIllustrationUrl}
-          className="absolute top-0 h-[92%] w-[125%] max-w-none object-fill"
+          src={womanVector.src}
+          className={`absolute top-0 h-[92%] w-[125%] max-w-none object-fill ${womanVector.isReady ? '' : 'mix-blend-multiply'}`}
           style={{ left: '50%', transform: 'translateX(-50%)' }}
         />
       ) : (
