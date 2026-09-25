@@ -1,7 +1,17 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
+import womanVectorSource from '../../VestidoMujer.svg?raw';
 
-const longGownVectorUrl = new URL('../../vestido_vector_real.svg', import.meta.url).href;
+const createWomanVectorUrl = (dressColor: string) => {
+  const safeColor = /^#[\da-f]{6}$/i.test(dressColor) ? dressColor : '#154690';
+  const svg = womanVectorSource
+    .replace(/<\?xml[\s\S]*?\?>\s*/, '')
+    .replace(/<!--([\s\S]*?)-->\s*/g, '')
+    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#FDFDFD" transform="translate\(0,0\)"\/>/, '')
+    .replace('fill="#154690"', `fill="${safeColor}"`);
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+};
 
 export interface ManFashionIllustrationProps {
   suitColor: string;
@@ -148,28 +158,16 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
   const isCocktail = outfitType === 'cocktail';
   const isJumpsuit = outfitType === 'jumpsuit';
   const isBoho = outfitType === 'boho';
+  const womanIllustrationUrl = React.useMemo(() => createWomanVectorUrl(dressColor), [dressColor]);
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
-      {outfitType === 'long-gown' ? (
-        <div
-          role="img"
-          aria-label="Silueta vectorial de dama con vestido largo"
-          className="absolute top-0 h-[92%] w-[125%]"
-          style={{
-            left: '50%',
-            backgroundColor: dressColor,
-            maskImage: `url("${longGownVectorUrl}")`,
-            WebkitMaskImage: `url("${longGownVectorUrl}")`,
-            maskSize: '100% 100%',
-            WebkitMaskSize: '100% 100%',
-            maskRepeat: 'no-repeat',
-            WebkitMaskRepeat: 'no-repeat',
-            maskPosition: 'center',
-            WebkitMaskPosition: 'center',
-            transform: 'translateX(-50%)',
-            transformOrigin: 'top center',
-          }}
+      {(['long-gown', 'cocktail', 'jumpsuit', 'boho'] as const).includes(outfitType) ? (
+        <img
+          alt="Ilustración de dama con vestido de gala"
+          src={womanIllustrationUrl}
+          className="absolute top-0 h-[92%] w-[125%] max-w-none object-fill"
+          style={{ left: '50%', transform: 'translateX(-50%)' }}
         />
       ) : (
       <svg viewBox="0 0 240 500" className="h-full w-full overflow-visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
