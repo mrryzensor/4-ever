@@ -1,6 +1,8 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 
+const longGownVectorUrl = new URL('../../vestido_vector_real.svg', import.meta.url).href;
+
 export interface ManFashionIllustrationProps {
   suitColor: string;
   shirtColor?: string;
@@ -149,6 +151,27 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
+      {outfitType === 'long-gown' ? (
+        <div
+          role="img"
+          aria-label="Silueta vectorial de dama con vestido largo"
+          className="absolute top-0 h-[92%] w-[125%]"
+          style={{
+            left: '50%',
+            backgroundColor: dressColor,
+            maskImage: `url("${longGownVectorUrl}")`,
+            WebkitMaskImage: `url("${longGownVectorUrl}")`,
+            maskSize: '100% 100%',
+            WebkitMaskSize: '100% 100%',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+            transform: 'translateX(-50%)',
+            transformOrigin: 'top center',
+          }}
+        />
+      ) : (
       <svg viewBox="0 0 240 500" className="h-full w-full overflow-visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
           <linearGradient id={`gown-${id}`} x1="78" y1="144" x2="167" y2="434" gradientUnits="userSpaceOnUse">
@@ -186,6 +209,11 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
         <path d="M119 62 117 71 Q120 74 123 71 M114 80 Q120 83 126 80" fill="none" stroke="#A96F62" strokeWidth="1.25" strokeLinecap="round" />
         <circle cx="98" cy="69" r="2.2" fill={accessoryColor} /><circle cx="142" cy="69" r="2.2" fill={accessoryColor} />
 
+        {/* Softly bent arms rest beside the waist for the non-gown outfit variants. */}
+        <path d="M96 126 C88 130 84 140 82 151 L77 177 C75 184 77 190 81 196 L85 207 Q87 212 91 209 L91 204 L88 191 Q86 187 88 181 L99 150 L106 139Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M144 126 C152 130 156 140 158 151 L163 177 C165 184 163 190 159 196 L155 207 Q153 212 149 209 L149 204 L152 191 Q154 187 152 181 L141 150 L134 139Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M80 193 Q83 196 86 195 M154 195 Q157 196 160 193" fill="none" stroke="#B77E69" strokeWidth="1" strokeLinecap="round" opacity=".55" />
+
         {/* Minimal bodice and soft A-line skirt */}
         <path d="M94 122 Q105 114 120 119 Q135 114 146 122 L151 180 Q138 198 120 200 Q102 198 89 180Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.2" strokeLinejoin="round" />
         {isBoho ? (
@@ -220,12 +248,8 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
           </g>
         )}
 
-        {/* A calm, symmetrical fashion pose keeps both arms clear and connected. */}
-        <path d="M94 127 C85 130 80 138 77 149 C74 161 76 174 74 187 L69 212 C67 220 69 227 74 230 Q79 233 82 228 L84 221 Q82 217 84 210 L92 181 Q96 162 105 141Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M146 127 C155 130 160 138 163 149 C166 161 164 174 166 187 L171 212 C173 220 171 227 166 230 Q161 233 158 228 L156 221 Q158 217 156 210 L148 181 Q144 162 135 141Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M79 151 C77 164 79 174 77 186 L72 212 M161 151 C163 164 161 174 163 186 L168 212" fill="none" stroke="#B77E69" strokeWidth="1.05" strokeLinecap="round" opacity=".42" />
-        <path d="M73 228 Q77 231 80 227 M160 227 Q163 231 167 228" fill="none" stroke="#A96F62" strokeWidth=".9" strokeLinecap="round" opacity=".5" />
       </svg>
+      )}
       <FigureBadge>Dama</FigureBadge>
     </div>
   );
