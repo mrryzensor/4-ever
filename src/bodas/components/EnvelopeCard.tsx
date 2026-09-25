@@ -658,7 +658,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`w-full ${settings.receptionSameAsCeremony ? 'md:col-span-2 max-w-4xl mx-auto' : ''} p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -666,18 +666,30 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               <div className="relative z-10">
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
-                    <AnimatedChurchBells className="w-9 h-9" color={theme.accentColorHex} />
+                    {settings.receptionSameAsCeremony ? (
+                      <span className="flex items-center">
+                        <AnimatedChurchBells className="w-6 h-6" color={theme.accentColorHex} />
+                        <AnimatedChampagneGlasses className="-ml-1 w-6 h-6" />
+                      </span>
+                    ) : <AnimatedChurchBells className="w-9 h-9" color={theme.accentColorHex} />}
                   </div>
-                  <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
-                    {settings.ceremonyTime || '17:00'} hrs
-                  </span>
+                  {settings.receptionSameAsCeremony ? (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
+                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
+                    </div>
+                  ) : (
+                    <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
+                      {settings.ceremonyTime || '17:00'} hrs
+                    </span>
+                  )}
                 </div>
 
                 <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
-                  Momento Sagrado
+                  {settings.receptionSameAsCeremony ? 'Ceremonia & Celebración' : 'Momento Sagrado'}
                 </span>
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                  Ceremonia Religiosa
+                  {settings.receptionSameAsCeremony ? 'Ceremonia y Recepción' : 'Ceremonia Religiosa'}
                 </h3>
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
                 <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
@@ -701,7 +713,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   }`}
                 >
                   <Navigation className="w-3.5 h-3.5" />
-                  <span>{expandedSection === 'ceremony' ? 'Ocultar Mapa' : 'Ver Mapa y Rutas'}</span>
+                  <span>{expandedSection === 'ceremony' ? 'Ocultar Mapa' : settings.receptionSameAsCeremony ? 'Ver ubicación y cómo llegar' : 'Ver Mapa y Rutas'}</span>
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'ceremony' ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -757,13 +769,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <span>Abrir en Waze</span>
                       </a>
                     </div>
-                    <SocialVideoEmbed url={settings.ceremonyArrivalVideoUrl} title="Video para llegar a la ceremonia" />
+                    <SocialVideoEmbed url={settings.ceremonyArrivalVideoUrl} title={settings.receptionSameAsCeremony ? 'Video para llegar a la ceremonia y recepción' : 'Video para llegar a la ceremonia'} />
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
+            {!settings.receptionSameAsCeremony && (
             <div
               className={`p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
@@ -789,7 +802,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{receptionLocationName}</p>
                 <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                   <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>{receptionLocationAddress || 'Dirección de la recepción'}{settings.receptionSameAsCeremony && <span className="mt-1 block text-[10px] uppercase tracking-wider opacity-75">Mismo lugar que la ceremonia</span>}</span>
+                  <span>{receptionLocationAddress || 'Dirección de la recepción'}</span>
                 </p>
               </div>
 
@@ -866,6 +879,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 )}
               </AnimatePresence>
             </div>
+            )}
 
             {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline - Fully Clickable) */}
             {settings.showItinerary !== false && itineraryList.length > 0 && (
