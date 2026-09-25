@@ -30,6 +30,7 @@ import {
   ListOrdered,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../../types.ts';
+import { BankAccountsEditor } from '../../../components/admin/settings/BankAccountsEditor.tsx';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../../lib/mediaOptimizer.ts';
 import { WEDDING_HERO_PRESETS } from './adminConstants.ts';
 import { CARD_THEMES } from '../../../lib/themes.ts';
@@ -1271,8 +1272,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </span>
             </div>
 
+            <BankAccountsEditor settings={settings} onChange={onChange} />
+
             {/* Quick Bank Presets */}
-            <div className="space-y-2">
+            <div hidden className="space-y-2">
               <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
                 Selección Rápida de Banco o Billetera:
               </label>
@@ -1294,7 +1297,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             </div>
 
             {/* Bank details form */}
-            <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
+            <div hidden className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
               <div className="flex items-center gap-2">
                 <Gift className="w-4 h-4 text-[#5A5A40]" />
                 <h5 className="text-xs font-bold text-stone-800 uppercase tracking-wider">

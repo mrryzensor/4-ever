@@ -15,6 +15,8 @@ import {
 import { WeddingSettings, GiftRegistryItem } from '../types.ts';
 import { AnimatedGiftBox, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
+import { getBankAccounts } from '../lib/bankAccounts.ts';
+import { BankAccountDetails } from './BankAccountDetails.tsx';
 
 interface GiftRegistrySectionProps {
   settings: WeddingSettings;
@@ -29,7 +31,10 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
   let registryItems: GiftRegistryItem[] = [];
   try {
-    registryItems = JSON.parse(settings.giftRegistry || '[]');
+    const parsedItems = JSON.parse(settings.giftRegistry || '[]');
+    registryItems = Array.isArray(parsedItems)
+      ? parsedItems.filter((item) => item && [item.title, item.description, item.url, item.storeName].some((value) => typeof value === 'string' && value.trim()))
+      : [];
   } catch {
     registryItems = [];
   }
@@ -42,15 +47,14 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
   };
 
   // If host provided direct bank settings and no bank item in registryItems, we construct one
-  const hasDirectBankSettings =
-    settings.enableBankTransfer !== false &&
-    Boolean(settings.bankClabe || settings.bankAccountNumber || settings.bankName);
+  const bankAccounts = getBankAccounts(settings);
+  const hasDirectBankSettings = settings.enableBankTransfer !== false && bankAccounts.length > 0;
 
   const hasDirectBankInItems = registryItems.some((item) => item.type === 'bank');
 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="mesa-de-regalos">
@@ -92,7 +96,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <CreditCard className="w-4 h-4 text-amber-500" />
-                <span>{settings.bankName || 'Transferencia Bancaria'}</span>
+                <span>{bankAccounts[0]?.bankName || 'Transferencia Bancaria'}</span>
               </span>
             )}
             {settings.enableEnvelopeGift !== false && (
@@ -144,10 +148,19 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         className="overflow-hidden"
       >
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+        {hasDirectBankSettings && !hasDirectBankInItems && (
+          <BankAccountDetails
+            accounts={bankAccounts}
+            isDark={isDark}
+            copiedKey={copiedKey}
+            onCopy={handleCopy}
+            className="col-span-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+          />
+        )}
         {/* ==================================================================== */}
         {/* DIRECT BANK ACCOUNT CARD (If configured in Settings) */}
         {/* ==================================================================== */}
-        {hasDirectBankSettings && !hasDirectBankInItems && (
+        {false && hasDirectBankSettings && !hasDirectBankInItems && (
           <div className={`backdrop-blur-sm rounded-3xl p-8 border shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
             isDark
               ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'

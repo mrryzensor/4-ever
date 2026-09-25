@@ -141,7 +141,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   bankAccountNumber: '9876 5432 1098 7654',
   bankClabe: '012180098765432109',
   bankCardNumber: '',
-  bankConcept: 'Regalo Mis XV Valeria',
+  bankConcept: 'Evento Valeria Montserrat',
   bankCurrency: 'MXN',
   enableBankTransfer: true,
   enableStoreRegistry: true,

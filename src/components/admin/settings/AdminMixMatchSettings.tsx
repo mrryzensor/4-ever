@@ -62,6 +62,9 @@ const TRANSITION_EFFECT_OPTIONS = [
   { id: 'sparkles', label: 'Destellos', desc: 'Brillos que aparecen y se desplazan' },
   { id: 'drape', label: 'Cortinaje', desc: 'Pliegues elegantes que enmarcan el contenido' },
   { id: 'orbit', label: 'Órbitas', desc: 'Arcos luminosos alrededor de un domo' },
+  { id: 'cascade', label: 'Lluvia botánica', desc: 'Hojas y pétalos caen sobre un borde escalonado' },
+  { id: 'ribbons', label: 'Listones fluidos', desc: 'Cintas cruzadas se mecen al pasar al contenido' },
+  { id: 'bloom', label: 'Jardín en flor', desc: 'Arcos florales con flores que se abren suavemente' },
 ] as const;
 
 export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({

@@ -59,7 +59,7 @@ const memoryState = {
       bankAccountNumber: '1234 5678 9012 3456',
       bankClabe: '012180012345678901',
       bankCardNumber: '',
-      bankConcept: 'Boda Sofía & Alejandro',
+      bankConcept: 'Evento Sofía & Alejandro',
       bankCurrency: 'MXN',
       enableBankTransfer: true,
       enableStoreRegistry: true,
@@ -625,7 +625,7 @@ const DEMO_XV_DB_FIELDS = [
   'transitionWaveStyle', 'transitionEffect',
   'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle',
   'bankName', 'bankBeneficiary',
-  'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency',
+  'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency', 'bankAccounts',
   'enableBankTransfer', 'enableStoreRegistry', 'enableEnvelopeGift',
   'envelopeGiftMessage', 'rsvpDeadline', 'contactPhone', 'contactEmail',
 ] as const;

@@ -142,7 +142,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   bankAccountNumber: '1234 5678 9012 3456',
   bankClabe: '012180012345678901',
   bankCardNumber: '',
-  bankConcept: 'Boda Sofía & Alejandro',
+  bankConcept: 'Evento Sofía & Alejandro',
   bankCurrency: 'MXN',
   enableBankTransfer: true,
   enableStoreRegistry: true,

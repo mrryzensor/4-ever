@@ -136,21 +136,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         ? !drivePhotoSelectionIds.has(photo.id)
         : drivePhotoSelectionIds.has(photo.id))
       .map((photo, index) => ({
-      id: -(index + 1),
-      weddingId,
-      url: photo.fullUrl || photo.thumbnailUrl,
-      thumbnailUrl: photo.thumbnailUrl,
-      caption: photo.name,
-      authorName: 'Carpeta compartida',
-      category: 'recuerdos' as const,
-      likesCount: 0,
-      approved: true,
-      createdAt: '',
-      driveOpenUrl: photo.openUrl,
-      driveFileId: photo.id,
-      driveInteractionToken: photo.interactionToken,
-      responsiveUrls: photo.responsiveUrls,
-    })),
+        id: -(index + 1),
+        weddingId,
+        url: photo.fullUrl || photo.thumbnailUrl,
+        thumbnailUrl: photo.thumbnailUrl,
+        caption: photo.name,
+        authorName: 'Carpeta compartida',
+        category: 'recuerdos' as const,
+        likesCount: 0,
+        approved: true,
+        createdAt: '',
+        driveOpenUrl: photo.openUrl,
+        driveFileId: photo.id,
+        driveInteractionToken: photo.interactionToken,
+        responsiveUrls: photo.responsiveUrls,
+      })),
   ], [driveGallery.photos, drivePhotoSelectionIds, drivePhotoSelectionMode, photos, weddingId]);
 
   const activePhoto = activePhotoIndex !== null && carouselPhotos[activePhotoIndex] ? carouselPhotos[activePhotoIndex] : null;
@@ -662,9 +662,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${isDark
-            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
-            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
-          }`}>
+          ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
+          : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
+        }`}>
           <AnimatedCameraLens className="w-10 h-10" />
         </div>
         <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
@@ -680,6 +680,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
+        {currentCarouselPhoto && (
+          <button
+            type="button"
+            onClick={() => void openPhotoAtIndex(carouselIndex)}
+            className={`mt-3 inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
+              ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
+              : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Presiona en la foto</span>
+          </button>
+        )}
       </div>
 
       {driveGallery.isDriveFolder && driveGallery.error && (
@@ -695,8 +708,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </div>
       ) : carouselPhotos.length === 0 ? (
         <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${isDark
-            ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
-            : 'bg-white/70 border-[#E5E2D0] text-stone-800'
+          ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
+          : 'bg-white/70 border-[#E5E2D0] text-stone-800'
           }`}>
           <Camera className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
           <h4 className={`text-base font-serif font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
@@ -717,8 +730,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             const containerClass = isPortrait
               ? 'max-w-md sm:max-w-lg aspect-[3/4] sm:aspect-[4/5] md:aspect-[9/16] max-h-[82vh]'
               : isSquareOrSoftPortrait
-              ? 'max-w-xl sm:max-w-2xl aspect-square max-h-[75vh]'
-              : 'w-full max-w-6xl 2xl:max-w-[1500px] aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] max-h-[85vh]';
+                ? 'max-w-xl sm:max-w-2xl aspect-square max-h-[75vh]'
+                : 'w-full max-w-6xl 2xl:max-w-[1500px] aspect-[4/3] sm:aspect-[16/10] md:aspect-[16/9] max-h-[85vh]';
 
             return (
               <div
@@ -842,69 +855,68 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   )}
                 </AnimatePresence>
 
-            {/* Left Carousel Navigation Button */}
-            {carouselPhotos.length > 1 && (
-              <button
-                type="button"
-                onClick={handlePrevCarousel}
-                className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                title="Foto anterior"
-              >
-                <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 -translate-x-0.5" />
-              </button>
-            )}
+                {/* Left Carousel Navigation Button */}
+                {carouselPhotos.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevCarousel}
+                    className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                    title="Foto anterior"
+                  >
+                    <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 -translate-x-0.5" />
+                  </button>
+                )}
 
-            {/* Right Carousel Navigation Button */}
-            {carouselPhotos.length > 1 && (
-              <button
-                type="button"
-                onClick={handleNextCarousel}
-                className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
-                title="Siguiente foto"
-              >
-                <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 translate-x-0.5" />
-              </button>
-            )}
+                {/* Right Carousel Navigation Button */}
+                {carouselPhotos.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleNextCarousel}
+                    className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/65 hover:bg-black/90 text-white flex items-center justify-center border border-white/25 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                    title="Siguiente foto"
+                  >
+                    <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7 translate-x-0.5" />
+                  </button>
+                )}
 
-            {/* Top Bar: Slide Index Pill + Auto-Play Play/Pause Button */}
-            <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-              <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
-                <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
-                <span className="text-stone-500">/</span>
-                <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
-              </div>
+                {/* Top Bar: Slide Index Pill + Auto-Play Play/Pause Button */}
+                <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                  <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
+                    <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
+                    <span className="text-stone-500">/</span>
+                    <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
+                  </div>
 
-              {carouselPhotos.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsAutoPlay(!isAutoPlay);
-                  }}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-sans font-medium flex items-center gap-1 backdrop-blur-md border transition-all cursor-pointer ${
-                    isAutoPlay
-                      ? 'bg-amber-500/80 text-stone-950 border-amber-300 shadow-xs'
-                      : 'bg-black/60 text-stone-300 border-white/20 hover:bg-black/80'
-                  }`}
-                  title={isAutoPlay ? 'Pausar pase automático' : 'Activar pase automático'}
-                >
-                  {isAutoPlay ? (
-                    <>
-                      <Pause className="w-3 h-3 fill-current" />
-                      <span className="hidden sm:inline">Auto</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3 h-3 fill-current" />
-                      <span className="hidden sm:inline">Play</span>
-                    </>
+                  {carouselPhotos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsAutoPlay(!isAutoPlay);
+                      }}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-sans font-medium flex items-center gap-1 backdrop-blur-md border transition-all cursor-pointer ${isAutoPlay
+                          ? 'bg-amber-500/80 text-stone-950 border-amber-300 shadow-xs'
+                          : 'bg-black/60 text-stone-300 border-white/20 hover:bg-black/80'
+                        }`}
+                      title={isAutoPlay ? 'Pausar pase automático' : 'Activar pase automático'}
+                    >
+                      {isAutoPlay ? (
+                        <>
+                          <Pause className="w-3 h-3 fill-current" />
+                          <span className="hidden sm:inline">Auto</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-3 h-3 fill-current" />
+                          <span className="hidden sm:inline">Play</span>
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })()}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Horizontal Thumbnails Strip Slider */}
           {carouselPhotos.length > 1 && (
@@ -912,25 +924,25 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <button type="button" onClick={() => scrollLandingThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronLeft className="h-5 w-5" /></button>
               <div ref={landingThumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
                 <div className="flex w-max min-w-full items-center justify-center gap-2.5">
-                {carouselPhotos.map((photo, idx) => (
-                  <button
-                    key={photo.id}
-                    data-gallery-thumbnail-index={idx}
-                    type="button"
-                    onClick={() => void navigateToCarouselPhoto(idx)}
-                    aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
-                    aria-current={idx === carouselIndex ? 'true' : undefined}
-                    className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex
+                  {carouselPhotos.map((photo, idx) => (
+                    <button
+                      key={photo.id}
+                      data-gallery-thumbnail-index={idx}
+                      type="button"
+                      onClick={() => void navigateToCarouselPhoto(idx)}
+                      aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
+                      aria-current={idx === carouselIndex ? 'true' : undefined}
+                      className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shrink-0 transition-all cursor-pointer border-2 ${idx === carouselIndex
                         ? isDark
                           ? 'border-[#C5A059] ring-2 ring-[#C5A059]/40 opacity-100 shadow-md'
                           : 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 opacity-100 shadow-md'
                         : 'border-transparent opacity-50 hover:opacity-90'
-                      }`}
-                  >
-                    <img src={photo.thumbnailUrl || photo.url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
-                  </button>
-                ))}
-                {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className={`flex h-12 shrink-0 items-center gap-2 rounded-xl border px-3 text-xs font-semibold disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}>{driveGallery.loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más</button>}
+                        }`}
+                    >
+                      <img src={photo.thumbnailUrl || photo.url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                  {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className={`flex h-12 shrink-0 items-center gap-2 rounded-xl border px-3 text-xs font-semibold disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}>{driveGallery.loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más</button>}
                 </div>
               </div>
               <button type="button" onClick={() => scrollLandingThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border ${isDark ? 'border-white/20 bg-black/70 text-white' : 'border-[#E5E2D0] bg-white/90 text-stone-700'}`}><ChevronRight className="h-5 w-5" /></button>
@@ -939,25 +951,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
           {/* Inline Action Indicator & Upload Photo Button */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => void openPhotoAtIndex(carouselIndex)}
-              className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
-                  ? 'bg-[#282B25] border-[#5A5A40] text-stone-200 hover:text-white'
-                  : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C] hover:bg-white'
-                }`}
-            >
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>Ver en pantalla completa</span>
-            </button>
-
             {isAdmin && (
               <button
                 type="button"
                 onClick={() => setShowUploadModal(true)}
                 className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
-                    ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
-                    : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
+                  ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                  : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
                   }`}
               >
                 <Camera className="w-4 h-4" />
@@ -1031,8 +1031,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   if (file) processGuestPhotoFile(file);
                 }}
                 className={`p-6 rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer ${isDraggingPhoto
-                    ? 'border-amber-400 bg-amber-500/10 scale-102'
-                    : 'border-stone-700 bg-stone-950/60 hover:border-amber-400/60'
+                  ? 'border-amber-400 bg-amber-500/10 scale-102'
+                  : 'border-stone-700 bg-stone-950/60 hover:border-amber-400/60'
                   }`}
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -1168,7 +1168,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     )}
 
                     {/* Main Photo with smooth transition */}
-                    <div 
+                    <div
                       className="flex-1 w-full h-full flex flex-col items-center justify-center min-h-0 relative px-0 sm:px-2 cursor-pointer"
                       onClick={() => {
                         if (mobileCommentsOpen) {
@@ -1226,19 +1226,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           e.stopPropagation();
                           handleLike(activePhoto);
                         }}
-                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${
-                          hasLikedPhoto(activePhoto)
+                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${hasLikedPhoto(activePhoto)
                             ? 'bg-rose-950/80 border-rose-500 text-rose-200 ring-2 ring-rose-500/40 scale-105'
                             : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
-                        }`}
+                          }`}
                         title="Me gusta"
                       >
                         <Heart
-                          className={`w-5 h-5 transition-transform ${
-                            hasLikedPhoto(activePhoto)
+                          className={`w-5 h-5 transition-transform ${hasLikedPhoto(activePhoto)
                               ? 'fill-rose-500 text-rose-500 scale-110'
                               : 'fill-rose-500 text-rose-500'
-                          }`}
+                            }`}
                         />
                         <span className="text-[10px] font-bold mt-0.5 leading-none">{getLikesCountForPhoto(activePhoto)}</span>
                       </button>
@@ -1250,11 +1248,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           e.stopPropagation();
                           setMobileCommentsOpen((prev) => !prev);
                         }}
-                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${
-                          mobileCommentsOpen
+                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${mobileCommentsOpen
                             ? 'bg-amber-950/80 border-amber-400 text-amber-200 ring-2 ring-amber-400/40'
                             : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
-                        }`}
+                          }`}
                         title={mobileCommentsOpen ? 'Cerrar comentarios' : 'Ver comentarios'}
                       >
                         <MessageCircle className="w-5 h-5 text-amber-400" />
@@ -1281,7 +1278,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                         {/* Sutil Comment Preview: Only 1 compact line if there are comments */}
                         {comments.length > 0 && (
-                          <div 
+                          <div
                             onClick={(e) => {
                               e.stopPropagation();
                               setMobileCommentsOpen(true);
@@ -1320,23 +1317,23 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
                         <div ref={thumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
                           <div className="flex w-max min-w-full items-center justify-center gap-2">
-                          {carouselPhotos.map((p, idx) => (
-                            <button
-                              key={p.id}
-                              data-thumbnail-index={idx}
-                              type="button"
-                              onClick={() => void openPhotoAtIndex(idx)}
-                              aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
-                              aria-current={idx === activePhotoIndex ? 'true' : undefined}
-                              className={`relative h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${idx === activePhotoIndex
-                                ? 'border-amber-400 ring-2 ring-amber-400/40 opacity-100'
-                                : 'border-transparent opacity-50 hover:opacity-90'
-                                }`}
-                            >
-                              <img src={p.thumbnailUrl || p.url} alt={`Miniatura ${idx + 1}`} loading="lazy" className="h-full w-full object-cover" />
-                            </button>
-                          ))}
-                          {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/60 px-3 text-[10px] font-semibold text-white disabled:opacity-60">{driveGallery.loadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Cargar más</button>}
+                            {carouselPhotos.map((p, idx) => (
+                              <button
+                                key={p.id}
+                                data-thumbnail-index={idx}
+                                type="button"
+                                onClick={() => void openPhotoAtIndex(idx)}
+                                aria-label={`Ver foto ${idx + 1} de ${carouselPhotos.length}`}
+                                aria-current={idx === activePhotoIndex ? 'true' : undefined}
+                                className={`relative h-10 w-10 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${idx === activePhotoIndex
+                                  ? 'border-amber-400 ring-2 ring-amber-400/40 opacity-100'
+                                  : 'border-transparent opacity-50 hover:opacity-90'
+                                  }`}
+                              >
+                                <img src={p.thumbnailUrl || p.url} alt={`Miniatura ${idx + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                              </button>
+                            ))}
+                            {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/60 px-3 text-[10px] font-semibold text-white disabled:opacity-60">{driveGallery.loadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Cargar más</button>}
                           </div>
                         </div>
                         <button type="button" onClick={() => scrollThumbnailRail(1)} aria-label="Ver miniaturas siguientes" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronRight className="h-5 w-5" /></button>
@@ -1349,7 +1346,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     {mobileCommentsOpen && (
                       <>
                         {/* Tap backdrop to close */}
-                        <div 
+                        <div
                           className="lg:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
                           onClick={() => setMobileCommentsOpen(false)}
                         />
@@ -1364,9 +1361,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         >
                           {/* Drag Handle & Header */}
                           <div className="p-3.5 pb-2.5 border-b border-white/10 shrink-0">
-                            <div 
+                            <div
                               onClick={() => setMobileCommentsOpen(false)}
-                              className="w-10 h-1 rounded-full bg-white/30 mx-auto mb-2 cursor-pointer hover:bg-white/50" 
+                              className="w-10 h-1 rounded-full bg-white/30 mx-auto mb-2 cursor-pointer hover:bg-white/50"
                             />
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -1544,14 +1541,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           type="button"
                           onClick={() => handleLike(activePhoto)}
                           className={`flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-2xl border transition-all cursor-pointer text-sm font-semibold shadow-sm ${hasLikedPhoto(activePhoto)
-                              ? 'bg-rose-950/60 border-rose-600 text-rose-200'
-                              : 'bg-stone-800 hover:bg-rose-950/40 text-stone-100 hover:text-rose-300 border-stone-700'
+                            ? 'bg-rose-950/60 border-rose-600 text-rose-200'
+                            : 'bg-stone-800 hover:bg-rose-950/40 text-stone-100 hover:text-rose-300 border-stone-700'
                             }`}
                         >
                           <Heart
                             className={`w-4 h-4 shrink-0 transition-transform ${hasLikedPhoto(activePhoto)
-                                ? 'fill-rose-500 text-rose-500 scale-110'
-                                : 'fill-rose-500 text-rose-500'
+                              ? 'fill-rose-500 text-rose-500 scale-110'
+                              : 'fill-rose-500 text-rose-500'
                               }`}
                           />
                           <span>

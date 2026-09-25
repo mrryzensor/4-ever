@@ -34,16 +34,18 @@ export interface ManOutfitProps {
   outfitType: 'tuxedo' | 'suit' | 'guayabera' | 'blazer';
   fabricFinish?: 'matte' | 'satin' | 'linen' | 'velvet';
   showShoes?: boolean;
+  lightweight?: boolean;
 }
 
-export const ManFashionMockup: React.FC<ManOutfitProps> = ({
+const ManFashionMockupComponent: React.FC<ManOutfitProps> = ({
   suitColor,
   shirtColor = '#FFFFFF',
   tieColor,
   outfitType,
   fabricFinish = 'satin',
+  lightweight = false,
 }) => {
-  const safeId = (suitColor || '#1C2D37').replace(/[^a-zA-Z0-9]/g, '');
+  const safeId = `${(suitColor || '#1C2D37').replace(/[^a-zA-Z0-9]/g, '')}-${React.useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const darkShade = adjustColorBrightness(suitColor, -35);
   const midDark = adjustColorBrightness(suitColor, -18);
   const lightShade = adjustColorBrightness(suitColor, 22);
@@ -51,10 +53,12 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
   const resolvedTieColor = tieColor || (outfitType === 'tuxedo' ? '#0F172A' : '#334155');
 
   return (
-    <div className="relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center filter drop-shadow-xl select-none">
+    <div className={`relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center select-none ${lightweight ? '' : 'filter drop-shadow-xl'}`}>
       <svg
         viewBox="0 0 240 460"
         className="w-full h-full overflow-visible"
+        shapeRendering="geometricPrecision"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -91,36 +95,36 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
           </linearGradient>
 
           {/* Realistic Skin Shader */}
-          <linearGradient id="man-skin-tone" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`man-skin-tone-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#F5D0C0" />
             <stop offset="60%" stopColor="#E5B5A0" />
             <stop offset="100%" stopColor="#CA9480" />
           </linearGradient>
 
           {/* Neck Shadow */}
-          <linearGradient id="man-neck-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id={`man-neck-shadow-${safeId}`} x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#B37D6B" />
             <stop offset="100%" stopColor="#E5B5A0" />
           </linearGradient>
 
           {/* Hair Gradient */}
-          <linearGradient id="man-hair" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`man-hair-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#4A3B32" />
             <stop offset="50%" stopColor="#2B211B" />
             <stop offset="100%" stopColor="#15100D" />
           </linearGradient>
 
           {/* Shoe Leather Polish */}
-          <linearGradient id="shoe-polish" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`shoe-polish-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#382E2B" />
             <stop offset="30%" stopColor="#1A1513" />
             <stop offset="70%" stopColor="#0B0908" />
             <stop offset="100%" stopColor="#261E1A" />
           </linearGradient>
 
-          <filter id="soft-depth" x="-15%" y="-15%" width="130%" height="130%">
+          {!lightweight && <filter id={`soft-depth-${safeId}`} x="-15%" y="-15%" width="130%" height="130%">
             <feDropShadow dx="0" dy="6" stdDeviation="4" floodOpacity="0.22" />
-          </filter>
+          </filter>}
         </defs>
 
         {/* Ambient Floor Shadow */}
@@ -133,13 +137,13 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
           {/* Neck base with anatomical shadow */}
           <path
             d="M107 68 L133 68 L134 98 C134 102 128 106 120 106 C112 106 106 102 106 98 Z"
-            fill="url(#man-skin-tone)"
+            fill={`url(#man-skin-tone-${safeId})`}
           />
           {/* Sternocleidomastoid & neck shadow */}
           <path
             d="M110 70 Q120 90 120 104 Q120 90 130 70"
             fill="none"
-            stroke="url(#man-neck-shadow)"
+            stroke={`url(#man-neck-shadow-${safeId})`}
             strokeWidth="2.5"
             opacity="0.6"
           />
@@ -147,17 +151,17 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
           {/* Head & Jawline */}
           <path
             d="M103 48 C103 26 110 22 120 22 C130 22 137 26 137 48 C137 64 130 74 120 74 C110 74 103 64 103 48 Z"
-            fill="url(#man-skin-tone)"
+            fill={`url(#man-skin-tone-${safeId})`}
           />
 
           {/* Ears */}
-          <ellipse cx="102" cy="48" rx="3.5" ry="6.5" fill="url(#man-skin-tone)" />
-          <ellipse cx="138" cy="48" rx="3.5" ry="6.5" fill="url(#man-skin-tone)" />
+          <ellipse cx="102" cy="48" rx="3.5" ry="6.5" fill={`url(#man-skin-tone-${safeId})`} />
+          <ellipse cx="138" cy="48" rx="3.5" ry="6.5" fill={`url(#man-skin-tone-${safeId})`} />
 
           {/* Modern Groomed Hairstyle */}
           <path
             d="M102 44 C100 24 112 16 123 16 C136 16 142 24 140 38 C138 34 130 30 122 31 C112 32 107 38 102 44 Z"
-            fill="url(#man-hair)"
+            fill={`url(#man-hair-${safeId})`}
           />
           {/* Hair volume & side fade */}
           <path
@@ -165,6 +169,10 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             fill="#5E4C41"
             opacity="0.6"
           />
+          <path d="M111 47 Q115 45 118 47 M122 47 Q125 45 129 47" fill="none" stroke="#49352E" strokeWidth="1.2" strokeLinecap="round" />
+          <circle cx="115" cy="49" r="1" fill="#34251F" />
+          <circle cx="125" cy="49" r="1" fill="#34251F" />
+          <path d="M120 50 L118.5 57 Q120 59 121.5 57 M116 63 Q120 65 124 63" fill="none" stroke="#A96F62" strokeWidth="1" strokeLinecap="round" />
         </g>
 
         {/* ========================================================= */}
@@ -178,20 +186,20 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
               fill={shirtColor || '#FDFBF7'}
               stroke="#D6D1C7"
               strokeWidth="1.2"
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : `url(#soft-depth-${safeId})`}
             />
 
             {/* Linen Weave Highlight Texture */}
             <path
               d="M84 98 L60 216 L108 222 L120 222 L132 222 L180 216 L156 98 Z"
-              fill="url(#man-suit-main-FFF)"
+              fill="#FFFFFF"
               opacity="0.08"
             />
 
             {/* Cuban Camp Collar with Open Neckline */}
             <polygon points="104,92 120,114 112,94" fill="#EFECE6" stroke="#D1CCC2" strokeWidth="0.8" />
             <polygon points="136,92 120,114 128,94" fill="#E8E4DD" stroke="#D1CCC2" strokeWidth="0.8" />
-            <polygon points="114,94 120,108 126,94" fill="url(#man-skin-tone)" />
+            <polygon points="114,94 120,108 126,94" fill={`url(#man-skin-tone-${safeId})`} />
 
             {/* Precision Presidential Vertical Alforzas (Pleats) */}
             <g stroke="#C2BBB0" strokeWidth="1" strokeDasharray="3.5 1.5">
@@ -231,14 +239,14 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <rect x="169" y="193" width="18" height="7" rx="1.5" fill="#F0EDE6" stroke="#D1CCC2" strokeWidth="0.8" transform="rotate(6 169 193)" />
 
             {/* Hands */}
-            <path d="M56 199 L50 224 L60 226 L67 202 Z" fill="url(#man-skin-tone)" />
-            <path d="M184 199 L190 224 L180 226 L173 202 Z" fill="url(#man-skin-tone)" />
+            <path d="M56 199 L50 224 L60 226 L67 202 Z" fill={`url(#man-skin-tone-${safeId})`} />
+            <path d="M184 199 L190 224 L180 226 L173 202 Z" fill={`url(#man-skin-tone-${safeId})`} />
 
             {/* Linen Trousers (Pantalón de Lino Fresco) */}
             <path
               d="M78 214 L84 395 L113 395 L120 262 L127 395 L156 395 L162 214 Z"
               fill={`url(#man-leg-grad-${safeId})`}
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : `url(#soft-depth-${safeId})`}
             />
             {/* Trouser Center Crease */}
             <line x1="98" y1="230" x2="98" y2="390" stroke="#000000" strokeWidth="1.2" opacity="0.22" />
@@ -301,7 +309,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <path
               d="M84 94 L56 220 L72 225 L82 170 L82 238 L118 242 L122 242 L158 238 L158 170 L168 225 L184 220 L156 94 L138 90 L102 90 Z"
               fill={`url(#man-suit-main-${safeId})`}
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : `url(#soft-depth-${safeId})`}
             />
 
             {/* Torso volume lighting */}
@@ -353,8 +361,8 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <rect x="56" y="218" width="16" height="5" rx="1.5" fill="#FFFFFF" transform="rotate(-15 56 218)" />
             <rect x="168" y="218" width="16" height="5" rx="1.5" fill="#FFFFFF" transform="rotate(15 168 218)" />
             {/* Hands */}
-            <path d="M57 222 L51 246 L60 248 L68 225 Z" fill="url(#man-skin-tone)" />
-            <path d="M183 222 L189 246 L180 248 L172 225 Z" fill="url(#man-skin-tone)" />
+            <path d="M57 222 L51 246 L60 248 L68 225 Z" fill={`url(#man-skin-tone-${safeId})`} />
+            <path d="M183 222 L189 246 L180 248 L172 225 Z" fill={`url(#man-skin-tone-${safeId})`} />
 
             {/* Trousers (Pantalón de Vestir a Medida) */}
             <path
@@ -364,7 +372,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
                   ? '#1E293B' // Contrasting charcoal trousers for blazer
                   : `url(#man-leg-grad-${safeId})`
               }
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : `url(#soft-depth-${safeId})`}
             />
 
             {/* Satin Galon (Tuxedo side ribbon) */}
@@ -388,7 +396,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
           {/* Left Oxford Shoe */}
           <path
             d="M80 394 C77 402 74 412 68 416 C64 418 78 422 110 422 C115 422 116 414 114 394 Z"
-            fill="url(#shoe-polish)"
+            fill={`url(#shoe-polish-${safeId})`}
           />
           {/* Shoe Cap Toe Seam & Laces */}
           <path d="M72 414 Q90 416 108 414" fill="none" stroke="#000000" strokeWidth="1" opacity="0.6" />
@@ -402,7 +410,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
           {/* Right Oxford Shoe */}
           <path
             d="M160 394 C163 402 166 412 172 416 C176 418 162 422 130 422 C125 422 124 414 126 394 Z"
-            fill="url(#shoe-polish)"
+            fill={`url(#shoe-polish-${safeId})`}
           />
           <path d="M168 414 Q150 416 132 414" fill="none" stroke="#000000" strokeWidth="1" opacity="0.6" />
           <line x1="150" y1="400" x2="142" y2="400" stroke="#475569" strokeWidth="1" />
@@ -423,6 +431,8 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
   );
 };
 
+export const ManFashionMockup = React.memo(ManFashionMockupComponent);
+
 // -------------------------------------------------------------
 // Ultra-Realistic SVG Fashion Mockup for Dama (Lady / Woman)
 // -------------------------------------------------------------
@@ -432,25 +442,29 @@ export interface WomanOutfitProps {
   outfitType: 'long-gown' | 'cocktail' | 'jumpsuit' | 'boho';
   fabricFinish?: 'matte' | 'satin' | 'linen' | 'velvet';
   showShoes?: boolean;
+  lightweight?: boolean;
 }
 
-export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
+const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
   dressColor,
   accessoryColor = '#D4AF37',
   outfitType,
   fabricFinish = 'satin',
+  lightweight = false,
 }) => {
-  const safeId = (dressColor || '#8A6D3B').replace(/[^a-zA-Z0-9]/g, '');
+  const safeId = `${(dressColor || '#8A6D3B').replace(/[^a-zA-Z0-9]/g, '')}-${React.useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const darkShade = adjustColorBrightness(dressColor, -32);
   const midDark = adjustColorBrightness(dressColor, -15);
   const lightShade = adjustColorBrightness(dressColor, 28);
   const highlightShade = adjustColorBrightness(dressColor, 55);
 
   return (
-    <div className="relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center filter drop-shadow-xl select-none">
+    <div className={`relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center select-none ${lightweight ? '' : 'filter drop-shadow-xl'}`}>
       <svg
         viewBox="0 0 240 460"
         className="w-full h-full overflow-visible"
+        shapeRendering="geometricPrecision"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -480,29 +494,29 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
           </linearGradient>
 
           {/* Skin Tone & Décolletage Shading */}
-          <linearGradient id="woman-skin-tone" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`woman-skin-tone-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FCE7DE" />
             <stop offset="60%" stopColor="#F5D0C0" />
             <stop offset="100%" stopColor="#E2B19E" />
           </linearGradient>
 
-          <linearGradient id="woman-hair" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`woman-hair-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#4A3728" />
             <stop offset="50%" stopColor="#2E2016" />
             <stop offset="100%" stopColor="#170F0A" />
           </linearGradient>
 
           {/* Metallic Gold / Champagne Jewelry */}
-          <linearGradient id="gold-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={`gold-metal-${safeId}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFF1B8" />
             <stop offset="40%" stopColor="#E5C158" />
             <stop offset="70%" stopColor="#B38B22" />
             <stop offset="100%" stopColor="#8A6711" />
           </linearGradient>
 
-          <filter id="woman-depth" x="-15%" y="-15%" width="130%" height="130%">
+          {!lightweight && <filter id={`woman-depth-${safeId}`} x="-15%" y="-15%" width="130%" height="130%">
             <feDropShadow dx="0" dy="6" stdDeviation="4" floodOpacity="0.2" />
-          </filter>
+          </filter>}
         </defs>
 
         {/* Floor Shadow */}
@@ -515,7 +529,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
           {/* Slender Swan Neck */}
           <path
             d="M112 64 L128 64 L128 98 C128 102 124 105 120 105 C116 105 112 102 112 98 Z"
-            fill="url(#woman-skin-tone)"
+            fill={`url(#woman-skin-tone-${safeId})`}
           />
           {/* Neck shade & collarbone hollow */}
           <path
@@ -529,14 +543,14 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
           {/* Elegant Oval Face */}
           <path
             d="M107 46 C107 28 113 22 120 22 C127 22 133 28 133 46 C133 60 127 70 120 70 C113 70 107 60 107 46 Z"
-            fill="url(#woman-skin-tone)"
+            fill={`url(#woman-skin-tone-${safeId})`}
           />
 
           {/* Haute Couture Braided Chignon / Evening Updo */}
-          <ellipse cx="120" cy="24" rx="14" ry="11" fill="url(#woman-hair)" />
+          <ellipse cx="120" cy="24" rx="14" ry="11" fill={`url(#woman-hair-${safeId})`} />
           <path
             d="M106 42 C106 24 113 18 122 18 C131 18 135 24 134 42 C131 38 126 36 120 37 C114 38 109 40 106 42 Z"
-            fill="url(#woman-hair)"
+            fill={`url(#woman-hair-${safeId})`}
           />
           {/* Hair shine strand */}
           <path
@@ -546,17 +560,21 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             strokeWidth="1.5"
             opacity="0.6"
           />
+          <path d="M111 46 Q114 44 117 46 M123 46 Q126 44 129 46" fill="none" stroke="#6B473D" strokeWidth="1.1" strokeLinecap="round" />
+          <circle cx="114.5" cy="48" r="0.9" fill="#3F2B25" />
+          <circle cx="125.5" cy="48" r="0.9" fill="#3F2B25" />
+          <path d="M120 49 L118.5 56 Q120 57.5 121.5 56 M117 62 Q120 64 123 62" fill="none" stroke="#C18478" strokeWidth="0.9" strokeLinecap="round" />
 
           {/* Crystal / Gold Drop Chandelier Earrings */}
           <g id="earrings">
-            <circle cx="106" cy="48" r="1.8" fill="url(#gold-metal)" />
-            <line x1="106" y1="50" x2="106" y2="58" stroke="url(#gold-metal)" strokeWidth="1" />
-            <polygon points="104,58 108,58 106,63" fill="url(#gold-metal)" />
+            <circle cx="106" cy="48" r="1.8" fill={`url(#gold-metal-${safeId})`} />
+            <line x1="106" y1="50" x2="106" y2="58" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1" />
+            <polygon points="104,58 108,58 106,63" fill={`url(#gold-metal-${safeId})`} />
             <circle cx="106" cy="61" r="1" fill="#FFFFFF" />
 
-            <circle cx="134" cy="48" r="1.8" fill="url(#gold-metal)" />
-            <line x1="134" y1="50" x2="134" y2="58" stroke="url(#gold-metal)" strokeWidth="1" />
-            <polygon points="132,58 136,58 134,63" fill="url(#gold-metal)" />
+            <circle cx="134" cy="48" r="1.8" fill={`url(#gold-metal-${safeId})`} />
+            <line x1="134" y1="50" x2="134" y2="58" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1" />
+            <polygon points="132,58 136,58 134,63" fill={`url(#gold-metal-${safeId})`} />
             <circle cx="134" cy="61" r="1" fill="#FFFFFF" />
           </g>
         </g>
@@ -568,15 +586,15 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
           {/* Graceful Bare Shoulders & Arms */}
           <path
             d="M92 98 C96 90 108 90 120 90 C132 90 144 90 148 98 L168 195 L156 197 L140 134 L134 162 L106 162 L100 134 L84 197 L72 195 Z"
-            fill="url(#woman-skin-tone)"
+            fill={`url(#woman-skin-tone-${safeId})`}
           />
           {/* Delicate Collarbone Shadows */}
           <path d="M102 98 Q111 103 118 101" fill="none" stroke="#D19782" strokeWidth="1.2" opacity="0.6" />
           <path d="M138 98 Q129 103 122 101" fill="none" stroke="#D19782" strokeWidth="1.2" opacity="0.6" />
 
           {/* Fine Layered Necklace */}
-          <path d="M112 88 Q120 102 128 88" fill="none" stroke="url(#gold-metal)" strokeWidth="1" />
-          <circle cx="120" cy="99" r="1.8" fill="url(#gold-metal)" />
+          <path d="M112 88 Q120 102 128 88" fill="none" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1" />
+          <circle cx="120" cy="99" r="1.8" fill={`url(#gold-metal-${safeId})`} />
           <circle cx="120" cy="99" r="0.8" fill="#FFFFFF" />
         </g>
 
@@ -589,25 +607,25 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M98 108 C106 102 114 104 120 108 C126 104 134 102 142 108 L136 168 C130 178 125 180 120 180 C115 180 110 178 104 168 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
             {/* Bust contouring & satin sheen */}
             <path
               d="M98 108 C106 102 114 104 120 108 C126 104 134 102 142 108 L138 138 C130 144 110 144 102 138 Z"
-              fill="url(#woman-satin-sheen)"
+              fill={`url(#woman-satin-sheen-${safeId})`}
               opacity="0.35"
             />
 
             {/* Fitted Waistband with Gold Buckle / Sash Accent */}
             <path d="M106 165 L134 165 L135 174 L105 174 Z" fill={midDark} />
-            <rect x="117" y="167" width="6" height="5" rx="1" fill="url(#gold-metal)" />
+            <rect x="117" y="167" width="6" height="5" rx="1" fill={`url(#gold-metal-${safeId})`} />
 
             {/* Flowing Floor-Length Silk Maxi Skirt */}
             <path
               d="M105 174 C90 260 62 360 52 418 C74 426 166 426 188 418 C178 360 150 260 135 174 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
             {/* Dynamic Cascading Silk Folds (Realistic Drapery Physics) */}
@@ -635,9 +653,9 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
 
             {/* Evening Minaudière Hard-Case Clutch in Hand */}
             <g id="evening-clutch">
-              <rect x="156" y="184" width="22" height="14" rx="3.5" fill="url(#gold-metal)" stroke="#997314" strokeWidth="0.8" />
+              <rect x="156" y="184" width="22" height="14" rx="3.5" fill={`url(#gold-metal-${safeId})`} stroke="#997314" strokeWidth="0.8" />
               {/* Jewel clasp */}
-              <circle cx="167" cy="183" r="2" fill="#FFFFFF" stroke="url(#gold-metal)" strokeWidth="0.8" />
+              <circle cx="167" cy="183" r="2" fill="#FFFFFF" stroke={`url(#gold-metal-${safeId})`} strokeWidth="0.8" />
               {/* Metallic reflection line */}
               <line x1="158" y1="189" x2="176" y2="189" stroke="#FFFFFF" strokeWidth="1" opacity="0.6" />
             </g>
@@ -653,20 +671,20 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M100 102 L140 102 L135 168 L105 168 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
             {/* Bodice Highlights */}
             <path d="M108 104 L114 166" stroke="#FFFFFF" strokeWidth="1" opacity="0.2" />
             <path d="M132 104 L126 166" stroke="#000000" strokeWidth="1" opacity="0.2" />
 
             {/* Gold Belt */}
-            <rect x="105" y="165" width="30" height="5" rx="1" fill="url(#gold-metal)" />
+            <rect x="105" y="165" width="30" height="5" rx="1" fill={`url(#gold-metal-${safeId})`} />
 
             {/* Chic A-Line Midi Skirt (Termina debajo de la rodilla) */}
             <path
               d="M105 170 C92 220 76 295 70 338 C90 346 150 346 170 338 C164 295 148 220 135 170 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
             {/* Skirt pleat shadows */}
@@ -675,13 +693,13 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path d="M120 172 Q120 260 120 344" stroke={highlightShade} strokeWidth="2" fill="none" opacity="0.4" />
 
             {/* Slender Calves & Legs */}
-            <path d="M102 338 L104 405 L116 405 L118 338 Z" fill="url(#woman-skin-tone)" />
-            <path d="M122 338 L124 405 L136 405 L138 338 Z" fill="url(#woman-skin-tone)" />
+            <path d="M102 338 L104 405 L116 405 L118 338 Z" fill={`url(#woman-skin-tone-${safeId})`} />
+            <path d="M122 338 L124 405 L136 405 L138 338 Z" fill={`url(#woman-skin-tone-${safeId})`} />
 
             {/* Evening Clutch */}
             <g id="cocktail-clutch">
-              <rect x="156" y="184" width="22" height="14" rx="3.5" fill="url(#gold-metal)" stroke="#997314" strokeWidth="0.8" />
-              <circle cx="167" cy="183" r="2" fill="#FFFFFF" stroke="url(#gold-metal)" strokeWidth="0.8" />
+              <rect x="156" y="184" width="22" height="14" rx="3.5" fill={`url(#gold-metal-${safeId})`} stroke="#997314" strokeWidth="0.8" />
+              <circle cx="167" cy="183" r="2" fill="#FFFFFF" stroke={`url(#gold-metal-${safeId})`} strokeWidth="0.8" />
             </g>
           </g>
         )}
@@ -695,20 +713,20 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M96 104 L120 136 L144 104 L136 170 L104 170 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
             {/* Decollete V-Skin */}
-            <polygon points="106,98 120,130 134,98" fill="url(#woman-skin-tone)" />
+            <polygon points="106,98 120,130 134,98" fill={`url(#woman-skin-tone-${safeId})`} />
 
             {/* Metallic Waist Sash with Tie */}
-            <rect x="104" y="166" width="32" height="7" rx="1.5" fill="url(#gold-metal)" />
-            <path d="M110 173 L108 205 L114 207 L116 173 Z" fill="url(#gold-metal)" opacity="0.9" />
+            <rect x="104" y="166" width="32" height="7" rx="1.5" fill={`url(#gold-metal-${safeId})`} />
+            <path d="M110 173 L108 205 L114 207 L116 173 Z" fill={`url(#gold-metal-${safeId})`} opacity="0.9" />
 
             {/* Flowing Palazzo Wide Legs (Pantalón Palazzo de Gala) */}
             <path
               d="M104 173 L74 415 L108 415 L120 248 L132 415 L166 415 L136 173 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
             {/* Center Creases and Pleats */}
@@ -717,7 +735,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <line x1="88" y1="200" x2="88" y2="412" stroke="#FFFFFF" strokeWidth="1" opacity="0.18" />
 
             {/* Clutch */}
-            <rect x="156" y="184" width="22" height="14" rx="3.5" fill="url(#gold-metal)" stroke="#997314" strokeWidth="0.8" />
+            <rect x="156" y="184" width="22" height="14" rx="3.5" fill={`url(#gold-metal-${safeId})`} stroke="#997314" strokeWidth="0.8" />
           </g>
         )}
 
@@ -730,7 +748,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M84 104 Q120 115 156 104 Q150 134 120 134 Q90 134 84 104 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
             {/* Ruffle gathers */}
             <path d="M96 106 Q100 130 104 106" stroke={darkShade} strokeWidth="1.2" fill="none" opacity="0.4" />
@@ -750,7 +768,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M78 280 C70 335 60 405 54 418 C76 426 164 426 186 418 C180 405 170 335 162 280 Z"
               fill={midDark}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
             {/* Tier hem lace trim */}
@@ -771,20 +789,20 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
           {/* Left Sandal / Stiletto */}
           <path
             d="M102 405 C100 412 96 420 92 422 C90 423 104 424 116 424 C118 424 118 416 116 405 Z"
-            fill="url(#gold-metal)"
+            fill={`url(#gold-metal-${safeId})`}
           />
           {/* Stiletto Heel Pin */}
-          <line x1="92" y1="416" x2="92" y2="426" stroke="url(#gold-metal)" strokeWidth="1.8" />
+          <line x1="92" y1="416" x2="92" y2="426" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1.8" />
           {/* Ankle Cross Strap */}
-          <path d="M100 408 Q109 412 118 408" fill="none" stroke="url(#gold-metal)" strokeWidth="1.5" />
+          <path d="M100 408 Q109 412 118 408" fill="none" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1.5" />
 
           {/* Right Sandal / Stiletto */}
           <path
             d="M138 405 C140 412 144 420 148 422 C150 423 136 424 124 424 C122 424 122 416 124 405 Z"
-            fill="url(#gold-metal)"
+            fill={`url(#gold-metal-${safeId})`}
           />
-          <line x1="148" y1="416" x2="148" y2="426" stroke="url(#gold-metal)" strokeWidth="1.8" />
-          <path d="M122 408 Q131 412 140 408" fill="none" stroke="url(#gold-metal)" strokeWidth="1.5" />
+          <line x1="148" y1="416" x2="148" y2="426" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1.8" />
+          <path d="M122 408 Q131 412 140 408" fill="none" stroke={`url(#gold-metal-${safeId})`} strokeWidth="1.5" />
         </g>
       </svg>
 
@@ -798,6 +816,8 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
     </div>
   );
 };
+
+export const WomanFashionMockup = React.memo(WomanFashionMockupComponent);
 
 // Helper to adjust hex brightness
 export function adjustColorBrightness(hex: string, percent: number) {

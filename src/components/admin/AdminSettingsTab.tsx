@@ -26,6 +26,7 @@ import { AdminLocationsSettings } from './settings/AdminLocationsSettings.tsx';
 import { AdminDressCodeSettings } from './settings/AdminDressCodeSettings.tsx';
 import { AdminGiftRegistrySettings } from './settings/AdminGiftRegistrySettings.tsx';
 import { SimpleModeInline } from './SimpleModeInline.tsx';
+import { VideoSection } from '../VideoSection.tsx';
 
 interface AdminSettingsTabProps {
   settings: WeddingSettings;
@@ -288,6 +289,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   />
                   <AdminThemeSettings settings={settings} onChange={onChange} />
                   <AdminSectionToggles settings={settings} onChange={onChange} />
+                  <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
                   {settings.showLocations !== false && (
                     <AdminLocationsSettings settings={settings} onChange={onChange} />
                   )}
@@ -449,6 +451,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     />
                     <AdminThemeSettings settings={settings} onChange={onChange} />
                     <AdminSectionToggles settings={settings} onChange={onChange} />
+                    <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
                     {settings.showLocations !== false && (
                       <AdminLocationsSettings settings={settings} onChange={onChange} />
                     )}

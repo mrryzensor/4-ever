@@ -32,6 +32,7 @@ import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, W
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
+import { getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
@@ -59,6 +60,7 @@ import {
   AnimatedAmbientParticles,
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
+import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
 
 interface EnvelopeCardProps {
   settings: WeddingSettings;
@@ -138,6 +140,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const themeDisplayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
+  const bankAccounts = getBankAccounts(settings);
   const receptionCardOrder = detailSectionOrder.indexOf('reception') * 2;
   const rsvpButtonOrder = detailSectionOrder.indexOf('rsvp') * 2;
   const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
@@ -354,6 +357,18 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
 
   const coupleNamesSafe = settings.coupleNames || 'Valeria Montserrat';
+  const heroHasFamilyContent = (settings.heroCourtPlacement || 'hero') === 'hero' && Boolean(
+    (settings.heroShowBrideParents && settings.heroBrideParents?.trim())
+    || (settings.heroShowGroomParents && settings.heroGroomParents?.trim())
+    || (settings.heroShowPadrinos && settings.heroPadrinos?.trim())
+    || (settings.heroShowWitnesses && settings.heroWitnesses?.trim())
+  );
+  const heroIsSparse = !heroHasFamilyContent
+    && !settings.heroShowRsvpButton
+    && (settings.heroQuote || '').trim().length < 110;
+  const heroNameFontSize = coupleNamesSafe.length > 18
+    ? (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2rem, 6vw, 5.5rem)')
+    : (heroIsSparse ? 'clamp(3rem, 10vw, 7.5rem)' : 'clamp(2.5rem, 7vw, 6rem)');
   const targetDateObj = useMemo(() => {
     return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
   }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
@@ -484,7 +499,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
-      <div ref={heroContainerRef} className="sticky top-0 h-screen min-h-[600px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-8 sm:py-10 select-none z-0">
+      <div ref={heroContainerRef} className="sticky top-0 h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-6 sm:py-10 select-none z-0">
         <motion.div style={{ opacity: heroBgOpacity, filter: settings.heroEnableScrollBlur !== false ? heroBgBlur : undefined }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity,filter]">
           {settings.heroImageFit === 'contain' && (
             <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${displayedCoverImage})` }} />
@@ -541,7 +556,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={14} />
         </motion.div>
 
-        <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-6 sm:pt-10 pb-16">
+        <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
           <div className="min-h-4">
             {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1">
@@ -549,13 +564,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </motion.div>
             )}
           </div>
-          <div className="max-w-4xl mx-auto my-auto px-4 text-center text-white flex flex-col items-center justify-center">
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className="text-base sm:text-2xl md:text-3xl tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium">{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+          <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-2 sm:gap-4' : 'gap-1 sm:gap-2'}`}>
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-lg sm:text-2xl md:text-3xl' : 'text-sm sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
-            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} className={`text-4xl sm:text-6xl md:text-7xl lg:text-8xl italic tracking-tight text-white my-3 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
+            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
-              <p className="text-base sm:text-xl font-serif italic text-white/95 leading-relaxed drop-shadow-md">{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
+              <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-sm sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>
             {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && settings.showRsvpSection !== false && onOpenRsvp && (
@@ -648,9 +663,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
-              onClick={() => toggleSection('ceremony')}
               style={{ order: detailSectionOrder.indexOf('ceremony') * 2, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -756,9 +770,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
-              onClick={() => toggleSection('reception')}
               style={{ order: receptionCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -896,9 +909,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline - Fully Clickable) */}
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
-                onClick={() => toggleSection('itinerary')}
                 style={{ order: detailSectionOrder.indexOf('itinerary') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
@@ -1038,9 +1050,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 4. MESA DE REGALOS & CUENTAS BANCARIAS (Interactive Card with Copyable Bank Accounts - Fully Clickable) */}
             {settings.showGiftRegistry !== false && (
               <div
-                onClick={() => toggleSection('gifts')}
                 style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border cursor-pointer select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
                 }`}
               >
@@ -1066,12 +1077,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {settings.enableBankTransfer !== false && (settings.bankName || settings.bankAccountNumber) && (
+                    {settings.enableBankTransfer !== false && bankAccounts.some(hasBankAccountData) && (
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{settings.bankName || 'Transferencia'}</span>
+                        <span>{bankAccounts[0]?.bankName || 'Transferencia'}</span>
                       </span>
                     )}
                     {settings.enableEnvelopeGift !== false && (
@@ -1083,6 +1094,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       </span>
                     )}
                   </div>
+                  {settings.enableBankTransfer !== false && bankAccounts.length > 0 && (
+                    <BankAccountDetails accounts={bankAccounts} isDark={isDark} copiedKey={copiedKey} onCopy={handleCopy} className="mt-4" />
+                  )}
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
@@ -1098,7 +1112,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-amber-900'
                     }`}
                   >
-                    <span>{expandedSection === 'gifts' ? 'Ocultar Cuentas' : 'Ver Cuentas y Opciones'}</span>
+                    <span>{expandedSection === 'gifts' ? 'Ocultar opciones adicionales' : 'Ver opciones adicionales'}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'gifts' ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
@@ -1112,7 +1126,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       exit={{ opacity: 0, height: 0 }}
                       className="mt-6 pt-5 border-t border-stone-200/40 dark:border-stone-700/40 space-y-4 overflow-hidden"
                     >
-                      {settings.enableBankTransfer !== false && (settings.bankAccountNumber || settings.bankClabe) && (
+                      {false && settings.enableBankTransfer !== false && (settings.bankAccountNumber || settings.bankClabe) && (
                         <div className={`p-4 rounded-2xl border space-y-3 ${
                           isDark ? 'bg-stone-850 border-stone-600 text-stone-100' : 'bg-white border-amber-200/80 text-stone-800'
                         }`}>
@@ -1194,9 +1208,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION (Fully Clickable) */}
           {settings.showDressCode !== false && (
             <div
-              onClick={() => toggleSection('dresscode')}
               style={{ order: detailSectionOrder.indexOf('dress-code') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
@@ -1409,9 +1422,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {/* 6. TIPS & RECOMENDACIONES DE LOS NOVIOS (Configurable Interactive Section - Fully Clickable) */}
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
-              onClick={() => toggleSection('tips')}
               style={{ order: detailSectionOrder.indexOf('tips') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border cursor-pointer select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >

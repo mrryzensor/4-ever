@@ -141,7 +141,8 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
                     accentColor={waveAccentColor}
                     cardStyle={activeWaveStyle}
                     effect={settings.transitionEffect || 'wave'}
-                    className="w-full h-12"
+                    className="w-full h-full"
+                    svgClassName="block h-full w-full"
                   />
                 </div>
               </div>

@@ -169,7 +169,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
   const isDark = cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
-  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="videos">
@@ -202,38 +201,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           Revive mi sesión previa de fotos, el video de mis mejores momentos y los mensajes más emotivos.
         </p>
 
-        {/* Video count / summary preview when collapsed - Larger & Clearer */}
-        {!isExpanded && (
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <span className={`text-sm sm:text-base font-serif italic px-5 py-2.5 rounded-full border shadow-xs ${
-              isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-stone-700'
-            }`}>
-              {videos.length > 0
-                ? `🎬 ${videos.length} ${videos.length === 1 ? 'video disponible' : 'videos disponibles'} para revivir`
-                : '🎬 Galería de videos y momentos especiales'}
-            </span>
-          </div>
-        )}
-
-        {/* Inline Toggle Button */}
-        <div className="mt-7 flex justify-center">
-          <button
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
-              isDark
-                ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
-                : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
-            }`}
-          >
-            <span>{isExpanded ? 'Ocultar Videos' : 'Ver Galería de Videos'}</span>
-            <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
-              ▼
-            </span>
-          </button>
-        </div>
-
-        {isAdmin && isExpanded && (
+        {isAdmin && (
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setShowAddModal(true)}
@@ -251,15 +219,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         )}
       </div>
 
-      <motion.div
-        initial={false}
-        animate={{
-          height: isExpanded ? 'auto' : 0,
-          opacity: isExpanded ? 1 : 0,
-        }}
-        transition={{ duration: 0.4, ease: 'easeInOut' }}
-        className="overflow-hidden"
-      >
       <div className="max-w-7xl mx-auto pt-4">
         {loading ? (
           <div className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
@@ -280,12 +239,12 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className={`grid grid-cols-1 gap-6 ${isAdmin ? 'mx-auto max-w-3xl' : 'md:grid-cols-2 lg:grid-cols-3 lg:gap-8'}`}>
             {videos.map((video) => (
               <motion.div
                 layout
                 key={video.id}
-                className={`backdrop-blur-sm rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
+                className={`min-w-0 w-full backdrop-blur-sm rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
                   isDark
                     ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
                     : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
@@ -293,8 +252,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
               >
                 {renderEmbed(video)}
 
-                <div className="mt-4 flex items-start justify-between">
-                  <div>
+                <div className="mt-4 flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full border ${
                         isDark
@@ -307,11 +266,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                         Por: {video.authorName || 'Quinceañera'}
                       </span>
                     </div>
-                    <h3 className={`text-base font-serif font-bold mt-1.5 ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
+                    <h3 className={`mt-1.5 break-words text-base font-serif font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
                       {video.title}
                     </h3>
                     {video.description && (
-                      <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                      <p className={`mt-1 break-words text-xs leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                         {video.description}
                       </p>
                     )}
@@ -332,7 +291,6 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           </div>
         )}
       </div>
-      </motion.div>
 
       {/* Add Video Modal */}
       {showAddModal && (

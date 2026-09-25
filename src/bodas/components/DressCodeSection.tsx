@@ -34,14 +34,16 @@ export interface ManOutfitProps {
   outfitType: 'tuxedo' | 'suit' | 'guayabera' | 'blazer';
   fabricFinish?: 'matte' | 'satin' | 'linen' | 'velvet';
   showShoes?: boolean;
+  lightweight?: boolean;
 }
 
-export const ManFashionMockup: React.FC<ManOutfitProps> = ({
+const ManFashionMockupComponent: React.FC<ManOutfitProps> = ({
   suitColor,
   shirtColor = '#FFFFFF',
   tieColor,
   outfitType,
   fabricFinish = 'satin',
+  lightweight = false,
 }) => {
   const safeId = (suitColor || '#1C2D37').replace(/[^a-zA-Z0-9]/g, '');
   const darkShade = adjustColorBrightness(suitColor, -35);
@@ -51,10 +53,12 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
   const resolvedTieColor = tieColor || (outfitType === 'tuxedo' ? '#0F172A' : '#334155');
 
   return (
-    <div className="relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center filter drop-shadow-xl select-none">
+    <div className={`relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center select-none ${lightweight ? '' : 'filter drop-shadow-xl'}`}>
       <svg
         viewBox="0 0 240 460"
         className="w-full h-full overflow-visible"
+        shapeRendering="geometricPrecision"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -118,9 +122,9 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <stop offset="100%" stopColor="#261E1A" />
           </linearGradient>
 
-          <filter id="soft-depth" x="-15%" y="-15%" width="130%" height="130%">
+          {!lightweight && <filter id="soft-depth" x="-15%" y="-15%" width="130%" height="130%">
             <feDropShadow dx="0" dy="6" stdDeviation="4" floodOpacity="0.22" />
-          </filter>
+          </filter>}
         </defs>
 
         {/* Ambient Floor Shadow */}
@@ -178,13 +182,13 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
               fill={shirtColor || '#FDFBF7'}
               stroke="#D6D1C7"
               strokeWidth="1.2"
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : 'url(#soft-depth)'}
             />
 
             {/* Linen Weave Highlight Texture */}
             <path
               d="M84 98 L60 216 L108 222 L120 222 L132 222 L180 216 L156 98 Z"
-              fill="url(#man-suit-main-FFF)"
+              fill="#FFFFFF"
               opacity="0.08"
             />
 
@@ -238,7 +242,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <path
               d="M78 214 L84 395 L113 395 L120 262 L127 395 L156 395 L162 214 Z"
               fill={`url(#man-leg-grad-${safeId})`}
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : 'url(#soft-depth)'}
             />
             {/* Trouser Center Crease */}
             <line x1="98" y1="230" x2="98" y2="390" stroke="#000000" strokeWidth="1.2" opacity="0.22" />
@@ -301,7 +305,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
             <path
               d="M84 94 L56 220 L72 225 L82 170 L82 238 L118 242 L122 242 L158 238 L158 170 L168 225 L184 220 L156 94 L138 90 L102 90 Z"
               fill={`url(#man-suit-main-${safeId})`}
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : 'url(#soft-depth)'}
             />
 
             {/* Torso volume lighting */}
@@ -364,7 +368,7 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
                   ? '#1E293B' // Contrasting charcoal trousers for blazer
                   : `url(#man-leg-grad-${safeId})`
               }
-              filter="url(#soft-depth)"
+              filter={lightweight ? undefined : 'url(#soft-depth)'}
             />
 
             {/* Satin Galon (Tuxedo side ribbon) */}
@@ -423,6 +427,8 @@ export const ManFashionMockup: React.FC<ManOutfitProps> = ({
   );
 };
 
+export const ManFashionMockup = React.memo(ManFashionMockupComponent);
+
 // -------------------------------------------------------------
 // Ultra-Realistic SVG Fashion Mockup for Dama (Lady / Woman)
 // -------------------------------------------------------------
@@ -432,13 +438,15 @@ export interface WomanOutfitProps {
   outfitType: 'long-gown' | 'cocktail' | 'jumpsuit' | 'boho';
   fabricFinish?: 'matte' | 'satin' | 'linen' | 'velvet';
   showShoes?: boolean;
+  lightweight?: boolean;
 }
 
-export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
+const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
   dressColor,
   accessoryColor = '#D4AF37',
   outfitType,
   fabricFinish = 'satin',
+  lightweight = false,
 }) => {
   const safeId = (dressColor || '#8A6D3B').replace(/[^a-zA-Z0-9]/g, '');
   const darkShade = adjustColorBrightness(dressColor, -32);
@@ -447,10 +455,12 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
   const highlightShade = adjustColorBrightness(dressColor, 55);
 
   return (
-    <div className="relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center filter drop-shadow-xl select-none">
+    <div className={`relative w-full max-w-[220px] sm:max-w-[240px] aspect-[1/2.05] mx-auto flex items-center justify-center select-none ${lightweight ? '' : 'filter drop-shadow-xl'}`}>
       <svg
         viewBox="0 0 240 460"
         className="w-full h-full overflow-visible"
+        shapeRendering="geometricPrecision"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
@@ -500,9 +510,9 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <stop offset="100%" stopColor="#8A6711" />
           </linearGradient>
 
-          <filter id="woman-depth" x="-15%" y="-15%" width="130%" height="130%">
+          {!lightweight && <filter id="woman-depth" x="-15%" y="-15%" width="130%" height="130%">
             <feDropShadow dx="0" dy="6" stdDeviation="4" floodOpacity="0.2" />
-          </filter>
+          </filter>}
         </defs>
 
         {/* Floor Shadow */}
@@ -589,7 +599,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M98 108 C106 102 114 104 120 108 C126 104 134 102 142 108 L136 168 C130 178 125 180 120 180 C115 180 110 178 104 168 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
 
             {/* Bust contouring & satin sheen */}
@@ -607,7 +617,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M105 174 C90 260 62 360 52 418 C74 426 166 426 188 418 C178 360 150 260 135 174 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
 
             {/* Dynamic Cascading Silk Folds (Realistic Drapery Physics) */}
@@ -653,7 +663,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M100 102 L140 102 L135 168 L105 168 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
             {/* Bodice Highlights */}
             <path d="M108 104 L114 166" stroke="#FFFFFF" strokeWidth="1" opacity="0.2" />
@@ -666,7 +676,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M105 170 C92 220 76 295 70 338 C90 346 150 346 170 338 C164 295 148 220 135 170 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
 
             {/* Skirt pleat shadows */}
@@ -695,7 +705,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M96 104 L120 136 L144 104 L136 170 L104 170 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
             {/* Decollete V-Skin */}
             <polygon points="106,98 120,130 134,98" fill="url(#woman-skin-tone)" />
@@ -708,7 +718,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M104 173 L74 415 L108 415 L120 248 L132 415 L166 415 L136 173 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
 
             {/* Center Creases and Pleats */}
@@ -730,7 +740,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M84 104 Q120 115 156 104 Q150 134 120 134 Q90 134 84 104 Z"
               fill={`url(#woman-dress-main-${safeId})`}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
             {/* Ruffle gathers */}
             <path d="M96 106 Q100 130 104 106" stroke={darkShade} strokeWidth="1.2" fill="none" opacity="0.4" />
@@ -750,7 +760,7 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
             <path
               d="M78 280 C70 335 60 405 54 418 C76 426 164 426 186 418 C180 405 170 335 162 280 Z"
               fill={midDark}
-              filter="url(#woman-depth)"
+              filter={lightweight ? undefined : 'url(#woman-depth)'}
             />
 
             {/* Tier hem lace trim */}
@@ -798,6 +808,8 @@ export const WomanFashionMockup: React.FC<WomanOutfitProps> = ({
     </div>
   );
 };
+
+export const WomanFashionMockup = React.memo(WomanFashionMockupComponent);
 
 // Helper to adjust hex brightness
 export function adjustColorBrightness(hex: string, percent: number) {

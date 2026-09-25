@@ -487,6 +487,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               <WomanFashionMockup
                 dressColor={getParsedDressCodePalette()[0] || '#1C2D37'}
                 outfitType={settings.dressCodeWomanOutfit || 'long-gown'}
+                lightweight
               />
             </div>
           </div>
@@ -500,6 +501,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               <ManFashionMockup
                 suitColor={getParsedDressCodePalette()[0] || '#1C2D37'}
                 outfitType={settings.dressCodeManOutfit || 'suit'}
+                lightweight
               />
             </div>
           </div>

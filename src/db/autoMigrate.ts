@@ -140,8 +140,9 @@ export async function autoMigrateDatabase() {
           bank_account_number TEXT DEFAULT '1234 5678 9012 3456',
           bank_clabe TEXT DEFAULT '012180012345678901',
           bank_card_number TEXT DEFAULT '',
-          bank_concept TEXT DEFAULT 'Boda Sofía & Alejandro',
+          bank_concept TEXT DEFAULT 'Evento Sofía & Alejandro',
           bank_currency TEXT DEFAULT 'MXN',
+          bank_accounts TEXT DEFAULT '[]',
           enable_bank_transfer BOOLEAN DEFAULT true,
           enable_store_registry BOOLEAN DEFAULT true,
           enable_envelope_gift BOOLEAN DEFAULT false,
@@ -152,6 +153,7 @@ export async function autoMigrateDatabase() {
           updated_at TIMESTAMP DEFAULT NOW()
         );
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'bodas';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS bank_accounts TEXT DEFAULT '[]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hashtag_is_custom BOOLEAN;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_text_is_custom BOOLEAN;
         -- Backfill the flags for legacy rows without overwriting future manual edits.

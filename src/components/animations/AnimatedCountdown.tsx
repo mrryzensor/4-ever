@@ -1236,7 +1236,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   const companionsCount = Math.max(0, passesCount - 1);
   const shouldShowGuestBadge = Boolean(guest) && (showGuestsBadge !== undefined ? showGuestsBadge : (settings.showCountdownGuestsBadge !== false));
   const requestedLayout = settings.countdownLayout || 'circle';
-  const countdownLayout = ['circle', 'editorial', 'tiles', 'banner'].includes(requestedLayout)
+  const countdownLayout = ['circle', 'editorial', 'tiles', 'banner', 'ribbon', 'spotlight', 'timeline'].includes(requestedLayout)
     ? requestedLayout
     : 'circle';
   const formattedEventDate = formatHeroDate(
@@ -1352,6 +1352,87 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
         >
           {renderCountdownHeading('tiles')}
           <div className="mt-6">{renderTimeUnits('tiles')}</div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'ribbon' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto w-full max-w-6xl rounded-[2rem] border px-4 py-6 text-center shadow-xl sm:px-10 sm:py-8 ${isDark ? 'border-amber-300/30 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}66`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('ribbon')}
+          <div className={`mx-auto mt-6 w-full max-w-5xl rounded-2xl border px-2 py-4 sm:px-8 sm:py-6 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-stone-50/80'}`}>
+            {renderTimeUnits('ribbon')}
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'spotlight' ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto flex w-full max-w-5xl flex-col items-center rounded-[2.5rem] border px-4 py-6 text-center shadow-xl sm:px-8 sm:py-9 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderTopColor: resolvedTheme.accentColorHex, borderTopWidth: 4, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('spotlight')}
+          <div className="mt-6 grid w-full max-w-4xl grid-cols-1 items-center gap-5 sm:grid-cols-[1fr_2fr] sm:gap-8">
+            <div className={`flex flex-col items-center justify-center rounded-3xl border px-4 py-5 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200 bg-stone-50/80'}`}>
+              <motion.span
+                key={`spotlight-days-${timeLeft.days}`}
+                initial={{ opacity: 0.7, y: -3 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`font-serif text-7xl font-bold leading-none tabular-nums sm:text-8xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+              >
+                {timeLeft.days}
+              </motion.span>
+              <span className="mt-2 text-xs uppercase tracking-[0.22em] text-stone-500">días</span>
+            </div>
+            <div className="grid w-full grid-cols-3 items-center justify-items-center">
+              {timeUnits.slice(1).map((unit, index) => (
+                <div key={unit.key} className={`flex w-full flex-col items-center justify-center px-1 text-center ${index > 0 ? `border-l ${isDark ? 'border-white/15' : 'border-stone-300/70'}` : ''}`}>
+                  <motion.span
+                    key={`spotlight-${unit.key}-${unit.value}`}
+                    initial={{ opacity: 0.7, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`font-serif text-3xl font-bold leading-none tabular-nums sm:text-5xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                  >
+                    {String(unit.value).padStart(2, '0')}
+                  </motion.span>
+                  <span className="mt-2 text-[9px] uppercase tracking-[0.15em] text-stone-500 sm:text-[10px]">{unit.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'timeline' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto w-full max-w-6xl rounded-3xl border px-3 py-6 text-center shadow-xl sm:px-8 sm:py-9 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}55`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('timeline')}
+          <div className="relative mx-auto mt-8 grid w-full max-w-5xl grid-cols-4 items-start">
+            <div className="absolute left-[12.5%] right-[12.5%] top-1.5 h-px" style={{ backgroundColor: `${resolvedTheme.accentColorHex}88` }} />
+            {timeUnits.map((unit) => (
+              <div key={unit.key} className="relative flex min-w-0 flex-col items-center px-1 text-center">
+                <span className="z-10 h-3 w-3 rounded-full border-2 bg-white" style={{ borderColor: resolvedTheme.accentColorHex }} />
+                <motion.span
+                  key={`timeline-${unit.key}-${unit.value}`}
+                  initial={{ opacity: 0.7, y: -2 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`mt-3 font-serif text-2xl font-bold leading-none tabular-nums sm:text-4xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                >
+                  {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
+                </motion.span>
+                <span className="mt-1 text-[8px] uppercase tracking-[0.13em] text-stone-500 sm:text-[10px] sm:tracking-[0.18em]">{unit.label}</span>
+              </div>
+            ))}
+          </div>
           {renderCountdownHeart()}
         </motion.div>
       ) : (

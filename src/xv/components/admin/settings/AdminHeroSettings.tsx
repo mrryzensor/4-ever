@@ -1073,6 +1073,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   { id: 'editorial', name: 'Panel editorial', desc: 'Título y cifras en una tarjeta horizontal' },
                   { id: 'tiles', name: 'Bloques destacados', desc: 'Cada unidad de tiempo en su propia tarjeta' },
                   { id: 'banner', name: 'Franja minimalista', desc: 'Fecha y cifras sin tarjeta circular' },
+                  { id: 'ribbon', name: 'Cinta panorámica', desc: 'Contador ancho, centrado y con marco fino' },
+                  { id: 'spotlight', name: 'Días protagonistas', desc: 'Días grandes y horas debajo en formato compacto' },
+                  { id: 'timeline', name: 'Línea de momentos', desc: 'Unidades alineadas sobre una línea ornamental' },
                 ].map((layout) => {
                   const isSelected = (settings.countdownLayout || 'circle') === layout.id;
                   return (

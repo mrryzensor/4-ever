@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { WeddingSettings, GiftRegistryItem } from '../../../types.ts';
+import { BankAccountsEditor } from './BankAccountsEditor.tsx';
 
 interface AdminGiftRegistrySettingsProps {
   settings: WeddingSettings;
@@ -161,7 +162,10 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
 
       {/* 3.1 Direct Bank Transfer Configuration */}
       {settings.enableBankTransfer !== false && (
-        <div className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 sm:p-6 space-y-5">
+        <BankAccountsEditor settings={settings} onChange={onChange} />
+      )}
+      {settings.enableBankTransfer !== false && (
+        <div hidden className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 sm:p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-[#5A5A40] uppercase tracking-wider flex items-center gap-2">
               <Landmark className="w-4 h-4 text-[#7D8C7A]" />

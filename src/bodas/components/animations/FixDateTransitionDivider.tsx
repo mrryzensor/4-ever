@@ -81,7 +81,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
   const cardStyle = (rawCardStyle && rawCardStyle !== 'auto') ? rawCardStyle : 'classic-gold';
   const wavePaths = [0, 1, 2, 3].map((layer) => buildWavePath(cardStyle, layer));
   const reducedMotion = useReducedMotion();
-  const effect = ['wave', 'petals', 'sparkles', 'drape', 'orbit'].includes(rawEffect) ? rawEffect : 'wave';
+  const effect = ['wave', 'petals', 'sparkles', 'drape', 'orbit', 'cascade', 'ribbons', 'bloom'].includes(rawEffect) ? rawEffect : 'wave';
 
   if (effect !== 'wave') {
     const effectPaths: Record<string, string> = {
@@ -89,6 +89,9 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
       sparkles: 'M0 108 C260 108 390 119 610 108 C810 98 1000 88 1180 101 C1290 110 1370 108 1440 102 L1440 240 L0 240 Z',
       drape: 'M0 76 C160 76 170 142 360 142 C550 142 550 75 720 75 C890 75 890 142 1080 142 C1270 142 1280 76 1440 76 L1440 240 L0 240 Z',
       orbit: 'M0 126 C260 126 340 74 720 74 C1100 74 1180 126 1440 126 L1440 240 L0 240 Z',
+      cascade: 'M0 82 C95 82 90 145 180 145 C270 145 270 82 360 82 C450 82 450 145 540 145 C630 145 630 82 720 82 C810 82 810 145 900 145 C990 145 990 82 1080 82 C1170 82 1170 145 1260 145 C1350 145 1350 82 1440 82 L1440 240 L0 240 Z',
+      ribbons: 'M0 112 C210 38 330 164 540 94 C750 24 870 160 1080 92 C1230 44 1320 62 1440 110 L1440 240 L0 240 Z',
+      bloom: 'M0 126 C90 126 70 56 160 56 C250 56 230 126 320 126 C410 126 390 56 480 56 C570 56 550 126 640 126 C730 126 710 56 800 56 C890 56 870 126 960 126 C1050 126 1030 56 1120 56 C1210 56 1190 126 1280 126 C1370 126 1350 56 1440 56 L1440 240 L0 240 Z',
     };
     const shape = effectPaths[effect];
     const petals = Array.from({ length: 16 }, (_, index) => ({
@@ -101,6 +104,17 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
       x: 42 + ((index * 157) % 1356),
       y: 18 + ((index * 29) % 76),
       delay: (index % 9) * 0.22,
+    }));
+    const cascadeLeaves = Array.from({ length: 14 }, (_, index) => ({
+      x: 48 + ((index * 103) % 1344),
+      y: 8 + ((index * 41) % 72),
+      delay: (index % 7) * 0.42,
+      rotation: (index * 37) % 160 - 80,
+    }));
+    const bloomFlowers = Array.from({ length: 7 }, (_, index) => ({
+      x: 118 + index * 201,
+      y: 41 + (index % 2) * 13,
+      delay: index * 0.28,
     }));
 
     return (
@@ -136,10 +150,25 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
                 ? 'M0 126 C260 126 340 74 720 74 C1100 74 1180 126 1440 126'
                 : effect === 'sparkles'
                   ? 'M0 108 C260 108 390 119 610 108 C810 98 1000 88 1180 101 C1290 110 1370 108 1440 102'
-                  : 'M0 116 C170 102 250 84 390 100 C540 118 620 139 770 119 C940 96 1030 79 1180 94 C1300 106 1360 120 1440 108'}
+                  : effect === 'cascade'
+                    ? 'M0 82 C95 82 90 145 180 145 C270 145 270 82 360 82 C450 82 450 145 540 145 C630 145 630 82 720 82 C810 82 810 145 900 145 C990 145 990 82 1080 82 C1170 82 1170 145 1260 145 C1350 145 1350 82 1440 82'
+                    : effect === 'ribbons'
+                      ? 'M0 112 C210 38 330 164 540 94 C750 24 870 160 1080 92 C1230 44 1320 62 1440 110'
+                      : effect === 'bloom'
+                        ? 'M0 126 C90 126 70 56 160 56 C250 56 230 126 320 126 C410 126 390 56 480 56 C570 56 550 126 640 126 C730 126 710 56 800 56 C890 56 870 126 960 126 C1050 126 1030 56 1120 56 C1210 56 1190 126 1280 126 C1370 126 1350 56 1440 56'
+                        : 'M0 116 C170 102 250 84 390 100 C540 118 620 139 770 119 C940 96 1030 79 1180 94 C1300 106 1360 120 1440 108'}
             stroke={accentColor}
             strokeWidth="2"
             strokeOpacity="0.38"
+          />
+          <path
+            d={wavePaths[1].replace(/ L 1440 250 L 0 250 Z$/, '')}
+            fill="none"
+            stroke={accentColor}
+            strokeWidth="1.25"
+            strokeOpacity="0.2"
+            strokeDasharray="3 8"
+            data-template-silhouette={cardStyle}
           />
 
           {effect === 'petals' && petals.map((petal, index) => (
@@ -165,6 +194,40 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
               style={{ transformOrigin: `${sparkle.x}px ${sparkle.y}px` }}
             >
               <path d={`M${sparkle.x} ${sparkle.y - 7} L${sparkle.x + 2} ${sparkle.y - 2} L${sparkle.x + 7} ${sparkle.y} L${sparkle.x + 2} ${sparkle.y + 2} L${sparkle.x} ${sparkle.y + 7} L${sparkle.x - 2} ${sparkle.y + 2} L${sparkle.x - 7} ${sparkle.y} L${sparkle.x - 2} ${sparkle.y - 2} Z`} fill={index % 3 === 0 ? '#D4A373' : accentColor} />
+            </motion.g>
+          ))}
+
+          {effect === 'cascade' && cascadeLeaves.map((leaf, index) => (
+            <motion.path
+              key={`cascade-leaf-${index}`}
+              d="M0 0 C-8 -5 -7 -15 0 -20 C7 -15 8 -5 0 0 Z"
+              transform={`translate(${leaf.x} ${leaf.y}) rotate(${leaf.rotation})`}
+              fill={index % 2 === 0 ? accentColor : '#D8A69A'}
+              fillOpacity="0.78"
+              animate={reducedMotion ? undefined : { y: [0, 30, 5], rotate: [leaf.rotation, leaf.rotation + 32, leaf.rotation - 18], opacity: [0.4, 0.9, 0.4] }}
+              transition={{ duration: 6 + (index % 4), delay: leaf.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+
+          {effect === 'ribbons' && (
+            <g fill="none" stroke={accentColor} strokeLinecap="round">
+              <motion.path d="M0 113 C210 42 330 166 540 96 C750 26 870 162 1080 94 C1230 46 1320 64 1440 112" strokeWidth="5" strokeOpacity="0.32" animate={reducedMotion ? undefined : { y: [-5, 7, -5] }} transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }} />
+              <motion.path d="M0 126 C220 62 340 178 550 111 C760 44 890 178 1090 108 C1240 62 1330 78 1440 126" strokeWidth="2" strokeOpacity="0.62" animate={reducedMotion ? undefined : { y: [6, -6, 6] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
+            </g>
+          )}
+
+          {effect === 'bloom' && bloomFlowers.map((flower, index) => (
+            <motion.g
+              key={`bloom-flower-${index}`}
+              transform={`translate(${flower.x} ${flower.y})`}
+              animate={reducedMotion ? undefined : { scale: [0.82, 1.12, 0.82], rotate: [0, 18, 0], opacity: [0.4, 0.9, 0.4] }}
+              transition={{ duration: 5 + (index % 3), delay: flower.delay, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: '0px 0px' }}
+            >
+              {[0, 60, 120, 180, 240, 300].map((angle) => (
+                <ellipse key={angle} cx="0" cy="-7" rx="3.5" ry="7" transform={`rotate(${angle})`} fill={index % 2 ? accentColor : '#D8A69A'} fillOpacity="0.72" />
+              ))}
+              <circle r="2.5" fill="#D4A373" />
             </motion.g>
           ))}
 
