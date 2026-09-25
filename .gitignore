@@ -3,8 +3,9 @@ build/
 dist/
 coverage/
 uploads/
+.codex-remote-attachments/
+.codex-verify-build/
 *.log
 .DS_Store
 .env*
 !.env.example
-
