@@ -1236,7 +1236,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   const companionsCount = Math.max(0, passesCount - 1);
   const shouldShowGuestBadge = Boolean(guest) && (showGuestsBadge !== undefined ? showGuestsBadge : (settings.showCountdownGuestsBadge !== false));
   const requestedLayout = settings.countdownLayout || 'circle';
-  const countdownLayout = ['circle', 'editorial', 'tiles', 'banner', 'ribbon', 'spotlight', 'timeline'].includes(requestedLayout)
+  const countdownLayout = ['circle', 'editorial', 'tiles', 'banner', 'ribbon', 'spotlight', 'timeline', 'flip', 'stacked', 'arch'].includes(requestedLayout)
     ? requestedLayout
     : 'circle';
   const formattedEventDate = formatHeroDate(
@@ -1432,6 +1432,84 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                 <span className="mt-1 text-[8px] uppercase tracking-[0.13em] text-stone-500 sm:text-[10px] sm:tracking-[0.18em]">{unit.label}</span>
               </div>
             ))}
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'flip' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto w-full max-w-5xl rounded-3xl border p-4 text-center shadow-xl sm:p-8 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}66`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('flip')}
+          <div className="mx-auto mt-6 grid w-full max-w-4xl grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+            {timeUnits.map((unit) => (
+              <div key={unit.key} className={`overflow-hidden rounded-2xl border shadow-sm ${isDark ? 'border-white/15' : 'border-stone-200'}`}>
+                <motion.div
+                  key={`flip-${unit.key}-${unit.value}`}
+                  initial={{ rotateX: -24, opacity: 0.65 }}
+                  animate={{ rotateX: 0, opacity: 1 }}
+                  transition={{ duration: 0.35 }}
+                  className={`relative flex min-h-20 items-center justify-center font-serif text-4xl font-bold leading-none tabular-nums sm:min-h-28 sm:text-6xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                  style={{
+                    background: isDark
+                      ? 'linear-gradient(to bottom, rgba(255,255,255,.1) 0 49.5%, rgba(0,0,0,.18) 50% 100%)'
+                      : 'linear-gradient(to bottom, rgba(255,255,255,.96) 0 49.5%, rgba(231,229,220,.48) 50% 100%)',
+                    transformPerspective: 500,
+                  }}
+                >
+                  {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
+                  <span className="absolute inset-x-0 top-1/2 border-t border-black/10" />
+                </motion.div>
+                <div className={`py-1.5 text-[9px] uppercase tracking-[0.18em] sm:py-2 sm:text-[10px] ${isDark ? 'bg-white/5 text-stone-300' : 'bg-stone-50 text-stone-500'}`}>
+                  {unit.label}
+                </div>
+              </div>
+            ))}
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'stacked' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto w-full max-w-3xl rounded-3xl border px-5 py-6 text-center shadow-xl sm:px-9 sm:py-8 ${isDark ? 'border-white/10 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}55`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('stacked')}
+          <div className={`mx-auto mt-5 w-full max-w-xl divide-y ${isDark ? 'divide-white/15' : 'divide-stone-200'}`}>
+            {timeUnits.map((unit) => (
+              <div key={unit.key} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 sm:py-3">
+                <span className={`text-right font-sans text-[10px] uppercase tracking-[0.2em] sm:text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>{unit.label}</span>
+                <motion.span
+                  key={`stacked-${unit.key}-${unit.value}`}
+                  initial={{ opacity: 0.65, x: 5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className={`min-w-[3ch] text-center font-serif text-4xl font-bold leading-none tabular-nums sm:text-5xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                >
+                  {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
+                </motion.span>
+                <span className="text-left text-[10px] uppercase tracking-[0.12em] text-stone-400 sm:text-xs">restantes</span>
+              </div>
+            ))}
+          </div>
+          {renderCountdownHeart()}
+        </motion.div>
+      ) : countdownLayout === 'arch' ? (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65 }}
+          className={`mx-auto w-full max-w-5xl rounded-t-[180px] rounded-b-3xl border px-4 pb-5 pt-8 text-center shadow-xl sm:px-10 sm:pb-8 sm:pt-10 ${isDark ? 'border-amber-300/30 bg-stone-900/95 text-white' : 'border-stone-200 bg-white/95 text-stone-800'}`}
+          style={{ borderColor: `${resolvedTheme.accentColorHex}66`, backdropFilter: 'blur(8px)' }}
+        >
+          {renderCountdownHeading('arch')}
+          <div className={`mx-auto mt-6 w-full max-w-4xl rounded-full border px-2 py-4 sm:px-8 sm:py-6 ${isDark ? 'border-white/10 bg-white/5' : 'border-stone-200/80 bg-stone-50/80'}`}>
+            {renderTimeUnits('arch')}
           </div>
           {renderCountdownHeart()}
         </motion.div>

@@ -81,7 +81,7 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
   const cardStyle = (rawCardStyle && rawCardStyle !== 'auto') ? rawCardStyle : 'classic-gold';
   const wavePaths = [0, 1, 2, 3].map((layer) => buildWavePath(cardStyle, layer));
   const reducedMotion = useReducedMotion();
-  const effect = ['wave', 'petals', 'sparkles', 'drape', 'orbit', 'cascade', 'ribbons', 'bloom'].includes(rawEffect) ? rawEffect : 'wave';
+  const effect = ['wave', 'petals', 'sparkles', 'drape', 'orbit', 'cascade', 'ribbons', 'bloom', 'arch', 'aurora', 'constellation', 'confetti'].includes(rawEffect) ? rawEffect : 'wave';
 
   if (effect !== 'wave') {
     const effectPaths: Record<string, string> = {
@@ -92,6 +92,10 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
       cascade: 'M0 82 C95 82 90 145 180 145 C270 145 270 82 360 82 C450 82 450 145 540 145 C630 145 630 82 720 82 C810 82 810 145 900 145 C990 145 990 82 1080 82 C1170 82 1170 145 1260 145 C1350 145 1350 82 1440 82 L1440 240 L0 240 Z',
       ribbons: 'M0 112 C210 38 330 164 540 94 C750 24 870 160 1080 92 C1230 44 1320 62 1440 110 L1440 240 L0 240 Z',
       bloom: 'M0 126 C90 126 70 56 160 56 C250 56 230 126 320 126 C410 126 390 56 480 56 C570 56 550 126 640 126 C730 126 710 56 800 56 C890 56 870 126 960 126 C1050 126 1030 56 1120 56 C1210 56 1190 126 1280 126 C1370 126 1350 56 1440 56 L1440 240 L0 240 Z',
+      arch: 'M0 136 C190 136 235 55 420 55 C605 55 620 116 720 116 C820 116 835 55 1020 55 C1205 55 1250 136 1440 136 L1440 240 L0 240 Z',
+      aurora: 'M0 112 C180 74 310 151 490 112 C680 70 800 148 980 112 C1160 76 1290 146 1440 108 L1440 240 L0 240 Z',
+      constellation: 'M0 126 C120 126 120 96 240 96 C360 96 360 132 480 132 C600 132 600 86 720 86 C840 86 840 132 960 132 C1080 132 1080 96 1200 96 C1320 96 1320 126 1440 126 L1440 240 L0 240 Z',
+      confetti: 'M0 108 C190 108 245 78 420 92 C595 106 645 136 810 120 C975 104 1050 72 1200 90 C1320 104 1370 112 1440 104 L1440 240 L0 240 Z',
     };
     const shape = effectPaths[effect];
     const petals = Array.from({ length: 16 }, (_, index) => ({
@@ -115,6 +119,16 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
       x: 118 + index * 201,
       y: 41 + (index % 2) * 13,
       delay: index * 0.28,
+    }));
+    const constellationStars = [
+      { x: 150, y: 40 }, { x: 310, y: 24 }, { x: 480, y: 54 }, { x: 650, y: 27 },
+      { x: 810, y: 52 }, { x: 980, y: 22 }, { x: 1140, y: 48 }, { x: 1300, y: 29 },
+    ];
+    const confettiPieces = Array.from({ length: 22 }, (_, index) => ({
+      x: 42 + ((index * 137) % 1350),
+      y: 15 + ((index * 31) % 65),
+      delay: (index % 11) * 0.24,
+      rotation: (index * 47) % 120,
     }));
 
     return (
@@ -154,8 +168,16 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
                     ? 'M0 82 C95 82 90 145 180 145 C270 145 270 82 360 82 C450 82 450 145 540 145 C630 145 630 82 720 82 C810 82 810 145 900 145 C990 145 990 82 1080 82 C1170 82 1170 145 1260 145 C1350 145 1350 82 1440 82'
                     : effect === 'ribbons'
                       ? 'M0 112 C210 38 330 164 540 94 C750 24 870 160 1080 92 C1230 44 1320 62 1440 110'
-                      : effect === 'bloom'
+              : effect === 'bloom'
                         ? 'M0 126 C90 126 70 56 160 56 C250 56 230 126 320 126 C410 126 390 56 480 56 C570 56 550 126 640 126 C730 126 710 56 800 56 C890 56 870 126 960 126 C1050 126 1030 56 1120 56 C1210 56 1190 126 1280 126 C1370 126 1350 56 1440 56'
+                        : effect === 'arch'
+                          ? 'M0 136 C190 136 235 55 420 55 C605 55 620 116 720 116 C820 116 835 55 1020 55 C1205 55 1250 136 1440 136'
+                          : effect === 'aurora'
+                            ? 'M0 112 C180 74 310 151 490 112 C680 70 800 148 980 112 C1160 76 1290 146 1440 108'
+                            : effect === 'constellation'
+                              ? 'M0 126 C120 126 120 96 240 96 C360 96 360 132 480 132 C600 132 600 86 720 86 C840 86 840 132 960 132 C1080 132 1080 96 1200 96 C1320 96 1320 126 1440 126'
+                              : effect === 'confetti'
+                                ? 'M0 108 C190 108 245 78 420 92 C595 106 645 136 810 120 C975 104 1050 72 1200 90 C1320 104 1370 112 1440 104'
                         : 'M0 116 C170 102 250 84 390 100 C540 118 620 139 770 119 C940 96 1030 79 1180 94 C1300 106 1360 120 1440 108'}
             stroke={accentColor}
             strokeWidth="2"
@@ -165,8 +187,8 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
             d={wavePaths[1].replace(/ L 1440 250 L 0 250 Z$/, '')}
             fill="none"
             stroke={accentColor}
-            strokeWidth="1.25"
-            strokeOpacity="0.2"
+            strokeWidth="1.5"
+            strokeOpacity="0.38"
             strokeDasharray="3 8"
             data-template-silhouette={cardStyle}
           />
@@ -246,6 +268,75 @@ export const FixDateAnimatedTransitionDivider: React.FC<{
               <motion.circle cx="895" cy="98" r="4" fill={accentColor} animate={reducedMotion ? undefined : { opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }} transition={{ duration: 2.5, repeat: Infinity }} />
             </g>
           )}
+
+          {effect === 'arch' && (
+            <>
+              <motion.path
+                d="M0 144 C190 144 235 63 420 63 C605 63 620 124 720 124 C820 124 835 63 1020 63 C1205 63 1250 144 1440 144"
+                fill="none"
+                stroke={accentColor}
+                strokeWidth="5"
+                strokeOpacity="0.2"
+                animate={reducedMotion ? undefined : { pathLength: [0.8, 1, 0.8], opacity: [0.16, 0.38, 0.16] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              {[420, 720, 1020].map((x, index) => (
+                <motion.circle key={x} cx={x} cy={index === 1 ? 116 : 55} r="4" fill={accentColor} animate={reducedMotion ? undefined : { opacity: [0.35, 0.9, 0.35], scale: [0.8, 1.25, 0.8] }} transition={{ duration: 3.5, delay: index * 0.45, repeat: Infinity }} />
+              ))}
+            </>
+          )}
+
+          {effect === 'aurora' && (
+            <>
+              <motion.path
+                d="M0 116 C180 78 310 155 490 116 C680 74 800 152 980 116 C1160 80 1290 150 1440 112 L1440 190 C1250 170 1160 202 980 178 C800 154 680 202 490 178 C310 154 180 192 0 176 Z"
+                fill={accentColor}
+                fillOpacity="0.12"
+                animate={reducedMotion ? undefined : { x: [-18, 18, -18], opacity: [0.08, 0.18, 0.08] }}
+                transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              <motion.path
+                d="M0 132 C180 96 310 166 490 132 C680 94 800 166 980 132 C1160 98 1290 164 1440 128"
+                fill="none"
+                stroke="#FFFFFF"
+                strokeWidth="2"
+                strokeOpacity="0.55"
+                animate={reducedMotion ? undefined : { x: [12, -12, 12] }}
+                transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </>
+          )}
+
+          {effect === 'constellation' && (
+            <g>
+              <polyline points={constellationStars.map((star) => `${star.x},${star.y}`).join(' ')} fill="none" stroke={accentColor} strokeWidth="1.2" strokeOpacity="0.42" strokeDasharray="3 7" />
+              {constellationStars.map((star, index) => (
+                <motion.path
+                  key={`constellation-${index}`}
+                  d={`M${star.x} ${star.y - 6} L${star.x + 2} ${star.y - 2} L${star.x + 6} ${star.y} L${star.x + 2} ${star.y + 2} L${star.x} ${star.y + 6} L${star.x - 2} ${star.y + 2} L${star.x - 6} ${star.y} L${star.x - 2} ${star.y - 2} Z`}
+                  fill={accentColor}
+                  animate={reducedMotion ? undefined : { opacity: [0.35, 1, 0.35], scale: [0.75, 1.25, 0.75] }}
+                  transition={{ duration: 2.8, delay: index * 0.22, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ transformOrigin: `${star.x}px ${star.y}px` }}
+                />
+              ))}
+            </g>
+          )}
+
+          {effect === 'confetti' && confettiPieces.map((piece, index) => (
+            <motion.rect
+              key={`confetti-${index}`}
+              x={piece.x}
+              y={piece.y}
+              width={index % 3 === 0 ? 5 : 3}
+              height={index % 3 === 0 ? 9 : 5}
+              rx="1"
+              fill={index % 2 === 0 ? accentColor : '#D8A69A'}
+              fillOpacity="0.72"
+              animate={reducedMotion ? undefined : { y: [piece.y, piece.y + 28, piece.y], rotate: [piece.rotation, piece.rotation + 90, piece.rotation], opacity: [0.35, 0.9, 0.35] }}
+              transition={{ duration: 5 + (index % 4), delay: piece.delay, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
         </svg>
       </div>
     );

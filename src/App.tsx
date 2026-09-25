@@ -469,13 +469,14 @@ export default function App() {
 
     if (settings?.id && currentView === 'invitation' && !demoMode) {
       const identifier = settings.slug || String(settings.id);
-      const ogImageUrl = `${window.location.origin}/api/og-image?wedding=${encodeURIComponent(identifier)}`;
+      const socialImageVersion = settings.updatedAt || `${settings.eventDate || ''}-${settings.coupleNames || ''}`;
+      const ogImageUrl = `${window.location.origin}/api/og-image?wedding=${encodeURIComponent(identifier)}&v=${encodeURIComponent(String(socialImageVersion))}`;
       setMeta('meta[property="og:image"]', ogImageUrl);
       setMeta('meta[property="og:image:secure_url"]', ogImageUrl);
       setMeta('meta[name="twitter:image"]', ogImageUrl);
       setMeta('meta[property="og:url"]', window.location.href);
     }
-  }, [currentView, settings?.id, settings?.slug, settings?.eventType, settings?.coupleNames, settings?.eventDate, settings?.eventTime, settings?.welcomeSubtitle, settings?.receptionVenue, settings?.ceremonyVenue, settings?.heroDateFormat, settings?.heroCustomDateText, activeGuest?.fullName, eventCategory, isViewingDemo, currentUser?.uid, currentWeddingId]);
+  }, [currentView, settings?.id, settings?.slug, settings?.eventType, settings?.coupleNames, settings?.eventDate, settings?.updatedAt, settings?.eventTime, settings?.welcomeSubtitle, settings?.receptionVenue, settings?.ceremonyVenue, settings?.heroDateFormat, settings?.heroCustomDateText, activeGuest?.fullName, eventCategory, isViewingDemo, currentUser?.uid, currentWeddingId]);
 
   const toggleFullscreen = async () => {
     try {

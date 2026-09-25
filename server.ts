@@ -1967,7 +1967,10 @@ async function startServer() {
         const cityOrAddress = wedding?.receptionAddress || wedding?.ceremonyAddress || '';
         const welcomeSubtitle = wedding?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.';
 
-        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}&t=${encodeURIComponent(wedding?.eventDate || '2026-11-28')}`;
+        const socialImageVersion = wedding?.updatedAt
+          ? new Date(wedding.updatedAt).getTime()
+          : `${wedding?.eventDate || '2026-11-28'}-${coupleNames}`;
+        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}&v=${encodeURIComponent(String(socialImageVersion))}`;
 
         // Dynamic Title for social sharing (WhatsApp, Facebook, iMessage, Twitter/X)
         const guestName = guest?.name || guest?.fullName;

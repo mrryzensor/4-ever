@@ -1296,7 +1296,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#1a1a1a] block mb-2">Diseño y tamaño del contador:</label>
+              <label className="text-xs font-bold text-[#1a1a1a] block mb-2">Diseño y tamaño del contador · 10 opciones:</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 {[
                   { id: 'circle', name: 'Círculo editorial', desc: 'Emblema amplio con marco animado' },
@@ -1306,6 +1306,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   { id: 'ribbon', name: 'Cinta panorámica', desc: 'Contador ancho, centrado y con marco fino' },
                   { id: 'spotlight', name: 'Días protagonistas', desc: 'Días grandes y horas debajo en formato compacto' },
                   { id: 'timeline', name: 'Línea de momentos', desc: 'Unidades alineadas sobre una línea ornamental' },
+                  { id: 'flip', name: 'Tarjetas Flip', desc: 'Cifras amplias con corte central tipo reloj' },
+                  { id: 'stacked', name: 'Columna editorial', desc: 'Unidades apiladas, fáciles de leer en móvil' },
+                  { id: 'arch', name: 'Arco panorámico', desc: 'Marco alto con las cifras en una banda central' },
                 ].map((layout) => {
                   const isSelected = (settings.countdownLayout || 'circle') === layout.id;
                   return (

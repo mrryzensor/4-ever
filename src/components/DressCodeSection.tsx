@@ -336,6 +336,12 @@ const ManFashionMockupComponent: React.FC<ManOutfitProps> = ({
               strokeOpacity="0.3"
             />
 
+            {/* Fine tailoring seams and soft sleeve folds keep the suit readable at small sizes. */}
+            <path d="M103 96 Q111 121 116 139 L91 157" fill="none" stroke={lightShade} strokeWidth="1.2" strokeOpacity="0.52" />
+            <path d="M137 96 Q129 121 124 139 L149 157" fill="none" stroke={darkShade} strokeWidth="1.2" strokeOpacity="0.48" />
+            <path d="M63 199 Q69 203 75 201 M165 201 Q171 203 177 199" fill="none" stroke={lightShade} strokeWidth="1.4" strokeLinecap="round" strokeOpacity="0.55" />
+            <path d="M84 228 Q100 234 116 234 M124 234 Q140 234 156 228" fill="none" stroke={darkShade} strokeWidth="1" strokeOpacity="0.45" />
+
             {/* Left Lapel Peak Notch Accent */}
             {outfitType === 'tuxedo' && (
               <polygon points="82,148 76,140 84,136" fill={`url(#man-satin-lapel-${safeId})`} stroke="#000000" strokeWidth="0.5" />
@@ -610,6 +616,13 @@ const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
               filter={lightweight ? undefined : `url(#woman-depth-${safeId})`}
             />
 
+            {/* Hand-finished neckline and corset seams add detail without heavy SVG filters. */}
+            <path d="M99 109 Q109 117 120 110 Q131 117 141 109" fill="none" stroke={accessoryColor} strokeWidth="1.35" strokeOpacity="0.86" />
+            <path d="M108 116 Q111 143 108 165 M132 116 Q129 143 132 165" fill="none" stroke={lightShade} strokeWidth="1.1" strokeOpacity="0.54" />
+            {[104, 110, 116, 124, 130, 136].map((x) => (
+              <circle key={`gown-bead-${x}`} cx={x} cy={108 + Math.abs(120 - x) * 0.1} r="1.2" fill={accessoryColor} fillOpacity="0.88" />
+            ))}
+
             {/* Bust contouring & satin sheen */}
             <path
               d="M98 108 C106 102 114 104 120 108 C126 104 134 102 142 108 L138 138 C130 144 110 144 102 138 Z"
@@ -648,6 +661,9 @@ const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
               opacity="0.35"
             />
 
+            {/* Long, curved stitch lines give the skirt folds a softer fabric drape. */}
+            <path d="M78 270 C76 328 65 374 62 411 M94 240 C92 312 85 372 82 416 M151 246 C155 320 168 372 178 411" fill="none" stroke={lightShade} strokeWidth="1.25" strokeLinecap="round" strokeOpacity="0.48" />
+
             {/* Slit Shadow & Graceful Hem Movement */}
             <path d="M52 418 Q120 430 188 418" fill="none" stroke="#000000" strokeWidth="1.5" opacity="0.3" />
 
@@ -658,6 +674,8 @@ const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
               <circle cx="167" cy="183" r="2" fill="#FFFFFF" stroke={`url(#gold-metal-${safeId})`} strokeWidth="0.8" />
               {/* Metallic reflection line */}
               <line x1="158" y1="189" x2="176" y2="189" stroke="#FFFFFF" strokeWidth="1" opacity="0.6" />
+              <path d="M150 178 Q156 177 160 181 L164 187 Q162 191 158 190 L151 185 Z" fill={`url(#woman-skin-tone-${safeId})`} stroke="#D69F8B" strokeWidth="0.7" />
+              <path d="M154 181 L159 185 M152 183 L157 187" fill="none" stroke="#D69F8B" strokeWidth="0.7" strokeLinecap="round" />
             </g>
           </g>
         )}

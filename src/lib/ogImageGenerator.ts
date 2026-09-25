@@ -16,6 +16,30 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, '&apos;');
 }
 
+function wrapHeroNames(value: string, maxLineLength = 18): string[] {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+
+  const lines: string[] = [];
+  let line = '';
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && candidate.length > maxLineLength) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+
+  // Keep the social card readable when somebody enters a very long, unbroken name.
+  if (lines.length === 1 && lines[0].length > maxLineLength + 4) {
+    return [lines[0].slice(0, maxLineLength), lines[0].slice(maxLineLength)];
+  }
+  return lines.slice(0, 3);
+}
+
 /**
  * Generates an ultra-crisp 1200x630 Open Graph Image representing the Hero of the Wedding Invitation.
  * Designed specifically for rich social cards on WhatsApp, Facebook, iMessage, Twitter/X, Instagram, LinkedIn, etc.
@@ -28,7 +52,15 @@ export async function generateWeddingOgImage(
   const height = 630;
 
   const presentation = getEventPresentation(settings.eventType, settings.slug);
-  const coupleNames = settings.coupleNames || presentation.defaultName;
+  const coupleNames = (settings.coupleNames || presentation.defaultName).trim();
+  const nameLines = wrapHeroNames(coupleNames);
+  const longestNameLine = Math.max(...nameLines.map((line) => line.length), 1);
+  const namesFontSize = Math.max(42, Math.min(72, Math.floor(72 * (26 / longestNameLine))));
+  const nameLineHeight = Math.round(namesFontSize * 1.12);
+  const namesStartY = Math.round(325 - ((nameLines.length - 1) * nameLineHeight) / 2);
+  const namesMarkup = nameLines
+    .map((line, index) => `<tspan x="600"${index ? ` dy="${nameLineHeight}"` : ''}>${escapeXml(line)}</tspan>`)
+    .join('');
   const eventDateFormatted = formatHeroDate(
     settings.eventDate || '2026-11-28',
     settings.heroDateFormat || 'dd.mm.aaaa',
@@ -154,10 +186,10 @@ export async function generateWeddingOgImage(
         </text>
       </g>
 
-      <!-- Main Couple Names -->
+      <!-- Primary names from the event Hero (couple or quinceañera), wrapped to fit social previews -->
       <g filter="url(#textGlow)">
-        <text x="600" y="325" text-anchor="middle" font-family="'Playfair Display', 'Cinzel', Georgia, serif" font-size="${coupleNames.length > 25 ? 58 : 72}" fill="#FFFFFF" font-weight="700" letter-spacing="2">
-          ${escapeXml(coupleNames)}
+        <text x="600" y="${namesStartY}" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="${namesFontSize}" fill="#FFFFFF" font-weight="700" letter-spacing="2">
+          ${namesMarkup}
         </text>
       </g>
 

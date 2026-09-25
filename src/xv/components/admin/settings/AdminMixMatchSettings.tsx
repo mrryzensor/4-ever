@@ -65,6 +65,10 @@ const TRANSITION_EFFECT_OPTIONS = [
   { id: 'cascade', label: 'Lluvia botánica', desc: 'Hojas y pétalos caen sobre un borde escalonado' },
   { id: 'ribbons', label: 'Listones fluidos', desc: 'Cintas cruzadas se mecen al pasar al contenido' },
   { id: 'bloom', label: 'Jardín en flor', desc: 'Arcos florales con flores que se abren suavemente' },
+  { id: 'arch', label: 'Arcos de bienvenida', desc: 'Un pórtico ornamental se ilumina al entrar al contenido' },
+  { id: 'aurora', label: 'Aurora suave', desc: 'Velos luminosos se desplazan bajo el hero' },
+  { id: 'constellation', label: 'Constelación', desc: 'Estrellas conectadas con destellos sutiles' },
+  { id: 'confetti', label: 'Confeti delicado', desc: 'Pequeños acentos flotan sobre un borde orgánico' },
 ] as const;
 
 export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
@@ -72,7 +76,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
   onChange,
   isXv = true,
 }) => {
-  const [openSection, setOpenSection] = useState<string | null>('colors');
+  const [openSection, setOpenSection] = useState<string | null>('waves');
 
   const toggleSection = (id: string) => {
     setOpenSection((prev) => (prev === id ? null : id));
@@ -639,7 +643,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Compass className="w-4 h-4 text-cyan-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                6. Transición Animada (Hero ➔ Contenido)
+                6. Transición Animada (Hero ➔ Contenido) · 12 diseños
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
                 {`${TRANSITION_EFFECT_OPTIONS.find((option) => option.id === (settings.transitionEffect || 'wave'))?.label || 'Olas orgánicas'} · ${settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
