@@ -4,8 +4,6 @@ import { Sparkles } from 'lucide-react';
 type FashionVector = {
   path: string;
   garmentFills: readonly string[];
-  shirtFills?: readonly string[];
-  removeFills?: readonly string[];
 };
 
 const manVectors: Record<ManFashionIllustrationProps['outfitType'], FashionVector> = {
@@ -13,10 +11,12 @@ const manVectors: Record<ManFashionIllustrationProps['outfitType'], FashionVecto
   tuxedo: { path: '/trajes/svg/TrajeVaronSmoking.svg', garmentFills: ['#252527', '#27272A'] },
   guayabera: {
     path: '/trajes/svg/TrajeVaronGuayaberaFormal.svg',
-    garmentFills: ['#29324D'],
-    shirtFills: ['#C2D8F8', '#C8DCF9'],
-    // El trazado sobre croma verde dejó estos restos además del fondo principal.
-    removeFills: ['#03F905', '#05F707', '#07F709'],
+    // La camisa, el pantalón y sus matices siguen la paleta activa.
+    garmentFills: [
+      '#8A172B', '#88172A', '#8B2433', '#620A18', '#610C19', '#5E0B16',
+      '#57141B', '#550A15', '#550916', '#500A14', '#4E1119', '#4E0611',
+      '#4D0914', '#450711', '#3F0B13', '#192B49',
+    ],
   },
   blazer: { path: '/trajes/svg/TrajeVaronBlazerPantalon.svg', garmentFills: ['#1A3D7C'] },
 };
@@ -50,28 +50,13 @@ const luminance = (color: string) => {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 };
 
-const recolorFashionSvg = (
-  source: string,
-  color: string,
-  garmentFills: readonly string[],
-  removeFills: readonly string[] = [],
-  shirtColor?: string,
-  shirtFills: readonly string[] = [],
-) => {
+const recolorFashionSvg = (source: string, color: string, garmentFills: readonly string[]) => {
   const safeColor = /^#[\da-f]{6}$/i.test(color) ? color : garmentFills[0];
   const baseLuminance = Math.max(1, luminance(garmentFills[0]));
   let svg = source
     .replace(/<\?xml[\s\S]*?\?>\s*/, '')
     .replace(/<!--([\s\S]*?)-->\s*/g, '')
-    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#[\da-f]{6}" transform="translate\(0,0\)"\/>/, '');
-
-  if (removeFills.length) {
-    const fillsToRemove = new Set(removeFills.map((fill) => fill.toLowerCase()));
-    svg = svg.replace(/<path\b[^>]*\/>/g, (path) => {
-      const fill = path.match(/\bfill="(#[\da-f]{6})"/i)?.[1].toLowerCase();
-      return fill && fillsToRemove.has(fill) ? '' : path;
-    });
-  }
+    .replace(/<path d="M0,0 L1024,0 L1024,1536 L0,1536 Z " fill="#[\da-f]{6}" transform="translate\(0,0\)"\/>/i, '');
 
   for (const originalFill of garmentFills) {
     const ratio = luminance(originalFill) / baseLuminance;
@@ -80,16 +65,11 @@ const recolorFashionSvg = (
     svg = svg.replaceAll(`fill="${originalFill}"`, `fill="${variantColor}"`);
   }
 
-  const safeShirtColor = shirtColor && /^#[\da-f]{6}$/i.test(shirtColor) ? shirtColor : '#F7F5EF';
-  for (const originalFill of shirtFills) {
-    svg = svg.replaceAll(`fill="${originalFill}"`, `fill="${safeShirtColor}"`);
-  }
-
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 };
 
-const useFashionVector = (variant: FashionVector, color: string, shirtColor?: string) => {
-  const requestKey = variant.path + '|' + color + '|' + (shirtColor ?? '');
+const useFashionVector = (variant: FashionVector, color: string) => {
+  const requestKey = `${variant.path}|${color}`;
   const [loadedVector, setLoadedVector] = React.useState<{ key: string; src: string } | null>(null);
 
   React.useEffect(() => {
@@ -97,8 +77,7 @@ const useFashionVector = (variant: FashionVector, color: string, shirtColor?: st
     getSvgSource(variant.path)
       .then((source) => {
         if (!cancelled) {
-          const src = recolorFashionSvg(source, color, variant.garmentFills, variant.removeFills, shirtColor, variant.shirtFills);
-          setLoadedVector({ key: requestKey, src });
+          setLoadedVector({ key: requestKey, src: recolorFashionSvg(source, color, variant.garmentFills) });
         }
       })
       .catch(() => undefined);
@@ -155,7 +134,7 @@ export const ManFashionIllustration: React.FC<ManFashionIllustrationProps> = ({
   const jacketDark = shade(suitColor, -30);
   const jacketLight = shade(suitColor, 22);
   const isGuayabera = outfitType === 'guayabera';
-  const manVector = useFashionVector(manVectors[outfitType], suitColor, shirtColor);
+  const manVector = useFashionVector(manVectors[outfitType], suitColor);
 
   return (
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
