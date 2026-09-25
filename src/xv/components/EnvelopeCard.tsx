@@ -27,6 +27,7 @@ import {
   Info,
   ShieldCheck,
   Footprints,
+  Users,
 } from 'lucide-react';
 import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, WeddingTipItem } from '../../types.ts';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
@@ -341,7 +342,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   );
   const heroIsSparse = !heroHasFamilyContent
     && !settings.heroShowRsvpButton
+    && !settings.heroShowCountdown
+    && !settings.heroShowGuestPill
     && (settings.heroQuote || '').trim().length < 110;
+  const heroCountdownEnabled = settings.showCountdown !== false && Boolean(settings.heroShowCountdown);
+  const heroGuestPillEnabled = Boolean(settings.heroShowGuestPill && guest?.fullName?.trim());
   const heroNameFontSize = coupleNamesSafe.length > 18
     ? (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2.25rem, 6vw, 5.5rem)')
     : (heroIsSparse ? 'clamp(3rem, 10vw, 7.5rem)' : 'clamp(2.5rem, 7vw, 6rem)');
@@ -424,10 +429,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   );
   const familyPageStartsAfterHero = hasCourtInfo && (
     familyPlacement === 'after-hero'
-    || (familyPlacement === 'after-countdown' && settings.showCountdown === false)
+    || (familyPlacement === 'after-countdown' && (settings.showCountdown === false || settings.heroShowCountdown))
   );
   const countdownPageStartsAfterHero = settings.countdownPlacement === 'after-hero'
     && settings.showCountdown !== false
+    && !settings.heroShowCountdown
     && !familyPageStartsAfterHero;
   const renderHeroTransitionDivider = () => (
     <div className="pointer-events-none absolute left-0 right-0 -top-16 z-0 w-full overflow-hidden leading-none sm:-top-22 md:-top-28 lg:-top-32">
@@ -533,26 +539,45 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         </motion.div>
 
         <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
-          <div className={heroIsSparse ? 'min-h-0' : 'min-h-4'}>
-            {!heroIsSparse && settings.heroShowIcon && (
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1">
-                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, false, theme.accentColorHex)}
-              </motion.div>
-            )}
-          </div>
           <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : 'gap-1 sm:gap-2'}`}>
-            {heroIsSparse && settings.heroShowIcon && (
+            {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1 sm:mb-2">
-                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, true, theme.accentColorHex)}
+                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex)}
               </motion.div>
             )}
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
+            {heroGuestPillEnabled && guest && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.28 }}
+                className="mt-1 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border bg-black/30 px-4 py-2 text-xs text-white shadow-sm backdrop-blur-md sm:text-sm"
+                style={{ borderColor: `${theme.accentColorHex}CC` }}
+              >
+                <Users className="h-4 w-4 shrink-0" style={{ color: theme.accentColorHex }} aria-hidden="true" />
+                <span className="max-w-full break-words font-semibold">{guest.fullName}</span>
+                <span className="text-white/80">· {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)} {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
+              </motion.div>
+            )}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
               <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>
+            {heroCountdownEnabled && (
+              <div className="mt-2 w-full px-1 sm:mt-3">
+                <AnimatedCountdown
+                  settings={settings}
+                  guest={guest}
+                  cardStyle={settings.cardStyle}
+                  customStyle={settings.countdownStyle}
+                  customTitle={settings.countdownTitle || 'Faltan'}
+                  showGuestsBadge={false}
+                  compact
+                />
+              </div>
+            )}
             {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && settings.showRsvpSection !== false && onOpenRsvp && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex gap-3 mt-6">
@@ -569,9 +594,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         </motion.div>
       </div>
 
-      {(familyPlacement === 'after-hero' || (familyPlacement === 'after-countdown' && settings.showCountdown === false)) && renderFamilyPage(familyPageStartsAfterHero)}
-      {settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderCountdownPage(countdownPageStartsAfterHero)}
-      {familyPlacement === 'after-countdown' && settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && renderFamilyPage()}
+      {(familyPlacement === 'after-hero' || (familyPlacement === 'after-countdown' && (settings.showCountdown === false || settings.heroShowCountdown))) && renderFamilyPage(familyPageStartsAfterHero)}
+      {settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && !settings.heroShowCountdown && renderCountdownPage(countdownPageStartsAfterHero)}
+      {familyPlacement === 'after-countdown' && settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && !settings.heroShowCountdown && renderFamilyPage()}
 
       {/* 2. INVITATION DETAILS SECTION - FUSED INTERACTIVE SECTION WITH INLINE EXPANSIONS */}
       <section
@@ -591,7 +616,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
         <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto text-center overflow-visible">
           {/* Animated SVG Countdown Section sitting right on the transition wave */}
-          {settings.showCountdown !== false && settings.countdownPlacement !== 'after-hero' && (
+          {settings.showCountdown !== false && !settings.heroShowCountdown && settings.countdownPlacement !== 'after-hero' && (
             <div className="-mt-28 sm:-mt-36 md:-mt-44 mb-6 sm:mb-12 relative z-20 flex justify-center">
               <AnimatedCountdown
                 settings={settings}
@@ -603,7 +628,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               />
             </div>
           )}
-          {familyPlacement === 'after-countdown' && settings.countdownPlacement !== 'after-hero' && settings.showCountdown !== false && renderFamilyPage()}
+          {familyPlacement === 'after-countdown' && settings.countdownPlacement !== 'after-hero' && settings.showCountdown !== false && !settings.heroShowCountdown && renderFamilyPage()}
 
           {/* Section Header: Story & Quote Banner */}
           <div className="mb-8 sm:mb-12 flex flex-col items-center overflow-visible">

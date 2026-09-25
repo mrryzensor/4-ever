@@ -13,6 +13,7 @@ interface AnimatedCountdownProps {
   customStyle?: string;
   customTitle?: string;
   showGuestsBadge?: boolean;
+  compact?: boolean;
 }
 
 // ----------------------------------------------------------------------
@@ -1155,6 +1156,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   customStyle,
   customTitle,
   showGuestsBadge,
+  compact = false,
 }) => {
   const activeStyleId = resolveCountdownStyle(
     customStyle,
@@ -1272,12 +1274,12 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             initial={{ opacity: 0.75, y: -2 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className={`font-bold font-serif tabular-nums leading-none text-3xl sm:text-4xl md:text-5xl ${unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+            className={`font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
             style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
           >
             {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
           </motion.span>
-          <span className="mt-1 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] text-stone-500 font-sans">
+          <span className={`mt-1 font-sans uppercase tracking-[0.16em] ${layout === 'hero' ? 'text-[8px] text-white/75 sm:text-[9px]' : 'text-[9px] text-stone-500 sm:text-[10px]'}`}>
             {unit.label}
           </span>
         </div>
@@ -1323,7 +1325,24 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
 
   return (
     <div className={`relative flex w-full flex-col items-center justify-center select-none ${className}`}>
-      {countdownLayout === 'circle' ? (
+      {compact ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto w-full max-w-md rounded-2xl border border-white/30 bg-black/30 px-3 py-3 text-white shadow-lg backdrop-blur-md sm:px-5 sm:py-4"
+          style={{ borderColor: `${resolvedTheme.accentColorHex}AA` }}
+        >
+          <div className="mb-2 text-center font-serif text-lg italic text-white sm:text-xl">{displayTitle}</div>
+          {formattedEventTime && (
+            <div className="mb-2 flex items-center justify-center gap-1.5 font-sans text-xs text-white/80">
+              <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
+              {formattedEventTime}
+            </div>
+          )}
+          {renderTimeUnits('hero')}
+        </motion.div>
+      ) : countdownLayout === 'circle' ? (
         <div className="relative mx-auto flex aspect-square h-auto w-full max-w-[22rem] items-center justify-center sm:max-w-[24rem] md:max-w-[26rem]">
           {renderSvgSurround()}
           <motion.div

@@ -830,7 +830,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 type="checkbox"
                 checked={Boolean(settings.heroShowCountdown)}
                 onChange={(e) =>
-                  onChange({ heroShowCountdown: e.target.checked })
+                  onChange({ heroShowCountdown: e.target.checked, ...(e.target.checked ? { showCountdown: true } : {}) })
                 }
                 className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
               />
@@ -839,7 +839,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   Contador Regresivo en Portada
                 </span>
                 <span className="text-[10px] text-[#7D8C7A]">
-                  Por defecto desactivado (el contador se ve en el cuerpo).
+                  Desactivado: se muestra en el cuerpo. Activado: pasa a la portada.
                 </span>
               </div>
             </label>
@@ -896,7 +896,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   Píldora de Pases del Invitado en Portada
                 </span>
                 <span className="text-[10px] text-[#7D8C7A]">
-                  Muestra el nombre del invitado en el hero.
+                  En enlaces con código, muestra el nombre y sus pases asignados.
                 </span>
               </div>
             </label>
