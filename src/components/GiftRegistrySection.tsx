@@ -25,7 +25,7 @@ interface GiftRegistrySectionProps {
 export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settings }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  if (settings.showGiftRegistry === false) {
+  if (settings.showGiftRegistry !== true) {
     return null;
   }
 
@@ -48,13 +48,13 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
   // If host provided direct bank settings and no bank item in registryItems, we construct one
   const bankAccounts = getBankAccounts(settings);
-  const hasDirectBankSettings = settings.enableBankTransfer !== false && bankAccounts.length > 0;
+  const hasDirectBankSettings = settings.enableBankTransfer === true && bankAccounts.length > 0;
 
   const hasDirectBankInItems = registryItems.some((item) => item.type === 'bank');
 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="mesa-de-regalos">

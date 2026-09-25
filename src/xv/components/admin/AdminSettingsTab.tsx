@@ -298,9 +298,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   {settings.showDressCode !== false && (
                     <AdminDressCodeSettings settings={settings} onChange={onChange} />
                   )}
-                  {settings.showGiftRegistry !== false && (
-                    <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-                  )}
+                  <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
 
                   <div className="pt-2 flex items-center justify-between gap-4">
                     {settingsSavedToast && (
@@ -365,11 +363,15 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             style={{ maxHeight: isMobileSheetOpen ? '82vh' : '64px' }}
           >
             {/* Sheet Handle & Header Bar */}
-            <div
-              onClick={() => setIsMobileSheetOpen(!isMobileSheetOpen)}
-              className="p-3.5 bg-gradient-to-r from-[#FAF9F0] via-white to-[#FAF9F0] border-b border-[#E5E2D0] flex items-center justify-between cursor-pointer select-none hover:bg-stone-50/80 transition-colors"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-3.5 bg-gradient-to-r from-[#FAF9F0] via-white to-[#FAF9F0] border-b border-[#E5E2D0] flex items-center justify-between select-none hover:bg-stone-50/80 transition-colors">
+              <button
+                type="button"
+                aria-expanded={isMobileSheetOpen}
+                aria-controls="admin-settings-sheet-content"
+                aria-label={isMobileSheetOpen ? 'Minimizar configuración' : 'Expandir configuración'}
+                onClick={() => setIsMobileSheetOpen((open) => !open)}
+                className="flex min-w-0 flex-1 items-center gap-2.5 p-0 text-left cursor-pointer"
+              >
                 <div className="w-8 h-8 rounded-xl bg-[#5A5A40] text-white flex items-center justify-center shrink-0 shadow-2xs">
                   {editorMode === 'simple' ? (
                     <Zap className="w-4 h-4 text-amber-300" />
@@ -392,15 +394,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                       : 'Configuración minimizada para interactuar con la invitación'}
                   </p>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              </button>
+              <div className="flex items-center gap-2 shrink-0 ml-2">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveAllSettings();
-                  }}
+                  onClick={onSaveAllSettings}
                   disabled={savingSettings}
                   className="px-3 py-1.5 rounded-xl bg-[#5A5A40] hover:bg-[#484833] text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 >
@@ -408,19 +407,26 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   <span>{savingSettings ? '...' : 'Guardar'}</span>
                 </button>
 
-                <div className="w-7 h-7 rounded-xl bg-white border border-[#E5E2D0] flex items-center justify-center text-stone-600 shadow-2xs">
+                <button
+                  type="button"
+                  aria-expanded={isMobileSheetOpen}
+                  aria-controls="admin-settings-sheet-content"
+                  aria-label={isMobileSheetOpen ? 'Minimizar configuración' : 'Expandir configuración'}
+                  onClick={() => setIsMobileSheetOpen((open) => !open)}
+                  className="w-9 h-9 rounded-xl bg-white border border-[#E5E2D0] flex items-center justify-center text-stone-600 shadow-2xs cursor-pointer hover:bg-[#F4F2E8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5A5A40]"
+                >
                   {isMobileSheetOpen ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
                     <ChevronUp className="w-4 h-4 text-[#5A5A40]" />
                   )}
-                </div>
+                </button>
               </div>
             </div>
 
             {/* Scrollable Form Body when Expanded */}
             {isMobileSheetOpen && (
-              <div className="p-2.5 sm:p-5 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-4 sm:space-y-6 max-h-[calc(82vh-64px)] w-full max-w-full min-w-0 box-border">
+              <div id="admin-settings-sheet-content" className="p-2.5 sm:p-5 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-4 sm:space-y-6 max-h-[calc(82vh-64px)] w-full max-w-full min-w-0 box-border">
                 {editorMode === 'simple' ? (
                   <SimpleModeInline
                     settings={settings}
@@ -461,9 +467,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     {settings.showDressCode !== false && (
                       <AdminDressCodeSettings settings={settings} onChange={onChange} />
                     )}
-                    {settings.showGiftRegistry !== false && (
-                      <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-                    )}
+                    <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
                   </div>
                 )}
               </div>

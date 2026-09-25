@@ -189,6 +189,10 @@ export interface WeddingSettings {
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido
   transitionEffect?: 'wave' | 'petals' | 'sparkles' | 'drape' | 'orbit' | 'cascade' | 'ribbons' | 'bloom' | 'arch' | 'aurora' | 'constellation' | 'confetti';
   heroIconStyle?: string; // 'auto' | 'wedding-rings' | 'twin-swans' | 'boho-sun' | 'royal-crown' | 'tiara' | 'none'
+  heroEmblemColor?: string; // Empty means use the motif and active theme colors
+  heroEmblemGlow?: number; // 0-100
+  heroEmblemSparkle?: number; // 0-100
+  heroEmblemScale?: number; // 70-150 percent
   ambientParticleStyle?: string; // 'auto' | 'petals' | 'gold-sparkles' | 'champagne-bubbles' | 'fireflies' | 'stars' | 'none'
   sealStyle?: string; // 'auto' | CardStyleId - Textura y estilo del sello de lacre digital
   // Section Visibility Toggles (Atelier / Design)

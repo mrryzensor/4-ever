@@ -168,14 +168,14 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
         {/* 4. Mesa de Regalos & Cuentas */}
         <label
           className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
-            settings.showGiftRegistry !== false
+            settings.showGiftRegistry === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60 hover:opacity-100'
           }`}
         >
           <input
             type="checkbox"
-            checked={settings.showGiftRegistry !== false}
+            checked={settings.showGiftRegistry === true}
             onChange={(e) =>
               onChange({ showGiftRegistry: e.target.checked })
             }

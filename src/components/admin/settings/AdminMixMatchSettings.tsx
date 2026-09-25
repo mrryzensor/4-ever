@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Palette,
   Type,
@@ -24,6 +24,69 @@ import {
   CardOrnamentFrame,
   AnimatedAmbientParticles,
 } from '../../AnimatedSvgs.tsx';
+
+interface EmblemColorPickerProps {
+  value?: string;
+  defaultColor: string;
+  onCommit: (color: string) => void;
+}
+
+const EmblemColorPicker = React.memo(({ value, defaultColor, onCommit }: EmblemColorPickerProps) => {
+  const currentColor = /^#[\da-f]{6}$/i.test(value || '') ? value! : defaultColor;
+  const [draftColor, setDraftColor] = useState(currentColor);
+  const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirtyRef = useRef(false);
+
+  useEffect(() => {
+    setDraftColor(currentColor);
+    dirtyRef.current = false;
+  }, [currentColor]);
+  useEffect(() => () => {
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
+  }, []);
+
+  const handleChange = (color: string) => {
+    setDraftColor(color);
+    dirtyRef.current = true;
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
+    commitTimerRef.current = setTimeout(() => {
+      onCommit(color);
+      dirtyRef.current = false;
+      commitTimerRef.current = null;
+    }, 250);
+  };
+
+  const commitDraft = () => {
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
+    commitTimerRef.current = null;
+    if (!dirtyRef.current) return;
+    dirtyRef.current = false;
+    onCommit(draftColor);
+  };
+
+  const restorePalette = () => {
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current);
+    commitTimerRef.current = null;
+    dirtyRef.current = false;
+    setDraftColor(defaultColor);
+    onCommit('');
+  };
+
+  return (
+    <div className="rounded-xl border border-stone-200 bg-stone-50/70 p-3 sm:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <label htmlFor="hero-emblem-color" className="block text-xs font-semibold text-stone-800">Color del emblema</label>
+          <p className="mt-1 text-[10px] text-stone-500">Al dejarlo en automático, el tono se adapta al motivo y a la paleta.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input id="hero-emblem-color" type="color" value={draftColor} onChange={(event) => handleChange(event.target.value)} onBlur={commitDraft} aria-label="Elegir color del emblema" className="h-10 w-12 cursor-pointer rounded-lg border border-stone-300 bg-white p-1" />
+          <button type="button" onClick={restorePalette} className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-[11px] font-medium text-stone-700 hover:bg-stone-100">Usar paleta</button>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 interface AdminMixMatchSettingsProps {
   settings: WeddingSettings;
@@ -95,12 +158,24 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       transitionWaveStyle: 'auto',
       transitionEffect: 'wave',
       heroIconStyle: 'auto',
+      heroEmblemColor: '',
+      heroEmblemGlow: 72,
+      heroEmblemSparkle: 78,
+      heroEmblemScale: 100,
       ambientParticleStyle: 'auto',
       sealStyle: 'auto',
     });
   };
 
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const emblemTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
+    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || activeTheme)
+    : activeTheme;
+  const defaultEmblemColor = emblemTheme.accentColorHex;
+
+  const updateHeroEmblemSettings = (updated: Partial<WeddingSettings>) => {
+    onChange({ ...updated, heroShowIcon: true });
+  };
 
   // Check if any modular overrides are active
   const hasOverrides =
@@ -115,6 +190,10 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto') ||
     (settings.transitionEffect && settings.transitionEffect !== 'wave') ||
     (settings.heroIconStyle && settings.heroIconStyle !== 'auto') ||
+    !!settings.heroEmblemColor ||
+    (settings.heroEmblemGlow !== undefined && settings.heroEmblemGlow !== 72) ||
+    (settings.heroEmblemSparkle !== undefined && settings.heroEmblemSparkle !== 78) ||
+    (settings.heroEmblemScale !== undefined && settings.heroEmblemScale !== 100) ||
     (settings.ambientParticleStyle && settings.ambientParticleStyle !== 'auto') ||
     (settings.sealStyle && settings.sealStyle !== 'auto');
 
@@ -776,7 +855,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               <button
                 type="button"
-                onClick={() => onChange({ heroIconStyle: 'auto' })}
+                    onClick={() => updateHeroEmblemSettings({ heroIconStyle: 'auto' })}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                   !settings.heroIconStyle || settings.heroIconStyle === 'auto'
                     ? 'border-teal-600 bg-teal-50/50 ring-1 ring-teal-500 font-bold'
@@ -801,7 +880,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                   <button
                     key={key}
                     type="button"
-                    onClick={() => onChange({ heroIconStyle: key })}
+                    onClick={() => updateHeroEmblemSettings({ heroIconStyle: key })}
                     className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isSelected
                         ? 'border-teal-600 bg-teal-50/50 ring-1 ring-teal-500 font-bold'
@@ -816,6 +895,34 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                   </button>
                 );
               })}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-stone-200 pt-4">
+              <label className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50/70 p-3 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={Boolean(settings.heroShowIcon)}
+                  onChange={(event) => onChange({ heroShowIcon: event.target.checked })}
+                  className="h-4 w-4 accent-teal-700"
+                />
+                <span className="text-xs font-semibold text-stone-800">Mostrar el emblema animado en la portada</span>
+              </label>
+              <EmblemColorPicker
+                value={settings.heroEmblemColor}
+                defaultColor={defaultEmblemColor}
+                onCommit={(color) => updateHeroEmblemSettings({ heroEmblemColor: color })}
+              />
+              <label className="rounded-xl border border-stone-200 p-3">
+                <span className="flex justify-between gap-2 text-xs font-semibold text-stone-800"><span>Intensidad del resplandor</span><span>{settings.heroEmblemGlow ?? 72}%</span></span>
+                <input type="range" min="0" max="100" value={settings.heroEmblemGlow ?? 72} onChange={(event) => updateHeroEmblemSettings({ heroEmblemGlow: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="Intensidad del resplandor del emblema" />
+              </label>
+              <label className="rounded-xl border border-stone-200 p-3">
+                <span className="flex justify-between gap-2 text-xs font-semibold text-stone-800"><span>Destellos</span><span>{settings.heroEmblemSparkle ?? 78}%</span></span>
+                <input type="range" min="0" max="100" value={settings.heroEmblemSparkle ?? 78} onChange={(event) => updateHeroEmblemSettings({ heroEmblemSparkle: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="Intensidad de destellos del emblema" />
+              </label>
+              <label className="rounded-xl border border-stone-200 p-3 sm:col-span-2">
+                <span className="flex justify-between gap-2 text-xs font-semibold text-stone-800"><span>Tamaño</span><span>{settings.heroEmblemScale ?? 100}%</span></span>
+                <input type="range" min="70" max="150" value={settings.heroEmblemScale ?? 100} onChange={(event) => updateHeroEmblemSettings({ heroEmblemScale: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="Tamaño del emblema" />
+              </label>
             </div>
           </div>
         )}

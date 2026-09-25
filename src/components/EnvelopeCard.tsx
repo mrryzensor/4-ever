@@ -72,10 +72,10 @@ interface EnvelopeCardProps {
   inlineGallery?: React.ReactNode;
 }
 
-const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold', sparse = false, themeAccent?: string) => {
+const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold', sparse = false, themeAccent?: string, emblemColor?: string, glowIntensity?: number, sparkleIntensity?: number, emblemScale?: number) => {
   const effectiveIcon = (heroIconStyle && heroIconStyle !== 'auto') ? heroIconStyle : cardStyle;
   const accentColor = themeAccent || CARD_THEMES[effectiveIcon as CardStyleId]?.accentColorHex || '#C5A059';
-  return <HeroEmblem cardStyle={effectiveIcon} accentColor={accentColor} sparse={sparse} />;
+  return <HeroEmblem cardStyle={effectiveIcon} accentColor={accentColor} sparse={sparse} color={emblemColor} glowIntensity={glowIntensity} sparkleIntensity={sparkleIntensity} scale={emblemScale} />;
 };
 
 export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
@@ -255,6 +255,24 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   } catch {
     registryItems = [];
   }
+  let customStoreItems: GiftRegistryItem[] = [];
+  try {
+    const configuredItems = settings.customStoreItems;
+    if (Array.isArray(configuredItems)) {
+      customStoreItems = configuredItems;
+    } else if (typeof configuredItems === 'string') {
+      const parsedItems = JSON.parse(configuredItems);
+      if (Array.isArray(parsedItems)) customStoreItems = parsedItems;
+    }
+  } catch {
+    customStoreItems = [];
+  }
+  const visibleRegistryItems = [...registryItems, ...customStoreItems].filter((item) => {
+    if (item.type === 'bank') return settings.enableBankTransfer === true;
+    if (item.type === 'envelope') return settings.enableEnvelopeGift === true;
+    return settings.enableStoreRegistry === true;
+  });
+  const hasAdditionalGiftOptions = visibleRegistryItems.length > 0;
 
   let tipsList: WeddingTipItem[] = [];
   try {
@@ -541,7 +559,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : 'gap-1 sm:gap-2'}`}>
             {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1 sm:mb-2">
-                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex)}
+                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex, settings.heroEmblemColor, settings.heroEmblemGlow, settings.heroEmblemSparkle, settings.heroEmblemScale)}
               </motion.div>
             )}
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
@@ -1053,7 +1071,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             )}
 
             {/* 4. MESA DE REGALOS & CUENTAS BANCARIAS (Interactive Card with Copyable Bank Accounts - Fully Clickable) */}
-            {settings.showGiftRegistry !== false && (
+            {settings.showGiftRegistry === true && (
               <div
                 style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
                 className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
@@ -1082,7 +1100,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {settings.enableBankTransfer !== false && bankAccounts.some(hasBankAccountData) && (
+                    {settings.enableBankTransfer === true && bankAccounts.some(hasBankAccountData) && (
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
@@ -1090,7 +1108,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <span>{bankAccounts[0]?.bankName || 'Transferencia'}</span>
                       </span>
                     )}
-                    {settings.enableEnvelopeGift !== false && (
+                    {settings.enableEnvelopeGift === true && (
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
@@ -1099,7 +1117,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       </span>
                     )}
                   </div>
-                  {settings.enableBankTransfer !== false && bankAccounts.length > 0 && (
+                  {settings.enableBankTransfer === true && bankAccounts.length > 0 && (
                     <BankAccountDetails
                       accounts={bankAccounts}
                       isDark={isDark}
@@ -1110,7 +1128,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
+                {hasAdditionalGiftOptions && <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1126,10 +1144,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <span>{expandedSection === 'gifts' ? 'Ocultar opciones adicionales' : 'Ver opciones adicionales'}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'gifts' ? 'rotate-180' : ''}`} />
                   </button>
-                </div>
+                </div>}
 
                 {/* Collapsible Bank Accounts & External Registries */}
-                <AnimatePresence>
+                {hasAdditionalGiftOptions && <AnimatePresence>
                   {expandedSection === 'gifts' && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -1190,7 +1208,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         </div>
                       )}
 
-                      {registryItems.map((reg, idx) => (
+                      {visibleRegistryItems.map((reg, idx) => (
                         <div key={idx} className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
                           isDark ? 'bg-stone-850 border-stone-600' : 'bg-white border-stone-200'
                         }`}>
@@ -1213,7 +1231,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       ))}
                     </motion.div>
                   )}
-                </AnimatePresence>
+                </AnimatePresence>}
               </div>
             )}
           {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION (Fully Clickable) */}

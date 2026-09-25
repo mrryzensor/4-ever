@@ -80,7 +80,7 @@ export async function autoMigrateDatabase() {
           dress_code_woman_outfit TEXT DEFAULT 'long-gown',
           dress_code_man_outfit TEXT DEFAULT 'suit',
           itinerary TEXT DEFAULT '[{"time":"17:00","title":"Ceremonia Religiosa","desc":"Parroquia San Francisco de Asís","icon":"church"},{"time":"18:30","title":"Cóctel de Bienvenida","desc":"Jardín de los Naranjos","icon":"cocktail"},{"time":"20:00","title":"Banquete & Brindis","desc":"Salón Principal","icon":"utensils"},{"time":"22:00","title":"Fiesta & DJ","desc":"Pista de baile y barra libre","icon":"music"},{"time":"02:00","title":"Tornaboda & Chilaquiles","desc":"Terraza Nocturna","icon":"moon"}]',
-          gift_registry TEXT DEFAULT '[{"type":"bank","title":"Transferencia Bancaria","accountNumber":"1234-5678-9012-3456","clabe":"012180012345678901","bankName":"BBVA","beneficiary":"Sofía Martínez / Alejandro Ruiz","concept":"Boda Sofía & Alejandro"},{"type":"store","title":"Mesa de Regalos Liverpool","url":"https://mesaderegalos.liverpool.com.mx","eventNumber":"51298472"},{"type":"honeymoon","title":"Fondo Luna de Miel en Bali","description":"Tu aportación para experiencias inolvidables en nuestro primer viaje de casados","url":"https://paypal.me/boda"}]',
+          gift_registry TEXT DEFAULT '[]',
           cover_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
           secondary_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
           hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]',
@@ -124,7 +124,7 @@ export async function autoMigrateDatabase() {
           show_itinerary BOOLEAN DEFAULT true,
           show_locations BOOLEAN DEFAULT true,
           show_dress_code BOOLEAN DEFAULT true,
-          show_gift_registry BOOLEAN DEFAULT true,
+          show_gift_registry BOOLEAN DEFAULT false,
           show_photo_gallery BOOLEAN DEFAULT true,
           gallery_external_album_url TEXT DEFAULT '',
           gallery_external_album_title TEXT DEFAULT 'Álbum en Google Photos',
@@ -136,16 +136,16 @@ export async function autoMigrateDatabase() {
           tips_title TEXT DEFAULT 'Tips & Recomendaciones para Invitados',
           tips_list TEXT DEFAULT '[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]',
           show_rsvp_section BOOLEAN DEFAULT true,
-          bank_name TEXT DEFAULT 'BBVA',
-          bank_beneficiary TEXT DEFAULT 'Sofía Martínez / Alejandro Ruiz',
-          bank_account_number TEXT DEFAULT '1234 5678 9012 3456',
-          bank_clabe TEXT DEFAULT '012180012345678901',
+          bank_name TEXT DEFAULT '',
+          bank_beneficiary TEXT DEFAULT '',
+          bank_account_number TEXT DEFAULT '',
+          bank_clabe TEXT DEFAULT '',
           bank_card_number TEXT DEFAULT '',
           bank_concept TEXT DEFAULT 'Evento Sofía & Alejandro',
           bank_currency TEXT DEFAULT 'MXN',
           bank_accounts TEXT DEFAULT '[]',
-          enable_bank_transfer BOOLEAN DEFAULT true,
-          enable_store_registry BOOLEAN DEFAULT true,
+          enable_bank_transfer BOOLEAN DEFAULT false,
+          enable_store_registry BOOLEAN DEFAULT false,
           enable_envelope_gift BOOLEAN DEFAULT false,
           envelope_gift_message TEXT DEFAULT 'Lluvia de sobres: Si deseas hacernos un regalo en efectivo el día del evento, dispondremos de un cofre especial en la recepción.',
           rsvp_deadline TEXT DEFAULT '2026-10-30',
@@ -155,6 +155,14 @@ export async function autoMigrateDatabase() {
         );
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'bodas';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS bank_accounts TEXT DEFAULT '[]';
+        ALTER TABLE wedding_settings ALTER COLUMN gift_registry SET DEFAULT '[]';
+        ALTER TABLE wedding_settings ALTER COLUMN show_gift_registry SET DEFAULT false;
+        ALTER TABLE wedding_settings ALTER COLUMN bank_name SET DEFAULT '';
+        ALTER TABLE wedding_settings ALTER COLUMN bank_beneficiary SET DEFAULT '';
+        ALTER TABLE wedding_settings ALTER COLUMN bank_account_number SET DEFAULT '';
+        ALTER TABLE wedding_settings ALTER COLUMN bank_clabe SET DEFAULT '';
+        ALTER TABLE wedding_settings ALTER COLUMN enable_bank_transfer SET DEFAULT false;
+        ALTER TABLE wedding_settings ALTER COLUMN enable_store_registry SET DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hashtag_is_custom BOOLEAN;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_text_is_custom BOOLEAN;
         -- Backfill the flags for legacy rows without overwriting future manual edits.
@@ -197,6 +205,10 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS transition_effect TEXT DEFAULT 'wave';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_icon_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS audio_playlist TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_color TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_glow INTEGER DEFAULT 72;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_sparkle INTEGER DEFAULT 78;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_scale INTEGER DEFAULT 100;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ambient_particle_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS seal_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_padrinos BOOLEAN DEFAULT false;

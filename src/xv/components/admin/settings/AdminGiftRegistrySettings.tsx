@@ -98,14 +98,14 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <label
           className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
-            settings.enableBankTransfer !== false
+            settings.enableBankTransfer === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
           }`}
         >
           <input
             type="checkbox"
-            checked={settings.enableBankTransfer !== false}
+            checked={settings.enableBankTransfer === true}
             onChange={(e) =>
               onChange({ enableBankTransfer: e.target.checked })
             }
@@ -119,14 +119,14 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
 
         <label
           className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
-            settings.enableEnvelopeGift !== false
+            settings.enableEnvelopeGift === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
           }`}
         >
           <input
             type="checkbox"
-            checked={settings.enableEnvelopeGift !== false}
+            checked={settings.enableEnvelopeGift === true}
             onChange={(e) =>
               onChange({ enableEnvelopeGift: e.target.checked })
             }
@@ -140,14 +140,14 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
 
         <label
           className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
-            settings.enableStoreRegistry !== false
+            settings.enableStoreRegistry === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
           }`}
         >
           <input
             type="checkbox"
-            checked={settings.enableStoreRegistry !== false}
+            checked={settings.enableStoreRegistry === true}
             onChange={(e) =>
               onChange({ enableStoreRegistry: e.target.checked })
             }
@@ -161,10 +161,10 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
       </div>
 
       {/* 3.1 Direct Bank Transfer Configuration */}
-      {settings.enableBankTransfer !== false && (
+      {settings.enableBankTransfer === true && (
         <BankAccountsEditor settings={settings} onChange={onChange} />
       )}
-      {settings.enableBankTransfer !== false && (
+      {settings.enableBankTransfer === true && (
         <div hidden className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 sm:p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-[#5A5A40] uppercase tracking-wider flex items-center gap-2">
@@ -400,7 +400,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
       )}
 
       {/* 3.2 Envelope Gift Message */}
-      {settings.enableEnvelopeGift !== false && (
+      {settings.enableEnvelopeGift === true && (
         <div className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 space-y-2">
           <label className="text-xs font-bold text-[#5A5A40] flex items-center justify-between">
             <span>Mensaje para Lluvia de Sobres (Efectivo en Recepción):</span>
@@ -419,7 +419,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
       )}
 
       {/* 3.3 Store Registries (Liverpool, Amazon, etc.) */}
-      {settings.enableStoreRegistry !== false && (
+      {settings.enableStoreRegistry === true && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-[#1a1a1a]">
