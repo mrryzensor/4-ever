@@ -141,8 +141,8 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
   lightweight = false,
 }) => {
   const id = React.useId().replace(/:/g, '');
-  const dark = shade(dressColor, -34);
-  const light = shade(dressColor, 28);
+  const dark = shade(dressColor, -28);
+  const light = shade(dressColor, 24);
   const isCocktail = outfitType === 'cocktail';
   const isJumpsuit = outfitType === 'jumpsuit';
   const isBoho = outfitType === 'boho';
@@ -151,102 +151,80 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
     <div className={`relative mx-auto flex aspect-[1/2.05] w-full max-w-[220px] items-center justify-center select-none sm:max-w-[240px] ${lightweight ? '' : 'drop-shadow-lg'}`}>
       <svg viewBox="0 0 240 500" className="h-full w-full overflow-visible" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <defs>
-          <linearGradient id={`gown-${id}`} x1="66" y1="137" x2="184" y2="434" gradientUnits="userSpaceOnUse">
-            <stop stopColor={light} /><stop offset=".42" stopColor={dressColor} /><stop offset="1" stopColor={dark} />
+          <linearGradient id={`gown-${id}`} x1="78" y1="144" x2="167" y2="434" gradientUnits="userSpaceOnUse">
+            <stop stopColor={light} /><stop offset=".48" stopColor={dressColor} /><stop offset="1" stopColor={dark} />
           </linearGradient>
-          <linearGradient id={`skin-woman-${id}`} x1="83" y1="42" x2="158" y2="250" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F4D4C2" /><stop offset="1" stopColor="#CA9079" />
+          <linearGradient id={`skin-woman-${id}`} x1="91" y1="55" x2="151" y2="226" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#F4D6C5" /><stop offset="1" stopColor="#D19B84" />
           </linearGradient>
-          <linearGradient id={`hair-woman-${id}`} x1="89" y1="20" x2="148" y2="207" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#554034" /><stop offset=".55" stopColor="#30231D" /><stop offset="1" stopColor="#171311" />
+          <linearGradient id={`hair-woman-${id}`} x1="94" y1="20" x2="151" y2="181" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#594339" /><stop offset=".58" stopColor="#342720" /><stop offset="1" stopColor="#211915" />
           </linearGradient>
-          <linearGradient id={`metal-${id}`} x1="101" y1="174" x2="146" y2="245" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#FFF0B8" /><stop offset=".48" stopColor={accessoryColor} /><stop offset="1" stopColor={shade(accessoryColor, -30)} />
+          <linearGradient id={`shoe-${id}`} x1="95" y1="431" x2="150" y2="447" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#39332F" /><stop offset="1" stopColor="#1E1C1A" />
           </linearGradient>
         </defs>
 
         <ellipse cx="120" cy="472" rx="50" ry="7" fill="#211B19" opacity=".12" />
 
-        {/* Back hair frames the face and falls softly behind the shoulders. */}
-        <path d="M91 62 Q85 20 116 17 Q151 17 148 62 L153 145 Q151 179 137 202 L99 201 Q83 177 87 143Z" fill={`url(#hair-woman-${id})`} />
-        {/* Legs and shoes remain visible below a midi hem; the long gown ends at the floor. */}
-        {!isJumpsuit && (isCocktail ? (
-          <g fill={`url(#skin-woman-${id})`}>
-            <path d="M99 327 Q107 325 114 328 L112 424 L101 424Z" />
-            <path d="M126 328 Q134 325 141 327 L139 424 L128 424Z" />
-          </g>
+        {/* Long, soft hair behind the figure */}
+        <path d="M93 62 Q87 22 119 18 Q151 20 147 62 L151 128 Q149 151 137 169 L126 155 L112 169 Q96 152 89 130Z" fill={`url(#hair-woman-${id})`} />
+        <path d="M101 38 Q110 24 124 25 M95 57 Q92 99 99 129 M142 55 Q146 91 140 121" fill="none" stroke="#806653" strokeWidth="2" strokeLinecap="round" opacity=".55" />
+
+        {/* Legs only show below shorter hems; long dresses meet the shoes cleanly. */}
+        {isCocktail && <g fill={`url(#skin-woman-${id})`}><path d="M101 326 Q109 330 116 327 L113 428 L101 428Z" /><path d="M125 327 Q133 330 140 326 L139 428 L127 428Z" /></g>}
+        {isJumpsuit && <g fill={`url(#skin-woman-${id})`}><path d="M101 356 Q109 359 116 355 L113 429 L101 429Z" /><path d="M125 355 Q133 359 140 356 L139 429 L127 429Z" /></g>}
+        {!isCocktail && !isJumpsuit && <g fill={`url(#skin-woman-${id})`}><path d="M101 412 Q109 415 116 412 L114 432 L102 432Z" /><path d="M124 412 Q132 415 139 412 L138 432 L126 432Z" /></g>}
+        {showShoes && <g fill={`url(#shoe-${id})`}><path d="M101 427 Q108 432 115 427 L119 439 Q116 444 106 444 L89 444 Q85 441 92 437Z" /><path d="M126 427 Q133 432 140 427 L151 437 Q157 441 151 444 L132 444 Q124 443 124 439Z" /><path d="M91 440 Q104 443 118 439 M129 439 Q141 443 154 440" fill="none" stroke={accessoryColor} strokeWidth="1.3" /></g>}
+
+        {/* Face, neck and a simple, softly waved hairstyle */}
+        <path d="M107 82 L133 82 L133 119 Q120 128 107 119Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M99 51 Q100 25 120 24 Q140 25 141 52 L138 75 Q133 91 120 92 Q107 91 102 75Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M98 58 Q94 26 117 19 Q143 18 145 47 Q136 43 128 35 Q116 49 99 58Z" fill={`url(#hair-woman-${id})`} />
+        <path d="M101 45 Q99 83 103 115 M139 44 Q143 81 138 113" fill="none" stroke="#2B201B" strokeWidth="4" strokeLinecap="round" />
+        <path d="M109 59h3 M128 59h3" stroke="#49342C" strokeWidth="2" strokeLinecap="round" />
+        <path d="M119 62 117 71 Q120 74 123 71 M114 80 Q120 83 126 80" fill="none" stroke="#A96F62" strokeWidth="1.25" strokeLinecap="round" />
+        <circle cx="98" cy="69" r="2.2" fill={accessoryColor} /><circle cx="142" cy="69" r="2.2" fill={accessoryColor} />
+
+        {/* Minimal bodice and soft A-line skirt */}
+        <path d="M94 122 Q105 114 120 119 Q135 114 146 122 L151 180 Q138 198 120 200 Q102 198 89 180Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.2" strokeLinejoin="round" />
+        {isBoho ? (
+          <path d="M94 126 Q107 143 120 132 Q133 143 146 126 L144 140 Q132 151 120 142 Q108 151 96 140Z" fill={light} opacity=".88" />
         ) : (
-          <g fill={`url(#skin-woman-${id})`}>
-            <path d="M98 402 Q108 399 115 403 L113 431 L101 431Z" />
-            <path d="M125 403 Q133 399 142 402 L139 431 L127 431Z" />
-          </g>
-        ))}
-        {isJumpsuit && (
-          <g fill={`url(#skin-woman-${id})`}>
-            <path d="M100 354 Q108 352 115 355 L113 431 L101 431Z" />
-            <path d="M125 355 Q133 352 141 354 L139 431 L127 431Z" />
-          </g>
+          <path d="M95 124 Q107 141 120 130 Q133 141 145 124" fill="none" stroke={accessoryColor} strokeWidth="1.8" strokeLinecap="round" />
         )}
-        {showShoes && (
-          <g>
-            <path d="M99 428 Q108 432 114 427 L120 442 Q117 447 107 447 L87 447 Q83 444 90 439Z" fill="#292522" />
-            <path d="M127 427 Q135 432 143 427 L151 440 Q157 444 151 447 L130 447 Q122 446 123 441Z" fill="#292522" />
-            <path d="M89 442 Q102 446 118 442 M127 442 Q141 446 154 442" fill="none" stroke={`url(#metal-${id})`} strokeWidth="1.4" />
-          </g>
-        )}
+        <path d="M101 148 Q120 157 139 148 M120 151 L120 190" fill="none" stroke={light} strokeWidth="1.2" opacity=".48" />
+        <path d="M99 188 Q120 196 141 188 L143 201 Q120 208 97 201Z" fill={accessoryColor} opacity=".88" />
+        <circle cx="120" cy="194" r="2" fill="#FFF4D6" />
 
-        {/* Face, neck and soft front hair pieces */}
-        <path d="M106 81 L134 81 L134 121 Q120 132 106 121Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M98 51 Q98 24 120 23 Q142 24 142 53 L139 76 Q134 94 120 94 Q106 92 101 76Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M98 58 Q92 24 116 17 Q145 14 145 49 Q135 42 127 35 Q116 49 99 58Z" fill={`url(#hair-woman-${id})`} />
-        <path d="M102 47 Q98 87 103 116 M139 45 Q145 89 139 123" fill="none" stroke="#241A16" strokeWidth="5" strokeLinecap="round" />
-        <path d="M109 59h3 M128 59h3" stroke="#49342C" strokeWidth="2.3" strokeLinecap="round" />
-        <path d="M119 62 117 72 Q120 75 123 72 M113 81 Q120 85 127 81" fill="none" stroke="#AE7065" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M99 61 Q94 57 96 68 M141 61 Q146 57 144 68" fill="none" stroke={`url(#metal-${id})`} strokeWidth="1.5" />
-        <circle cx="96" cy="69" r="2.4" fill={accessoryColor} /><circle cx="144" cy="69" r="2.4" fill={accessoryColor} />
-
-        {/* Arms: one relaxed, one gently bent toward a small evening clutch. */}
-        <path d="M91 127 Q80 135 77 155 L69 205 Q67 217 77 220 L86 215 L101 163 L108 145Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M149 127 Q160 136 162 155 L166 181 Q167 191 159 196 L151 191 L143 159 L135 145Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M74 212 Q72 222 78 229 L86 227 L86 215Z M153 187 Q150 196 156 203 L164 200 L161 190Z" fill={`url(#skin-woman-${id})`} />
-
-        {/* Dress or jumpsuit silhouette */}
         {isJumpsuit ? (
           <g>
-            <path d="M91 119 Q102 108 120 110 Q138 108 149 119 L158 153 L145 177 L151 210 Q138 221 120 216 Q102 221 89 210 L95 177 L82 153Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.4" strokeLinejoin="round" />
-            <path d="M99 118 120 143 141 118 134 160 120 171 106 160Z" fill="#F7F4EC" stroke="#D5CFC4" strokeWidth="1" />
-            <path d="M93 210 Q120 218 147 210 L159 427 Q141 438 124 432 L120 292 L115 432 Q98 438 81 427Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.5" strokeLinejoin="round" />
-            <path d="M103 230 96 416 M137 230 145 416 M120 226 120 420" fill="none" stroke={light} strokeWidth="1.5" opacity=".55" />
+            <path d="M94 199 Q120 207 146 199 L156 421 Q140 430 125 426 L120 300 L115 426 Q100 430 84 421Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.3" strokeLinejoin="round" />
+            <path d="M101 218 L95 411 M139 218 L145 411 M120 214 L120 414" fill="none" stroke={light} strokeWidth="1.2" opacity=".48" />
+            <path d="M95 202 120 231 145 202 138 168 120 185 102 168Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.1" strokeLinejoin="round" />
+            <path d="M103 168 120 185 137 168" fill="none" stroke="#F4F0E8" strokeWidth="2" />
           </g>
         ) : (
           <g>
-            {/* Structured bodice and gently curved neckline */}
-            <path d="M93 119 Q105 108 120 114 Q135 108 147 119 L145 190 Q132 199 120 196 Q108 199 95 190Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.4" strokeLinejoin="round" />
-            {isBoho ? (
-              <path d="M91 121 Q105 138 120 127 Q135 138 149 121 L145 137 Q133 148 120 139 Q107 148 95 137Z" fill={light} stroke={dark} strokeWidth="1" />
-            ) : (
-              <path d="M94 120 Q106 140 120 126 Q134 140 146 120" fill="none" stroke={accessoryColor} strokeWidth="2.2" strokeLinecap="round" />
-            )}
-            <path d="M104 143 Q107 165 104 187 M136 143 Q133 165 136 187" fill="none" stroke={light} strokeWidth="1.3" opacity=".52" />
-            <path d="M99 190 Q120 197 141 190 L143 201 Q120 208 97 201Z" fill={`url(#metal-${id})`} />
-            {isCocktail ? (
-              <path d="M97 200 Q120 207 143 200 Q151 256 171 330 Q120 352 69 330 Q89 256 97 200Z" fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.5" strokeLinejoin="round" />
-            ) : (
-              <path d={isBoho
-                ? 'M97 200 Q120 207 143 200 Q151 257 166 321 Q182 370 192 430 Q120 447 48 430 Q58 370 74 321 Q89 257 97 200Z'
-                : 'M97 200 Q120 207 143 200 Q151 260 169 333 Q183 383 190 430 Q120 445 50 430 Q57 383 71 333 Q89 260 97 200Z'}
-                fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.5" strokeLinejoin="round" />
-            )}
-            <path d={isCocktail ? 'M87 303 Q120 316 153 303 M99 213 Q94 259 83 310 M141 213 Q146 259 157 310' : 'M87 262 Q120 276 153 262 M74 329 Q120 348 166 329 M61 402 Q120 422 179 402'} fill="none" stroke={light} strokeWidth="1.6" strokeLinecap="round" opacity=".64" />
-            {isBoho && <path d="M76 331 Q120 349 164 331 M55 414 Q120 434 185 414" fill="none" stroke={accessoryColor} strokeWidth="1.3" strokeDasharray="3 4" opacity=".75" />}
-            {isCocktail && <path d="M87 329 91 423 M153 329 149 423" fill="none" stroke={dark} strokeWidth="1.1" opacity=".45" />}
+            <path d={isCocktail
+              ? 'M97 199 Q120 207 143 199 Q149 248 164 326 Q120 342 76 326 Q91 248 97 199Z'
+              : isBoho
+                ? 'M97 199 Q120 207 143 199 Q151 267 164 332 Q179 385 188 426 Q120 440 52 426 Q61 385 76 332 Q89 267 97 199Z'
+                : 'M97 199 Q120 207 143 199 Q150 265 162 328 Q176 380 183 426 Q120 440 57 426 Q64 380 78 328 Q90 265 97 199Z'}
+              fill={`url(#gown-${id})`} stroke={dark} strokeWidth="1.3" strokeLinejoin="round" />
+            <path d={isCocktail
+              ? 'M85 316 Q120 326 155 316 M103 218 Q99 264 88 311 M137 218 Q141 264 152 311'
+              : 'M87 268 Q120 279 153 268 M72 345 Q120 360 168 345 M62 407 Q120 422 178 407'}
+              fill="none" stroke={light} strokeWidth="1.35" strokeLinecap="round" opacity=".56" />
+            {isBoho && <path d="M77 346 Q120 360 163 346 M58 416 Q120 431 182 416" fill="none" stroke={accessoryColor} strokeWidth="1" strokeDasharray="3 4" opacity=".65" />}
           </g>
         )}
 
-        {/* Small satin clutch and fine jewelry accents */}
-        <path d="M149 193 Q157 189 164 195 L171 208 Q160 217 149 208Z" fill={`url(#metal-${id})`} stroke={shade(accessoryColor, -32)} strokeWidth="1" />
-        <path d="M154 194 Q159 190 164 194" fill="none" stroke="#FFF5D5" strokeWidth="1.3" />
-        <circle cx="120" cy="188" r="2.2" fill={accessoryColor} />
+        {/* Visible, continuous arms: one relaxed at her side, one resting at the waist. */}
+        <path d="M94 127 C85 130 79 138 76 150 C73 163 77 175 76 187 C75 198 70 208 69 217 C68 224 71 230 76 232 C80 233 83 229 83 224 L82 216 C82 212 84 206 86 199 L93 174 C95 160 100 148 107 140Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M146 127 C156 129 162 137 165 148 C169 160 165 171 156 180 L143 192 C138 196 137 200 141 204 C144 207 148 204 151 201 L166 187 C177 177 181 161 177 148 C174 136 163 128 151 126Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M78 153 C76 163 80 173 79 185 M73 215 Q72 224 77 228 M162 150 Q165 161 158 171 M142 198 Q145 201 149 198" fill="none" stroke="#B77E69" strokeWidth="1.1" strokeLinecap="round" opacity=".48" />
+        <path d="M70 224 Q73 229 78 230 M142 203 Q146 205 149 201" fill="none" stroke="#A96F62" strokeWidth=".9" strokeLinecap="round" opacity=".52" />
       </svg>
       <FigureBadge>Dama</FigureBadge>
     </div>
