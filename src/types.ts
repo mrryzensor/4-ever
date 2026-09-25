@@ -83,6 +83,12 @@ export interface HotelRecommendation {
   notes?: string;
 }
 
+export interface AudioTrack {
+  id: string;
+  title: string;
+  url: string;
+}
+
 export interface WeddingSettings {
   id: number;
   eventType?: EventType; // 'bodas' | 'xv' (defaults to 'bodas')
@@ -137,6 +143,7 @@ export interface WeddingSettings {
   audioUrl: string;
   audioTitle: string;
   audioAutoplay: boolean;
+  audioPlaylist?: string; // JSON array of AudioTrack entries
   welcomeMessage: string;
   welcomeSubtitle?: string;
   heroDateFormat?: string; // e.g. 'dd.mm.aaaa', 'dd / mm / aaaa', 'literal-full', 'custom'

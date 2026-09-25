@@ -25,6 +25,7 @@ import { AdminSectionToggles } from './settings/AdminSectionToggles.tsx';
 import { AdminLocationsSettings } from './settings/AdminLocationsSettings.tsx';
 import { AdminDressCodeSettings } from './settings/AdminDressCodeSettings.tsx';
 import { AdminGiftRegistrySettings } from './settings/AdminGiftRegistrySettings.tsx';
+import { AudioSettingsPanel } from '../../../components/admin/settings/AudioSettingsPanel.tsx';
 import { SimpleModeInline } from './SimpleModeInline.tsx';
 import { VideoSection } from '../VideoSection.tsx';
 
@@ -287,6 +288,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     onChange={onChange}
                     onOpenSimpleMode={() => setEditorMode('simple')}
                   />
+                  <AudioSettingsPanel settings={settings} onChange={onChange} />
                   <AdminThemeSettings settings={settings} onChange={onChange} />
                   <AdminSectionToggles settings={settings} onChange={onChange} />
                   <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
@@ -449,6 +451,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                       onChange={onChange}
                       onOpenSimpleMode={() => setEditorMode('simple')}
                     />
+                    <AudioSettingsPanel settings={settings} onChange={onChange} />
                     <AdminThemeSettings settings={settings} onChange={onChange} />
                     <AdminSectionToggles settings={settings} onChange={onChange} />
                     <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />

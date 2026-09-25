@@ -107,6 +107,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const [isCanvasVisible, setIsCanvasVisible] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const mobileButtonRef = useRef<HTMLButtonElement>(null);
@@ -187,6 +188,30 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
 
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
   const currentSpec = DEVICE_SPECS[selectedDevice];
+
+  // Desktop and mobile canvases coexist in the responsive admin layout. Do not
+  // mount an iframe for the hidden zero-sized canvas, or it can play audio in
+  // parallel with the visible preview.
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    const updateVisibility = () => {
+      const visible = element.clientWidth > 0 && element.clientHeight > 0;
+      setIsCanvasVisible(visible);
+      if (!visible) setIsIframeLoaded(false);
+    };
+
+    updateVisibility();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateVisibility) : null;
+    observer?.observe(element);
+    window.addEventListener('resize', updateVisibility);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateVisibility);
+    };
+  }, []);
 
   // Sync settings to the iframe in real time via postMessage, sessionStorage & localStorage
   const sendSettingsToIframe = useCallback(() => {
@@ -727,19 +752,22 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
 
             {/* 100% Genuine Isolated Viewport: Real Mobile iframe */}
             <div className="flex-1 w-full h-full relative overflow-hidden bg-[#FAF9F0]">
-              <iframe
-                ref={iframeRef}
-                key={refreshKey}
-                src={iframeSrc}
-                title="Invitación Digital en Vivo"
-                onLoad={handleIframeLoad}
-                className="w-full h-full border-0 block"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  display: 'block',
-                }}
-              />
+              {isCanvasVisible ? (
+                <iframe
+                  ref={iframeRef}
+                  key={refreshKey}
+                  src={iframeSrc}
+                  title="Invitación Digital en Vivo"
+                  allow="autoplay"
+                  onLoad={handleIframeLoad}
+                  className="w-full h-full border-0 block"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'block',
+                  }}
+                />
+              ) : null}
             </div>
 
             {/* iOS Home Indicator Bar */}

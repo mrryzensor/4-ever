@@ -84,6 +84,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   audioUrl: '/audio/vals-danubio-azul.mp3',
   audioTitle: 'Vals de Ensueño - Gran Orquesta Real',
   audioAutoplay: false,
+  audioPlaylist: '',
   welcomeMessage: '¡Mis Quince Años! Un sueño hecho realidad',
   welcomeSubtitle: 'Doy gracias a Dios y a mis queridos padres por permitirme llegar a esta hermosa etapa. Será un inmenso honor contar con tu compañía en mi noche inolvidable.',
   heroDateFormat: 'dd.mm.aaaa',

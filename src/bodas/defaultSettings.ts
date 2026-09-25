@@ -77,6 +77,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
   audioTitle: 'Acoustic Romance - Guitarra Suave',
   audioAutoplay: false,
+  audioPlaylist: '',
   welcomeMessage: '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor',
   welcomeSubtitle: 'Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración.',
   heroDateFormat: 'dd.mm.aaaa',

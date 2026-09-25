@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX, Play, Pause, Music, Upload, Check, Disc3, Zap, Loader2, FileAudio } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
+import { getAudioPlaylist } from '../../lib/audioPlaylist.ts';
 import { optimizeAudioClient, formatBytes, AudioOptimizationResult } from '../../lib/mediaOptimizer.ts';
 import { getStreamAudioUrl } from '../../lib/audioStream.ts';
 
@@ -13,6 +14,10 @@ interface AudioPlayerProps {
   onUpdateSettings?: (updated: Partial<WeddingSettings>) => void;
   onAudioUpdated?: (newUrl: string, newTitle: string) => void;
   isAdmin?: boolean;
+  allowAutoplay?: boolean;
+  isReadyToPlay?: boolean;
+  showControls?: boolean;
+  preloadAudio?: boolean;
 }
 
 const PRESET_SONGS = [
@@ -43,6 +48,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   onUpdateSettings,
   onAudioUpdated,
   isAdmin = false,
+  allowAutoplay = true,
+  isReadyToPlay = true,
+  showControls = true,
+  preloadAudio = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -53,6 +62,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [customTitle, setCustomTitle] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackRequestRef = useRef<Promise<void> | null>(null);
+  const playAfterSourceChangeRef = useRef(false);
 
   const effectiveEventLabel = eventTitle || 'Música de XV Años';
 
@@ -71,36 +82,127 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     settings?.coupleNames ||
     effectiveEventLabel;
 
-  const effectiveAutoplay = settings?.audioAutoplay ?? false;
+  // Capture autoplay once for this invitation load. Live setting changes must not
+  // start or stop audio in the already-open preview.
+  const autoplayOnLoadRef = useRef<boolean | null>(null);
+  if (isReadyToPlay && autoplayOnLoadRef.current === null) {
+    autoplayOnLoadRef.current = allowAutoplay && (settings?.audioAutoplay ?? false);
+  }
+  const autoplayOnLoad = autoplayOnLoadRef.current ?? false;
+  const initialAutoplayAttemptedRef = useRef(false);
+  const playlist = getAudioPlaylist(settings);
+
+  useEffect(() => () => {
+    playbackRequestRef.current = null;
+    audioRef.current?.pause();
+  }, []);
+
+  // Share a single in-flight request for autoplay, user gestures and the play
+  // control so all playback remains on this one audio element.
+  const requestPlayback = (allowMutedAutoplayFallback = false) => {
+    const audio = audioRef.current;
+    if (!audio) return Promise.reject(new Error('El reproductor de audio no está listo.'));
+    if (!audio.paused && !audio.ended) {
+      if (allowMutedAutoplayFallback && audio.muted && !isMuted) audio.muted = false;
+      return Promise.resolve();
+    }
+    if (playbackRequestRef.current) return playbackRequestRef.current;
+
+    try {
+      // Invoke play synchronously to preserve browser user-activation permission.
+      const wasMuted = audio.muted;
+      const shouldBootstrapMuted = allowMutedAutoplayFallback && !wasMuted;
+      if (shouldBootstrapMuted) audio.muted = true;
+      if (!allowMutedAutoplayFallback && !isMuted) audio.muted = false;
+      const playResult = (async () => {
+        try {
+          await audio.play();
+        } catch (error) {
+          if (!allowMutedAutoplayFallback) throw error;
+
+          // Chromium may still reject a cold start while the source is loading.
+          // Keep the same request muted for the retry; muted media is allowed
+          // by the browser without an interaction.
+          audio.muted = true;
+          try {
+            await audio.play();
+          } catch {
+            throw error;
+          }
+        }
+      })();
+      let request: Promise<void>;
+      request = Promise.resolve(playResult)
+        .then(() => {
+          if (shouldBootstrapMuted) audio.muted = wasMuted;
+          setIsPlaying(true);
+        })
+        .catch((error) => {
+          if (shouldBootstrapMuted) audio.muted = wasMuted;
+          setIsPlaying(false);
+          throw error;
+        })
+        .finally(() => {
+          if (playbackRequestRef.current === request) playbackRequestRef.current = null;
+        });
+      playbackRequestRef.current = request;
+      return request;
+    } catch (error) {
+      setIsPlaying(false);
+      return Promise.reject(error);
+    }
+  };
 
   useEffect(() => {
-    if (audioRef.current && effectiveAudioUrl) {
-      const streamUrl = getStreamAudioUrl(effectiveAudioUrl);
-      if (audioRef.current.src !== streamUrl) {
-        audioRef.current.src = streamUrl;
-      }
-      if (effectiveAutoplay) {
-        audioRef.current
-          .play()
-          .then(() => setIsPlaying(true))
-          .catch(() => {
-            // Autoplay blocked by browser until user interaction
-            setIsPlaying(false);
-          });
-      }
+    const audio = audioRef.current;
+    if (!audio || !effectiveAudioUrl || !isReadyToPlay) return;
+
+    const isInitialAutoplayAttempt = autoplayOnLoad && !initialAutoplayAttemptedRef.current;
+    const shouldStart = isInitialAutoplayAttempt || playAfterSourceChangeRef.current;
+    if (isInitialAutoplayAttempt) initialAutoplayAttemptedRef.current = true;
+    playAfterSourceChangeRef.current = false;
+
+    let waitingForGesture = false;
+    const removeGestureListeners = () => {
+      if (!waitingForGesture) return;
+      document.removeEventListener('pointerdown', retryAfterGesture, true);
+      document.removeEventListener('keydown', retryAfterGesture, true);
+      waitingForGesture = false;
+    };
+    const retryAfterGesture = (event: Event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('[data-audio-control]')) return;
+      void requestPlayback().then(removeGestureListeners).catch(() => {});
+    };
+    const handleAudioPlay = () => removeGestureListeners();
+
+    audio.addEventListener('play', handleAudioPlay);
+    if (isInitialAutoplayAttempt) {
+      waitingForGesture = true;
+      document.addEventListener('pointerdown', retryAfterGesture, true);
+      document.addEventListener('keydown', retryAfterGesture, true);
     }
-  }, [effectiveAudioUrl, effectiveAutoplay]);
+
+    if (shouldStart) {
+      void requestPlayback(isInitialAutoplayAttempt).catch(() => {
+        // A rejected autoplay request is expected on browsers that require a
+        // visitor gesture; the floating play button is the explicit fallback.
+      });
+    }
+    return () => {
+      audio.removeEventListener('play', handleAudioPlay);
+      removeGestureListeners();
+    };
+  }, [effectiveAudioUrl, autoplayOnLoad, isReadyToPlay]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
-    if (isPlaying) {
+    if (!audioRef.current.paused || isPlaying) {
       audioRef.current.pause();
+      playbackRequestRef.current = null;
       setIsPlaying(false);
     } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => console.log('Audio play error:', err));
+      void requestPlayback().catch((err) => console.log('Audio play error:', err));
     }
   };
 
@@ -111,6 +213,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const triggerUpdate = (newUrl: string, newTitle: string) => {
+    const currentPlaylist = getAudioPlaylist(settings);
+    const existing = currentPlaylist.find((track) => track.url === newUrl);
+    const nextPlaylist = existing
+      ? currentPlaylist.map((track) => track.url === newUrl ? { ...track, title: newTitle } : track)
+      : [...currentPlaylist, { id: `audio-${Date.now()}-${newUrl}`, title: newTitle, url: newUrl }];
     if (onAudioUpdated) {
       onAudioUpdated(newUrl, newTitle);
     }
@@ -118,8 +225,17 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       onUpdateSettings({
         audioUrl: newUrl,
         audioTitle: newTitle,
+        audioPlaylist: JSON.stringify(nextPlaylist),
       });
     }
+  };
+
+  const handleTrackEnded = () => {
+    if (playlist.length < 2) return;
+    const currentIndex = playlist.findIndex((track) => track.url === effectiveAudioUrl);
+    const nextTrack = playlist[(currentIndex + 1 + playlist.length) % playlist.length];
+    playAfterSourceChangeRef.current = true;
+    triggerUpdate(nextTrack.url, nextTrack.title);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,15 +288,18 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     <>
       <audio
         ref={audioRef}
-        loop
-        preload="metadata"
+        src={getStreamAudioUrl(effectiveAudioUrl)}
+        autoPlay={autoplayOnLoad}
+        loop={playlist.length <= 1}
+        preload={preloadAudio || autoplayOnLoad ? 'auto' : 'metadata'}
         controlsList="nodownload"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
+        onEnded={handleTrackEnded}
+        className={showControls ? undefined : 'hidden'}
       />
 
-      {/* Floating Audio Controller */}
-      <div
+      {showControls && <div data-audio-control
         className={`fixed bottom-6 left-4 sm:left-6 z-40 flex items-center bg-[#F9F7EF]/95 text-[#3D3D3D] backdrop-blur-md rounded-full shadow-lg border border-[#E5E2D0] transition-all duration-300 ${
           isMobileExpanded
             ? 'p-2 sm:px-4 sm:py-2.5 gap-2.5 sm:gap-3'
@@ -249,10 +368,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         >
           <Music className={`w-4 h-4 ${isPlaying ? 'text-[#5A5A40] animate-bounce' : ''}`} />
         </button>
-      </div>
+      </div>}
 
       {/* Audio Customization Modal */}
-      {showModal && (
+      {showControls && showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1a1a1a]/70 backdrop-blur-sm">
           <div className="bg-[#FDFCF0] border border-[#E5E2D0] rounded-[32px] sm:rounded-[40px] p-6 sm:p-8 max-w-md w-full shadow-2xl text-[#3D3D3D]">
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#E5E2D0]">

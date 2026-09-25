@@ -79,6 +79,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   audioUrl: '/audio/canon-in-d.ogg',
   audioTitle: 'Canon in D - Orquesta Nupcial',
   audioAutoplay: false,
+  audioPlaylist: '',
   welcomeMessage: '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor',
   welcomeSubtitle: 'Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración.',
   heroDateFormat: 'dd.mm.aaaa',

@@ -28,9 +28,11 @@ import {
   MessageSquare,
   Users,
   ListOrdered,
+  Music2,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../types.ts';
 import { BankAccountsEditor } from './settings/BankAccountsEditor.tsx';
+import { AudioSettingsPanel } from './settings/AudioSettingsPanel.tsx';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../lib/mediaOptimizer.ts';
 import { WEDDING_HERO_PRESETS } from './adminConstants.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
@@ -76,7 +78,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   settingsSavedToast,
 }) => {
   const [activeStep, setActiveStep] = useState<
-    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'secciones' | 'confirmacion'
+    'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'secciones' | 'confirmacion' | 'musica'
   >('datos');
 
   // Photo optimization state for Cover Photo
@@ -535,6 +537,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     { id: 'libro', label: '8. Libro de Firmas', icon: BookOpen, desc: 'Deseos y dedicatorias', isOptional: true, isEnabled: settings.showGuestbook === true },
     { id: 'secciones', label: '9. Secciones', icon: ListOrdered, desc: 'Orden, galería y hoteles', isOptional: false },
     { id: 'confirmacion', label: '10. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', isOptional: false },
+    { id: 'musica', label: '11. Música', icon: Music2, desc: 'Lista de pistas y autoplay', isOptional: false },
   ];
 
   return (
@@ -1221,6 +1224,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             </div>
           </div>
         )}
+
+        {activeStep === 'musica' && <AudioSettingsPanel settings={settings} onChange={onChange} />}
 
         {/* STEP 2: CÓMO LLEGAR */}
         {activeStep === 'llegar' && (

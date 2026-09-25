@@ -65,6 +65,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   audioUrl: text('audio_url').default('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3'),
   audioTitle: text('audio_title').default('Acoustic Romance - Guitarra Suave'),
   audioAutoplay: boolean('audio_autoplay').default(false),
+  audioPlaylist: text('audio_playlist').default(''),
   welcomeMessage: text('welcome_message').default('¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor'),
   welcomeSubtitle: text('welcome_subtitle').default('Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración.'),
   heroDateFormat: text('hero_date_format').default('dd.mm.aaaa'),

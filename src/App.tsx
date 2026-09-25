@@ -308,6 +308,10 @@ export default function App() {
     }
     return eventCategory === 'xv' ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS;
   });
+  const [previewSettingsReady, setPreviewSettingsReady] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return new URLSearchParams(window.location.search).get('mode') !== 'preview_embed';
+  });
 
   // Once an event is loaded, its persisted type is the source of truth for
   // the editor and invitation. URL/local state is only used while loading.
@@ -331,7 +335,18 @@ export default function App() {
     }
   };
 
-  const [loadingWedding, setLoadingWedding] = useState(false);
+  const [loadingWedding, setLoadingWedding] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const hasInvitationIdentifier = Boolean(
+      getPathSlug() ||
+      params.get('w') ||
+      params.get('wedding') ||
+      params.get('mode') === 'invitation' ||
+      checkIsDemoUrl(),
+    );
+    return hasInvitationIdentifier;
+  });
   const [readyHeroResourceKey, setReadyHeroResourceKey] = useState<string | null>(null);
   const [activeGuest, setActiveGuest] = useState<Guest | null>(null);
   const [isInlineRsvpOpen, setIsInlineRsvpOpen] = useState(false);
@@ -618,6 +633,7 @@ export default function App() {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'ATELIER_SYNC_SETTINGS' && event.data.settings) {
         setSettings(event.data.settings);
+        setPreviewSettingsReady(true);
         setLoadingWedding(false);
       }
     };
@@ -1199,27 +1215,56 @@ export default function App() {
   }
 
   // Loading state for wedding invitation view
-  if (loadingWedding || !settings || (currentView === 'invitation' && readyHeroResourceKey !== heroResourceKey)) {
+  if (loadingWedding || !settings || !previewSettingsReady || (currentView === 'invitation' && readyHeroResourceKey !== heroResourceKey)) {
     return (
-      <div className="min-h-screen bg-[#FDFCF0] flex flex-col items-center justify-center text-[#3D3D3D]">
-        <motion.div
-          animate={{ scale: [1, 1.12, 1] }}
-          transition={{ repeat: Infinity, duration: 1.6 }}
-          className="w-16 h-16 rounded-full aspect-square shrink-0 circle-badge bg-[#FAF9F0] border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] mb-4 shadow-sm"
-        >
-          {settingsEventCategory === 'xv' ? (
-            <Sparkles className="w-8 h-8 text-pink-500" />
-          ) : (
-            <Heart className="w-8 h-8 fill-current text-[#7D8C7A]" />
-          )}
-        </motion.div>
-        <p className="font-serif italic text-xl tracking-wider text-[#5A5A40]">
-          Preparando tu invitación...
-        </p>
-        <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
-          {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
-        </p>
-      </div>
+      <>
+        {currentView === 'invitation' && settingsEventCategory === 'xv' ? (
+          <XvAudioPlayer
+            settings={settings}
+            audioUrl={settings.audioUrl}
+            songTitle={settings.audioTitle}
+            artistName={settings.coupleNames}
+            eventTitle="Música de XV Años"
+            allowAutoplay={false}
+            isReadyToPlay={false}
+            showControls={false}
+            preloadAudio
+          />
+        ) : currentView === 'invitation' ? (
+          <AudioPlayer
+            settings={settings}
+            audioUrl={settings.audioUrl}
+            songTitle={settings.audioTitle}
+            artistName={settings.coupleNames}
+            eventTitle="Música de Boda"
+            eventCategory={settingsEventCategory}
+            allowAutoplay={false}
+            isReadyToPlay={false}
+            showControls={false}
+            preloadAudio
+          />
+        ) : null}
+
+        <div className="min-h-screen bg-[#FDFCF0] flex flex-col items-center justify-center text-[#3D3D3D]">
+          <motion.div
+            animate={{ scale: [1, 1.12, 1] }}
+            transition={{ repeat: Infinity, duration: 1.6 }}
+            className="w-16 h-16 rounded-full aspect-square shrink-0 circle-badge bg-[#FAF9F0] border border-[#E5E2D0] flex items-center justify-center text-[#5A5A40] mb-4 shadow-sm"
+          >
+            {settingsEventCategory === 'xv' ? (
+              <Sparkles className="w-8 h-8 text-pink-500" />
+            ) : (
+              <Heart className="w-8 h-8 fill-current text-[#7D8C7A]" />
+            )}
+          </motion.div>
+          <p className="font-serif italic text-xl tracking-wider text-[#5A5A40]">
+            Preparando tu invitación...
+          </p>
+          <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
+            {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
+          </p>
+        </div>
+      </>
     );
   }
 
@@ -1407,6 +1452,7 @@ export default function App() {
           songTitle={settings?.audioTitle || 'Vals de Ensueño'}
           artistName={settings?.coupleNames || 'Vals de Mis XV'}
           eventTitle="Música de XV Años"
+          allowAutoplay={currentView === 'invitation'}
           isAdmin={!isDemoMode && Boolean(currentUser)}
           onUpdateSettings={handleUpdateSettings}
           onAudioUpdated={(newUrl, newTitle) => {
@@ -1424,6 +1470,7 @@ export default function App() {
           artistName={settings?.coupleNames || 'Música de Boda'}
           eventTitle="Música de Boda"
           eventCategory={settingsEventCategory}
+          allowAutoplay={currentView === 'invitation'}
           isAdmin={!isDemoMode && Boolean(currentUser)}
           onUpdateSettings={handleUpdateSettings}
           onAudioUpdated={(newUrl, newTitle) => {

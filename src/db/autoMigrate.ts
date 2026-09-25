@@ -92,6 +92,7 @@ export async function autoMigrateDatabase() {
           audio_url TEXT DEFAULT 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
           audio_title TEXT DEFAULT 'Acoustic Romance - Guitarra Suave',
           audio_autoplay BOOLEAN DEFAULT false,
+          audio_playlist TEXT DEFAULT '',
           welcome_message TEXT DEFAULT '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor',
           welcome_subtitle TEXT DEFAULT 'Nos emociona compartir este día tan especial contigo. Aquí encontrarás todos los detalles y ubicaciones de nuestra celebración.',
           hero_date_format TEXT DEFAULT 'dd.mm.aaaa',
@@ -195,6 +196,7 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS transition_wave_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS transition_effect TEXT DEFAULT 'wave';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_icon_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS audio_playlist TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ambient_particle_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS seal_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_padrinos BOOLEAN DEFAULT false;
