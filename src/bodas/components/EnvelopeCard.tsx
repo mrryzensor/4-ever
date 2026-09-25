@@ -1079,12 +1079,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       e.stopPropagation();
                       toggleSection('gifts');
                     }}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`inline-flex w-full items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                       expandedSection === 'gifts'
-                        ? 'bg-amber-500 text-stone-950 font-bold'
-                        : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-amber-900'
+                        ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
+                        : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
                     }`}
                   >
+                    <Sparkles className="w-3.5 h-3.5" />
                     <span>{expandedSection === 'gifts'
                       ? 'Ocultar opciones adicionales'
                       : hasVisibleBankAccounts && !showBankAccountsWhenCollapsed

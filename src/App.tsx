@@ -72,6 +72,7 @@ import { formatHeroDate } from './lib/dateFormatters.ts';
 import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { getLandingSectionOrder } from './lib/sectionOrder.ts';
+import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 import { CardStyle } from './types.ts';
 
@@ -1271,6 +1272,15 @@ export default function App() {
   const activeTheme = settingsEventCategory === 'xv'
     ? (XV_CARD_THEMES[settings.cardStyle] || XV_CARD_THEMES['romantic-floral'])
     : (CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold']);
+  const activeFontTheme = settings.fontPairStyle && settings.fontPairStyle !== 'auto'
+    ? settingsEventCategory === 'xv'
+      ? (XV_CARD_THEMES[settings.fontPairStyle as CardStyle] || activeTheme)
+      : (CARD_THEMES[settings.fontPairStyle as CardStyle] || activeTheme)
+    : activeTheme;
+  const invitationFontStyle = {
+    '--invitation-font-body': getThemeFontFamily(activeFontTheme.fontBody, 'Georgia, serif'),
+    '--invitation-font-display': getThemeFontFamily(activeFontTheme.fontDisplay, 'Georgia, serif'),
+  } as React.CSSProperties;
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
   const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !isPreviewEmbed;
@@ -1355,7 +1365,7 @@ export default function App() {
   return (
     <div
       className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
-      style={{ backgroundColor: activeTheme.bgHex }}
+      style={{ backgroundColor: activeTheme.bgHex, ...invitationFontStyle }}
     >
       {/* Interactive Demo Style Selector Bar in Demo Mode */}
       {isDemoMode && (

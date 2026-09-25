@@ -81,8 +81,18 @@ export function getRsvpButtonPresentation(
 }
 
 export function getThemeDisplayFontFamily(fontDisplayClass: string): string {
-  const match = fontDisplayClass.match(/font-\["([^\"]+)"\]/);
-  if (!match) return 'Georgia, serif';
+  return getThemeFontFamily(fontDisplayClass, 'Georgia, serif');
+}
+
+export function getThemeFontFamily(fontClass: string, fallback: string): string {
+  const match = fontClass.match(/font-\["([^\"]+)"\]/);
+  if (!match) return fallback;
+
   const family = match[1].replaceAll('_', ' ');
-  return `"${family}", serif`;
+  const genericFallback = family === 'Montserrat'
+    ? 'Arial, sans-serif'
+    : family === 'Alex Brush'
+      ? 'cursive'
+      : 'Georgia, serif';
+  return `"${family}", ${genericFallback}`;
 }

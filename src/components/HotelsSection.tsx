@@ -3,7 +3,6 @@ import { Building2, ExternalLink, MapPin, Phone } from 'lucide-react';
 import { CardThemeConfig, EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
-import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 
 interface HotelsSectionProps {
   settings: WeddingSettings;
@@ -61,7 +60,6 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
           <h2 className={`mt-2 font-serif text-3xl sm:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
             {settings.hotelsTitle?.trim() || 'Hospedaje recomendado'}
           </h2>
-          <StyleSpecificDivider cardStyle={settings.cardStyle} className="mx-auto mt-3 h-8 w-52" color={theme.accentColorHex} />
           <p className={`mx-auto mt-2 max-w-2xl text-sm sm:text-base ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
             Opciones de hospedaje cercanas para acompañarnos y disfrutar de la celebración.
           </p>

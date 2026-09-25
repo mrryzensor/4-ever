@@ -5,6 +5,14 @@
   color-scheme: only light;
 }
 
+.public-invitation :where(*) {
+  font-family: var(--invitation-font-body, inherit) !important;
+}
+
+.public-invitation :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--invitation-font-display, inherit) !important;
+}
+
 .public-invitation button {
   -webkit-appearance: none !important;
   appearance: none !important;
