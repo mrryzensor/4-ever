@@ -220,11 +220,11 @@ export const WomanFashionIllustration: React.FC<WomanFashionIllustrationProps> =
           </g>
         )}
 
-        {/* Visible, continuous arms: one relaxed at her side, one resting at the waist. */}
-        <path d="M94 127 C85 130 79 138 76 150 C73 163 77 175 76 187 C75 198 70 208 69 217 C68 224 71 230 76 232 C80 233 83 229 83 224 L82 216 C82 212 84 206 86 199 L93 174 C95 160 100 148 107 140Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M146 127 C156 129 162 137 165 148 C169 160 165 171 156 180 L143 192 C138 196 137 200 141 204 C144 207 148 204 151 201 L166 187 C177 177 181 161 177 148 C174 136 163 128 151 126Z" fill={`url(#skin-woman-${id})`} />
-        <path d="M78 153 C76 163 80 173 79 185 M73 215 Q72 224 77 228 M162 150 Q165 161 158 171 M142 198 Q145 201 149 198" fill="none" stroke="#B77E69" strokeWidth="1.1" strokeLinecap="round" opacity=".48" />
-        <path d="M70 224 Q73 229 78 230 M142 203 Q146 205 149 201" fill="none" stroke="#A96F62" strokeWidth=".9" strokeLinecap="round" opacity=".52" />
+        {/* A calm, symmetrical fashion pose keeps both arms clear and connected. */}
+        <path d="M94 127 C85 130 80 138 77 149 C74 161 76 174 74 187 L69 212 C67 220 69 227 74 230 Q79 233 82 228 L84 221 Q82 217 84 210 L92 181 Q96 162 105 141Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M146 127 C155 130 160 138 163 149 C166 161 164 174 166 187 L171 212 C173 220 171 227 166 230 Q161 233 158 228 L156 221 Q158 217 156 210 L148 181 Q144 162 135 141Z" fill={`url(#skin-woman-${id})`} />
+        <path d="M79 151 C77 164 79 174 77 186 L72 212 M161 151 C163 164 161 174 163 186 L168 212" fill="none" stroke="#B77E69" strokeWidth="1.05" strokeLinecap="round" opacity=".42" />
+        <path d="M73 228 Q77 231 80 227 M160 227 Q163 231 167 228" fill="none" stroke="#A96F62" strokeWidth=".9" strokeLinecap="round" opacity=".5" />
       </svg>
       <FigureBadge>Dama</FigureBadge>
     </div>
