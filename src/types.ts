@@ -105,12 +105,15 @@ export interface WeddingSettings {
   ceremonyAddress: string;
   ceremonyMapsUrl: string;
   ceremonyEmbedUrl?: string;
+  ceremonyArrivalVideoUrl?: string;
   ceremonyPlaceQuery?: string;
   ceremonyTime: string;
   receptionVenue: string;
   receptionAddress: string;
+  receptionSameAsCeremony?: boolean;
   receptionMapsUrl: string;
   receptionEmbedUrl?: string;
+  receptionArrivalVideoUrl?: string;
   receptionPlaceQuery?: string;
   receptionTime: string;
   dressCode: string;
@@ -235,6 +238,7 @@ export interface WeddingSettings {
   bankCurrency?: string;
   bankAccounts?: string; // JSON array of country-aware BankAccountConfig records
   enableBankTransfer?: boolean;
+  showBankAccountsWhenCollapsed?: boolean; // Mantiene las cuentas visibles con el card de regalos colapsado
   enableStoreRegistry?: boolean;
   enableEnvelopeGift?: boolean;
   envelopeGiftMessage?: string;

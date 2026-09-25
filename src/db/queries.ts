@@ -42,12 +42,15 @@ const memoryState = {
       ceremonyAddress: 'Calle de los Olivos 142, Centro Histórico',
       ceremonyMapsUrl: 'https://maps.google.com/?q=Parroquia+San+Francisco+de+Asis',
       ceremonyEmbedUrl: '',
+      ceremonyArrivalVideoUrl: '',
       ceremonyPlaceQuery: 'Parroquia San Francisco de Asís',
       receptionVenue: 'Hacienda Los Arcángeles',
       receptionLocationName: 'Hacienda Los Arcángeles',
       receptionAddress: 'Km 14.5 Carretera Real, Valle Encantado',
+      receptionSameAsCeremony: false,
       receptionMapsUrl: 'https://maps.google.com/?q=Hacienda+Los+Arcangeles',
       receptionEmbedUrl: '',
+      receptionArrivalVideoUrl: '',
       receptionPlaceQuery: 'Hacienda Los Arcángeles',
       dressCode: 'Formal / Traje Oscuro y Vestido Largo',
       dressCodeDescription: 'Agradecemos no usar blanco, marfil o champagne reservado para la novia.',
@@ -62,6 +65,7 @@ const memoryState = {
       bankConcept: 'Evento Sofía & Alejandro',
       bankCurrency: 'MXN',
       enableBankTransfer: false,
+      showBankAccountsWhenCollapsed: true,
       enableStoreRegistry: false,
       enableEnvelopeGift: false,
       envelopeGiftMessage: 'Lluvia de sobres: Si deseas hacernos un regalo en efectivo el día del evento, dispondremos de un cofre especial en la recepción.',
@@ -271,6 +275,7 @@ const memoryState = {
       ceremonyTime: '18:00',
       receptionVenue: 'Salón Diamante & Jardines de Versalles',
       receptionAddress: 'Av. Las Palmas 550, Zona Residencial Real',
+      receptionSameAsCeremony: false,
       receptionMapsUrl: 'https://maps.google.com/?q=Salon+Diamante',
       receptionEmbedUrl: '',
       receptionPlaceQuery: 'Salón Diamante',
@@ -604,9 +609,9 @@ const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
 const DEMO_XV_DB_FIELDS = [
   'eventType', 'userId', 'ownerUid', 'slug', 'isPublished', 'coupleNames',
   'hashtag', 'hashtagIsCustom', 'eventDate', 'eventTime',
-  'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl', 'ceremonyEmbedUrl',
-  'ceremonyPlaceQuery', 'ceremonyTime', 'receptionVenue', 'receptionAddress',
-  'receptionMapsUrl', 'receptionEmbedUrl', 'receptionPlaceQuery', 'receptionTime',
+  'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl', 'ceremonyEmbedUrl', 'ceremonyArrivalVideoUrl',
+  'ceremonyPlaceQuery', 'ceremonyTime', 'receptionVenue', 'receptionAddress', 'receptionSameAsCeremony',
+  'receptionMapsUrl', 'receptionEmbedUrl', 'receptionArrivalVideoUrl', 'receptionPlaceQuery', 'receptionTime',
   'dressCode', 'dressCodeDescription', 'dressCodePalette', 'dressCodeMenTitle',
   'dressCodeMenDescription', 'dressCodeWomenTitle', 'dressCodeWomenDescription',
   'dressCodeFootwearNote', 'dressCodeProhibitedColors', 'dressCodeWomanOutfit',
@@ -633,7 +638,7 @@ const DEMO_XV_DB_FIELDS = [
   'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle',
   'bankName', 'bankBeneficiary',
   'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency', 'bankAccounts',
-  'enableBankTransfer', 'enableStoreRegistry', 'enableEnvelopeGift',
+  'enableBankTransfer', 'showBankAccountsWhenCollapsed', 'enableStoreRegistry', 'enableEnvelopeGift',
   'envelopeGiftMessage', 'rsvpDeadline', 'contactPhone', 'contactEmail',
 ] as const;
 
@@ -1431,6 +1436,7 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
     ceremonyAddress: data.ceremonyAddress || 'Calle de los Olivos 142, Centro Histórico',
     receptionVenue: data.receptionVenue || 'Hacienda Los Arcángeles',
     receptionAddress: data.receptionAddress || 'Km 14.5 Carretera Real, Valle Encantado',
+    receptionSameAsCeremony: data.receptionSameAsCeremony ?? false,
     coverPhoto: data.coverPhoto || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
     cardStyle: data.cardStyle || 'classic-gold',
     waxSealText: waxSealTextIsCustom && data.waxSealText
@@ -1452,6 +1458,7 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
   payload.waxSealText = waxSealTextIsCustom && data.waxSealText
     ? data.waxSealText
     : generateDynamicInitials(payload.coupleNames, eventType);
+  payload.receptionSameAsCeremony = data.receptionSameAsCeremony ?? false;
 
   try {
     if (sqlEnabled || process.env.SQL_HOST) {

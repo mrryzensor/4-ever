@@ -112,6 +112,20 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
                 className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
               />
             </div>
+
+            <div className="min-w-0">
+              <label className="text-[11px] font-semibold text-stone-700 block mb-1">
+                Video para llegar (YouTube, Facebook, Instagram, X, TikTok u otra red):
+              </label>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={settings.ceremonyArrivalVideoUrl || ''}
+                onChange={(e) => onChange({ ceremonyArrivalVideoUrl: e.target.value })}
+                className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
+              />
+              <p className="mt-1 text-[10px] text-[#7D8C7A]">Se incrusta cuando la plataforma lo permite; siempre habrá un enlace para abrirlo en otra pestaña.</p>
+            </div>
           </div>
 
           {/* Actions & Map Preview Test */}
@@ -148,7 +162,17 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
               </span>
             </div>
 
-            <div className="min-w-0">
+            <label className="flex items-start gap-2.5 rounded-xl border border-[#E5E2D0] bg-white px-3 py-2.5 text-xs text-stone-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.receptionSameAsCeremony === true}
+                onChange={(e) => onChange({ receptionSameAsCeremony: e.target.checked })}
+                className="mt-0.5 accent-[#5A5A40]"
+              />
+              <span><strong>La recepción es en el mismo lugar que la ceremonia.</strong><br />Se reutilizarán su dirección, mapa y video; la hora de recepción se configura por separado.</span>
+            </label>
+
+            {!settings.receptionSameAsCeremony && <div className="min-w-0">
               <label className="text-[11px] font-semibold text-stone-700 block mb-1">
                 Nombre de la Hacienda / Salón / Jardín:
               </label>
@@ -161,10 +185,10 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
                 }
                 className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
               />
-            </div>
+            </div>}
 
             <div className="space-y-3 min-w-0">
-              <div className="min-w-0">
+              {!settings.receptionSameAsCeremony && <div className="min-w-0">
                 <label className="text-[11px] font-semibold text-stone-700 block mb-1">
                   Dirección Completa (Calle, Número, Ciudad):
                 </label>
@@ -177,7 +201,7 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
                   }
                   className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
                 />
-              </div>
+              </div>}
 
               <div className="min-w-0">
                 <label className="text-[11px] font-semibold text-stone-700 block mb-1">
@@ -194,7 +218,7 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
               </div>
             </div>
 
-            <div className="min-w-0">
+            {!settings.receptionSameAsCeremony && <div className="min-w-0">
               <div className="flex items-center justify-between mb-1 gap-2">
                 <label className="text-[11px] font-semibold text-stone-700 truncate">
                   Enlace / Búsqueda Google Maps:
@@ -219,13 +243,29 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
                 }
                 className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
               />
-            </div>
+            </div>}
+
+            {!settings.receptionSameAsCeremony && <div className="min-w-0">
+              <label className="text-[11px] font-semibold text-stone-700 block mb-1">
+                Video para llegar (YouTube, Facebook, Instagram, X, TikTok u otra red):
+              </label>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={settings.receptionArrivalVideoUrl || ''}
+                onChange={(e) => onChange({ receptionArrivalVideoUrl: e.target.value })}
+                className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
+              />
+              <p className="mt-1 text-[10px] text-[#7D8C7A]">Se incrusta cuando la plataforma lo permite; siempre habrá un enlace para abrirlo en otra pestaña.</p>
+            </div>}
           </div>
 
           {/* Actions & Map Preview Test */}
           <div className="pt-3 border-t border-[#E5E2D0] flex flex-wrap items-center gap-2">
             <a
-              href={settings.receptionMapsUrl || generateGoogleMapsLink(settings.receptionVenue, settings.receptionAddress)}
+              href={settings.receptionSameAsCeremony
+                ? settings.ceremonyMapsUrl || generateGoogleMapsLink(settings.ceremonyVenue, settings.ceremonyAddress)
+                : settings.receptionMapsUrl || generateGoogleMapsLink(settings.receptionVenue, settings.receptionAddress)}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3 py-1.5 bg-[#5A5A40] text-white hover:bg-[#484833] text-[11px] font-semibold rounded-full flex items-center gap-1.5 transition-colors shadow-2xs whitespace-nowrap"
@@ -235,7 +275,9 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
             </a>
 
             <a
-              href={generateGoogleMapsDirLink(settings.receptionVenue, settings.receptionAddress)}
+              href={settings.receptionSameAsCeremony
+                ? generateGoogleMapsDirLink(settings.ceremonyVenue, settings.ceremonyAddress)
+                : generateGoogleMapsDirLink(settings.receptionVenue, settings.receptionAddress)}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3 py-1.5 bg-white border border-[#E5E2D0] text-[#5A5A40] hover:bg-stone-50 text-[11px] font-semibold rounded-full flex items-center gap-1.5 transition-colors shadow-2xs whitespace-nowrap"

@@ -165,6 +165,20 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
         <BankAccountsEditor settings={settings} onChange={onChange} />
       )}
       {settings.enableBankTransfer === true && (
+        <label className="flex items-start gap-3 rounded-2xl border border-[#E5E2D0] bg-[#FAF9F0] p-4 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.showBankAccountsWhenCollapsed !== false}
+            onChange={(event) => onChange({ showBankAccountsWhenCollapsed: event.target.checked })}
+            className="mt-0.5 h-4 w-4 accent-[#5A5A40] cursor-pointer"
+          />
+          <span>
+            <span className="block text-xs font-bold text-[#3D3D2C]">Mantener cuentas visibles al colapsar</span>
+            <span className="mt-0.5 block text-[11px] text-[#7D8C7A]">Activado: los datos bancarios permanecen en el card sin abrir las opciones adicionales.</span>
+          </span>
+        </label>
+      )}
+      {settings.enableBankTransfer === true && (
         <div hidden className="bg-[#FAF9F0] border border-[#E5E2D0] rounded-3xl p-5 sm:p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-[#5A5A40] uppercase tracking-wider flex items-center gap-2">

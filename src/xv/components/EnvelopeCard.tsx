@@ -34,6 +34,7 @@ import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
 import { getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
+import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
@@ -118,6 +119,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
   const bankAccounts = getBankAccounts(settings);
+  const hasVisibleBankAccounts = settings.enableBankTransfer === true && bankAccounts.some(hasBankAccountData);
+  const showBankAccountsWhenCollapsed = settings.showBankAccountsWhenCollapsed !== false;
   const receptionCardOrder = detailSectionOrder.indexOf('reception') * 2;
   const rsvpButtonOrder = detailSectionOrder.indexOf('rsvp') * 2;
   const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
@@ -270,11 +273,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     customStoreItems = [];
   }
   const visibleRegistryItems = [...registryItems, ...customStoreItems].filter((item) => {
-    if (item.type === 'bank') return settings.enableBankTransfer === true;
+    const itemTitle = typeof item.title === 'string' ? item.title.trim().toLocaleLowerCase('es') : '';
+    if (hasVisibleBankAccounts && (item.type === 'bank' || (!item.url && itemTitle.includes('transferencia bancaria')))) return false;
+    if (item.type === 'bank') return settings.enableBankTransfer === true && !hasVisibleBankAccounts;
     if (item.type === 'envelope') return settings.enableEnvelopeGift === true;
     return settings.enableStoreRegistry === true;
   });
-  const hasAdditionalGiftOptions = visibleRegistryItems.length > 0;
+  const hasAdditionalGiftOptions = visibleRegistryItems.length > 0
+    || (hasVisibleBankAccounts && !showBankAccountsWhenCollapsed);
 
   let tipsList: WeddingTipItem[] = [];
   try {
@@ -318,13 +324,18 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   };
 
   const ceremonyEmbedUrl = getEmbedUrl(settings.ceremonyVenue || 'Ceremonia', settings.ceremonyAddress || '', settings.ceremonyEmbedUrl);
-  const receptionEmbedUrl = getEmbedUrl(settings.receptionVenue || 'Recepción', settings.receptionAddress || '', settings.receptionEmbedUrl);
+  const receptionLocationName = settings.receptionSameAsCeremony ? settings.ceremonyVenue || 'Ceremonia' : settings.receptionVenue || 'Recepción';
+  const receptionLocationAddress = settings.receptionSameAsCeremony ? settings.ceremonyAddress || '' : settings.receptionAddress || '';
+  const receptionMapsSourceUrl = settings.receptionSameAsCeremony ? settings.ceremonyMapsUrl : settings.receptionMapsUrl;
+  const receptionEmbedSourceUrl = settings.receptionSameAsCeremony ? settings.ceremonyEmbedUrl : settings.receptionEmbedUrl;
+  const receptionArrivalVideoUrl = settings.receptionSameAsCeremony ? settings.ceremonyArrivalVideoUrl : settings.receptionArrivalVideoUrl;
+  const receptionEmbedUrl = getEmbedUrl(receptionLocationName, receptionLocationAddress, receptionEmbedSourceUrl);
   const ceremonyMapsUrl = getMapsSearchUrl(settings.ceremonyVenue || 'Ceremonia', settings.ceremonyAddress || '', settings.ceremonyMapsUrl);
-  const receptionMapsUrl = getMapsSearchUrl(settings.receptionVenue || 'Recepción', settings.receptionAddress || '', settings.receptionMapsUrl);
+  const receptionMapsUrl = getMapsSearchUrl(receptionLocationName, receptionLocationAddress, receptionMapsSourceUrl);
   const ceremonyDirectionsUrl = getMapsDirectionsUrl(settings.ceremonyVenue || 'Ceremonia', settings.ceremonyAddress || '');
-  const receptionDirectionsUrl = getMapsDirectionsUrl(settings.receptionVenue || 'Recepción', settings.receptionAddress || '');
+  const receptionDirectionsUrl = getMapsDirectionsUrl(receptionLocationName, receptionLocationAddress);
   const ceremonyWazeUrl = getWazeUrl(settings.ceremonyVenue || 'Ceremonia', settings.ceremonyAddress || '');
-  const receptionWazeUrl = getWazeUrl(settings.receptionVenue || 'Recepción', settings.receptionAddress || '');
+  const receptionWazeUrl = getWazeUrl(receptionLocationName, receptionLocationAddress);
 
   const { scrollY } = useScroll();
   const heroBgBlur = useTransform(scrollY, [0, 80, 240, 480], ['blur(0px)', 'blur(4px)', 'blur(14px)', 'blur(28px)']);
@@ -381,8 +392,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     const min = pad(targetDateObj.getMinutes());
     const startStr = `${y}${m}${d}T${h}${min}00Z`;
     const endStr = `${y}${m}${d}T235900Z`;
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mis+XV+A%C3%B1os+-+${encodeURIComponent(coupleNamesSafe)}&dates=${startStr}/${endStr}&details=Celebraci%C3%B3n+de+mis+XV+A%C3%B1os.&location=${encodeURIComponent(settings.receptionVenue || '')}`;
-  }, [targetDateObj, coupleNamesSafe, settings.receptionVenue]);
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Mis+XV+A%C3%B1os+-+${encodeURIComponent(coupleNamesSafe)}&dates=${startStr}/${endStr}&details=Celebraci%C3%B3n+de+mis+XV+A%C3%B1os.&location=${encodeURIComponent(receptionLocationName)}`;
+  }, [targetDateObj, coupleNamesSafe, receptionLocationName]);
 
   // Multi-photo Hero Carousel with Configurable Auto-Play Timer
   const heroPhotoList = useMemo(() => {
@@ -787,6 +798,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <span>Abrir en Waze</span>
                       </a>
                     </div>
+                    <SocialVideoEmbed url={settings.ceremonyArrivalVideoUrl} title="Video para llegar a la ceremonia" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -816,10 +828,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   Recepción & Brindis
                 </h3>
-                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.receptionVenue || 'Hacienda de Eventos'}</p>
+                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{receptionLocationName}</p>
                 <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                   <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>{settings.receptionAddress || 'Dirección de la recepción'}</span>
+                  <span>{receptionLocationAddress || 'Dirección de la recepción'}{settings.receptionSameAsCeremony && <span className="mt-1 block text-[10px] uppercase tracking-wider opacity-75">Mismo lugar que la ceremonia</span>}</span>
                 </p>
               </div>
 
@@ -842,9 +854,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'reception' ? 'rotate-180' : ''}`} />
                 </button>
 
-                {settings.receptionMapsUrl && (
+                {(settings.receptionSameAsCeremony ? settings.ceremonyMapsUrl : settings.receptionMapsUrl) && (
                   <a
-                    href={settings.receptionMapsUrl}
+                    href={receptionMapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -891,6 +903,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         <span>Abrir en Waze</span>
                       </a>
                     </div>
+                    <SocialVideoEmbed url={receptionArrivalVideoUrl} title="Video para llegar a la recepción" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1118,7 +1131,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       </span>
                     )}
                   </div>
-                  {settings.enableBankTransfer === true && bankAccounts.length > 0 && (
+                  {hasVisibleBankAccounts && showBankAccountsWhenCollapsed && (
                     <BankAccountDetails accounts={bankAccounts} isDark={isDark} copiedKey={copiedKey} onCopy={handleCopy} className="mt-4" />
                   )}
                 </div>
@@ -1136,7 +1149,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-amber-900'
                     }`}
                   >
-                    <span>{expandedSection === 'gifts' ? 'Ocultar opciones adicionales' : 'Ver opciones adicionales'}</span>
+                    <span>{expandedSection === 'gifts'
+                      ? 'Ocultar opciones adicionales'
+                      : hasVisibleBankAccounts && !showBankAccountsWhenCollapsed
+                        ? 'Ver cuentas y opciones adicionales'
+                        : 'Ver opciones adicionales'}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'gifts' ? 'rotate-180' : ''}`} />
                   </button>
                 </div>}
@@ -1203,6 +1220,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         </div>
                       )}
 
+                      {hasVisibleBankAccounts && !showBankAccountsWhenCollapsed && (
+                        <BankAccountDetails
+                          accounts={bankAccounts}
+                          isDark={isDark}
+                          copiedKey={copiedKey}
+                          onCopy={handleCopy}
+                        />
+                      )}
                       {visibleRegistryItems.map((reg, idx) => (
                         <div key={idx} className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
                           isDark ? 'bg-stone-850 border-stone-600' : 'bg-white border-stone-200'

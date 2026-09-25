@@ -1107,6 +1107,17 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
                   />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-[11px] font-semibold text-stone-700">Video para llegar (YouTube, Facebook, Instagram, X, TikTok u otra red)</label>
+                  <input
+                    type="url"
+                    value={settings.ceremonyArrivalVideoUrl || ''}
+                    onChange={(e) => onChange({ ceremonyArrivalVideoUrl: e.target.value })}
+                    placeholder="Enlace del video (https://...)"
+                    className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
+                  />
+                  <p className="mt-1 text-[10px] text-stone-500">Se mostrará integrado cuando sea compatible; también se podrá abrir en otra pestaña.</p>
+                </div>
               </div>
             </div>
 
@@ -1118,7 +1129,16 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   Lugar de la Recepción / Fiesta
                 </h5>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="flex items-start gap-2.5 rounded-xl border border-[#E5E2D0] bg-white px-3 py-2.5 text-xs text-stone-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.receptionSameAsCeremony === true}
+                  onChange={(e) => onChange({ receptionSameAsCeremony: e.target.checked })}
+                  className="mt-0.5 accent-[#5A5A40]"
+                />
+                <span><strong>La recepción es en el mismo lugar que la ceremonia.</strong><br />Se reutilizarán la dirección, el mapa y el video configurados arriba.</span>
+              </label>
+              {!settings.receptionSameAsCeremony && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
                   type="text"
                   value={settings.receptionVenue || ''}
@@ -1142,7 +1162,18 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
                   />
                 </div>
-              </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-[11px] font-semibold text-stone-700">Video para llegar (YouTube, Facebook, Instagram, X, TikTok u otra red)</label>
+                  <input
+                    type="url"
+                    value={settings.receptionArrivalVideoUrl || ''}
+                    onChange={(e) => onChange({ receptionArrivalVideoUrl: e.target.value })}
+                    placeholder="Enlace del video (https://...)"
+                    className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 font-mono"
+                  />
+                  <p className="mt-1 text-[10px] text-stone-500">Se mostrará integrado cuando sea compatible; también se podrá abrir en otra pestaña.</p>
+                </div>
+              </div>}
             </div>
           </div>
         )}

@@ -60,12 +60,15 @@ export async function autoMigrateDatabase() {
           ceremony_address TEXT NOT NULL DEFAULT 'Calle de los Olivos 142, Centro Histórico',
           ceremony_maps_url TEXT DEFAULT 'https://maps.google.com/?q=San+Francisco+Church',
           ceremony_embed_url TEXT DEFAULT '',
+          ceremony_arrival_video_url TEXT DEFAULT '',
           ceremony_place_query TEXT DEFAULT 'Parroquia San Francisco de Asís',
           ceremony_time TEXT DEFAULT '17:00',
           reception_venue TEXT NOT NULL DEFAULT 'Hacienda Los Arcángeles',
           reception_address TEXT NOT NULL DEFAULT 'Km 14.5 Carretera Real, Valle Encantado',
+          reception_same_as_ceremony BOOLEAN DEFAULT false,
           reception_maps_url TEXT DEFAULT 'https://maps.google.com/?q=Hacienda+Los+Arcangeles',
           reception_embed_url TEXT DEFAULT '',
+          reception_arrival_video_url TEXT DEFAULT '',
           reception_place_query TEXT DEFAULT 'Hacienda Los Arcángeles',
           reception_time TEXT DEFAULT '19:30',
           dress_code TEXT DEFAULT 'Formal / Traje Oscuro y Vestido Largo',
@@ -145,6 +148,7 @@ export async function autoMigrateDatabase() {
           bank_currency TEXT DEFAULT 'MXN',
           bank_accounts TEXT DEFAULT '[]',
           enable_bank_transfer BOOLEAN DEFAULT false,
+          show_bank_accounts_when_collapsed BOOLEAN DEFAULT true,
           enable_store_registry BOOLEAN DEFAULT false,
           enable_envelope_gift BOOLEAN DEFAULT false,
           envelope_gift_message TEXT DEFAULT 'Lluvia de sobres: Si deseas hacernos un regalo en efectivo el día del evento, dispondremos de un cofre especial en la recepción.',
@@ -154,7 +158,12 @@ export async function autoMigrateDatabase() {
           updated_at TIMESTAMP DEFAULT NOW()
         );
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'bodas';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ceremony_arrival_video_url TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_arrival_video_url TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_same_as_ceremony BOOLEAN DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS bank_accounts TEXT DEFAULT '[]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_bank_accounts_when_collapsed BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ALTER COLUMN show_bank_accounts_when_collapsed SET DEFAULT true;
         ALTER TABLE wedding_settings ALTER COLUMN gift_registry SET DEFAULT '[]';
         ALTER TABLE wedding_settings ALTER COLUMN show_gift_registry SET DEFAULT false;
         ALTER TABLE wedding_settings ALTER COLUMN bank_name SET DEFAULT '';
