@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Heart, Check } from 'lucide-react';
+import { Heart, Check, Clock3 } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
@@ -1244,6 +1244,12 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     settings.heroDateFormat || 'dd.mm.aaaa',
     settings.heroCustomDateText,
   );
+  const formattedEventTime = useMemo(() => {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(settings.eventTime?.trim() || '');
+    if (!match) return settings.eventTime?.trim() || '';
+    const time = new Date(2000, 0, 1, Number(match[1]), Number(match[2]));
+    return new Intl.DateTimeFormat('es-PE', { hour: 'numeric', minute: '2-digit' }).format(time);
+  }, [settings.eventTime]);
   const timeUnits = [
     { key: 'days', value: timeLeft.days, label: 'días' },
     { key: 'hours', value: timeLeft.hours, label: 'horas' },
@@ -1282,10 +1288,16 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     <div className="mx-auto flex w-full flex-col items-center text-center">
       <time
         dateTime={settings.eventDate || undefined}
-        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans tracking-wide ${layout === 'circle' ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} ${isDark ? 'text-stone-300' : 'text-stone-600'}`}
+        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-sm sm:text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
       >
         {formattedEventDate}
       </time>
+      {formattedEventTime && (
+        <span className={`mt-1 inline-flex items-center gap-1.5 font-sans text-xs tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+          <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
+          {formattedEventTime}
+        </span>
+      )}
       <span
         className={`mt-1 font-serif italic tracking-wide text-3xl sm:text-4xl md:text-5xl ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
         style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}

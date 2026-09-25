@@ -61,6 +61,7 @@ import {
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
+import { HeroEmblem } from '../../components/HeroEmblem.tsx';
 
 interface EnvelopeCardProps {
   settings: WeddingSettings;
@@ -72,35 +73,10 @@ interface EnvelopeCardProps {
   inlineGallery?: React.ReactNode;
 }
 
-const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold') => {
+const renderHeroEmblem = (heroIconStyle?: string, cardStyle: string = 'classic-gold', sparse = false, themeAccent?: string) => {
   const effectiveIcon = (heroIconStyle && heroIconStyle !== 'auto') ? heroIconStyle : cardStyle;
-  switch (effectiveIcon) {
-    case 'romantic-floral':
-      return <AnimatedTwinSwans className="w-14 h-12 mx-auto" />;
-    case 'boho-chic':
-      return <AnimatedBohoSunMandala className="w-12 h-12 mx-auto" />;
-    case 'dark-luxury':
-      return <AnimatedConstellationDivider className="w-16 h-8 mx-auto" color="#D4AF37" />;
-    case 'watercolor-garden':
-      return <AnimatedWatercolorBranchDivider className="w-16 h-8 mx-auto" color="#526B50" />;
-    case 'royal-navy':
-      return <AnimatedRoyalCrownEmblem className="w-14 h-12 mx-auto" />;
-    case 'terracotta-sunset':
-      return <AnimatedSunsetDesertEmblem className="w-14 h-12 mx-auto" />;
-    case 'lavender-provence':
-      return <AnimatedLavenderButterflyEmblem className="w-14 h-12 mx-auto" />;
-    case 'emerald-botanical':
-      return <AnimatedMonsteraEmblem className="w-14 h-12 mx-auto" />;
-    case 'coastal-breeze':
-      return <AnimatedSeashellPearlEmblem className="w-14 h-12 mx-auto" />;
-    case 'champagne-glam':
-      return <AnimatedArtDecoFanEmblem className="w-14 h-12 mx-auto" />;
-    case 'minimal-editorial':
-      return <div className="w-12 h-0.5 bg-white/70 mx-auto my-2" />;
-    case 'classic-gold':
-    default:
-      return <AnimatedQuinceaneraTiara className="w-16 h-12 mx-auto" color="#E5B25D" />;
-  }
+  const accentColor = themeAccent || CARD_THEMES[effectiveIcon as CardStyleId]?.accentColorHex || '#E5B25D';
+  return <HeroEmblem cardStyle={effectiveIcon} accentColor={accentColor} sparse={sparse} quinceanera />;
 };
 
 export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
@@ -367,7 +343,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     && !settings.heroShowRsvpButton
     && (settings.heroQuote || '').trim().length < 110;
   const heroNameFontSize = coupleNamesSafe.length > 18
-    ? (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2rem, 6vw, 5.5rem)')
+    ? (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2.25rem, 6vw, 5.5rem)')
     : (heroIsSparse ? 'clamp(3rem, 10vw, 7.5rem)' : 'clamp(2.5rem, 7vw, 6rem)');
   const targetDateObj = useMemo(() => {
     return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
@@ -557,20 +533,25 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
         </motion.div>
 
         <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
-          <div className="min-h-4">
-            {settings.heroShowIcon && (
+          <div className={heroIsSparse ? 'min-h-0' : 'min-h-4'}>
+            {!heroIsSparse && settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1">
-                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle)}
+                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, false, theme.accentColorHex)}
               </motion.div>
             )}
           </div>
-          <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-2 sm:gap-4' : 'gap-1 sm:gap-2'}`}>
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-lg sm:text-2xl md:text-3xl' : 'text-sm sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+          <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : 'gap-1 sm:gap-2'}`}>
+            {heroIsSparse && settings.heroShowIcon && (
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1 sm:mb-2">
+                {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, true, theme.accentColorHex)}
+              </motion.div>
+            )}
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
-              <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-sm sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
+              <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
             </motion.div>
             {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && settings.showRsvpSection !== false && onOpenRsvp && (

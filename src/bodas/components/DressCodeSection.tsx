@@ -18,6 +18,7 @@ import {
 import { WeddingSettings } from '../../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
+import { ManFashionIllustration, WomanFashionIllustration } from '../../components/FashionIllustrations.tsx';
 
 interface DressCodeSectionProps {
   settings: WeddingSettings;
@@ -433,7 +434,7 @@ const ManFashionMockupComponent: React.FC<ManOutfitProps> = ({
   );
 };
 
-export const ManFashionMockup = React.memo(ManFashionMockupComponent);
+export const ManFashionMockup = React.memo(ManFashionIllustration);
 
 // -------------------------------------------------------------
 // Ultra-Realistic SVG Fashion Mockup for Dama (Lady / Woman)
@@ -827,7 +828,7 @@ const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
   );
 };
 
-export const WomanFashionMockup = React.memo(WomanFashionMockupComponent);
+export const WomanFashionMockup = React.memo(WomanFashionIllustration);
 
 // Helper to adjust hex brightness
 export function adjustColorBrightness(hex: string, percent: number) {
