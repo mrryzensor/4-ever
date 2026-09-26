@@ -147,6 +147,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   rsvpDeadlineMessage: 'Por favor confirma tu asistencia antes del {date}.',
   rsvpButtonText: 'Confirmar asistencia',
   rsvpButtonStyle: 'auto',
+  rsvpCompanionToggleText: '¿Llevas invitados?',
   contactPhone: '+52 55 1234 5678',
   contactEmail: 'boda.sofyale@gmail.com',
   isPublished: true,

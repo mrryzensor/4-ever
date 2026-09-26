@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Guest, WeddingSettings } from '../types.ts';
 import { toast } from '../lib/toast.ts';
+import { RsvpCompanionToggle } from './RsvpCompanionToggle.tsx';
 
 interface RsvpModalProps {
   isOpen: boolean;
@@ -40,6 +41,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
   // Form states
   const [status, setStatus] = useState<'confirmed' | 'declined'>('confirmed');
   const [confirmedPasses, setConfirmedPasses] = useState(1);
+  const [bringingCompanions, setBringingCompanions] = useState(false);
   const [attendingCeremony, setAttendingCeremony] = useState(true);
   const [attendingReception, setAttendingReception] = useState(true);
   const [dietary, setDietary] = useState('');
@@ -50,11 +52,23 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const maxSelectablePasses = guest ? Math.max(guest.allocatedPasses || 1, 1) : 5;
+  const handleBringCompanionsChange = (enabled: boolean, maxPasses = maxSelectablePasses) => {
+    setBringingCompanions(enabled);
+    if (enabled) {
+      setConfirmedPasses((current) => Math.min(maxPasses, Math.max(2, current)));
+    } else {
+      setConfirmedPasses(1);
+      setCompanions((current) => current.slice(0, 1));
+    }
+  };
 
   useEffect(() => {
     if (initialGuest) {
       setGuest(initialGuest);
-      setConfirmedPasses(initialGuest.confirmedPasses > 0 ? initialGuest.confirmedPasses : initialGuest.allocatedPasses);
+      const passes = initialGuest.confirmedPasses > 0 ? initialGuest.confirmedPasses : 1;
+      setConfirmedPasses(passes);
+      setBringingCompanions(passes > 1);
       setStatus(initialGuest.status === 'declined' ? 'declined' : 'confirmed');
       setAttendingCeremony(initialGuest.attendingCeremony ?? true);
       setAttendingReception(initialGuest.attendingReception ?? true);
@@ -87,7 +101,9 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
       }
       const data: Guest = await res.json();
       setGuest(data);
-      setConfirmedPasses(data.confirmedPasses > 0 ? data.confirmedPasses : data.allocatedPasses);
+      const passes = data.confirmedPasses > 0 ? data.confirmedPasses : 1;
+      setConfirmedPasses(passes);
+      setBringingCompanions(passes > 1);
       setStatus(data.status === 'declined' ? 'declined' : 'confirmed');
       setPhone(data.phone || '');
       setEmail(data.email || '');
@@ -133,14 +149,18 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
     setSubmitting(true);
     try {
+      const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
+      const submittedCompanions = companions
+        .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
+        .filter((name) => name.trim() !== '');
       const payload = {
         accessCode: guest.accessCode,
         status,
-        confirmedPasses: status === 'confirmed' ? confirmedPasses : 0,
+        confirmedPasses: submittedPasses,
         attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
         attendingReception: status === 'confirmed' ? attendingReception : false,
         dietaryRestrictions: dietary,
-        companionNames: companions.filter((c) => c.trim() !== ''),
+        companionNames: submittedCompanions,
         suggestedSong: song,
         message,
         phone,
@@ -185,15 +205,19 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
     setSubmitting(true);
     try {
+      const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
+      const submittedCompanions = companions
+        .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
+        .filter((name) => name.trim() !== '');
       const payload = {
         weddingId: settings.id || 1,
         fullName: genericFullName.trim(),
         status,
-        confirmedPasses: status === 'confirmed' ? confirmedPasses : 0,
+        confirmedPasses: submittedPasses,
         attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
         attendingReception: status === 'confirmed' ? attendingReception : false,
         dietaryRestrictions: dietary,
-        companionNames: companions.filter((c) => c.trim() !== ''),
+        companionNames: submittedCompanions,
         suggestedSong: song,
         message,
         phone,
@@ -416,16 +440,23 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
                 {status === 'confirmed' && (
                   <div className="space-y-3 pt-1 animate-fadeIn">
-                    {/* Number of passes */}
+                    <RsvpCompanionToggle
+                      label={settings.rsvpCompanionToggleText?.trim() || '¿Llevas invitados?'}
+                      checked={bringingCompanions}
+                      onChange={(enabled) => handleBringCompanionsChange(enabled, 5)}
+                    />
+
+                    {bringingCompanions && (
+                    <div className="space-y-3 animate-fadeIn">
                     <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/60 flex items-center justify-between">
                       <div>
                         <span className="text-xs font-bold text-amber-900 block">
-                          Número de personas que asisten:
+                          Número de asistentes (incluyéndote):
                         </span>
-                        <span className="text-[10px] text-amber-700">Incluyéndote a ti</span>
+                        <span className="text-[10px] text-amber-700">Selecciona de 2 a 5 personas.</span>
                       </div>
                       <div className="flex items-center gap-1.5 bg-white border border-amber-200 rounded-lg p-1">
-                        {[1, 2, 3, 4, 5].map((num) => (
+                        {[2, 3, 4, 5].map((num) => (
                           <button
                             key={num}
                             type="button"
@@ -443,7 +474,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                     </div>
 
                     {/* Companion names */}
-                    {confirmedPasses > 1 && (
+                    {bringingCompanions && confirmedPasses > 1 && (
                       <div className="space-y-1.5 bg-white p-3 rounded-xl border border-stone-200">
                         <span className="text-[11px] font-semibold text-stone-700 block">
                           Nombres de tus acompañantes:
@@ -459,6 +490,8 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                           />
                         ))}
                       </div>
+                    )}
+                    </div>
                     )}
 
                     {/* Suggested Song */}
@@ -567,14 +600,23 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
             {status === 'confirmed' && (
               <div className="space-y-4">
-                {/* Number of passes used */}
+                {guest.allocatedPasses > 1 && (
+                  <RsvpCompanionToggle
+                    label={settings.rsvpCompanionToggleText?.trim() || '¿Llevas invitados?'}
+                    checked={bringingCompanions}
+                    onChange={handleBringCompanionsChange}
+                  />
+                )}
+
+                {bringingCompanions && guest.allocatedPasses > 1 && (
+                <div className="space-y-3 animate-fadeIn">
                 <div>
                   <label className="text-xs font-semibold text-stone-700 block mb-1.5 flex items-center justify-between">
-                    <span>Número de pases que utilizarás:</span>
+                    <span>Número de asistentes (incluyéndote):</span>
                     <span className="text-amber-800 font-bold">{confirmedPasses} de {guest.allocatedPasses}</span>
                   </label>
                   <div className="flex gap-2">
-                    {Array.from({ length: guest.allocatedPasses }, (_, i) => i + 1).map((num) => (
+                    {Array.from({ length: Math.max(guest.allocatedPasses - 1, 0) }, (_, i) => i + 2).map((num) => (
                       <button
                         key={num}
                         type="button"
@@ -592,7 +634,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                 </div>
 
                 {/* Companion Names */}
-                {confirmedPasses > 1 && (
+                {bringingCompanions && confirmedPasses > 1 && (
                   <div className="space-y-2 pt-2 border-t border-stone-200">
                     <label className="text-xs font-semibold text-stone-700 block">
                       Nombre de acompañantes:
@@ -608,6 +650,8 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                       />
                     ))}
                   </div>
+                )}
+                </div>
                 )}
 
                 {/* Dietary Requirements */}

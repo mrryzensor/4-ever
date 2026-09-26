@@ -232,6 +232,7 @@ export interface WeddingSettings {
   rsvpDeadlineMessage?: string; // Supports {date} placeholder
   rsvpButtonText?: string;
   rsvpButtonStyle?: 'auto' | 'soft' | 'outline' | 'editorial' | 'art-deco';
+  rsvpCompanionToggleText?: string;
   // Bank Account & Transfer Quick Settings (Perú & Latam)
   bankName?: string;
   bankBeneficiary?: string;

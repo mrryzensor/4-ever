@@ -224,6 +224,16 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           />
         </div>
       </div>
+      <div className="max-w-xl">
+        <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">Pregunta para acompañantes:</label>
+        <input
+          type="text"
+          value={settings.rsvpCompanionToggleText || ''}
+          onChange={(e) => onChange({ rsvpCompanionToggleText: e.target.value })}
+          placeholder="¿Llevas invitados?"
+          className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+        />
+      </div>
     </div>
   );
 };

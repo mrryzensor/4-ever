@@ -643,7 +643,7 @@ const DEMO_XV_DB_FIELDS = [
   'typographyTitleScale', 'typographyHeadingScale', 'typographyBodyScale', 'typographySubtitleScale', 'typographyDetailScale', 'typographyBadgeScale', 'typographyButtonScale',
   'transitionWaveStyle', 'transitionEffect', 'heroIconStyle', 'heroEmblemColor', 'heroEmblemGlow',
   'heroEmblemSparkle', 'heroEmblemScale',
-  'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle',
+  'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
   'bankName', 'bankBeneficiary',
   'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency', 'bankAccounts',
   'enableBankTransfer', 'showBankAccountsWhenCollapsed', 'enableStoreRegistry', 'enableEnvelopeGift',

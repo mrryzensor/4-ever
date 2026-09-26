@@ -146,6 +146,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   rsvpDeadlineMessage: 'Por favor confirma tu asistencia antes del {date}.',
   rsvpButtonText: 'Confirmar asistencia',
   rsvpButtonStyle: 'auto',
+  rsvpCompanionToggleText: '¿Llevas invitados?',
   contactPhone: '+52 55 9876 5432',
   contactEmail: 'xv.valeriamontserrat@gmail.com',
   isPublished: true,

@@ -45,6 +45,7 @@ const matchGuestTokens = (guest: Guest, search: string) => {
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { AnimatedChampagneGlasses, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { toast } from '../../lib/toast.ts';
+import { RsvpCompanionToggle } from '../../components/RsvpCompanionToggle.tsx';
 
 interface RsvpSectionProps {
   initialGuest?: Guest | null;
@@ -70,6 +71,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   // Form states
   const [status, setStatus] = useState<'confirmed' | 'declined'>('confirmed');
   const [confirmedPasses, setConfirmedPasses] = useState(1);
+  const [bringingCompanions, setBringingCompanions] = useState(false);
   const [attendingCeremony, setAttendingCeremony] = useState(true);
   const [attendingReception, setAttendingReception] = useState(true);
   const [dietary, setDietary] = useState('');
@@ -96,7 +98,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const applyGuestData = (selected: Guest) => {
     setGuest(selected);
     setFullName(selected.fullName);
-    setConfirmedPasses(selected.confirmedPasses > 0 ? selected.confirmedPasses : selected.allocatedPasses);
+    const passes = selected.confirmedPasses > 0 ? selected.confirmedPasses : 1;
+    setConfirmedPasses(passes);
+    setBringingCompanions(passes > 1);
     setStatus(selected.status === 'declined' ? 'declined' : 'confirmed');
     setAttendingCeremony(selected.attendingCeremony ?? true);
     setAttendingReception(selected.attendingReception ?? true);
@@ -211,6 +215,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setGuest(null);
     setFullName('');
     setConfirmedPasses(1);
+    setBringingCompanions(false);
     setCompanions([]);
     setDietary('');
     setSong('');
@@ -228,6 +233,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
     setSubmitting(true);
     try {
+      const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
+      const submittedCompanions = companions
+        .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
+        .filter((name) => name.trim() !== '');
       let res;
       if (guest && guest.accessCode) {
         // Confirm assigned guest
@@ -235,11 +244,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           weddingId: settings.id || 1,
           accessCode: guest.accessCode,
           status,
-          confirmedPasses: status === 'confirmed' ? confirmedPasses : 0,
+          confirmedPasses: submittedPasses,
           attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
           attendingReception: status === 'confirmed' ? attendingReception : false,
           dietaryRestrictions: dietary,
-          companionNames: companions.filter((c) => c.trim() !== ''),
+          companionNames: submittedCompanions,
           suggestedSong: song,
           message,
           phone,
@@ -257,11 +266,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           weddingId: settings.id || 1,
           fullName: fullName.trim(),
           status,
-          confirmedPasses: status === 'confirmed' ? confirmedPasses : 0,
+          confirmedPasses: submittedPasses,
           attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
           attendingReception: status === 'confirmed' ? attendingReception : false,
           dietaryRestrictions: dietary,
-          companionNames: companions.filter((c) => c.trim() !== ''),
+          companionNames: submittedCompanions,
           suggestedSong: song,
           message,
           phone,
@@ -301,7 +310,16 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     }
   };
 
-  const maxSelectablePasses = guest?.allocatedPasses ? Math.max(guest.allocatedPasses, 1) : 6;
+  const maxSelectablePasses = guest ? Math.max(guest.allocatedPasses || 1, 1) : 6;
+  const handleBringCompanionsChange = (enabled: boolean) => {
+    setBringingCompanions(enabled);
+    if (enabled) {
+      setConfirmedPasses((current) => Math.min(maxSelectablePasses, Math.max(2, current)));
+    } else {
+      setConfirmedPasses(1);
+      setCompanions((current) => current.slice(0, 1));
+    }
+  };
 
   return (
     <section id={inline ? 'rsvp-inline' : 'rsvp'} className={`w-full ${inline ? 'py-2 px-0' : 'py-10 sm:py-14 px-4 sm:px-6 lg:px-12'} transition-colors duration-500 ${inline ? '' : activeTheme.bgClass}`}>
@@ -519,16 +537,27 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               {status === 'confirmed' && (
                 <div className="space-y-6 pt-2 animate-fadeIn">
                   
-                  {/* Passes Counter Selector - Ultra-Responsive Layout */}
+                  {maxSelectablePasses > 1 && (
+                    <RsvpCompanionToggle
+                      label={settings.rsvpCompanionToggleText?.trim() || '¿Llevas invitados?'}
+                      checked={bringingCompanions}
+                      onChange={handleBringCompanionsChange}
+                      isDark={isDark}
+                      accentColor={activeTheme.accentColorHex}
+                    />
+                  )}
+
+                  {bringingCompanions && maxSelectablePasses > 1 && (
+                  <div className="space-y-4 animate-fadeIn">
                   <div className="p-4 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
                       <span className={`text-sm sm:text-base font-bold block ${activeTheme.textPrimaryClass}`}>
-                        Número de Asistentes
+                        Número de asistentes (incluyéndote)
                       </span>
                       <span className="text-xs text-stone-500 dark:text-stone-400">
                         {guest?.allocatedPasses
                           ? `Tu invitación cuenta con hasta ${guest.allocatedPasses} pases reservados.`
-                          : 'Indica cuántas personas asistirán en total (incluyéndote).'}
+                          : 'Indica el total de personas que asistirán.'}
                       </span>
                     </div>
 
@@ -536,8 +565,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       {/* Stepper Minus */}
                       <button
                         type="button"
-                        onClick={() => handlePassesChange(Math.max(1, confirmedPasses - 1))}
-                        disabled={confirmedPasses <= 1}
+                        onClick={() => handlePassesChange(Math.max(2, confirmedPasses - 1))}
+                        disabled={confirmedPasses <= 2}
                         className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
                         title="Disminuir asistentes"
                       >
@@ -546,8 +575,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
                       {/* Number Pills */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {Array.from({ length: maxSelectablePasses }).map((_, idx) => {
-                          const num = idx + 1;
+                        {Array.from({ length: maxSelectablePasses - 1 }).map((_, idx) => {
+                          const num = idx + 2;
                           return (
                             <button
                               key={num}
@@ -579,7 +608,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   </div>
 
                   {/* Companion names fields */}
-                  {confirmedPasses > 1 && (
+                  {bringingCompanions && confirmedPasses > 1 && (
                     <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-3">
                       <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                         Nombres de tus Acompañantes
@@ -597,6 +626,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                         ))}
                       </div>
                     </div>
+                  )}
+                  </div>
                   )}
                 </div>
               )}

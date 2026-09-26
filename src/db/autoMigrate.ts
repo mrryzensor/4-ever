@@ -255,6 +255,7 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_deadline_message TEXT DEFAULT 'Por favor confirma tu asistencia antes del {date}.';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_text TEXT DEFAULT 'Confirmar asistencia';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_companion_toggle_text TEXT DEFAULT '¿Llevas invitados?';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

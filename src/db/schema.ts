@@ -153,6 +153,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   rsvpDeadlineMessage: text('rsvp_deadline_message').default('Por favor confirma tu asistencia antes del {date}.'),
   rsvpButtonText: text('rsvp_button_text').default('Confirmar asistencia'),
   rsvpButtonStyle: text('rsvp_button_style').default('auto'),
+  rsvpCompanionToggleText: text('rsvp_companion_toggle_text').default('¿Llevas invitados?'),
   bankName: text('bank_name').default(''),
   bankBeneficiary: text('bank_beneficiary').default(''),
   bankAccountNumber: text('bank_account_number').default(''),
