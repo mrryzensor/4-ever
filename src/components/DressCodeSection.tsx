@@ -429,7 +429,7 @@ const ManFashionMockupComponent: React.FC<ManOutfitProps> = ({
 
       {/* Haute Couture Atelier Badge */}
       <div className="absolute -bottom-3 inset-x-0 flex justify-center">
-        <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-[#1E293B] text-white backdrop-blur-md border border-slate-700 shadow-md flex items-center gap-1">
+        <span data-typography-role="badge" className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-[#1E293B] text-white backdrop-blur-md border border-slate-700 shadow-md flex items-center gap-1">
           <Sparkles className="w-2.5 h-2.5 text-amber-400" />
           Caballero
         </span>
@@ -827,7 +827,7 @@ const WomanFashionMockupComponent: React.FC<WomanOutfitProps> = ({
 
       {/* Haute Couture Atelier Badge */}
       <div className="absolute -bottom-3 inset-x-0 flex justify-center">
-        <span className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-[#3B1E2B] text-white backdrop-blur-md border border-rose-900 shadow-md flex items-center gap-1">
+        <span data-typography-role="badge" className="text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full bg-[#3B1E2B] text-white backdrop-blur-md border border-rose-900 shadow-md flex items-center gap-1">
           <Sparkles className="w-2.5 h-2.5 text-rose-300" />
           Dama
         </span>
@@ -969,14 +969,12 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             color={activeTheme?.accentColorHex}
           />
 
-          <p className={`text-xl sm:text-2xl font-serif italic font-medium mt-3 ${
-            isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
-          }`}>
+          <h3 className={`mt-3 text-2xl font-bold sm:text-3xl ${activeTheme.textPrimaryClass} ${activeTheme.fontDisplay}`}>
             {dressCodeTitle}
-          </p>
+          </h3>
 
           {dressCodeDesc && (
-            <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif ${
+            <p className={`invitation-card-copy text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif ${
               isDark ? 'text-stone-300' : 'text-stone-600'
             }`}>
               "{dressCodeDesc}"
@@ -1004,10 +1002,10 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
 
           {/* Inline Toggle Button for Simulator and Full Details */}
           <div className="mt-7 flex justify-center">
-            <button
+            <button data-typography-role="button"
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
+              className={`invitation-card-action inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
                 isDark
                   ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                   : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'

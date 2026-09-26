@@ -1279,7 +1279,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           >
             {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
           </motion.span>
-          <span className={`mt-1 font-sans uppercase tracking-[0.16em] ${layout === 'hero' ? 'text-[8px] text-white/75 sm:text-[9px]' : 'text-[9px] text-stone-500 sm:text-[10px]'}`}>
+          <span data-typography-role="detail" className={`mt-1 font-sans uppercase tracking-[0.1em] sm:tracking-[0.16em] ${layout === 'hero' ? 'text-[10px] text-white/75 sm:text-[9px]' : 'text-[11px] text-stone-600 sm:text-[10px]'}`}>
             {unit.label}
           </span>
         </div>
@@ -1290,17 +1290,18 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     <div className="mx-auto flex w-full flex-col items-center text-center">
       <time
         dateTime={settings.eventDate || undefined}
-        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-sm sm:text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
+        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
       >
         {formattedEventDate}
       </time>
       {formattedEventTime && (
-        <span className={`mt-1 inline-flex items-center gap-1.5 font-sans text-xs tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+        <span data-typography-role="detail" className={`mt-1 inline-flex items-center gap-1.5 font-sans text-sm tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
           <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
           {formattedEventTime}
         </span>
       )}
       <span
+        data-typography-role="heading"
         className={`mt-1 font-serif italic tracking-wide text-3xl sm:text-4xl md:text-5xl ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
         style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}
       >
@@ -1431,7 +1432,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                   >
                     {String(unit.value).padStart(2, '0')}
                   </motion.span>
-                  <span className="mt-2 text-[9px] uppercase tracking-[0.15em] text-stone-500 sm:text-[10px]">{unit.label}</span>
+                  <span data-typography-role="detail" className="mt-2 text-[9px] uppercase tracking-[0.15em] text-stone-500 sm:text-[10px]">{unit.label}</span>
                 </div>
               ))}
             </div>
@@ -1460,7 +1461,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                 >
                   {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
                 </motion.span>
-                <span className="mt-1 text-[8px] uppercase tracking-[0.13em] text-stone-500 sm:text-[10px] sm:tracking-[0.18em]">{unit.label}</span>
+                <span data-typography-role="detail" className="mt-1 text-[8px] uppercase tracking-[0.13em] text-stone-500 sm:text-[10px] sm:tracking-[0.18em]">{unit.label}</span>
               </div>
             ))}
           </div>
@@ -1494,7 +1495,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                   {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
                   <span className="absolute inset-x-0 top-1/2 border-t border-black/10" />
                 </motion.div>
-                <div className={`py-1.5 text-[9px] uppercase tracking-[0.18em] sm:py-2 sm:text-[10px] ${isDark ? 'bg-white/5 text-stone-300' : 'bg-stone-50 text-stone-500'}`}>
+                <div data-typography-role="detail" className={`py-1.5 text-[9px] uppercase tracking-[0.18em] sm:py-2 sm:text-[10px] ${isDark ? 'bg-white/5 text-stone-300' : 'bg-stone-50 text-stone-500'}`}>
                   {unit.label}
                 </div>
               </div>
@@ -1514,7 +1515,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           <div className={`mx-auto mt-5 w-full max-w-xl divide-y ${isDark ? 'divide-white/15' : 'divide-stone-200'}`}>
             {timeUnits.map((unit) => (
               <div key={unit.key} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 py-2.5 sm:py-3">
-                <span className={`text-right font-sans text-[10px] uppercase tracking-[0.2em] sm:text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>{unit.label}</span>
+                <span data-typography-role="detail" className={`text-right font-sans text-[10px] uppercase tracking-[0.2em] sm:text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>{unit.label}</span>
                 <motion.span
                   key={`stacked-${unit.key}-${unit.value}`}
                   initial={{ opacity: 0.65, x: 5 }}

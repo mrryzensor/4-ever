@@ -203,7 +203,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
         {isAdmin && (
           <div className="mt-6 flex justify-center">
-            <button
+            <button data-typography-role="button"
               onClick={() => setShowAddModal(true)}
               className={`px-6 py-3 rounded-full text-xs font-serif font-semibold shadow-md flex items-center gap-2 cursor-pointer transition-colors ${
                 isDark
@@ -255,7 +255,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                 <div className="mt-4 flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full border ${
+                      <span data-typography-role="badge" className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full border ${
                         isDark
                           ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
                           : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'

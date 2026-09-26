@@ -13,6 +13,49 @@
   font-family: var(--invitation-font-display, inherit) !important;
 }
 
+/* Typography scales are set by Atelier and intentionally scale each text role
+   as a unit so the browser recalculates wrapping and surrounding layout. */
+.public-invitation h1 { zoom: var(--invitation-type-title, 1); }
+.public-invitation :where(h2, h3, h4, h5, h6, [data-typography-role="heading"]) { zoom: var(--invitation-type-heading, 1); }
+.public-invitation p[data-typography-role="heading"] { zoom: var(--invitation-type-heading, 1); }
+.public-invitation p { zoom: var(--invitation-type-body, 1); }
+.public-invitation p[data-typography-role="subtitle"] { zoom: var(--invitation-type-subtitle, 1); }
+.public-invitation :where(small, time, [data-typography-role="detail"]):not(button *):not(a *):not([role="button"] *) {
+  zoom: var(--invitation-type-detail, 1);
+}
+.public-invitation [data-typography-role="badge"] {
+  zoom: var(--invitation-type-badge, 1);
+}
+.public-invitation button:not([aria-label]):not([title]):not(:has(> svg:only-child)),
+.public-invitation a[class*="cursor-pointer"]:not([data-typography-role="badge"]),
+.public-invitation [data-typography-role="button"] {
+  zoom: var(--invitation-type-button, 1);
+}
+.public-invitation .invitation-card-action {
+  display: inline-flex !important;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem !important;
+  border: 1px solid color-mix(in srgb, currentColor 26%, transparent);
+  border-radius: 9999px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.055em !important;
+  text-align: center;
+  text-transform: uppercase;
+}
+.public-invitation p.invitation-card-copy {
+  font-family: var(--invitation-font-body, inherit) !important;
+  font-size: clamp(0.875rem, 0.8rem + 0.45vw, 1rem) !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1.65 !important;
+  letter-spacing: normal !important;
+}
+
 .public-invitation button {
   -webkit-appearance: none !important;
   appearance: none !important;

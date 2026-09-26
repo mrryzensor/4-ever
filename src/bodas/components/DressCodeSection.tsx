@@ -961,11 +961,9 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             color={activeTheme?.accentColorHex}
           />
 
-          <p className={`text-xl sm:text-2xl font-serif italic font-medium mt-3 ${
-            isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
-          }`}>
+          <h3 className={`mt-3 text-2xl font-bold sm:text-3xl ${activeTheme.textPrimaryClass} ${activeTheme.fontDisplay}`}>
             {dressCodeTitle}
-          </p>
+          </h3>
 
           {dressCodeDesc && (
             <p className={`text-sm max-w-xl mx-auto mt-2 leading-relaxed font-serif ${

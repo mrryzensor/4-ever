@@ -696,7 +696,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           color={activeTheme?.accentColorHex}
         />
         {currentCarouselPhoto && (
-          <button
+          <button data-typography-role="button"
             type="button"
             onClick={() => void openPhotoAtIndex(carouselIndex)}
             className={`mt-3 inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-serif font-bold uppercase tracking-wider border shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
@@ -852,7 +852,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                           {/* Category Badge positioned nicely above caption */}
                           <div className="mb-1.5">
-                            <span className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
+                            <span data-typography-role="badge" className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
                               {currentCarouselPhoto.driveOpenUrl ? 'Google Drive' : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
                             </span>
                           </div>
@@ -968,7 +968,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           {/* Inline Action Indicator & Upload Photo Button */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             {isAdmin && (
-              <button
+              <button data-typography-role="button"
                 type="button"
                 onClick={() => setShowUploadModal(true)}
                 className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-serif font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 ${isDark
@@ -981,7 +981,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               </button>
             )}
             {driveGallery.hasMore && (
-              <button
+              <button data-typography-role="button"
                 type="button"
                 onClick={() => void driveGallery.loadMore()}
                 disabled={driveGallery.loadingMore}
@@ -1278,7 +1278,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     {/* MOBILE BOTTOM GRADIENT OVERLAY - Subtle & Elegant (Photo is the real protagonist) */}
                     <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none transition-opacity duration-300 ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
                       <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 px-4 pr-16 text-left">
-                        <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
+                        <span data-typography-role="badge" className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
                           {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                         </span>
 
@@ -1320,7 +1320,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
                             <span>{comments.length === 0 ? 'Sé el primero en comentar...' : `Ver y dejar comentarios (${comments.length})...`}</span>
                           </span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
+                      <span data-typography-role="badge" className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
                             {comments.length}
                           </span>
                         </button>
@@ -1490,7 +1490,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <div className="hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
                     {/* Header & Photo Title */}
                     <div className="p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0">
-                      <span className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
+                      <span data-typography-role="badge" className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
                         {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                       </span>
                       <h3 className="text-xl font-serif font-semibold text-white leading-snug">
@@ -1510,7 +1510,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           <MessageCircle className="w-4 h-4 text-amber-400" />
                           <span>Comentarios & Dedicatorias</span>
                         </div>
-                        <span className="text-xs font-mono font-bold text-amber-300 bg-stone-800/80 px-2.5 py-0.5 rounded-full">
+                        <span data-typography-role="badge" className="text-xs font-mono font-bold text-amber-300 bg-stone-800/80 px-2.5 py-0.5 rounded-full">
                           {comments.length}
                         </span>
                       </div>

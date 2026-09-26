@@ -362,7 +362,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 )}
               </div>
 
-              <button
+              <button data-typography-role="button"
                 type="button"
                 onClick={() => setIsSuccess(false)}
                 className="px-8 py-3 rounded-full bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 font-medium text-xs sm:text-sm hover:opacity-90 transition-all cursor-pointer shadow-md"
@@ -473,7 +473,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   ¿Nos acompañarás a celebrar?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
+                  <button data-typography-role="button"
                     type="button"
                     onClick={() => setStatus('confirmed')}
                     className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
@@ -493,7 +493,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     </div>
                   </button>
 
-                    <button
+                    <button data-typography-role="button"
                       type="button"
                       onClick={() => setStatus('declined')}
                       className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
@@ -603,7 +603,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
               {/* 4. OPTIONAL DETAILS ACCORDION TOGGLE (Restricciones, Canción DJ, Dedicatoria, Teléfono, Correo) */}
               <div className="pt-2">
-                <button
+                <button data-typography-role="button"
                   type="button"
                   onClick={() => setShowExtraDetails(!showExtraDetails)}
                   className={`w-full p-4 rounded-2xl border flex items-center justify-between text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
@@ -709,7 +709,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
               {/* Submit CTA */}
               <div className="pt-4">
-                <button
+                <button data-typography-role="button"
                   type="submit"
                   disabled={submitting || !fullName.trim()}
                   className="w-full py-4 sm:py-5 rounded-2xl bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 font-serif font-bold text-base sm:text-lg shadow-xl hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"

@@ -125,7 +125,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
+        <p className={`invitation-card-copy text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
           Te facilitamos los mapas interactivos y rutas guiadas por Google Maps para acompañarnos puntualmente en cada momento.
@@ -143,7 +143,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 <MapPin className="w-6 h-6" />
               </div>
               <div className="min-w-0">
-                <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
+                <span data-typography-role="badge" className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
                   Ceremonia • {settings.ceremonyTime || '17:00'} hrs
                 </span>
                 <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
@@ -161,7 +161,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 <MapPin className="w-6 h-6" />
               </div>
               <div className="min-w-0">
-                <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
+                <span data-typography-role="badge" className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
                   Recepción • {settings.receptionTime || '19:30'} hrs
                 </span>
                 <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
@@ -174,10 +174,10 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
 
         {/* Toggle Button for Maps and Full Details */}
         <div className="mt-7 flex justify-center">
-          <button
+          <button data-typography-role="button"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
+            className={`invitation-card-action inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
@@ -212,14 +212,14 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         }`}>
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className={`text-[11px] uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${
+              <span data-typography-role="badge" className={`text-[11px] uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${
                 isDark
                   ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
                   : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
               }`}>
                 Paso 1 • Ceremonia
               </span>
-              <div className={`flex items-center gap-1.5 text-xs font-mono font-semibold ${
+              <div data-typography-role="badge" className={`flex items-center gap-1.5 text-xs font-mono font-semibold ${
                 isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
               }`}>
                 <Clock className="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 loading="lazy"
               />
               <div className="absolute top-2 right-2 z-10">
-                <span className="text-[10px] font-semibold bg-white/90 backdrop-blur-xs text-[#5A5A40] px-2 py-1 rounded-lg border border-[#E5E2D0] shadow-xs flex items-center gap-1">
+                <span data-typography-role="badge" className="text-[10px] font-semibold bg-white/90 backdrop-blur-xs text-[#5A5A40] px-2 py-1 rounded-lg border border-[#E5E2D0] shadow-xs flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-red-500" /> Google Maps
                 </span>
               </div>
@@ -268,11 +268,11 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
           <div className={`space-y-2.5 pt-2 border-t ${isDark ? 'border-[#5A5A40]/50' : 'border-[#E5E2D0]/60'}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* Primary: Abrir en Google Maps */}
-              <a
+              <a data-typography-role="button"
                 href={ceremonySearchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`px-4 py-3 rounded-2xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`invitation-card-action px-4 py-3 rounded-2xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isDark
                     ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
                     : 'bg-[#5A5A40] hover:bg-[#484833] text-white'
@@ -283,11 +283,11 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
               </a>
 
               {/* Route: Cómo Llegar */}
-              <a
+              <a data-typography-role="button"
                 href={ceremonyDirectionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                className={`invitation-card-action px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
                   isDark
                     ? 'bg-[#1F211D] hover:bg-[#282B25] text-stone-200 border-[#5A5A40]'
                     : 'bg-[#FAF9F0] hover:bg-[#F0EEDC] text-[#5A5A40] border-[#E5E2D0]'
@@ -397,7 +397,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 loading="lazy"
               />
               <div className="absolute top-2 right-2 z-10">
-                <span className="text-[10px] font-semibold bg-white/90 backdrop-blur-xs text-[#5A5A40] px-2 py-1 rounded-lg border border-[#E5E2D0] shadow-xs flex items-center gap-1">
+                <span data-typography-role="badge" className="text-[10px] font-semibold bg-white/90 backdrop-blur-xs text-[#5A5A40] px-2 py-1 rounded-lg border border-[#E5E2D0] shadow-xs flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-red-500" /> Google Maps
                 </span>
               </div>
@@ -408,11 +408,11 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
           <div className={`space-y-2.5 pt-2 border-t ${isDark ? 'border-[#5A5A40]/50' : 'border-[#E5E2D0]/60'}`}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* Primary: Abrir en Google Maps */}
-              <a
+              <a data-typography-role="button"
                 href={receptionSearchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`px-4 py-3 rounded-2xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`invitation-card-action px-4 py-3 rounded-2xl text-xs font-semibold shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
                   isDark
                     ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
                     : 'bg-[#5A5A40] hover:bg-[#484833] text-white'
@@ -423,11 +423,11 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
               </a>
 
               {/* Route: Cómo Llegar */}
-              <a
+              <a data-typography-role="button"
                 href={receptionDirectionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
+                className={`invitation-card-action px-4 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer border ${
                   isDark
                     ? 'bg-[#1F211D] hover:bg-[#282B25] text-stone-200 border-[#5A5A40]'
                     : 'bg-[#FAF9F0] hover:bg-[#F0EEDC] text-[#5A5A40] border-[#E5E2D0]'

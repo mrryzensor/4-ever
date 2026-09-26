@@ -1280,6 +1280,13 @@ export default function App() {
   const invitationFontStyle = {
     '--invitation-font-body': getThemeFontFamily(activeFontTheme.fontBody, 'Georgia, serif'),
     '--invitation-font-display': getThemeFontFamily(activeFontTheme.fontDisplay, 'Georgia, serif'),
+    '--invitation-type-title': `${Math.min(140, Math.max(80, settings.typographyTitleScale ?? 100)) / 100}`,
+    '--invitation-type-heading': `${Math.min(140, Math.max(80, settings.typographyHeadingScale ?? 100)) / 100}`,
+    '--invitation-type-body': `${Math.min(140, Math.max(80, settings.typographyBodyScale ?? 100)) / 100}`,
+    '--invitation-type-subtitle': `${Math.min(140, Math.max(80, settings.typographySubtitleScale ?? 100)) / 100}`,
+    '--invitation-type-detail': `${Math.min(140, Math.max(80, settings.typographyDetailScale ?? 100)) / 100}`,
+    '--invitation-type-badge': `${Math.min(200, Math.max(80, settings.typographyBadgeScale ?? 100)) / 100}`,
+    '--invitation-type-button': `${Math.min(200, Math.max(80, settings.typographyButtonScale ?? 100)) / 100}`,
   } as React.CSSProperties;
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
@@ -1329,12 +1336,17 @@ export default function App() {
 
   const landingSections: Record<LandingSectionId, React.ReactNode> = {
     invitation: (
-      <section id="seccion-invitacion" key="invitation">
+      <section id="seccion-invitacion" key="invitation" className="relative" style={{ backgroundColor: activeTheme.bgHex }}>
         {settingsEventCategory === 'xv' ? (
           <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         ) : (
           <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         )}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[60] h-px sm:hidden"
+          style={{ backgroundColor: activeTheme.bgHex }}
+        />
       </section>
     ),
     gallery: galleryInEventDetails ? null : gallerySection,

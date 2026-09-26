@@ -611,7 +611,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.heroCourtPosition === 'below-quote' && renderCourtCard()}
             {settings.heroShowRsvpButton && settings.showRsvpSection !== false && onOpenRsvp && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex gap-3 mt-6">
-                <button onClick={onOpenRsvp} className="px-8 py-3 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-serif font-semibold text-sm uppercase shadow-xl hover:brightness-110 transition-all flex items-center gap-2">
+                <button data-typography-role="button" onClick={onOpenRsvp} className="invitation-card-action px-8 py-3 rounded-full bg-gradient-to-r from-amber-600 to-amber-700 text-white font-serif font-semibold text-sm uppercase shadow-xl hover:brightness-110 transition-all flex items-center gap-2">
                   <Heart className="w-4 h-4 fill-white" /> {settings.rsvpButtonText?.trim() || 'Confirmar asistencia'}
                 </button>
               </motion.div>
@@ -689,7 +689,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               color={theme.accentColorHex}
             />
             
-            <p className={`text-sm sm:text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+            <p data-typography-role="subtitle" className={`text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
               {settings.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de manera interactiva.'}
             </p>
           </div>
@@ -717,24 +717,24 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                   {settings.receptionSameAsCeremony ? (
                     <div className="flex flex-col items-end gap-1">
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
                     </div>
                   ) : (
-                    <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
+                    <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
                       {settings.ceremonyTime || '17:00'} hrs
                     </span>
                   )}
                 </div>
 
-                <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
+                <span className="text-sm uppercase tracking-[0.12em] sm:tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                   {settings.receptionSameAsCeremony ? 'Ceremonia & Celebración' : 'Momento Sagrado'}
                 </span>
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.receptionSameAsCeremony ? 'Ceremonia y Recepción' : 'Ceremonia Religiosa'}
                 </h3>
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
-                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                <p className={`text-sm mt-2 flex items-start gap-2 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.accentColorHex }} />
                   <span>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
                 </p>
@@ -748,7 +748,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     e.stopPropagation();
                     toggleSection('ceremony');
                   }}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
                       ? isDark ? 'bg-[#C5A059] text-stone-950 font-bold' : 'bg-[#5A5A40] text-white'
                       : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-[#5A5A40]'
@@ -765,7 +765,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:underline"
+                    className="text-sm font-semibold flex items-center gap-1.5 hover:underline"
                     style={{ color: theme.accentColorHex }}
                   >
                     <Compass className="w-4 h-4 shrink-0" />
@@ -831,7 +831,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChampagneGlasses className="w-9 h-9" />
                   </div>
-                  <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
+                  <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
                     {settings.receptionTime || '19:30'} hrs
                   </span>
                 </div>
@@ -843,7 +843,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   Recepción & Brindis
                 </h3>
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{receptionLocationName}</p>
-                <p className={`text-xs sm:text-sm mt-2 flex items-start gap-2 ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                <p className={`text-sm mt-2 flex items-start gap-2 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
                   <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <span>{receptionLocationAddress || 'Dirección de la recepción'}</span>
                 </p>
@@ -857,7 +857,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     e.stopPropagation();
                     toggleSection('reception');
                   }}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
                       ? 'bg-amber-500 text-stone-950 font-bold border-amber-500'
                       : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-amber-900'
@@ -972,7 +972,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <Clock className="w-6 h-6 shrink-0" />
                     </div>
-                    <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
+                    <span data-typography-role="badge" className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
                       {itineraryList.length} Momentos Clave
                     </span>
                   </div>
@@ -987,7 +987,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   {/* Summary Chips */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {itineraryList.slice(0, 3).map((item, idx) => (
-                      <span
+                      <span data-typography-role="badge"
                         key={idx}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                           isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
@@ -1005,14 +1005,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
-                  <button
+                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex justify-center">
+                  <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleSection('itinerary');
                     }}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`invitation-card-action inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'itinerary'
                         ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
                         : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
@@ -1113,7 +1113,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <AnimatedGiftBox className="w-8 h-8" />
                     </div>
-                    <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
+                    <span data-typography-role="badge" className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
                       Mesa de Regalos
                     </span>
                   </div>
@@ -1130,7 +1130,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
                   <div className="mt-3 flex flex-wrap gap-2">
                     {settings.enableBankTransfer === true && bankAccounts.some(hasBankAccountData) && (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+                      <span data-typography-role="badge" className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <CreditCard className="w-3.5 h-3.5 text-amber-400" />
@@ -1138,7 +1138,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       </span>
                     )}
                     {settings.enableEnvelopeGift === true && (
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+                      <span data-typography-role="badge" className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <Mail className="w-3.5 h-3.5 text-rose-400" />
@@ -1293,9 +1293,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                   Código de Vestimenta
                 </span>
-                <p className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.dressCode || 'Formal / Rigurosa Etiqueta'}
-                </p>
+                </h3>
                 {settings.dressCodeDescription && (
                   <p className={`text-sm sm:text-base mt-2 max-w-xl mx-auto italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                     "{settings.dressCodeDescription}"
@@ -1510,14 +1510,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.tipsTitle || 'Tips & Recomendaciones de los Novios'}
                 </h3>
-                <p className={`text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                <p className={`invitation-card-copy text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   Información y sugerencias clave preparadas con cariño para que disfrutes al máximo cada momento de nuestra boda.
                 </p>
 
                 {/* Summary Tips Pills */}
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {tipsList.map((tip, idx) => (
-                    <span
+                    <span data-typography-role="badge"
                       key={idx}
                       className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
@@ -1530,13 +1530,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                  <button
+                  <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleSection('tips');
                     }}
-                    className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
+                    className={`invitation-card-action inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                       expandedSection === 'tips'
                         ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
                         : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
@@ -1573,7 +1573,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               <h4 className={`font-serif font-bold text-sm sm:text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
                                 {tip.title}
                               </h4>
-                              <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                              <p className={`invitation-card-copy text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                                 {tip.desc}
                               </p>
                             </div>

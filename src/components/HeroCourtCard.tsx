@@ -82,7 +82,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
           <h2 style={{ fontFamily: displayFontFamily }} className={`mx-auto max-w-5xl text-4xl leading-tight sm:text-5xl md:text-6xl lg:text-7xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
             {pageHeading}
           </h2>
-          <p className={`mx-auto mt-4 max-w-3xl text-base italic sm:text-lg md:text-xl ${theme.textSecondaryClass} ${theme.fontBody}`}>
+          <p className={`mx-auto mt-4 max-w-3xl text-lg font-medium italic sm:text-xl ${theme.textSecondaryClass} ${theme.fontBody}`}>
             {title}
           </p>
           <div className={`mx-auto mt-8 grid w-full max-w-[1500px] gap-4 sm:mt-10 sm:gap-5 ${courtItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'} ${fullPageGridColumns}`}>
@@ -92,10 +92,10 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                 className={`flex min-h-44 flex-col items-center justify-center rounded-3xl border px-5 py-7 shadow-lg sm:min-h-56 sm:px-7 sm:py-9 md:min-h-64 md:px-9 ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || ''}`}
                 style={{ borderColor: `${theme.accentColorHex}66` }}
               >
-                <span className="text-xs font-semibold uppercase tracking-[0.22em] sm:text-sm" style={{ color: theme.accentColorHex }}>
+                <span className="text-sm font-semibold uppercase tracking-[0.14em] sm:text-sm sm:tracking-[0.22em]" style={{ color: theme.accentColorHex }}>
                   {item.title}
                 </span>
-                <p style={{ fontFamily: displayFontFamily }} className={`mt-3 break-words text-2xl font-medium italic leading-snug sm:text-3xl md:text-4xl lg:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                <p data-typography-role="heading" style={{ fontFamily: displayFontFamily }} className={`mt-3 break-words text-2xl font-medium italic leading-snug sm:text-3xl md:text-4xl lg:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {item.names}
                 </p>
               </article>
@@ -132,7 +132,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                   >
                     {item.title}
                   </span>
-                  <p style={{ fontFamily: displayFontFamily }} className={`mt-0.5 break-words font-medium italic leading-snug ${nameSize} ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                  <p data-typography-role="heading" style={{ fontFamily: displayFontFamily }} className={`mt-0.5 break-words font-medium italic leading-snug ${nameSize} ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                     {item.names}
                   </p>
                 </div>

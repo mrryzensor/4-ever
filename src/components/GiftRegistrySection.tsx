@@ -81,7 +81,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
+        <p className={`invitation-card-copy text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
           {settings.giftRegistryMessage ||
@@ -120,10 +120,10 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
         {/* Inline Toggle Button */}
         <div className="mt-7 flex justify-center">
-          <button
+          <button data-typography-role="button"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
+          className={`invitation-card-action inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
@@ -175,7 +175,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 }`}>
                   <CreditCard className="w-6 h-6 shrink-0" />
                 </div>
-                <span className={`text-[10px] font-bold uppercase tracking-widest border px-2.5 py-1 rounded-full font-mono ${
+                <span data-typography-role="badge" className={`text-[10px] font-bold uppercase tracking-widest border px-2.5 py-1 rounded-full font-mono ${
                   isDark
                     ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
                     : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
@@ -387,7 +387,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                   {item.type === 'other' && <HeartHandshake className="w-6 h-6 shrink-0" />}
                 </div>
                 {item.bankName && (
-                  <span className={`text-[10px] font-bold uppercase tracking-widest border px-2.5 py-1 rounded-full font-mono ${
+                  <span data-typography-role="badge" className={`text-[10px] font-bold uppercase tracking-widest border px-2.5 py-1 rounded-full font-mono ${
                     isDark
                       ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
                       : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
@@ -571,11 +571,11 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
             {/* Bottom action button */}
             <div className={`mt-6 pt-4 border-t ${isDark ? 'border-[#5A5A40]/50' : 'border-[#E5E2D0]'}`}>
               {item.url ? (
-                <a
+                <a data-typography-role="button"
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`w-full py-3 px-5 rounded-full text-xs font-serif font-semibold flex items-center justify-center gap-2 shadow-md hover:brightness-110 transition-all ${
+                  className={`invitation-card-action w-full py-3 px-5 rounded-full text-xs font-serif font-semibold flex items-center justify-center gap-2 shadow-md hover:brightness-110 transition-all ${
                     isDark
                       ? 'bg-[#C5A059] text-stone-950 font-bold hover:bg-[#d8b46d]'
                       : 'bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 text-amber-50'
@@ -585,7 +585,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                   <span>Ir a la Mesa de Regalos</span>
                 </a>
               ) : item.type === 'bank' ? (
-                <button
+                <button data-typography-role="button"
                   type="button"
                   onClick={() =>
                     handleCopy(
@@ -593,7 +593,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                       `item-all-${index}`
                     )
                   }
-                  className={`w-full py-3 px-4 rounded-full border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  className={`invitation-card-action w-full py-3 px-4 rounded-full border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     isDark
                       ? 'bg-[#1F211D] hover:bg-[#282B25] border-[#5A5A40] text-stone-200'
                       : 'bg-[#FAF9F0] hover:bg-stone-200/60 border-[#E5E2D0] text-[#3D3D2C]'

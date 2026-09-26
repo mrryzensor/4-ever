@@ -187,6 +187,13 @@ export interface WeddingSettings {
   customAccentColor?: string; // Color de acento personalizado (hex)
   customBgColor?: string; // Color de fondo personalizado (hex)
   fontPairStyle?: string; // 'auto' | CardStyleId - Combinación tipográfica de títulos y textos
+  typographyTitleScale?: number; // Porcentaje, 80-140
+  typographyHeadingScale?: number; // Porcentaje, 80-140
+  typographyBodyScale?: number; // Porcentaje, 80-140
+  typographySubtitleScale?: number; // Porcentaje, 80-140
+  typographyDetailScale?: number; // Porcentaje, 80-140
+  typographyBadgeScale?: number; // Porcentaje, 80-200
+  typographyButtonScale?: number; // Porcentaje, 80-200
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
   frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido

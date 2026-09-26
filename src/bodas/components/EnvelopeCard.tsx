@@ -648,7 +648,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               color={theme.accentColorHex}
             />
             
-            <p className={`text-sm sm:text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+            <p data-typography-role="subtitle" className={`text-sm sm:text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
               {settings.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de manera interactiva.'}
             </p>
           </div>
@@ -675,11 +675,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                   {settings.receptionSameAsCeremony ? (
                     <div className="flex flex-col items-end gap-1">
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-[10px] font-mono font-bold sm:text-xs ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
                     </div>
                   ) : (
-                    <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
+                    <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
                       {settings.ceremonyTime || '17:00'} hrs
                     </span>
                   )}
@@ -706,7 +706,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     e.stopPropagation();
                     toggleSection('ceremony');
                   }}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
                       ? isDark ? 'bg-[#C5A059] text-stone-950 font-bold' : 'bg-[#5A5A40] text-white'
                       : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-[#5A5A40]'
@@ -788,7 +788,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                     <AnimatedChampagneGlasses className="w-9 h-9" />
                   </div>
-                  <span className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
+                  <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
                     {settings.receptionTime || '19:30'} hrs
                   </span>
                 </div>
@@ -814,7 +814,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     e.stopPropagation();
                     toggleSection('reception');
                   }}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
                       ? 'bg-amber-500 text-stone-950 font-bold border-amber-500'
                       : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-amber-900'
@@ -927,14 +927,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
-                  <button
+                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex justify-center">
+                  <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleSection('itinerary');
                     }}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    className={`invitation-card-action inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'itinerary'
                         ? isDark ? 'bg-[#C5A059] text-stone-950' : 'bg-[#5A5A40] text-white'
                         : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white border border-stone-300 text-[#5A5A40]'
@@ -1204,9 +1204,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <span className="text-xs uppercase tracking-[0.25em] font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                   Código de Vestimenta
                 </span>
-                <p className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
+                <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.dressCode || 'Formal / Rigurosa Etiqueta'}
-                </p>
+                </h3>
                 {settings.dressCodeDescription && (
                   <p className={`text-sm sm:text-base mt-2 max-w-xl mx-auto italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                     "{settings.dressCodeDescription}"
@@ -1423,14 +1423,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <h3 className={`text-2xl sm:text-3xl font-bold ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.tipsTitle || 'Tips & Recomendaciones de los Novios'}
                 </h3>
-                <p className={`text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                <p className={`invitation-card-copy text-xs sm:text-sm mt-2 max-w-xl mx-auto leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   Información y sugerencias clave preparadas con cariño para que disfrutes al máximo cada momento de nuestra boda.
                 </p>
 
                 {/* Summary Tips Pills */}
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   {tipsList.map((tip, idx) => (
-                    <span
+                    <span data-typography-role="badge"
                       key={idx}
                       className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border ${
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
@@ -1443,7 +1443,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                  <button
+                  <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1486,7 +1486,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               <h4 className={`font-serif font-bold text-sm sm:text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
                                 {tip.title}
                               </h4>
-                              <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                              <p className={`invitation-card-copy text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                                 {tip.desc}
                               </p>
                             </div>

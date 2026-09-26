@@ -84,7 +84,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
+        <p className={`invitation-card-copy text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
           Te compartimos los horarios y momentos clave para que no te pierdas ningún detalle.
@@ -110,7 +110,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
               </span>
             ))}
             {hasMore && (
-              <span className={`text-xs sm:text-sm font-serif font-medium px-4 py-2 rounded-full border border-dashed ${
+              <span data-typography-role="badge" className={`text-xs sm:text-sm font-serif font-medium px-4 py-2 rounded-full border border-dashed ${
                 isDark ? 'border-[#5A5A40] text-stone-300 bg-stone-900/40' : 'border-[#E5E2D0] text-stone-600 bg-[#FAF9F0]/80'
               }`}>
                 +{itineraryList.length - 3} momentos más
@@ -121,10 +121,10 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
 
         {/* Toggle Button for More Details */}
         <div className="mt-7 flex justify-center">
-          <button
+          <button data-typography-role="button"
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
+            className={`invitation-card-action inline-flex items-center gap-2.5 px-7 py-3 rounded-full text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-105 active:scale-95 ${
               isDark
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
@@ -206,7 +206,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                         : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
                     }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
+              <span data-typography-role="badge" className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
                           isDark
                             ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
                             : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
