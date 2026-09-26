@@ -47,6 +47,13 @@
   text-align: center;
   text-transform: uppercase;
 }
+.public-invitation .invitation-card-action-compact {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.625rem !important;
+}
+.public-invitation .invitation-card-action {
+  zoom: var(--invitation-type-button, 1);
+}
 .public-invitation p.invitation-card-copy {
   font-family: var(--invitation-font-body, inherit) !important;
   font-size: clamp(0.875rem, 0.8rem + 0.45vw, 1rem) !important;

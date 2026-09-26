@@ -34,6 +34,7 @@ import { CARD_THEMES } from '../lib/themes.ts';
 import { HeroCourtCard } from './HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../lib/sectionOrder.ts';
 import { getBankAccounts, hasBankAccountData } from '../lib/bankAccounts.ts';
+import { getContrastTextColor } from '../lib/colorUtils.ts';
 import { SocialVideoEmbed } from './SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
@@ -113,6 +114,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     fontDisplay: fontTheme.fontDisplay,
     fontBody: fontTheme.fontBody,
   };
+  const accentContrastColor = getContrastTextColor(theme.accentColorHex);
   const themeDisplayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
@@ -700,8 +702,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               style={{ order: settings.receptionSameAsCeremony ? sharedLocationCardOrder : ceremonyCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full ${settings.receptionSameAsCeremony ? 'md:w-full max-w-4xl mx-auto' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full min-w-0 max-w-full ${settings.receptionSameAsCeremony ? 'md:w-full md:max-w-4xl mx-auto overflow-hidden' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-1 hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -736,7 +738,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
                 <p className={`text-sm mt-2 flex items-start gap-2 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.accentColorHex }} />
-                  <span>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
                 </p>
               </div>
 
@@ -750,9 +752,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   }}
                   className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
-                      ? isDark ? 'bg-[#C5A059] text-stone-950 font-bold' : 'bg-[#5A5A40] text-white'
-                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-[#5A5A40]'
+                      ? 'font-bold'
+                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100'
                   }`}
+                  style={{
+                    color: expandedSection === 'ceremony' ? accentContrastColor : theme.accentColorHex,
+                    borderColor: theme.accentColorHex,
+                    ...(expandedSection === 'ceremony' ? { backgroundColor: theme.accentColorHex } : {}),
+                  }}
                 >
                   <Navigation className="w-3.5 h-3.5" />
                   <span>{expandedSection === 'ceremony' ? 'Ocultar Mapa' : settings.receptionSameAsCeremony ? 'Ver ubicación y cómo llegar' : 'Ver Mapa y Rutas'}</span>
@@ -788,22 +795,21 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <iframe title="Mapa Ceremonia" width="100%" height="100%" src={ceremonyEmbedUrl} className="w-full h-full border-0" loading="lazy" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
-                      <a
+                      <a data-typography-role="button"
                         href={ceremonyDirectionsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 border ${
-                          isDark ? 'bg-[#C5A059] text-stone-950 border-[#C5A059]' : 'bg-[#5A5A40] text-white border-[#5A5A40]'
-                        }`}
+                        className="invitation-card-action invitation-card-action-compact w-full min-w-0 p-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 border"
+                        style={{ backgroundColor: theme.accentColorHex, borderColor: theme.accentColorHex, color: accentContrastColor }}
                       >
                         <Car className="w-3.5 h-3.5" />
                         <span>Cómo Llegar (GPS)</span>
                       </a>
-                      <a
+                      <a data-typography-role="button"
                         href={ceremonyWazeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5 border ${
+                        className={`invitation-card-action invitation-card-action-compact w-full min-w-0 p-2.5 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5 border ${
                           isDark ? 'bg-stone-800 text-stone-100 border-stone-600' : 'bg-white text-stone-700 border-stone-300'
                         }`}
                       >
@@ -836,7 +842,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </span>
                 </div>
 
-                <span className={`text-xs uppercase tracking-widest font-semibold block mb-1 ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>
+                <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
                   Celebración & Fiesta
                 </span>
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
@@ -845,7 +851,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{receptionLocationName}</p>
                 <p className={`text-sm mt-2 flex items-start gap-2 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
                   <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                  <span>{receptionLocationAddress || 'Dirección de la recepción'}</span>
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">{receptionLocationAddress || 'Dirección de la recepción'}</span>
                 </p>
               </div>
 
@@ -859,9 +865,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   }}
                   className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
-                      ? 'bg-amber-500 text-stone-950 font-bold border-amber-500'
-                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100 text-amber-900'
+                      ? 'font-bold'
+                      : isDark ? 'bg-stone-800/90 text-stone-100 hover:text-white border-stone-600' : 'bg-white hover:bg-stone-100'
                   }`}
+                  style={{
+                    color: expandedSection === 'reception' ? accentContrastColor : theme.accentColorHex,
+                    borderColor: theme.accentColorHex,
+                    ...(expandedSection === 'reception' ? { backgroundColor: theme.accentColorHex } : {}),
+                  }}
                 >
                   <Navigation className="w-3.5 h-3.5" />
                   <span>{expandedSection === 'reception' ? 'Ocultar Mapa' : 'Ver Mapa y Rutas'}</span>
@@ -874,9 +885,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs sm:text-sm font-semibold text-amber-700 hover:text-amber-900 flex items-center gap-1.5 hover:underline"
+                    className="text-xs sm:text-sm font-semibold flex items-center gap-1.5 hover:underline"
+                    style={{ color: theme.accentColorHex }}
                   >
-                    <Compass className="w-4 h-4 text-amber-600 shrink-0" />
+                    <Compass className="w-4 h-4 shrink-0" style={{ color: theme.accentColorHex }} />
                     <span>Google Maps</span>
                   </a>
                 )}
@@ -896,20 +908,21 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <iframe title="Mapa Recepción" width="100%" height="100%" src={receptionEmbedUrl} className="w-full h-full border-0" loading="lazy" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
-                      <a
+                      <a data-typography-role="button"
                         href={receptionDirectionsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 shadow-xs"
+                        className="invitation-card-action invitation-card-action-compact w-full min-w-0 p-2.5 rounded-xl text-xs font-bold text-center flex items-center justify-center gap-1.5 border shadow-xs"
+                        style={{ backgroundColor: theme.accentColorHex, borderColor: theme.accentColorHex, color: accentContrastColor }}
                       >
                         <Car className="w-3.5 h-3.5" />
                         <span>Cómo Llegar (GPS)</span>
                       </a>
-                      <a
+                      <a data-typography-role="button"
                         href={receptionWazeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5 border ${
+                        className={`invitation-card-action invitation-card-action-compact w-full min-w-0 p-2.5 rounded-xl text-xs font-semibold text-center flex items-center justify-center gap-1.5 border ${
                           isDark ? 'bg-stone-800 text-stone-200 border-stone-700' : 'bg-white text-stone-700 border-stone-300'
                         }`}
                       >
@@ -928,7 +941,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 style={{ order: rsvpButtonOrder, display: settings.showLocations === false ? 'none' : undefined }}
                 className="flex w-full flex-col items-center gap-4 text-center"
               >
-                <button
+                <button data-typography-role="button"
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1124,7 +1137,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                     Mesa de Regalos & Cuentas
                   </h3>
-                  <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
+                  <p className={`invitation-card-copy text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                     {settings.giftRegistryMessage || 'El mejor regalo es tu presencia. Si deseas hacernos un presente o aportación para nuestra luna de miel, ponemos a tu disposición nuestras cuentas bancarias.'}
                   </p>
 
@@ -1158,7 +1171,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 </div>
 
                 {hasAdditionalGiftOptions && <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
-                  <button
+                <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();

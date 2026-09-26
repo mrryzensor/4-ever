@@ -112,7 +112,8 @@ export const SocialVideoEmbed: React.FC<SocialVideoEmbedProps> = ({ url, title }
         href={normalizedUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-50"
+        data-typography-role="button"
+        className="invitation-card-action invitation-card-action-compact inline-flex min-h-10 w-full min-w-0 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-50"
       >
         {video.embedUrl ? <ExternalLink className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-current" />}
         <span>{video.embedUrl ? `Abrir en ${video.platform}` : `Ver video para llegar en ${video.platform}`}</span>
