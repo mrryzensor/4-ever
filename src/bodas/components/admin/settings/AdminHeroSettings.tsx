@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import {
   Sparkles,
   Image as ImageIcon,
@@ -22,12 +23,14 @@ interface AdminHeroSettingsProps {
   settings: WeddingSettings;
   onChange: (updated: Partial<WeddingSettings>) => void;
   onOpenSimpleMode?: () => void;
+  beforeCountdown?: ReactNode;
 }
 
 export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   settings,
   onChange,
   onOpenSimpleMode,
+  beforeCountdown,
 }) => {
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const [heroUploadMessage, setHeroUploadMessage] = useState<string | null>(null);
@@ -1229,6 +1232,8 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
         </div>
       </div>
 
+      {beforeCountdown}
+
       {/* 5. CUENTA REGRESIVA ANIMADA (SVG) & PASES DE INVITADOS */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] space-y-5 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E2D0] pb-4">
@@ -1294,7 +1299,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
             <div>
               <label className="text-xs font-bold text-[#1a1a1a] block mb-2">Diseño y tamaño del contador · 10 opciones:</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {[
                   { id: 'circle', name: 'Círculo editorial', desc: 'Emblema amplio con marco animado' },
                   { id: 'editorial', name: 'Panel editorial', desc: 'Título y cifras en una tarjeta horizontal' },
@@ -1334,7 +1339,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               <label className="text-xs font-bold text-[#1a1a1a] block mb-2">
                 Motivo decorativo y acentos del contador:
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {[
                   { id: 'auto', name: 'Automático', desc: 'Sigue el tema de la tarjeta' },
                   { id: 'classic-gold', name: 'Aros Dorados', desc: 'Órbitas y destellos de oro' },

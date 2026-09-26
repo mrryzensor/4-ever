@@ -39,6 +39,7 @@ export function getRsvpButtonPresentation(
   requestedStyle: RsvpButtonStyle | string | undefined,
   cardStyle: CardStyleId,
   accentColor: string,
+  compact = false,
 ): RsvpButtonPresentation {
   const selectedStyle: Exclude<RsvpButtonStyle, 'auto'> =
     requestedStyle === 'auto' || !requestedStyle
@@ -46,7 +47,9 @@ export function getRsvpButtonPresentation(
       : requestedStyle === 'soft' || requestedStyle === 'outline' || requestedStyle === 'art-deco'
         ? requestedStyle
         : 'editorial';
-  const baseClassName = 'inline-flex min-h-14 items-center justify-center gap-2 px-10 py-4 text-base font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl cursor-pointer sm:px-14 sm:py-5 sm:text-lg focus-visible:outline-2 focus-visible:outline-offset-4';
+  const baseClassName = compact
+    ? 'inline-flex min-h-0 max-w-full items-center justify-center gap-2 px-4 py-2 text-center text-xs font-bold shadow-sm'
+    : 'inline-flex min-h-14 items-center justify-center gap-2 px-10 py-4 text-base font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-105 hover:shadow-xl cursor-pointer sm:px-14 sm:py-5 sm:text-lg focus-visible:outline-2 focus-visible:outline-offset-4';
 
   if (selectedStyle === 'outline') {
     return {

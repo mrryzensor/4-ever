@@ -75,9 +75,9 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
 
   return (
     <div className="bg-white p-4 sm:p-6 lg:p-7 rounded-2xl sm:rounded-3xl border border-[#E5E2D0] space-y-5 sm:space-y-6 shadow-sm min-w-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E2D0] pb-4">
-        <div>
-          <h3 className="text-lg font-serif text-[#1a1a1a] flex items-center gap-2 font-bold">
+      <div className="flex min-w-0 flex-col xl:flex-row xl:items-center xl:justify-between gap-3 border-b border-[#E5E2D0] pb-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="min-w-0 break-words text-lg font-serif text-[#1a1a1a] flex items-center gap-2 font-bold">
             <CreditCard className="w-5 h-5 text-[#7D8C7A]" />
             Gestión de Números de Cuenta & Mesa de Regalos
           </h3>
@@ -86,8 +86,8 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
+        <div className="flex min-w-0 max-w-full items-center gap-2 self-start xl:self-auto">
+          <span className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">
             <CheckCircle className="w-3 h-3 text-emerald-600" />
             Copia en 1-Clic para Invitados
           </span>
@@ -95,9 +95,9 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
       </div>
 
       {/* Toggles for Gift Modalities */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3">
         <label
-          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
+          className={`min-w-0 p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
             settings.enableBankTransfer === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
@@ -111,14 +111,14 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
             }
             className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
           />
-          <div>
+          <div className="min-w-0 flex-1 break-words">
             <span className="text-xs font-bold text-[#1a1a1a] block">Transferencia Bancaria</span>
             <span className="text-[10px] text-[#7D8C7A]">CLABE, Cuenta y Tarjeta</span>
           </div>
         </label>
 
         <label
-          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
+          className={`min-w-0 p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
             settings.enableEnvelopeGift === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
@@ -132,14 +132,14 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
             }
             className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
           />
-          <div>
+          <div className="min-w-0 flex-1 break-words">
             <span className="text-xs font-bold text-[#1a1a1a] block">Lluvia de Sobres</span>
             <span className="text-[10px] text-[#7D8C7A]">Buzón / Sobre en Recepción</span>
           </div>
         </label>
 
         <label
-          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-3 select-none ${
+          className={`min-w-0 p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
             settings.enableStoreRegistry === true
               ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
               : 'bg-white border-[#E5E2D0] opacity-60'
@@ -153,7 +153,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
             }
             className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
           />
-          <div>
+          <div className="min-w-0 flex-1 break-words">
             <span className="text-xs font-bold text-[#1a1a1a] block">Tiendas Departamentales</span>
             <span className="text-[10px] text-[#7D8C7A]">Liverpool, Amazon, etc.</span>
           </div>

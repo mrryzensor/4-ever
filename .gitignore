@@ -5,6 +5,11 @@ coverage/
 uploads/
 .codex-remote-attachments/
 .codex-verify-build/
+codex-clipboard-*
+tmp/
+temp/
+*.tmp
+*.temp
 *.log
 .DS_Store
 .env*

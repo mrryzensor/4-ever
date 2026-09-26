@@ -525,19 +525,17 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     }
   };
 
-  const stepsList = [
-    { id: 'datos', label: '1. Datos & Foto', icon: Heart, desc: 'Nombres, fecha y portada', isOptional: false },
-    { id: 'llegar', label: '2. Cómo Llegar', icon: MapPin, desc: 'Ceremonia y recepción', isOptional: false },
-    { id: 'itinerario', label: '3. Itinerario', icon: Clock, desc: 'Cronograma del evento', isOptional: false },
-    { id: 'vestimenta', label: '4. Vestimenta', icon: Shirt, desc: 'Código de vestimenta', isOptional: false },
-    { id: 'regalos', label: '5. Regalos (Perú)', icon: Gift, desc: 'BCP, Interbank, Yape/Plin', isOptional: false },
-    { id: 'galeria', label: '6. Galería de Fotos', icon: Camera, desc: 'Subir fotos de los novios', isOptional: false },
-    { id: 'video', label: '7. Video de Historia', icon: Film, desc: 'YouTube / Reels / TikTok', isOptional: true, isEnabled: settings.showVideoMemories === true },
-    { id: 'libro', label: '8. Libro de Firmas', icon: BookOpen, desc: 'Deseos y dedicatorias', isOptional: true, isEnabled: settings.showGuestbook === true },
-    { id: 'secciones', label: '9. Secciones', icon: ListOrdered, desc: 'Orden, galería y hoteles', isOptional: false },
-    { id: 'confirmacion', label: '10. Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', isOptional: false },
-    { id: 'musica', label: '11. Música', icon: Music2, desc: 'Lista de pistas y autoplay', isOptional: false },
+  const stepGroups: { id: string; label: string; icon: React.ElementType; desc: string; steps: { id: string; label: string; isOptional?: boolean; isEnabled?: boolean }[] }[] = [
+    { id: 'datos', label: 'Datos', icon: Heart, desc: 'Nombres, fecha y portada', steps: [{ id: 'datos', label: 'Datos de la celebración' }] },
+    { id: 'evento', label: 'Evento', icon: MapPin, desc: 'Lugares y cronograma', steps: [{ id: 'llegar', label: 'Ubicaciones' }, { id: 'itinerario', label: 'Itinerario' }] },
+    { id: 'vestimenta', label: 'Vestimenta', icon: Shirt, desc: 'Código de vestimenta', steps: [{ id: 'vestimenta', label: 'Vestimenta' }] },
+    { id: 'regalos', label: 'Regalos', icon: Gift, desc: 'Cuentas y mesa de regalos', steps: [{ id: 'regalos', label: 'Regalos' }] },
+    { id: 'multimedia', label: 'Multimedia', icon: Camera, desc: 'Galería, video y firmas', steps: [{ id: 'galeria', label: 'Galería' }, { id: 'video', label: 'Video', isOptional: true, isEnabled: settings.showVideoMemories === true }, { id: 'libro', label: 'Libro de firmas', isOptional: true, isEnabled: settings.showGuestbook === true }] },
+    { id: 'secciones', label: 'Secciones', icon: ListOrdered, desc: 'Orden y hospedaje', steps: [{ id: 'secciones', label: 'Secciones' }] },
+    { id: 'confirmacion', label: 'Confirmación', icon: CheckCircle2, desc: 'RSVP y WhatsApp', steps: [{ id: 'confirmacion', label: 'Confirmación' }] },
+    { id: 'musica', label: 'Música', icon: Music2, desc: 'Pistas y reproducción', steps: [{ id: 'musica', label: 'Música' }] },
   ];
+  const activeStepGroup = stepGroups.find((group) => group.steps.some((step) => step.id === activeStep)) || stepGroups[0];
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0 animate-fadeIn box-border">
@@ -557,22 +555,22 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </span>
             </div>
             <p className="text-[11px] sm:text-xs text-stone-600 mt-1 leading-relaxed break-words">
-              Ingresa tus datos, sube tu foto con compresión automática en <strong className="text-stone-800 font-semibold">AVIF al 95%</strong> y activa opcionalmente video o libro de firmas.
+              Los ajustes están organizados por tema; Evento y Multimedia reúnen sus opciones relacionadas.
             </p>
           </div>
         </div>
 
         {/* Interactive Step Pills */}
-        <div className="mt-4 pt-3.5 border-t border-[#E5E2D0]/80 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-10 gap-1.5 w-full min-w-0">
-          {stepsList.map((step) => {
+        <div className="mt-4 pt-4 border-t border-[#E5E2D0]/80 grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2.5 w-full min-w-0">
+          {stepGroups.map((step) => {
             const Icon = step.icon;
-            const isActive = activeStep === step.id;
+            const isActive = step.steps.some((substep) => substep.id === activeStep);
             return (
               <button
                 key={step.id}
                 type="button"
-                onClick={() => setActiveStep(step.id as any)}
-                className={`p-2 rounded-xl text-left transition-all cursor-pointer select-none flex flex-col gap-0.5 min-w-0 overflow-hidden relative ${
+                onClick={() => setActiveStep(step.steps[0].id as any)}
+                className={`p-3 sm:p-3.5 min-h-[88px] sm:min-h-[96px] rounded-2xl text-left transition-all cursor-pointer select-none flex flex-col justify-between gap-2 min-w-0 overflow-hidden relative ${
                   isActive
                     ? 'bg-[#5A5A40] text-white shadow-xs ring-2 ring-[#5A5A40]/30'
                     : 'bg-white/70 hover:bg-white text-stone-700 border border-[#E5E2D0]/60'
@@ -580,28 +578,28 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               >
                 <div className="flex items-center justify-between gap-1 min-w-0">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-[#7D8C7A]'}`} />
-                    <span className="text-[11px] sm:text-xs font-bold truncate block">{step.label}</span>
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-300' : 'text-[#7D8C7A]'}`} />
+                    <span className="text-xs sm:text-sm font-bold leading-tight whitespace-normal break-words">{step.label}</span>
                   </div>
-                  {step.isOptional && (
-                    <span
-                      className={`text-[8px] px-1 py-0.2 rounded-full font-bold uppercase shrink-0 ${
-                        step.isEnabled
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : 'bg-stone-100 text-stone-500 border border-stone-200'
-                      }`}
-                    >
-                      {step.isEnabled ? 'ON' : 'Opc.'}
-                    </span>
-                  )}
                 </div>
-                <span className={`text-[9px] sm:text-[10px] truncate block ${isActive ? 'text-white/80' : 'text-stone-400'}`}>
+                <span className={`text-[10px] sm:text-[11px] leading-snug whitespace-normal break-words ${isActive ? 'text-white/80' : 'text-stone-500'}`}>
                   {step.desc}
                 </span>
               </button>
             );
           })}
         </div>
+        {activeStepGroup.steps.length > 1 && (
+          <div className="mt-2.5 flex flex-wrap gap-2" aria-label={`Subsecciones de ${activeStepGroup.label}`}>
+            {activeStepGroup.steps.map((substep) => (
+              <button key={substep.id} type="button" onClick={() => setActiveStep(substep.id as any)} aria-current={activeStep === substep.id ? 'step' : undefined}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-semibold transition-colors ${activeStep === substep.id ? 'border-[#5A5A40] bg-[#5A5A40] text-white' : 'border-[#E5E2D0] bg-white text-stone-700 hover:bg-[#FAF9F0]'}`}>
+                {substep.label}
+                {substep.isOptional && <span className={`rounded-full px-1.5 text-[9px] ${substep.isEnabled ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-stone-500'}`}>{substep.isEnabled ? 'Activo' : 'Opcional'}</span>}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 2. Step Content Form */}
@@ -612,7 +610,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="border-b border-[#E5E2D0] pb-3 flex flex-wrap items-center justify-between gap-2 min-w-0">
               <div className="min-w-0 flex-1">
                 <h4 className="font-serif text-sm sm:text-base font-bold text-stone-900 break-words">
-                  1. Datos de la Pareja & Foto de Portada
+                  Datos de la Pareja & Foto de Portada
                 </h4>
                 <p className="text-[11px] sm:text-xs text-stone-500 break-words">
                   Aparecen en el sobre interactivo, portada y cabecera de la invitación.
@@ -1219,7 +1217,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           <div className="space-y-6 animate-fadeIn">
             <div className="border-b border-[#E5E2D0] pb-3">
               <h4 className="font-serif text-base font-bold text-stone-900">
-                2. Ubicaciones & Cómo Llegar (Google Maps)
+                Ubicaciones & Cómo Llegar (Google Maps)
               </h4>
               <p className="text-xs text-stone-500">
                 Direcciones y enlaces para que tus invitados abran Google Maps o Waze con un clic.
@@ -1311,7 +1309,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="border-b border-[#E5E2D0] pb-3 flex items-center justify-between">
               <div>
                 <h4 className="font-serif text-base font-bold text-stone-900">
-                  3. Itinerario & Cronograma del Evento
+                  Itinerario & Cronograma del Evento
                 </h4>
                 <p className="text-xs text-stone-500">
                   Define las horas y momentos clave de tu celebración.
@@ -1381,7 +1379,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           <div className="space-y-6 animate-fadeIn">
             <div className="border-b border-[#E5E2D0] pb-3">
               <h4 className="font-serif text-base font-bold text-stone-900">
-                4. Código de Vestimenta (Dress Code)
+                Código de Vestimenta (Dress Code)
               </h4>
               <p className="text-xs text-stone-500">
                 Orienta a tus invitados sobre el atuendo adecuado para tu boda.
@@ -1424,7 +1422,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="border-b border-[#E5E2D0] pb-3 flex items-center justify-between">
               <div>
                 <h4 className="font-serif text-base font-bold text-stone-900">
-                  5. Mesa de Regalos & Cuentas Bancarias (Perú)
+                  Mesa de Regalos & Cuentas Bancarias (Perú)
                 </h4>
                 <p className="text-xs text-stone-500">
                   Configura tus cuentas en BCP, BBVA, Interbank, Scotiabank o billeteras Yape / Plin.
@@ -1565,7 +1563,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <div className="border-b border-[#E5E2D0] pb-3 flex items-center justify-between">
               <div>
                 <h4 className="font-serif text-base font-bold text-stone-900">
-                  6. Galería de Fotos & Álbumes en la Nube
+                  Galería de Fotos & Álbumes en la Nube
                 </h4>
                 <p className="text-xs text-stone-500">
                   Sube las fotos oficiales que verán tus invitados o enlaza un álbum compartido en Google Photos / Drive.
@@ -2069,7 +2067,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           <div className="space-y-6 animate-fadeIn">
             <div className="border-b border-[#E5E2D0] pb-3">
               <h4 className="font-serif text-base font-bold text-stone-900">
-                7. Confirmación de Asistencia (RSVP)
+                Confirmación de Asistencia (RSVP)
               </h4>
               <p className="text-xs text-stone-500">
                 Establece la fecha límite y el número de contacto directo para tus invitados.

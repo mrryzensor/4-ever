@@ -845,7 +845,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             </div>
             <div className="border-t border-stone-200 pt-3">
               <span className="mb-2 block text-xs font-bold text-stone-800">Paleta y silueta según plantilla</span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => onChange({ transitionWaveStyle: 'auto' })}

@@ -28,6 +28,7 @@ import { AdminGiftRegistrySettings } from './settings/AdminGiftRegistrySettings.
 import { AudioSettingsPanel } from '../../../components/admin/settings/AudioSettingsPanel.tsx';
 import { SimpleModeInline } from './SimpleModeInline.tsx';
 import { VideoSection } from '../VideoSection.tsx';
+import { AdminSimpleCoverageSettings } from '../../../components/admin/settings/AdminSimpleCoverageSettings.tsx';
 
 interface AdminSettingsTabProps {
   settings: WeddingSettings;
@@ -287,18 +288,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     settings={settings}
                     onChange={onChange}
                     onOpenSimpleMode={() => setEditorMode('simple')}
+                    beforeCountdown={(
+                      <>
+                        {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
+                        <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+                      </>
+                    )}
                   />
                   <AudioSettingsPanel settings={settings} onChange={onChange} />
                   <AdminThemeSettings settings={settings} onChange={onChange} />
                   <AdminSectionToggles settings={settings} onChange={onChange} />
                   <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
-                  {settings.showLocations !== false && (
-                    <AdminLocationsSettings settings={settings} onChange={onChange} />
-                  )}
                   {settings.showDressCode !== false && (
                     <AdminDressCodeSettings settings={settings} onChange={onChange} />
                   )}
-                  <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+                  <AdminSimpleCoverageSettings settings={settings} onChange={onChange} />
 
                   <div className="pt-2 flex items-center justify-between gap-4">
                     {settingsSavedToast && (
@@ -456,18 +460,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                       settings={settings}
                       onChange={onChange}
                       onOpenSimpleMode={() => setEditorMode('simple')}
+                      beforeCountdown={(
+                        <>
+                          {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
+                          <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+                        </>
+                      )}
                     />
                     <AudioSettingsPanel settings={settings} onChange={onChange} />
                     <AdminThemeSettings settings={settings} onChange={onChange} />
                     <AdminSectionToggles settings={settings} onChange={onChange} />
                     <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
-                    {settings.showLocations !== false && (
-                      <AdminLocationsSettings settings={settings} onChange={onChange} />
-                    )}
                     {settings.showDressCode !== false && (
                       <AdminDressCodeSettings settings={settings} onChange={onChange} />
                     )}
-                    <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+                    <AdminSimpleCoverageSettings settings={settings} onChange={onChange} />
                   </div>
                 )}
               </div>
