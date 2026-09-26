@@ -21,7 +21,7 @@ export const RsvpCompanionToggle: React.FC<RsvpCompanionToggleProps> = ({
     }`}
     style={{ borderColor: checked ? accentColor : isDark ? '#44403c' : '#e7e5e4' }}
   >
-    <span className={`min-w-0 break-words text-sm sm:text-base font-semibold ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
+    <span data-typography-role="heading" className={`min-w-0 break-words text-base sm:text-lg font-semibold ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
       {label}
     </span>
     <span className="relative inline-flex shrink-0 items-center">

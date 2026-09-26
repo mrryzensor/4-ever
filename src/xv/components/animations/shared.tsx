@@ -70,6 +70,7 @@ export const AnimatedFloatingPetals: React.FC<{ className?: string; count?: numb
  */
 export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-28 h-20',
+  color = '#E5B25D',
 }) => {
   return (
     <div className={`relative flex items-center justify-center overflow-visible ${className}`}>
@@ -78,18 +79,18 @@ export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string
           <linearGradient id="goldRing1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFF7C2" />
             <stop offset="20%" stopColor="#F5D77F" />
-            <stop offset="45%" stopColor="#E5B25D" />
-            <stop offset="70%" stopColor="#AA7A44" />
+            <stop offset="45%" stopColor={color} />
+            <stop offset="70%" stopColor={color} />
             <stop offset="90%" stopColor="#FDE68A" />
-            <stop offset="100%" stopColor="#8C5E28" />
+            <stop offset="100%" stopColor={color} />
           </linearGradient>
           <linearGradient id="goldRing2" x1="100%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#FFF7C2" />
             <stop offset="25%" stopColor="#F5D77F" />
-            <stop offset="50%" stopColor="#E5B25D" />
-            <stop offset="75%" stopColor="#AA7A44" />
+            <stop offset="50%" stopColor={color} />
+            <stop offset="75%" stopColor={color} />
             <stop offset="92%" stopColor="#FDE68A" />
-            <stop offset="100%" stopColor="#8C5E28" />
+            <stop offset="100%" stopColor={color} />
           </linearGradient>
           <linearGradient id="diamondShine" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FFFFFF" />
@@ -99,7 +100,7 @@ export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string
           </linearGradient>
           <filter id="intenseRingGlow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="2.5" result="blur" />
-            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#E5B25D" floodOpacity="0.45" />
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor={color} floodOpacity="0.45" />
           </filter>
         </defs>
 
@@ -122,7 +123,7 @@ export const AnimatedWeddingRings: React.FC<{ className?: string; color?: string
             cy="46"
             rx="42"
             ry="24"
-            fill="#FDE68A"
+            fill={color}
             opacity={0.15}
             animate={{
               scale: [0.95, 1.15, 0.95],
@@ -386,8 +387,9 @@ export const AnimatedChurchBells: React.FC<{ className?: string; color?: string 
 /**
  * Animated Clinking Champagne Flutes for Reception Card
  */
-export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
+export const AnimatedChampagneGlasses: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-12 h-12',
+  color = '#D4A373',
 }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -397,7 +399,7 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
           cx="30"
           cy="18"
           r="1.8"
-          fill="#F5D77F"
+          fill={color}
           animate={{ y: [0, -10, -18], opacity: [0, 1, 0] }}
           transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
         />
@@ -405,7 +407,7 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
           cx="27"
           cy="15"
           r="1.2"
-          fill="#F5D77F"
+          fill={color}
           animate={{ y: [0, -8, -14], opacity: [0, 0.9, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, delay: 0.4, ease: 'easeOut' }}
         />
@@ -413,7 +415,7 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
           cx="33"
           cy="14"
           r="1.4"
-          fill="#F5D77F"
+          fill={color}
           animate={{ y: [0, -9, -16], opacity: [0, 1, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, delay: 0.8, ease: 'easeOut' }}
         />
@@ -421,7 +423,7 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
         {/* Sparkle Clink star */}
         <motion.path
           d="M30 18 L30 24 M27 21 L33 21"
-          stroke="#F5D77F"
+          stroke={color}
           strokeWidth="1.8"
           strokeLinecap="round"
           animate={{ scale: [0, 1.4, 0], opacity: [0, 1, 0] }}
@@ -435,8 +437,8 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           style={{ transformOrigin: '20px 50px' }}
         >
-          <path d="M16 16 L24 16 L22 32 C22 34 18 34 18 32 Z" fill="#D4A373" opacity="0.85" />
-          <path d="M20 34 L20 48 M15 48 L25 48" stroke="#B8860B" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M16 16 L24 16 L22 32 C22 34 18 34 18 32 Z" fill={color} opacity="0.85" />
+          <path d="M20 34 L20 48 M15 48 L25 48" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
         </motion.g>
 
         {/* Right Flute */}
@@ -445,8 +447,8 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           style={{ transformOrigin: '40px 50px' }}
         >
-          <path d="M36 16 L44 16 L42 32 C42 34 38 34 38 32 Z" fill="#D4A373" opacity="0.85" />
-          <path d="M40 34 L40 48 M35 48 L45 48" stroke="#B8860B" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M36 16 L44 16 L42 32 C42 34 38 34 38 32 Z" fill={color} opacity="0.85" />
+          <path d="M40 34 L40 48 M35 48 L45 48" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
         </motion.g>
       </svg>
     </div>
@@ -456,8 +458,9 @@ export const AnimatedChampagneGlasses: React.FC<{ className?: string }> = ({
 /**
  * Animated Gift Box with Shimmering Ribbon for Gift Registry
  */
-export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
+export const AnimatedGiftBox: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-12 h-12',
+  color = '#5A5A40',
 }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -465,7 +468,7 @@ export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
         {/* Floating Sparkles around box */}
         <motion.path
           d="M12 18 L12 22 M10 20 L14 20"
-          stroke="#D4A373"
+          stroke={color}
           strokeWidth="1.2"
           strokeLinecap="round"
           animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
@@ -473,7 +476,7 @@ export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
         />
         <motion.path
           d="M48 38 L48 42 M46 40 L50 40"
-          stroke="#D4A373"
+          stroke={color}
           strokeWidth="1.2"
           strokeLinecap="round"
           animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
@@ -481,20 +484,20 @@ export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
         />
 
         {/* Main Box Body */}
-        <rect x="14" y="26" width="32" height="24" rx="4" fill="#5A5A40" />
+        <rect x="14" y="26" width="32" height="24" rx="4" fill={color} />
         {/* Box Lid with subtle float */}
         <motion.g
           animate={{ y: [0, -2.5, 0] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <rect x="11" y="20" width="38" height="8" rx="2" fill="#7D8C7A" />
+          <rect x="11" y="20" width="38" height="8" rx="2" fill={color} />
           {/* Vertical Ribbon on Lid */}
-          <rect x="28" y="20" width="4" height="8" fill="#D4A373" />
+          <rect x="28" y="20" width="4" height="8" fill={color} />
           {/* Ribbon Bow Loops */}
           <motion.path
             d="M30 20 C24 14, 20 18, 28 20 C36 18, 36 14, 30 20"
-            fill="#D4A373"
-            stroke="#AA7A44"
+            fill={color}
+            stroke={color}
             strokeWidth="0.8"
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
@@ -503,8 +506,8 @@ export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
         </motion.g>
 
         {/* Vertical and Horizontal Ribbons on Box */}
-        <rect x="28" y="26" width="4" height="24" fill="#D4A373" />
-        <rect x="14" y="36" width="32" height="4" fill="#D4A373" />
+        <rect x="28" y="26" width="4" height="24" fill={color} />
+        <rect x="14" y="36" width="32" height="4" fill={color} />
       </svg>
     </div>
   );
@@ -513,8 +516,9 @@ export const AnimatedGiftBox: React.FC<{ className?: string }> = ({
 /**
  * Animated Quill Writing Pen for Guestbook Section
  */
-export const AnimatedQuillPen: React.FC<{ className?: string }> = ({
+export const AnimatedQuillPen: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-12 h-12',
+  color = '#5A5A40',
 }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -522,7 +526,7 @@ export const AnimatedQuillPen: React.FC<{ className?: string }> = ({
         {/* Animated written line under pen */}
         <motion.path
           d="M12 48 Q24 45, 34 49 T46 48"
-          stroke="#7D8C7A"
+          stroke={color}
           strokeWidth="1.8"
           strokeLinecap="round"
           fill="none"
@@ -544,22 +548,22 @@ export const AnimatedQuillPen: React.FC<{ className?: string }> = ({
           {/* Feather Body */}
           <path
             d="M28 46 L36 28 C42 16, 46 8, 48 6 C42 14, 38 24, 28 38 Z"
-            fill="#5A5A40"
+            fill={color}
           />
           <path
             d="M36 28 C30 20, 24 16, 22 18 C26 24, 30 30, 28 38"
-            fill="#7D8C7A"
+            fill={color}
             opacity="0.85"
           />
           {/* Quill Shaft */}
           <path
             d="M28 46 L48 6"
-            stroke="#D4A373"
+            stroke={color}
             strokeWidth="1.2"
             strokeLinecap="round"
           />
           {/* Gold Nib Tip */}
-          <polygon points="28,46 25,50 30,48" fill="#AA7A44" />
+          <polygon points="28,46 25,50 30,48" fill={color} />
         </motion.g>
       </svg>
     </div>
@@ -569,8 +573,9 @@ export const AnimatedQuillPen: React.FC<{ className?: string }> = ({
 /**
  * Animated Camera Lens with Shutter Rotation & Flash for Gallery
  */
-export const AnimatedCameraLens: React.FC<{ className?: string }> = ({
+export const AnimatedCameraLens: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-12 h-12',
+  color = '#5A5A40',
 }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -586,9 +591,9 @@ export const AnimatedCameraLens: React.FC<{ className?: string }> = ({
         />
 
         {/* Camera Body */}
-        <rect x="10" y="18" width="40" height="30" rx="6" fill="#5A5A40" />
+        <rect x="10" y="18" width="40" height="30" rx="6" fill={color} />
         <path d="M22 18 L25 14 L35 14 L38 18 Z" fill="#484833" />
-        <circle cx="44" cy="24" r="2.5" fill="#D4A373" />
+        <circle cx="44" cy="24" r="2.5" fill={color} />
 
         {/* Lens Ring */}
         <circle cx="30" cy="33" r="11" fill="#333322" stroke="#E5E2D0" strokeWidth="1.5" />
@@ -600,9 +605,9 @@ export const AnimatedCameraLens: React.FC<{ className?: string }> = ({
           style={{ transformOrigin: '30px 33px' }}
         >
           <circle cx="30" cy="33" r="6" fill="#1C1C14" />
-          <path d="M30 27 L33 33 L27 35 Z" fill="#7D8C7A" opacity="0.8" />
-          <path d="M36 33 L30 36 L32 30 Z" fill="#7D8C7A" opacity="0.8" />
-          <path d="M24 33 L30 30 L28 36 Z" fill="#7D8C7A" opacity="0.8" />
+          <path d="M30 27 L33 33 L27 35 Z" fill={color} opacity="0.8" />
+          <path d="M36 33 L30 36 L32 30 Z" fill={color} opacity="0.8" />
+          <path d="M24 33 L30 30 L28 36 Z" fill={color} opacity="0.8" />
         </motion.g>
 
         {/* Reflection shimmer */}
@@ -621,14 +626,15 @@ export const AnimatedCameraLens: React.FC<{ className?: string }> = ({
 /**
  * Animated Film Reel for Video Section
  */
-export const AnimatedFilmReel: React.FC<{ className?: string }> = ({
+export const AnimatedFilmReel: React.FC<{ className?: string; color?: string }> = ({
   className = 'w-12 h-12',
+  color = '#5A5A40',
 }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       <svg viewBox="0 0 60 60" className="w-full h-full overflow-visible">
         {/* Outer Reel Frame */}
-        <circle cx="30" cy="30" r="22" stroke="#5A5A40" strokeWidth="3" fill="#FAF9F0" />
+        <circle cx="30" cy="30" r="22" stroke={color} strokeWidth="3" fill="#FAF9F0" />
 
         {/* Rotating Sprocket Wheel */}
         <motion.g
@@ -636,14 +642,14 @@ export const AnimatedFilmReel: React.FC<{ className?: string }> = ({
           transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
           style={{ transformOrigin: '30px 30px' }}
         >
-          <circle cx="30" cy="30" r="8" fill="#5A5A40" />
+          <circle cx="30" cy="30" r="8" fill={color} />
           <circle cx="30" cy="30" r="3" fill="#FAF9F0" />
           {/* Film Holes */}
-          <circle cx="30" cy="14" r="3.5" fill="#7D8C7A" />
-          <circle cx="44" cy="24" r="3.5" fill="#7D8C7A" />
-          <circle cx="40" cy="40" r="3.5" fill="#7D8C7A" />
-          <circle cx="20" cy="40" r="3.5" fill="#7D8C7A" />
-          <circle cx="16" cy="24" r="3.5" fill="#7D8C7A" />
+          <circle cx="30" cy="14" r="3.5" fill={color} />
+          <circle cx="44" cy="24" r="3.5" fill={color} />
+          <circle cx="40" cy="40" r="3.5" fill={color} />
+          <circle cx="20" cy="40" r="3.5" fill={color} />
+          <circle cx="16" cy="24" r="3.5" fill={color} />
         </motion.g>
 
         {/* Play Icon in center */}

@@ -105,6 +105,10 @@ export interface WeddingSettings {
   ceremonyAddress: string;
   ceremonyMapsUrl: string;
   ceremonyEmbedUrl?: string;
+  mapMobileWidth?: number;
+  mapMobileHeight?: number;
+  mapDesktopWidth?: number;
+  mapDesktopHeight?: number;
   ceremonyArrivalVideoUrl?: string;
   ceremonyPlaceQuery?: string;
   ceremonyTime: string;
@@ -407,6 +411,8 @@ export interface CardThemeConfig {
   secondaryBgHex: string;
   primaryColorHex: string;
   accentColorHex: string;
+  /** Secondary highlight used for itinerary times and the active RSVP submit button. */
+  itineraryAccentColorHex?: string;
   bgClass: string;
   cardBgClass: string;
   textPrimaryClass: string;

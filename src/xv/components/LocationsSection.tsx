@@ -110,7 +110,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         }`}>
           <MapPin className="w-7 h-7 shrink-0" />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
           Ubicaciones & Cómo Llegar
@@ -122,6 +122,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
         </h2>
         <StyleSpecificDivider
           cardStyle={settings.cardStyle}
+          dividerStyle={settings.dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -241,7 +242,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
             </div>
 
             {/* Embedded Google Map */}
-            <div className={`w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
+            <div className={`invitation-responsive-map w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
               isDark ? 'bg-stone-900 border-[#5A5A40]' : 'bg-stone-100 border-[#E5E2D0]'
             }`}>
               <iframe
@@ -381,7 +382,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
             </div>
 
             {/* Embedded Google Map */}
-            <div className={`w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
+            <div className={`invitation-responsive-map w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
               isDark ? 'bg-stone-900 border-[#5A5A40]' : 'bg-stone-100 border-[#E5E2D0]'
             }`}>
               <iframe

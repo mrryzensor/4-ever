@@ -60,6 +60,10 @@ export async function autoMigrateDatabase() {
           ceremony_address TEXT NOT NULL DEFAULT 'Calle de los Olivos 142, Centro Histórico',
           ceremony_maps_url TEXT DEFAULT 'https://maps.google.com/?q=San+Francisco+Church',
           ceremony_embed_url TEXT DEFAULT '',
+          map_mobile_width INTEGER DEFAULT 100,
+          map_mobile_height INTEGER DEFAULT 240,
+          map_desktop_width INTEGER DEFAULT 100,
+          map_desktop_height INTEGER DEFAULT 320,
           ceremony_arrival_video_url TEXT DEFAULT '',
           ceremony_place_query TEXT DEFAULT 'Parroquia San Francisco de Asís',
           ceremony_time TEXT DEFAULT '17:00',
@@ -158,6 +162,10 @@ export async function autoMigrateDatabase() {
           updated_at TIMESTAMP DEFAULT NOW()
         );
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS event_type TEXT DEFAULT 'bodas';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS map_mobile_width INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS map_mobile_height INTEGER DEFAULT 240;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS map_desktop_width INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS map_desktop_height INTEGER DEFAULT 320;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ceremony_arrival_video_url TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_arrival_video_url TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_same_as_ceremony BOOLEAN DEFAULT false;

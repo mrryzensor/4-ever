@@ -54,7 +54,7 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
           <div className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border ${theme.accentClass}`}>
             <Building2 className="h-7 w-7" />
           </div>
-          <span className="block text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.accentColorHex }}>
+          <span data-typography-role="detail" className="block text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: theme.accentColorHex }}>
             Alojamiento
           </span>
           <h2 className={`mt-2 font-serif text-3xl sm:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
@@ -88,17 +88,17 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
 
               <div className="mt-auto flex flex-wrap gap-2 pt-3">
                 {safeWebUrl(hotel.mapsUrl) && (
-                  <a href={safeWebUrl(hotel.mapsUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a data-typography-role="button" href={safeWebUrl(hotel.mapsUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <MapPin className="h-3.5 w-3.5" /> Ver mapa
                   </a>
                 )}
                 {safeWebUrl(hotel.bookingUrl) && (
-                  <a href={safeWebUrl(hotel.bookingUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a data-typography-role="button" href={safeWebUrl(hotel.bookingUrl)} target="_blank" rel="noreferrer" className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <ExternalLink className="h-3.5 w-3.5" /> Reservar
                   </a>
                 )}
                 {hotel.phone && (
-                  <a href={`tel:${hotel.phone}`} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
+                  <a data-typography-role="button" href={`tel:${hotel.phone}`} className={`inline-flex cursor-pointer items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold ${theme.accentClass}`}>
                     <Phone className="h-3.5 w-3.5" /> Llamar
                   </a>
                 )}

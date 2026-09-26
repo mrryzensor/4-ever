@@ -41,6 +41,7 @@ import { DrivePhotoPicker } from '../DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from './SimpleModeSectionsStep.tsx';
 import { HeroCourtPlacementControl } from './HeroCourtPlacementControl.tsx';
 import { RsvpButtonStyleField } from './settings/RsvpButtonStyleField.tsx';
+import { MapDimensionsControls } from './settings/MapDimensionsControls.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -1337,6 +1338,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </div>
               </div>}
             </div>
+            <MapDimensionsControls settings={settings} onChange={onChange} />
           </div>
         )}
 

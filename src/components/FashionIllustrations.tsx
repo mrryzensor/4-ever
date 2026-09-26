@@ -115,7 +115,7 @@ const shade = (hex: string, amount: number) => {
 
 const FigureBadge: React.FC<{ children: string; dark?: boolean }> = ({ children, dark }) => (
   <div className="absolute -bottom-3 inset-x-0 flex justify-center">
-    <span className={`flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] shadow-sm ${dark ? 'border-slate-600 bg-slate-800 text-white' : 'border-rose-200 bg-white text-rose-950'}`}>
+    <span data-typography-role="badge" className={`flex items-center gap-1 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] shadow-sm ${dark ? 'border-slate-600 bg-slate-800 text-white' : 'border-rose-200 bg-white text-rose-950'}`}>
       <Sparkles className="h-3 w-3 text-amber-500" />{children}
     </span>
   </div>

@@ -9,7 +9,7 @@
   font-family: var(--invitation-font-body, inherit) !important;
 }
 
-.public-invitation :where(h1, h2, h3, h4, h5, h6) {
+.public-invitation :where(h1, h2, h3, h4, h5, h6, [data-typography-role="heading"]) {
   font-family: var(--invitation-font-display, inherit) !important;
 }
 
@@ -20,13 +20,54 @@
 .public-invitation p[data-typography-role="heading"] { zoom: var(--invitation-type-heading, 1); }
 .public-invitation p { zoom: var(--invitation-type-body, 1); }
 .public-invitation p[data-typography-role="subtitle"] { zoom: var(--invitation-type-subtitle, 1); }
+.public-invitation :where(span, label, input, textarea, select)[data-typography-role="body"] {
+  zoom: var(--invitation-type-body, 1);
+}
+.public-invitation :where(label):not([data-typography-role]) {
+  zoom: var(--invitation-type-detail, 1);
+}
+.public-invitation :where(input, textarea, select):not([data-typography-role]) {
+  zoom: var(--invitation-type-body, 1);
+}
+.public-invitation span[class*="rounded-full"]:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *) {
+  zoom: var(--invitation-type-badge, 1);
+}
+.public-invitation span[class*="uppercase"]:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *) {
+  zoom: var(--invitation-type-detail, 1);
+}
+.public-invitation span:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *):not(span *) {
+  zoom: var(--invitation-type-body, 1);
+}
+.public-invitation [data-ornament-frame] svg {
+  color: var(--ornament-accent) !important;
+}
+.public-invitation [data-ornament-frame] svg [fill="#C5A059"],
+.public-invitation [data-ornament-frame] svg [fill="#8A6D65"],
+.public-invitation [data-ornament-frame] svg [fill="#B26E59"],
+.public-invitation [data-ornament-frame] svg [fill="#D4AF37"],
+.public-invitation [data-ornament-frame] svg [fill="#526B50"],
+.public-invitation [data-ornament-frame] svg [fill="#7D947B"],
+.public-invitation [data-ornament-frame] svg [fill="#E07A5F"],
+.public-invitation [data-ornament-frame] svg [fill="#7B6D8D"],
+.public-invitation [data-ornament-frame] svg [fill="#52B788"],
+.public-invitation [data-ornament-frame] svg [fill="#2B6CB0"],
+.public-invitation [data-ornament-frame] svg [fill="#C39B60"] {
+  fill: var(--ornament-accent) !important;
+}
+.public-invitation [data-ornament-frame] svg [stroke="#D4AF37"],
+.public-invitation [data-ornament-frame] svg [stroke="#8A6D65"] {
+  stroke: var(--ornament-accent) !important;
+}
+.public-invitation a:not([data-typography-role="badge"]) {
+  zoom: var(--invitation-type-button, 1);
+}
 .public-invitation :where(small, time, [data-typography-role="detail"]):not(button *):not(a *):not([role="button"] *) {
   zoom: var(--invitation-type-detail, 1);
 }
 .public-invitation [data-typography-role="badge"] {
   zoom: var(--invitation-type-badge, 1);
 }
-.public-invitation button:not([aria-label]):not([title]):not(:has(> svg:only-child)),
+.public-invitation button:not([data-typography-children]):not([aria-label]):not([title]):not(:has(> svg:only-child)),
 .public-invitation a[class*="cursor-pointer"]:not([data-typography-role="badge"]),
 .public-invitation [data-typography-role="button"] {
   zoom: var(--invitation-type-button, 1);
@@ -61,6 +102,20 @@
   font-style: normal !important;
   line-height: 1.65 !important;
   letter-spacing: normal !important;
+}
+
+.public-invitation .invitation-responsive-map {
+  width: min(var(--invitation-map-mobile-width, 100%), 100%);
+  height: var(--invitation-map-mobile-height, 240px);
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .public-invitation .invitation-responsive-map {
+    width: min(var(--invitation-map-desktop-width, 100%), 100%);
+    height: var(--invitation-map-desktop-height, 320px);
+  }
 }
 
 .public-invitation button {

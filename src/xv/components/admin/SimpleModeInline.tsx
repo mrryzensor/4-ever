@@ -40,6 +40,7 @@ import { StyleSpecificDivider } from '../AnimatedSvgs.tsx';
 import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSectionsStep.tsx';
 import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
+import { MapDimensionsControls } from '../../../components/admin/settings/MapDimensionsControls.tsx';
 import { RsvpButtonStyleField } from '../../../components/admin/settings/RsvpButtonStyleField.tsx';
 
 interface SimpleModeInlineProps {
@@ -1174,6 +1175,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </div>
               </div>}
             </div>
+            <MapDimensionsControls settings={settings} onChange={onChange} />
           </div>
         )}
 

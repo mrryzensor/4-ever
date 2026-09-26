@@ -64,9 +64,9 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
             : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
         }`}>
-          <AnimatedGiftBox className="w-10 h-10" />
+          <AnimatedGiftBox className="w-10 h-10" color={activeTheme.accentColorHex} />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
           Mesa de Regalos & Aportaciones
@@ -78,6 +78,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         </h2>
         <StyleSpecificDivider
           cardStyle={settings.cardStyle}
+          dividerStyle={settings.dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -92,7 +93,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         {!isExpanded && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 max-w-2xl mx-auto">
             {hasDirectBankSettings && (
-              <span className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
+              <span data-typography-role="badge" className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <CreditCard className="w-4 h-4 text-amber-500" />
@@ -100,7 +101,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
               </span>
             )}
             {settings.enableEnvelopeGift !== false && (
-              <span className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
+              <span data-typography-role="badge" className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <Mail className="w-4 h-4 text-rose-400" />
@@ -108,7 +109,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
               </span>
             )}
             {registryItems.map((item, idx) => (
-              <span key={idx} className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
+              <span data-typography-role="badge" key={idx} className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <Sparkles className="w-4 h-4 text-amber-400" />
@@ -195,7 +196,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 Depósito nacional o transferencia interbancaria
               </p>
 
-              <div className={`space-y-3 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+              <div data-typography-role="detail" className={`space-y-3 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                 {settings.bankBeneficiary && (
                   <div className={`flex items-center justify-between p-2.5 rounded-xl border ${
                     isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
@@ -402,7 +403,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
               </h3>
 
               {item.type === 'bank' && (
-                <div className={`space-y-2.5 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                <div data-typography-role="detail" className={`space-y-2.5 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                   {item.beneficiary && (
                     <div className={`flex items-center justify-between p-2 rounded-xl border ${
                       isDark ? 'bg-[#1F211D] border-[#5A5A40]' : 'bg-[#FAF9F0] border-[#E5E2D0]'
@@ -645,7 +646,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
             </div>
 
             <div className={`mt-6 pt-4 border-t text-center ${isDark ? 'border-[#5A5A40]/50' : 'border-[#E5E2D0]'}`}>
-              <span className={`text-[11px] font-serif italic block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
+              <span data-typography-role="detail" className={`text-[11px] font-serif italic block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
                 ¡Agradecemos de corazón tu muestra de cariño!
               </span>
             </div>

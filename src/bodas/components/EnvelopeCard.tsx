@@ -94,6 +94,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     bgHex: settings.customBgColor || colorTheme.bgHex,
     secondaryBgHex: colorTheme.secondaryBgHex,
     accentColorHex: settings.customAccentColor || colorTheme.accentColorHex,
+    itineraryAccentColorHex: settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex,
     primaryColorHex: colorTheme.primaryColorHex,
     cardBgClass: colorTheme.cardBgClass,
     textPrimaryClass: colorTheme.textPrimaryClass,
@@ -749,7 +750,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     onClick={(e) => e.stopPropagation()}
                     className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
                   >
-                    <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
+                    <div className="invitation-responsive-map w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
                       <iframe title="Mapa Ceremonia" width="100%" height="100%" src={ceremonyEmbedUrl} className="w-full h-full border-0" loading="lazy" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
@@ -861,7 +862,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     onClick={(e) => e.stopPropagation()}
                     className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
                   >
-                    <div className="w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
+                    <div className="invitation-responsive-map w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
                       <iframe title="Mapa Recepción" width="100%" height="100%" src={receptionEmbedUrl} className="w-full h-full border-0" loading="lazy" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1">
@@ -907,12 +908,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <div className={`w-12 h-12 flex items-center justify-center border group-hover:scale-105 transition-transform ${theme.cardHeaderShapeClass || 'rounded-2xl'} ${theme.accentClass}`}>
                       <Clock className="w-6 h-6 shrink-0" />
                     </div>
-                    <span className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
+                    <span data-typography-role="badge" className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
                       {itineraryList.length} Momentos Clave
                     </span>
                   </div>
 
-                  <span className="text-xs uppercase tracking-widest font-semibold block mb-1 opacity-80" style={{ color: theme.accentColorHex }}>
+                  <span data-typography-role="detail" className="text-xs uppercase tracking-widest font-semibold block mb-1 opacity-80" style={{ color: theme.accentColorHex }}>
                     Cronograma Oficial
                   </span>
                   <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
@@ -922,18 +923,18 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   {/* Summary Chips */}
                   <div className="mt-3 flex flex-wrap gap-2">
                     {itineraryList.slice(0, 3).map((item, idx) => (
-                      <span
+                      <span data-typography-role="badge"
                         key={idx}
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                           isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                         }`}
                       >
-                        <span className="font-mono font-bold text-amber-400">{item.time}</span>
+                        <span className="font-mono font-bold" style={{ color: theme.itineraryAccentColorHex }}>{item.time}</span>
                         <span>{item.title}</span>
                       </span>
                     ))}
                     {itineraryList.length > 3 && (
-                      <span className={`text-xs font-serif italic self-center ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>
+                      <span data-typography-role="badge" className={`text-xs font-serif italic self-center ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>
                         +{itineraryList.length - 3} más
                       </span>
                     )}
@@ -1001,20 +1002,25 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                             <div key={idx} className="relative flex items-start gap-4 group">
                               {/* Animated SVG ring node with curving horizontal offset */}
                               <div
-                                className={`absolute top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-300 via-amber-400 to-amber-600 border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10 transition-transform duration-300 group-hover:scale-110 ${
+                                style={{ backgroundImage: `linear-gradient(135deg, color-mix(in srgb, ${theme.itineraryAccentColorHex} 62%, white), ${theme.itineraryAccentColorHex}, color-mix(in srgb, ${theme.itineraryAccentColorHex} 78%, black))` }}
+                                className={`absolute top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10 transition-transform duration-300 group-hover:scale-110 ${
                                   isOdd ? '-left-12 sm:-left-13' : '-left-14 sm:-left-15'
                                 }`}
                               >
                                 {getItineraryIcon(item.icon)}
                               </div>
                               <div className={`p-4 rounded-2xl border flex-1 shadow-xs transition-all hover:scale-[1.01] ${
-                                isDark ? 'bg-stone-850 border-stone-600 hover:border-amber-400/70 shadow-lg' : 'bg-white border-stone-200 hover:border-amber-300'
+                                isDark ? 'bg-stone-850 border-stone-600 hover:border-stone-400 shadow-lg' : 'bg-white border-stone-200 hover:border-stone-400'
                               }`}>
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                                  <span className={`font-serif font-bold text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
+                                  <span data-typography-role="heading" className={`font-serif font-bold text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
                                     {item.title}
                                   </span>
-                                  <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-300 border border-amber-500/30">
+                                  <span data-typography-role="badge" style={{
+                                    color: theme.itineraryAccentColorHex,
+                                    backgroundColor: `color-mix(in srgb, ${theme.itineraryAccentColorHex} 14%, transparent)`,
+                                    borderColor: `color-mix(in srgb, ${theme.itineraryAccentColorHex} 42%, transparent)`,
+                                  }} className="font-mono text-xs font-bold px-3 py-1 rounded-full border">
                                     {item.time} hrs
                                   </span>
                                 </div>

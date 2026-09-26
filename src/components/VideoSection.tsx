@@ -11,12 +11,14 @@ interface VideoSectionProps {
   weddingId?: number;
   isAdmin?: boolean;
   cardStyle?: string;
+  dividerStyle?: string;
 }
 
 export const VideoSection: React.FC<VideoSectionProps> = ({
   weddingId = 1,
   isAdmin = false,
   cardStyle = 'classic-gold',
+  dividerStyle,
 }) => {
   const [videos, setVideos] = useState<WeddingVideo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -178,9 +180,9 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
             : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
         }`}>
-          <AnimatedFilmReel className="w-10 h-10" />
+          <AnimatedFilmReel className="w-10 h-10" color={activeTheme?.accentColorHex} />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
           Momentos en Video
@@ -192,6 +194,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
+          dividerStyle={dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -221,7 +224,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
 
       <div className="max-w-7xl mx-auto pt-4">
         {loading ? (
-          <div className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
+          <div data-typography-role="body" className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
             Cargando videos...
           </div>
         ) : videos.length === 0 ? (
@@ -262,7 +265,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                       }`}>
                         {video.platform}
                       </span>
-                      <span className={`text-[11px] ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                      <span data-typography-role="detail" className={`text-[11px] ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                         Por: {video.authorName || 'Novios'}
                       </span>
                     </div>

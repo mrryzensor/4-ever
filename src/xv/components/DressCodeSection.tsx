@@ -943,7 +943,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             <Shirt className="w-7 h-7 shrink-0" />
           </div>
 
-          <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+          <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
             isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
           }`}>
             Guía de Estilo & Etiqueta
@@ -955,8 +955,9 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
             Código de Vestimenta
           </h2>
 
-          <StyleSpecificDivider
-            cardStyle={settings.cardStyle}
+        <StyleSpecificDivider
+          cardStyle={settings.cardStyle}
+          dividerStyle={settings.dividerStyle}
             className="w-48 sm:w-60 h-8 mx-auto mt-2"
             color={activeTheme?.accentColorHex}
           />
@@ -976,7 +977,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
           {/* Color palette pills summary (when collapsed) - Larger & Clearer */}
           {!isExpanded && paletteList.length > 0 && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3 max-w-lg mx-auto">
-              <span className={`text-sm font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+              <span data-typography-role="detail" className={`text-sm font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                 Paleta sugerida:
               </span>
               <div className="flex items-center gap-2 p-2 rounded-full border bg-black/10 backdrop-blur-xs shadow-xs">
@@ -1197,7 +1198,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
               
               {/* Palette Swatches */}
               <div>
-                <span className={`text-xs uppercase font-bold tracking-wider block mb-2 flex items-center gap-1.5 ${
+                <span data-typography-role="detail" className={`text-xs uppercase font-bold tracking-wider block mb-2 flex items-center gap-1.5 ${
                   isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
                 }`}>
                   <Palette className={`w-3.5 h-3.5 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
@@ -1232,8 +1233,8 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
                 </div>
 
                 <div className={`flex items-center gap-2 mt-2 text-[11px] font-mono ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                  <span>Color activo:</span>
-                  <span className={`font-bold ${isDark ? 'text-[#C5A059]' : 'text-[#1a1a1a]'}`}>{activePaletteColor}</span>
+                  <span data-typography-role="detail">Color activo:</span>
+                  <span data-typography-role="detail" className={`font-bold ${isDark ? 'text-[#C5A059]' : 'text-[#1a1a1a]'}`}>{activePaletteColor}</span>
                 </div>
               </div>
 

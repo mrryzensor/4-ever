@@ -10,12 +10,14 @@ interface GuestbookSectionProps {
   weddingId?: number;
   defaultAuthor?: string;
   cardStyle?: string;
+  dividerStyle?: string;
 }
 
 export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
   weddingId = 1,
   defaultAuthor = '',
   cardStyle = 'classic-gold',
+  dividerStyle,
 }) => {
   const [wishes, setWishes] = useState<GuestWish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,9 +95,9 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
             ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
             : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
         }`}>
-          <AnimatedQuillPen className="w-10 h-10" />
+          <AnimatedQuillPen className="w-10 h-10" color={activeTheme.accentColorHex} />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
           Mensajes de Cariño
@@ -107,6 +109,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
+          dividerStyle={dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -119,7 +122,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         {/* Wishes count and prompt when collapsed - Larger & Clearer */}
         {!isExpanded && (
           <div className="mt-6 flex items-center justify-center gap-2">
-            <span className={`text-sm sm:text-base font-serif italic px-5 py-2.5 rounded-full border shadow-xs ${
+            <span data-typography-role="badge" className={`text-sm sm:text-base font-serif italic px-5 py-2.5 rounded-full border shadow-xs ${
               isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-stone-700'
             }`}>
               {wishes.length > 0
@@ -252,7 +255,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         {/* Wishes List */}
         <div className="lg:col-span-2 space-y-4">
           {loading ? (
-            <div className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
+            <div data-typography-role="body" className={`py-12 text-center text-sm ${isDark ? 'text-stone-400' : 'text-stone-400'}`}>
               Cargando dedicatorias...
             </div>
           ) : wishes.length === 0 ? (

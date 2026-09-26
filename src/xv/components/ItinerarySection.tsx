@@ -11,9 +11,9 @@ import {
   Palette,
   Clock
 } from 'lucide-react';
-import { WeddingSettings, ItineraryItem } from '../../types.ts';
+import { CardStyleId, WeddingSettings, ItineraryItem } from '../../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
-import { CARD_THEMES } from '../../lib/themes.ts';
+import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 
 interface ItinerarySectionProps {
   settings: WeddingSettings;
@@ -53,6 +53,10 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
 
   const isDark = settings.cardStyle === 'dark-luxury';
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
+    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || activeTheme)
+    : activeTheme;
+  const itineraryAccentColor = settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex;
 
   // In compact preview, show the first 2-3 key highlights or summary badges
   const previewItems = itineraryList.slice(0, 3);
@@ -69,7 +73,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
         }`}>
           <Clock className="w-7 h-7 shrink-0" />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
           Cronograma del Gran Día
@@ -81,6 +85,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
         </h2>
         <StyleSpecificDivider
           cardStyle={settings.cardStyle}
+          dividerStyle={settings.dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -94,7 +99,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
         {!isExpanded && itineraryList.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto">
             {previewItems.map((item, idx) => (
-              <span
+              <span data-typography-role="badge"
                 key={idx}
                 className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm sm:text-base font-serif font-medium border shadow-sm transition-all duration-300 hover:scale-105 ${
                   isDark
@@ -102,7 +107,7 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                     : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
                 }`}
               >
-                <span className={`font-mono font-bold text-sm sm:text-base ${isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'}`}>
+                <span className="font-mono font-bold text-sm sm:text-base" style={{ color: itineraryAccentColor }}>
                   {item.time} hrs
                 </span>
                 <span className="text-stone-400 font-sans">•</span>
@@ -206,15 +211,15 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                         : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
                     }`}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
-                          isDark
-                            ? 'bg-[#1F211D] text-[#C5A059] border-[#5A5A40]'
-                            : 'bg-[#FAF9F0] text-[#5A5A40] border-[#E5E2D0]'
-                        }`}>
+                        <span style={{
+                          color: itineraryAccentColor,
+                          backgroundColor: `color-mix(in srgb, ${itineraryAccentColor} 14%, transparent)`,
+                          borderColor: `color-mix(in srgb, ${itineraryAccentColor} 42%, transparent)`,
+                        }} className="text-xs font-mono font-bold px-3 py-1 rounded-full border">
                           {item.time} hrs
                         </span>
                       </div>
-                      <h4 className={`text-lg font-serif font-bold mt-1 ${
+                      <h4 data-typography-role="heading" className={`text-lg font-serif font-bold mt-1 ${
                         isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
                       }`}>
                         {item.title}

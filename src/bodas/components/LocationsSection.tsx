@@ -241,7 +241,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
             </div>
 
             {/* Embedded Google Map */}
-            <div className={`w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
+            <div className={`invitation-responsive-map w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
               isDark ? 'bg-stone-900 border-[#5A5A40]' : 'bg-stone-100 border-[#E5E2D0]'
             }`}>
               <iframe
@@ -381,7 +381,7 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
             </div>
 
             {/* Embedded Google Map */}
-            <div className={`w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
+            <div className={`invitation-responsive-map w-full h-56 sm:h-64 rounded-2xl overflow-hidden border shadow-inner mb-6 relative ${
               isDark ? 'bg-stone-900 border-[#5A5A40]' : 'bg-stone-100 border-[#E5E2D0]'
             }`}>
               <iframe

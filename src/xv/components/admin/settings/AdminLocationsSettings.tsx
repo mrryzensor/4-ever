@@ -2,6 +2,7 @@ import React from 'react';
 import { MapPin, Heart, Sparkles, Navigation, Car } from 'lucide-react';
 import { WeddingSettings } from '../../../../types.ts';
 import { generateGoogleMapsLink, generateGoogleMapsDirLink } from '../../../../lib/navigation.ts';
+import { MapDimensionsControls } from '../../../../components/admin/settings/MapDimensionsControls.tsx';
 
 interface AdminLocationsSettingsProps {
   settings: WeddingSettings;
@@ -28,6 +29,8 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
           Integración Google Maps
         </span>
       </div>
+
+      <MapDimensionsControls settings={settings} onChange={onChange} />
 
       <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4 sm:gap-5 min-w-0">
         {/* 2.1 Lugar de la Ceremonia */}

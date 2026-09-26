@@ -665,9 +665,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
           : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
         }`}>
-          <AnimatedCameraLens className="w-10 h-10" />
+          <AnimatedCameraLens className="w-10 h-10" color={activeTheme?.accentColorHex} />
         </div>
-        <span className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
+        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
           }`}>
           Sesión de Fotos & Recuerdos
         </span>
@@ -677,6 +677,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
+          dividerStyle={settings?.dividerStyle}
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
@@ -1196,7 +1197,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           {/* Photo Subtitle (Author & Date underneath the photo on desktop) */}
                           <div className="hidden lg:flex mt-2.5 items-center justify-center gap-3 text-xs sm:text-sm text-stone-300 font-serif">
                             {activePhoto.authorName && (
-                              <span className="text-amber-200/90 italic">
+                              <span data-typography-role="detail" className="text-amber-200/90 italic">
                                 Fotografía por: {activePhoto.authorName}
                               </span>
                             )}

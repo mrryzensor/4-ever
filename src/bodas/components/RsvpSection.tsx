@@ -20,7 +20,7 @@ import {
   Minus,
   ChevronDown,
 } from 'lucide-react';
-import { Guest, WeddingSettings } from '../../types.ts';
+import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { DEMO_GUESTS } from '../../data/demoGuests.ts';
 
 // Helper for comprehensive fuzzy/multi-token matching
@@ -42,6 +42,7 @@ const matchGuestTokens = (guest: Guest, search: string) => {
   return tokens.every((tok) => combined.includes(tok));
 };
 import { CARD_THEMES } from '../../lib/themes.ts';
+import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { AnimatedChampagneGlasses, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { toast } from '../../lib/toast.ts';
 import { RsvpCompanionToggle } from '../../components/RsvpCompanionToggle.tsx';
@@ -82,6 +83,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
+    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || activeTheme)
+    : activeTheme;
+  const rsvpAccentColor = settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex;
+  const rsvpAccentTextColor = getContrastTextColor(rsvpAccentColor);
   const isDark = activeTheme.isDark;
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
@@ -392,7 +398,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               {/* 1. Name Input with Real-time Guest Autocomplete & Search */}
               <div className="relative" ref={suggestionsRef}>
                 <div className="flex items-center justify-between mb-2">
-                  <label className={`text-xs sm:text-sm font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
+                  <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                     Nombre Completo
                   </label>
                   {guest && (
@@ -410,6 +416,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   <input
                     type="text"
                     required
+                    data-typography-role="body"
                     placeholder="Escribe tu nombre y apellido..."
                     value={fullName}
                     onChange={(e) => {
@@ -421,7 +428,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     onFocus={() => {
                       if (suggestions.length > 0) setShowSuggestions(true);
                     }}
-                    className={`w-full px-5 py-4 pl-12 rounded-2xl border text-sm sm:text-base font-serif transition-all focus:outline-none focus:ring-2 ${
+                    className={`w-full px-5 py-4 pl-12 rounded-2xl border text-base sm:text-lg font-serif transition-all focus:outline-none focus:ring-2 ${
                       isDark
                         ? 'bg-stone-900/80 border-stone-700 text-stone-100 placeholder:text-stone-500 focus:border-amber-400 focus:ring-amber-400/20'
                         : 'bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 focus:border-amber-600 focus:ring-amber-600/20 shadow-xs'
@@ -484,11 +491,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
               {/* 2. Attendance Status Selection (Buttons) */}
               <div>
-                <label className={`text-xs sm:text-sm font-bold uppercase tracking-wider block mb-3 ${activeTheme.textPrimaryClass}`}>
+                <label data-typography-role="heading" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-3 ${activeTheme.textPrimaryClass}`}>
                   ¿Nos acompañarás a celebrar?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
+                  <button data-typography-children="true"
                     type="button"
                     onClick={() => setStatus('confirmed')}
                     className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
@@ -503,12 +510,12 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   >
                     <CheckCircle className={`w-6 h-6 shrink-0 ${status === 'confirmed' ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : 'text-stone-400'}`} />
                     <div className="text-left">
-                      <span className="text-sm sm:text-base font-bold block">Sí, con mucho gusto asistiré</span>
-                      <span className="text-xs opacity-75">Confirmo mi asistencia a la celebración</span>
+                      <span data-typography-role="heading" className="block text-base sm:text-lg font-bold">Sí, con mucho gusto asistiré</span>
+                      <span data-typography-role="body" className="text-sm opacity-75">Confirmo mi asistencia a la celebración</span>
                     </div>
                   </button>
 
-                  <button
+                  <button data-typography-children="true"
                     type="button"
                     onClick={() => setStatus('declined')}
                     className={`p-4 sm:p-5 rounded-2xl border flex items-center justify-center gap-3 transition-all cursor-pointer ${
@@ -523,8 +530,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   >
                     <XCircle className={`w-6 h-6 shrink-0 ${status === 'declined' ? (isDark ? 'text-rose-400' : 'text-rose-600') : 'text-stone-400'}`} />
                     <div className="text-left">
-                      <span className="text-sm sm:text-base font-bold block">No podré asistir</span>
-                      <span className="text-xs opacity-75">No podré acompañarlos esta vez</span>
+                      <span data-typography-role="heading" className="block text-base sm:text-lg font-bold">No podré asistir</span>
+                      <span data-typography-role="body" className="text-sm opacity-75">No podré acompañarlos esta vez</span>
                     </div>
                   </button>
                 </div>
@@ -548,10 +555,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   <div className="space-y-4 animate-fadeIn">
                   <div className="p-4 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <span className={`text-sm sm:text-base font-bold block ${activeTheme.textPrimaryClass}`}>
+                      <span data-typography-role="heading" className={`text-base sm:text-lg font-bold block ${activeTheme.textPrimaryClass}`}>
                         Número de asistentes (incluyéndote)
                       </span>
-                      <span className="text-xs text-stone-500 dark:text-stone-400">
+                      <span data-typography-role="body" className="text-sm text-stone-500 dark:text-stone-400">
                         {guest?.allocatedPasses
                           ? `Tu invitación cuenta con hasta ${guest.allocatedPasses} pases reservados.`
                           : 'Indica el total de personas que asistirán.'}
@@ -607,7 +614,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   {/* Companion names fields */}
                   {bringingCompanions && confirmedPasses > 1 && (
                     <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-3">
-                      <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
+                      <span data-typography-role="heading" className={`text-sm sm:text-base font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                         Nombres de tus Acompañantes
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -615,10 +622,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                           <input
                             key={idx}
                             type="text"
+                            data-typography-role="body"
                             placeholder={`Acompañante ${idx + 1}`}
                             value={companions[idx + 1] || ''}
                             onChange={(e) => handleCompanionChange(idx + 1, e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                            className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
                           />
                         ))}
                       </div>
@@ -634,21 +642,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowExtraDetails(!showExtraDetails)}
-                  className={`w-full p-4 rounded-2xl border flex items-center justify-between text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                    showExtraDetails
-                      ? isDark ? 'bg-stone-800 text-stone-100 border-stone-700' : 'bg-amber-50/80 text-amber-950 border-amber-300'
-                      : isDark ? 'bg-stone-900/60 text-stone-300 border-stone-800 hover:text-white' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                  className={`invitation-card-action inline-flex w-full items-center justify-center gap-2.5 px-5 py-3 text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
+                    isDark
+                      ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
+                      : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>
-                      {showExtraDetails
-                        ? 'Ocultar detalles opcionales (Mensaje, Canción, Menú, Contacto)'
-                        : 'Añadir detalles opcionales (Mensaje, Canción DJ, Menú especial o Contacto)'}
-                    </span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showExtraDetails ? 'rotate-180' : ''}`} />
+                  <Sparkles className="w-4 h-4 shrink-0" />
+                  <span>{showExtraDetails ? 'Ocultar detalles opcionales' : 'Añadir detalles opcionales'}</span>
+                  <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-300 ${showExtraDetails ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Collapsible Content */}
@@ -658,76 +660,81 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     {/* Dietary & DJ Song Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                           <Utensils className="w-4 h-4 text-amber-700 shrink-0" />
                           Restricciones Alimentarias (Opcional)
                         </label>
                         <input
                           type="text"
+                          data-typography-role="body"
                           placeholder="Ej. Vegetariano, celíaco, alergia..."
                           value={dietary}
                           onChange={(e) => setDietary(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
                         />
                       </div>
 
                       <div>
-                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                           <Music className="w-4 h-4 text-amber-700 shrink-0" />
                           Canción para la Fiesta (DJ)
                         </label>
                         <input
                           type="text"
+                          data-typography-role="body"
                           placeholder="Ej. Vivir Mi Vida - Marc Anthony"
                           value={song}
                           onChange={(e) => setSong(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
                         />
                       </div>
                     </div>
 
                     {/* Dedication message for couple */}
                     <div>
-                      <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                      <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                         <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
                         Mensaje o Dedicatoria para los Novios
                       </label>
                       <textarea
                         rows={3}
+                        data-typography-role="body"
                         placeholder="Escribe unas palabras de felicitación o buenos deseos..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"
+                        className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"
                       />
                     </div>
 
                     {/* Contact Info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                           <Phone className="w-4 h-4 text-amber-700 shrink-0" />
                           Teléfono / WhatsApp
                         </label>
                         <input
                           type="tel"
+                          data-typography-role="body"
                           placeholder="Ej. +51 987 654 321"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
                         />
                       </div>
 
                       <div>
-                        <label className={`text-xs font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
+                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
                           <Mail className="w-4 h-4 text-amber-700 shrink-0" />
                           Correo Electrónico (Opcional)
                         </label>
                         <input
                           type="email"
+                          data-typography-role="body"
                           placeholder="correo@ejemplo.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs sm:text-sm text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
                         />
                       </div>
                     </div>
@@ -737,10 +744,15 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
               {/* Submit CTA */}
               <div className="pt-4">
-                <button
+                <button data-typography-role="button"
                   type="submit"
                   disabled={submitting || !fullName.trim()}
-                  className="w-full py-4 sm:py-5 rounded-2xl bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 font-serif font-bold text-base sm:text-lg shadow-xl hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  style={fullName.trim() ? { backgroundColor: rsvpAccentColor, color: rsvpAccentTextColor } : undefined}
+                  className={`w-full py-4 sm:py-5 rounded-2xl font-serif font-bold text-base sm:text-lg shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                    fullName.trim()
+                      ? 'hover:brightness-105'
+                      : 'bg-stone-400 text-white hover:bg-stone-400'
+                  }`}
                 >
                   {submitting ? (
                     <span>Procesando confirmación...</span>

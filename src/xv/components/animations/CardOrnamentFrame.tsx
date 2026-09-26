@@ -20,7 +20,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
   switch (effectiveStyle) {
     case 'classic-gold':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-7 h-7 text-[#C5A059]/70" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2">
             <path d="M2 18 V6 C2 3.8 3.8 2 6 2 H18" />
             <path d="M6 14 V8 C6 6.9 6.9 6 8 6 H14" strokeWidth="0.8" opacity="0.7" />
@@ -46,7 +46,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'romantic-floral':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-8 h-8 text-[#8A6D65]/60" viewBox="0 0 36 36" fill="none" stroke="currentColor" strokeWidth="1.2">
             <path d="M3 20 C4 10, 10 4, 20 3" />
             <circle cx="20" cy="5" r="3" fill="#F4C2C2" stroke="#8A6D65" strokeWidth="0.8" />
@@ -70,7 +70,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'boho-chic':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-7 h-7 text-[#B26E59]/70" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 14 L2 2 L14 2" />
             <path d="M6 10 L6 6 L10 6" strokeDasharray="1.5 1.5" />
@@ -93,7 +93,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'minimal-editorial':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-[#1a1a1a]/40" />
           <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-[#1a1a1a]/40" />
           <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-[#1a1a1a]/40" />
@@ -105,7 +105,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'dark-luxury':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-6 h-6 text-[#D4AF37]/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
             <path d="M2 10 V2 H10" stroke="#D4AF37" />
             <polygon points="5,5 7,2 9,5 12,7 9,9 7,12 5,9 2,7" fill="#D4AF37" />
@@ -128,7 +128,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'watercolor-garden':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-8 h-8 text-[#526B50]/60" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.2">
             <path d="M3 3 C12 6, 18 14, 20 22" />
             <ellipse cx="8" cy="5" rx="3" ry="1.5" transform="rotate(-30 8 5)" fill="#7D947B" />
@@ -144,7 +144,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'royal-navy':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-7 h-7 text-[#D4AF37]/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 2 H10 V4 H4 V10 H2 Z" />
             <circle cx="7" cy="7" r="1.5" fill="#D4AF37" />
@@ -171,7 +171,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'terracotta-sunset':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF4EE] border-r-2 border-[#E07A5F]/70 shadow-inner" />
           <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#FAF4EE] border-l-2 border-[#E07A5F]/70 shadow-inner" />
           <div className="absolute right-3 top-3 opacity-15 text-[#E07A5F]">
@@ -195,7 +195,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'lavender-provence':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#7B6D8D]/10 to-transparent rounded-t-[4.5rem]" />
           <div className="absolute right-2 -bottom-2 opacity-15 text-[#7B6D8D]">
             <svg className="w-20 h-20" viewBox="0 0 60 60" fill="currentColor">
@@ -210,7 +210,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'emerald-botanical':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#52B788]/15 rounded-full blur-2xl" />
           <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-[#52B788]/15 rounded-full blur-2xl" />
           <div className="absolute -right-4 -bottom-4 w-28 h-28 opacity-10 text-[#52B788]">
@@ -223,7 +223,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'coastal-breeze':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#2B6CB0] to-transparent opacity-80" />
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#2B6CB0] to-transparent opacity-80" />
           <div className="absolute -right-3 -top-3 opacity-10 text-[#2B6CB0]">
@@ -238,7 +238,7 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
 
     case 'champagne-glam':
       return (
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div data-ornament-frame style={{ '--ornament-accent': accentColor } as React.CSSProperties} className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <svg className="absolute top-2 left-2 w-8 h-8 text-[#C39B60]/70" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 2 H14 V6 H6 V14 H2 Z" fill="#C39B60" fillOpacity="0.15" />
             <line x1="2" y1="2" x2="16" y2="16" strokeDasharray="2 2" />

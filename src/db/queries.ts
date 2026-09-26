@@ -616,7 +616,9 @@ const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
 const DEMO_XV_DB_FIELDS = [
   'eventType', 'userId', 'ownerUid', 'slug', 'isPublished', 'coupleNames',
   'hashtag', 'hashtagIsCustom', 'eventDate', 'eventTime',
-  'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl', 'ceremonyEmbedUrl', 'ceremonyArrivalVideoUrl',
+  'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl', 'ceremonyEmbedUrl',
+  'mapMobileWidth', 'mapMobileHeight', 'mapDesktopWidth', 'mapDesktopHeight',
+  'ceremonyArrivalVideoUrl',
   'ceremonyPlaceQuery', 'ceremonyTime', 'receptionVenue', 'receptionAddress', 'receptionSameAsCeremony',
   'receptionMapsUrl', 'receptionEmbedUrl', 'receptionArrivalVideoUrl', 'receptionPlaceQuery', 'receptionTime',
   'dressCode', 'dressCodeDescription', 'dressCodePalette', 'dressCodeMenTitle',

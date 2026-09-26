@@ -1287,6 +1287,10 @@ export default function App() {
     '--invitation-type-detail': `${Math.min(140, Math.max(80, settings.typographyDetailScale ?? 100)) / 100}`,
     '--invitation-type-badge': `${Math.min(200, Math.max(80, settings.typographyBadgeScale ?? 100)) / 100}`,
     '--invitation-type-button': `${Math.min(200, Math.max(80, settings.typographyButtonScale ?? 100)) / 100}`,
+    '--invitation-map-mobile-width': `${Math.min(100, Math.max(50, settings.mapMobileWidth ?? 100))}%`,
+    '--invitation-map-mobile-height': `${Math.min(600, Math.max(140, settings.mapMobileHeight ?? 240))}px`,
+    '--invitation-map-desktop-width': `${Math.min(100, Math.max(50, settings.mapDesktopWidth ?? 100))}%`,
+    '--invitation-map-desktop-height': `${Math.min(700, Math.max(180, settings.mapDesktopHeight ?? 320))}px`,
   } as React.CSSProperties;
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
@@ -1352,9 +1356,9 @@ export default function App() {
     gallery: galleryInEventDetails ? null : gallerySection,
     video: settings.showVideoMemories === true ? (
       settingsEventCategory === 'xv' ? (
-        <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} />
+        <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
       ) : (
-        <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} />
+        <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
       )
     ) : null,
     hotels: <HotelsSection key="hotels" settings={settings} eventType={settingsEventCategory} />,
@@ -1367,9 +1371,9 @@ export default function App() {
     ) : null,
     guestbook: settings.showGuestbook === true ? (
       settingsEventCategory === 'xv' ? (
-        <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} />
+        <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
       ) : (
-        <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} />
+        <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
       )
     ) : null,
   };
