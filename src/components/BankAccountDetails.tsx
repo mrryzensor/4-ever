@@ -73,8 +73,8 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
                   return (
                     <div key={key} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${fieldClass}`}>
                       <div className="min-w-0">
-                        <span className={`block text-[9px] uppercase tracking-wide ${mutedClass}`}>{label}</span>
-                        <span className={`break-all text-xs ${label === 'Concepto sugerido' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                        <span data-typography-role="detail" className={`block text-[10px] uppercase tracking-wide ${mutedClass}`}>{label}</span>
+                        <span data-typography-role="detail" className={`break-all text-sm ${label === 'Concepto sugerido' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
                       </div>
                       <button
                         type="button"
