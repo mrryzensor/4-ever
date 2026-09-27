@@ -1874,7 +1874,9 @@ async function startServer() {
       }
 
       // Generate dynamic Open Graph social card buffer
-      const imageBuffer = await generateWeddingOgImage(wedding || {}, guest);
+      // Drive hero photos are stored as signed relative URLs. Resolve them
+      // through this local server so the existing Drive proxy can fetch them.
+      const imageBuffer = await generateWeddingOgImage(wedding || {}, guest, `http://127.0.0.1:${PORT}`);
 
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');

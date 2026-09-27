@@ -30,6 +30,10 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
+# sharp renders Open Graph SVG text through the system font stack. Install a
+# dependable Latin font so social cards do not render missing-glyph squares.
+RUN apk add --no-cache fontconfig ttf-dejavu
+
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV SQL_DB_NAME=2date_db

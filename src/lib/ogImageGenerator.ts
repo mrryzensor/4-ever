@@ -23,6 +23,18 @@ function wrapHeroNames(value: string, maxLineLength = 18): string[] {
   const lines: string[] = [];
   let line = '';
   for (const word of words) {
+    const wordCharacters = Array.from(word);
+    if (wordCharacters.length > maxLineLength) {
+      if (line) {
+        lines.push(line);
+        line = '';
+      }
+      for (let index = 0; index < wordCharacters.length; index += maxLineLength) {
+        lines.push(wordCharacters.slice(index, index + maxLineLength).join(''));
+      }
+      continue;
+    }
+
     const candidate = line ? `${line} ${word}` : word;
     if (line && candidate.length > maxLineLength) {
       lines.push(line);
@@ -33,31 +45,40 @@ function wrapHeroNames(value: string, maxLineLength = 18): string[] {
   }
   if (line) lines.push(line);
 
-  // Keep the social card readable when somebody enters a very long, unbroken name.
-  if (lines.length === 1 && lines[0].length > maxLineLength + 4) {
-    return [lines[0].slice(0, maxLineLength), lines[0].slice(maxLineLength)];
+  // Reserve a clear, visible name block even when an unusually long name is entered.
+  const visibleLines = lines.slice(0, 3);
+  if (lines.length > visibleLines.length && visibleLines.length) {
+    const lastLine = Array.from(visibleLines[visibleLines.length - 1]);
+    visibleLines[visibleLines.length - 1] = `${lastLine.slice(0, maxLineLength - 1).join('')}…`;
   }
-  return lines.slice(0, 3);
+  return visibleLines;
 }
 
 /**
- * Generates an ultra-crisp 1200x630 Open Graph Image representing the Hero of the Wedding Invitation.
+ * Generates an ultra-crisp 1200x630 Open Graph image representing the event hero.
  * Designed specifically for rich social cards on WhatsApp, Facebook, iMessage, Twitter/X, Instagram, LinkedIn, etc.
  */
 export async function generateWeddingOgImage(
   settings: Partial<WeddingSettings>,
-  guest?: Partial<Guest> | null
+  guest?: Partial<Guest> | null,
+  internalAssetOrigin?: string,
 ): Promise<Buffer> {
   const width = 1200;
   const height = 630;
 
   const presentation = getEventPresentation(settings.eventType, settings.slug);
-  const coupleNames = (settings.coupleNames || presentation.defaultName).trim();
+  const rawEventType = String(settings.eventType ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  const isXvEvent = presentation.type === 'xv';
+  const isWeddingEvent = !rawEventType || ['boda', 'bodas', 'wedding', 'nupcias'].includes(rawEventType);
+  const isGenericEvent = !isXvEvent && !isWeddingEvent;
+  const coupleNames = settings.coupleNames?.trim() || (isGenericEvent ? 'Tu Evento' : presentation.defaultName);
   const nameLines = wrapHeroNames(coupleNames);
   const longestNameLine = Math.max(...nameLines.map((line) => line.length), 1);
-  const namesFontSize = Math.max(42, Math.min(72, Math.floor(72 * (26 / longestNameLine))));
+  const maxNamesFontSize = nameLines.length >= 3 ? 56 : 72;
+  const namesFontSize = Math.max(42, Math.min(maxNamesFontSize, Math.floor(maxNamesFontSize * (26 / longestNameLine))));
   const nameLineHeight = Math.round(namesFontSize * 1.12);
   const namesStartY = Math.round(325 - ((nameLines.length - 1) * nameLineHeight) / 2);
+  const ringsY = 395 + Math.min((nameLines.length - 1) * 16, 32);
   const namesMarkup = nameLines
     .map((line, index) => `<tspan x="600"${index ? ` dy="${nameLineHeight}"` : ''}>${escapeXml(line)}</tspan>`)
     .join('');
@@ -67,7 +88,16 @@ export async function generateWeddingOgImage(
     settings.heroCustomDateText
   );
   const venue = settings.ceremonyVenue || settings.receptionVenue || 'Acompáñanos a Celebrar';
-  const location = settings.receptionAddress || settings.ceremonyAddress || '';
+  const rawLocation = settings.receptionAddress || settings.ceremonyAddress || '';
+  const location = rawLocation
+    .split(/https?:\/\/|www\./i)[0]
+    .replace(/\s*(?:[·•|—–-]\s*)?c[oó]mo\s+llegar\s*:.*/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const venueAndLocation = [venue.trim(), location].filter(Boolean).join(' • ');
+  const footerLocation = venueAndLocation.length > 76
+    ? `${venueAndLocation.slice(0, 75).trimEnd()}…`
+    : venueAndLocation;
 
   // 1. Resolve Background Image
   let backgroundBuffer: Buffer | null = null;
@@ -76,26 +106,79 @@ export async function generateWeddingOgImage(
   if (coverPhoto) {
     try {
       if (coverPhoto.startsWith('/uploads/')) {
-        const localPath = path.join(process.cwd(), coverPhoto);
+        // Uploaded covers are persisted in UPLOADS_DIR, which may be mounted
+        // somewhere other than <cwd>/uploads in production.
+        const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
+        const filename = path.basename(coverPhoto.split(/[?#]/, 1)[0]);
+        const localPath = path.join(uploadsDir, filename);
         if (fs.existsSync(localPath)) {
           backgroundBuffer = await sharp(localPath)
             .resize(width, height, { fit: 'cover', position: 'center' })
             .toBuffer();
         }
+      } else if (/^data:image\/(?:png|jpe?g|webp|avif);base64,/i.test(coverPhoto)) {
+        // Older editor sessions may have saved a data URL when the upload
+        // endpoint was unavailable. It is still usable by the server renderer.
+        const [, encodedImage] = coverPhoto.match(/^data:image\/(?:png|jpe?g|webp|avif);base64,([\s\S]+)$/i) || [];
+        if (encodedImage) {
+          const imageBuffer = Buffer.from(encodedImage, 'base64');
+          if (imageBuffer.length <= 25 * 1024 * 1024) {
+            backgroundBuffer = await sharp(imageBuffer)
+              .resize(width, height, { fit: 'cover', position: 'center' })
+              .toBuffer();
+          }
+        }
+      } else if (coverPhoto.startsWith('/api/drive-folders/') && internalAssetOrigin) {
+        // The Drive picker persists a signed, same-app proxy URL (not a
+        // Google-hosted URL). Fetch it through this server so its existing
+        // Drive API key and signature checks can resolve the private asset.
+        const assetUrl = new URL(coverPhoto, internalAssetOrigin);
+        const origin = new URL(internalAssetOrigin).origin;
+        const validDriveAsset = assetUrl.origin === origin
+          && /^\/api\/drive-folders\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+\/thumbnail$/.test(assetUrl.pathname)
+          && assetUrl.searchParams.has('signature');
+        if (validDriveAsset) {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 25000);
+          try {
+            const resp = await fetch(assetUrl, { signal: controller.signal });
+            if (resp.ok) {
+              const contentLength = Number(resp.headers.get('content-length') || 0);
+              if (contentLength <= 25 * 1024 * 1024) {
+                const arrayBuf = await resp.arrayBuffer();
+                if (arrayBuf.byteLength <= 25 * 1024 * 1024) {
+                  backgroundBuffer = await sharp(Buffer.from(arrayBuf))
+                    .resize(width, height, { fit: 'cover', position: 'center' })
+                    .toBuffer();
+                }
+              }
+            }
+          } finally {
+            clearTimeout(timeout);
+          }
+        }
       } else if (coverPhoto.startsWith('http://') || coverPhoto.startsWith('https://')) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 4000);
-        const resp = await fetch(coverPhoto, { signal: controller.signal });
-        clearTimeout(timeout);
-        if (resp.ok) {
-          const arrayBuf = await resp.arrayBuffer();
-          backgroundBuffer = await sharp(Buffer.from(arrayBuf))
-            .resize(width, height, { fit: 'cover', position: 'center' })
-            .toBuffer();
+        try {
+          const resp = await fetch(coverPhoto, { signal: controller.signal });
+          if (resp.ok) {
+            const contentLength = Number(resp.headers.get('content-length') || 0);
+            if (contentLength <= 25 * 1024 * 1024) {
+              const arrayBuf = await resp.arrayBuffer();
+              if (arrayBuf.byteLength <= 25 * 1024 * 1024) {
+                backgroundBuffer = await sharp(Buffer.from(arrayBuf))
+                  .resize(width, height, { fit: 'cover', position: 'center' })
+                  .toBuffer();
+              }
+            }
+          }
+        } finally {
+          clearTimeout(timeout);
         }
       }
     } catch (e) {
-      console.warn('Could not fetch custom hero photo for OG card, using procedural background:', e);
+      console.warn('Could not resolve custom hero photo for OG card, using procedural background:', e);
     }
   }
 
@@ -106,30 +189,43 @@ export async function generateWeddingOgImage(
         width,
         height,
         channels: 4,
-        background: { r: 24, g: 30, b: 35, alpha: 1 },
+        background: { r: 25, g: 54, b: 46, alpha: 1 },
       },
     })
       .png()
       .toBuffer();
   }
 
-  const categoryLabel = presentation.type === 'xv' ? 'M I S   X V   A Ñ O S' : 'N U E S T R A   B O D A';
+  const categoryLabel = isXvEvent
+    ? 'M I S   X V   A Ñ O S'
+    : isGenericEvent
+      ? 'C E L E B R A C I Ó N   E S P E C I A L'
+      : 'N U E S T R A   B O D A';
+  const celebrationSymbol = isXvEvent
+    ? `<path d="M-37,8 L-28,-20 L-10,-5 L0,-30 L10,-5 L28,-20 L37,8 Z" fill="rgba(212,175,55,0.12)" stroke="url(#goldGradient)" stroke-width="3" stroke-linejoin="round" />
+        <path d="M-37,13 L37,13" fill="none" stroke="url(#goldGradient)" stroke-width="3" stroke-linecap="round" />
+        <path d="M-8,-13 L0,-22 L8,-13" fill="none" stroke="url(#goldGradient)" stroke-width="2" />`
+    : isGenericEvent
+      ? `<path d="M0,-29 L7,-8 L29,-7 L12,7 L18,29 L0,17 L-18,29 L-12,7 L-29,-7 L-7,-8 Z" fill="rgba(212,175,55,0.12)" stroke="url(#goldGradient)" stroke-width="3" stroke-linejoin="round" />`
+      : `<circle cx="-14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
+        <circle cx="14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
+        <path d="M-8,-14 L0,-24 L8,-14" fill="none" stroke="url(#goldGradient)" stroke-width="2" />`;
 
   // 2. Build Hero Overlay SVG with Typography & Golden Accents
   const guestBadge = guest?.fullName
     ? `<g transform="translate(600, 490)">
         <rect x="-240" y="-22" width="480" height="44" rx="22" fill="rgba(197, 160, 89, 0.25)" stroke="#D4AF37" stroke-width="1.5" />
-        <text x="0" y="6" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="#FDFCF0" font-weight="600" letter-spacing="2">
+      <text x="0" y="6" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="#FDFCF0" font-weight="600" letter-spacing="2">
           INVITACIÓN ESPECIAL PARA: ${escapeXml(guest.fullName.toUpperCase())}
         </text>
       </g>`
     : '';
 
   const locationText = location
-    ? `<text x="600" y="555" text-anchor="middle" font-family="'Montserrat', 'Inter', sans-serif" font-size="18" fill="rgba(255,255,255,0.8)" font-weight="400" letter-spacing="2">
-        ${escapeXml(venue.toUpperCase())} ${venue && location ? '•' : ''} ${escapeXml(location)}
+    ? `<text x="600" y="555" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="18" fill="rgba(255,255,255,0.8)" font-weight="400" letter-spacing="2">
+        ${escapeXml(footerLocation.toUpperCase())}
       </text>`
-    : `<text x="600" y="555" text-anchor="middle" font-family="'Montserrat', 'Inter', sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" font-weight="400" letter-spacing="3">
+    : `<text x="600" y="555" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" font-weight="400" letter-spacing="3">
         ${escapeXml(venue.toUpperCase())}
       </text>`;
 
@@ -138,10 +234,10 @@ export async function generateWeddingOgImage(
       <defs>
         <!-- Dark Vignette Gradient for high contrast -->
         <linearGradient id="vignette" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#000000" stop-opacity="0.75" />
-          <stop offset="40%" stop-color="#000000" stop-opacity="0.45" />
-          <stop offset="70%" stop-color="#000000" stop-opacity="0.70" />
-          <stop offset="100%" stop-color="#000000" stop-opacity="0.95" />
+          <stop offset="0%" stop-color="#000000" stop-opacity="0.45" />
+          <stop offset="40%" stop-color="#000000" stop-opacity="0.25" />
+          <stop offset="70%" stop-color="#000000" stop-opacity="0.42" />
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.68" />
         </linearGradient>
 
         <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -173,7 +269,7 @@ export async function generateWeddingOgImage(
 
       <!-- Top Tag / Category -->
       <g filter="url(#softGlow)">
-        <text x="600" y="110" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="url(#goldGradient)" font-weight="700" letter-spacing="6">
+        <text x="600" y="110" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="url(#goldGradient)" font-weight="700" letter-spacing="6">
           ${categoryLabel}
         </text>
         <line x1="420" y1="130" x2="780" y2="130" stroke="url(#goldGradient)" stroke-width="1" stroke-opacity="0.6" />
@@ -181,23 +277,21 @@ export async function generateWeddingOgImage(
 
       <!-- Date Badge -->
       <g filter="url(#softGlow)">
-        <text x="600" y="185" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="28" fill="#F3F0E6" font-weight="600" letter-spacing="4">
+        <text x="600" y="185" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="28" fill="#F3F0E6" font-weight="600" letter-spacing="4">
           ${escapeXml(eventDateFormatted)}
         </text>
       </g>
 
       <!-- Primary names from the event Hero (couple or quinceañera), wrapped to fit social previews -->
       <g filter="url(#textGlow)">
-        <text x="600" y="${namesStartY}" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="${namesFontSize}" fill="#FFFFFF" font-weight="700" letter-spacing="2">
+        <text x="600" y="${namesStartY}" text-anchor="middle" font-family="'DejaVu Serif', 'Playfair Display', Georgia, 'Times New Roman', serif" font-size="${namesFontSize}" fill="#FFFFFF" font-weight="700" letter-spacing="2">
           ${namesMarkup}
         </text>
       </g>
 
-      <!-- Rings / Monogram Symbol -->
-      <g transform="translate(600, 395)" filter="url(#softGlow)">
-        <circle cx="-14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
-        <circle cx="14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
-        <path d="M-8,-14 L0,-24 L8,-14" fill="none" stroke="url(#goldGradient)" stroke-width="2" />
+      <!-- Event-specific accent symbol -->
+      <g transform="translate(600, ${ringsY})" filter="url(#softGlow)">
+        ${celebrationSymbol}
       </g>
 
       <!-- Guest Personalized Badge (if present) -->
@@ -209,7 +303,7 @@ export async function generateWeddingOgImage(
       </g>
 
       <!-- Bottom RSVP Call to Action -->
-      <text x="600" y="585" text-anchor="middle" font-family="'Montserrat', 'Inter', sans-serif" font-size="14" fill="url(#goldGradient)" font-weight="600" letter-spacing="3">
+      <text x="600" y="585" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="14" fill="url(#goldGradient)" font-weight="600" letter-spacing="3">
         TOCA PARA ABRIR LA INVITACIÓN &amp; CONFIRMAR ASISTENCIA
       </text>
     </svg>
