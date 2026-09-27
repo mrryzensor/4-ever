@@ -9,6 +9,7 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
+    "verify:og": "tsx scripts/verify-og-image.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

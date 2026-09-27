@@ -90,6 +90,20 @@ pnpm dev
 pnpm build
 ```
 
+## ⚙️ GitHub Actions: validación y despliegue
+
+El workflow `.github/workflows/ci.yml` se ejecuta en cada pull request hacia `main` y en cada push a `main`. Verifica la generación de tarjetas Open Graph para boda y XV, y compila la aplicación antes de permitir el despliegue.
+
+Para activar el despliegue automático a producción después de una compilación exitosa, configura en **Settings → Secrets and variables → Actions**:
+
+| Tipo | Nombre | Valor |
+| :--- | :--- | :--- |
+| Variable | `COOLIFY_DEPLOY_ENABLED` | `true` |
+| Secret | `COOLIFY_DEPLOY_WEBHOOK` | URL de despliegue de la aplicación en Coolify |
+| Secret | `COOLIFY_TOKEN` | Token de Coolify con permiso `deploy` |
+
+En Coolify, la URL está en **Application → Configuration → Webhooks**. Si las variables y secretos no están configurados, el workflow valida y compila el proyecto, pero no despliega a producción. Mantén el token solo en GitHub Secrets; no lo añadas al repositorio.
+
 ---
 
 ## 📦 Repositorio Oficial
