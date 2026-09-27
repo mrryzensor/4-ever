@@ -299,6 +299,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     || (hasVisibleBankAccounts && !showBankAccountsWhenCollapsed);
 
   let tipsList: WeddingTipItem[] = [];
+  let useDefaultTips = settings.tipsList == null;
   try {
     if (typeof settings.tipsList === 'string') {
       tipsList = JSON.parse(settings.tipsList || '[]');
@@ -307,8 +308,9 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     }
   } catch {
     tipsList = [];
+    useDefaultTips = true;
   }
-  if (!tipsList.length) {
+  if (useDefaultTips) {
     tipsList = [
       { icon: 'clock', title: 'Puntualidad', desc: 'Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo.' },
       { icon: 'car', title: 'Estacionamiento & Valet', desc: 'El recinto cuenta con servicio de Valet Parking y vigilancia privada.' },

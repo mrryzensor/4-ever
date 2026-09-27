@@ -16,6 +16,7 @@ import {
 import { WeddingSettings } from '../../../../types.ts';
 import { AdminSectionOrder } from '../../../../components/admin/settings/AdminSectionOrder.tsx';
 import { AdminHotelsSettings } from '../../../../components/admin/settings/AdminHotelsSettings.tsx';
+import { AdminTipsSettings } from '../../../../components/admin/settings/AdminTipsSettings.tsx';
 
 interface AdminSectionTogglesProps {
   settings: WeddingSettings;
@@ -359,6 +360,7 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
       </div>
       <AdminSectionOrder settings={settings} onChange={onChange} />
       <AdminHotelsSettings settings={settings} onChange={onChange} />
+      <AdminTipsSettings settings={settings} onChange={onChange} />
     </div>
   );
 };
