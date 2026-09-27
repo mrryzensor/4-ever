@@ -1287,6 +1287,7 @@ export default function App() {
     '--invitation-type-detail': `${Math.min(140, Math.max(80, settings.typographyDetailScale ?? 100)) / 100}`,
     '--invitation-type-badge': `${Math.min(200, Math.max(80, settings.typographyBadgeScale ?? 100)) / 100}`,
     '--invitation-type-button': `${Math.min(200, Math.max(80, settings.typographyButtonScale ?? 100)) / 100}`,
+    '--invitation-type-toggle': `${Math.min(200, Math.max(80, settings.typographyToggleScale ?? 100)) / 100}`,
     '--invitation-map-mobile-width': `${Math.min(100, Math.max(50, settings.mapMobileWidth ?? 100))}%`,
     '--invitation-map-mobile-height': `${Math.min(600, Math.max(140, settings.mapMobileHeight ?? 240))}px`,
     '--invitation-map-desktop-width': `${Math.min(100, Math.max(50, settings.mapDesktopWidth ?? 100))}%`,

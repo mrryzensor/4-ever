@@ -21,6 +21,7 @@ import {
   DEMO_XV_SLUG,
 } from '../lib/eventUtils.ts';
 import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
+import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
 const memoryState = {
@@ -135,6 +136,7 @@ const memoryState = {
       typographyDetailScale: 100,
       typographyBadgeScale: 100,
       typographyButtonScale: 100,
+      typographyToggleScale: 100,
       dividerStyle: 'auto',
       frameOrnamentStyle: 'auto',
       transitionWaveStyle: 'auto',
@@ -388,7 +390,7 @@ const memoryState = {
       attendingCeremony: true,
       attendingReception: true,
       dietaryRestrictions: '1 menú vegetariano',
-      companionNames: JSON.stringify(['Carlos Ruiz', 'Elena Morales', 'Mateo Ruiz', 'Valentina Ruiz']),
+      companionNames: JSON.stringify(['Elena Morales', 'Mateo Ruiz', 'Valentina Ruiz']),
       suggestedSong: 'Bailando - Enrique Iglesias',
       message: '¡Muchísimas felicidades Sofía y Alejandro! Que Dios bendiga su nuevo hogar. Nos vemos para festejar en grande en Lima.',
       confirmedAt: new Date(),
@@ -409,7 +411,7 @@ const memoryState = {
       attendingCeremony: true,
       attendingReception: true,
       dietaryRestrictions: 'Sin gluten (Celíaca)',
-      companionNames: JSON.stringify(['Mariana Gómez', 'Rodrigo Sánchez']),
+      companionNames: JSON.stringify(['Rodrigo Sánchez']),
       suggestedSong: 'September - Earth, Wind & Fire',
       message: '¡Amiga hermosa! Te verás radiante, no puedo esperar para verte entrar hacia el altar.',
       confirmedAt: new Date(),
@@ -642,7 +644,7 @@ const DEMO_XV_DB_FIELDS = [
   'showVideoMemories', 'showGuestbook',
   'showHotels', 'hotelsTitle', 'hotelRecommendations', 'landingSectionOrder',
   'detailSectionOrder', 'galleryPlacement', 'galleryAfterDetailSection',
-  'typographyTitleScale', 'typographyHeadingScale', 'typographyBodyScale', 'typographySubtitleScale', 'typographyDetailScale', 'typographyBadgeScale', 'typographyButtonScale',
+  'typographyTitleScale', 'typographyHeadingScale', 'typographyBodyScale', 'typographySubtitleScale', 'typographyDetailScale', 'typographyBadgeScale', 'typographyButtonScale', 'typographyToggleScale',
   'transitionWaveStyle', 'transitionEffect', 'heroIconStyle', 'heroEmblemColor', 'heroEmblemGlow',
   'heroEmblemSparkle', 'heroEmblemScale',
   'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
@@ -1615,11 +1617,18 @@ export async function createGuest(data: typeof guests.$inferInsert) {
     data.accessCode = data.accessCode.trim().toUpperCase();
   }
 
+  const allocatedPasses = Math.max(1, Math.trunc(Number(data.allocatedPasses) || 1));
+  const status = (data.status as any) || 'pending';
+  const confirmedPasses = status === 'confirmed'
+    ? Math.min(allocatedPasses, Math.max(1, Math.trunc(Number(data.confirmedPasses) || 1)))
+    : 0;
+  const companions = parseGuestCompanionNames(data.companionNames, data.fullName, Math.max(confirmedPasses, 1));
   const normalizedData = {
     ...data,
-    allocatedPasses: Number(data.allocatedPasses) || 1,
-    confirmedPasses: Number(data.confirmedPasses) || 0,
-    status: (data.status as any) || 'pending',
+    allocatedPasses,
+    confirmedPasses,
+    companionNames: JSON.stringify(normalizeCompanionNames(companions, Math.max(0, confirmedPasses - 1))),
+    status,
   };
 
   try {
@@ -1689,16 +1698,44 @@ export async function createGuestsBulk(guestList: Array<typeof guests.$inferInse
 export async function updateGuest(id: number, data: Partial<typeof guests.$inferInsert>) {
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
-      const updated = await db.update(guests).set({ ...data, updatedAt: new Date() }).where(eq(guests.id, id)).returning();
+      const rows = await db.select().from(guests).where(eq(guests.id, id)).limit(1);
+      const current = rows[0];
+      if (!current) return null;
+      const merged = { ...current, ...data };
+      const allocatedPasses = Math.max(1, Math.trunc(Number(merged.allocatedPasses) || 1));
+      const confirmedPasses = merged.status === 'confirmed'
+        ? Math.min(allocatedPasses, Math.max(1, Math.trunc(Number(merged.confirmedPasses) || 1)))
+        : 0;
+      const companions = parseGuestCompanionNames(merged.companionNames, merged.fullName, Math.max(confirmedPasses, 1));
+      const normalizedData = {
+        ...data,
+        allocatedPasses,
+        confirmedPasses,
+        companionNames: JSON.stringify(normalizeCompanionNames(companions, Math.max(0, confirmedPasses - 1))),
+        updatedAt: new Date(),
+      };
+      const updated = await db.update(guests).set(normalizedData).where(eq(guests.id, id)).returning();
       if (updated.length > 0) return updated[0];
     }
   } catch (err) {
     console.warn('updateGuest fallback to memory');
   }
 
-  const idx = memoryState.guests.findIndex((g) => g.id === id);
+  const idx = memoryState.guests.findIndex((guest) => guest.id === id);
   if (idx !== -1) {
-    memoryState.guests[idx] = { ...memoryState.guests[idx], ...data, updatedAt: new Date() };
+    const merged = { ...memoryState.guests[idx], ...data };
+    const allocatedPasses = Math.max(1, Math.trunc(Number(merged.allocatedPasses) || 1));
+    const confirmedPasses = merged.status === 'confirmed'
+      ? Math.min(allocatedPasses, Math.max(1, Math.trunc(Number(merged.confirmedPasses) || 1)))
+      : 0;
+    const companions = parseGuestCompanionNames(merged.companionNames, merged.fullName, Math.max(confirmedPasses, 1));
+    memoryState.guests[idx] = {
+      ...merged,
+      allocatedPasses,
+      confirmedPasses,
+      companionNames: JSON.stringify(normalizeCompanionNames(companions, Math.max(0, confirmedPasses - 1))),
+      updatedAt: new Date(),
+    };
     return memoryState.guests[idx];
   }
   return null;
@@ -1745,7 +1782,14 @@ export async function submitRsvp(
     return guest;
   }
 
-  const companionNamesJson = JSON.stringify(payload.companionNames || []);
+  const confirmedPasses = payload.status === 'confirmed'
+    ? Math.min(Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)), Math.max(1, Math.trunc(Number(guest.allocatedPasses) || 1)))
+    : 0;
+  const submittedCompanions = normalizeCompanionNames(payload.companionNames, Math.max(0, confirmedPasses - 1));
+  if (payload.status === 'confirmed' && submittedCompanions.length !== Math.max(0, confirmedPasses - 1)) {
+    throw new Error('Debes escribir el nombre de cada acompañante seleccionado.');
+  }
+  const companionNamesJson = JSON.stringify(submittedCompanions);
 
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
@@ -1753,7 +1797,7 @@ export async function submitRsvp(
         .update(guests)
         .set({
           status: payload.status,
-          confirmedPasses: payload.status === 'confirmed' ? Math.min(payload.confirmedPasses, guest.allocatedPasses) : 0,
+          confirmedPasses,
           attendingCeremony: payload.attendingCeremony,
           attendingReception: payload.attendingReception,
           dietaryRestrictions: payload.dietaryRestrictions || '',
@@ -1787,7 +1831,7 @@ export async function submitRsvp(
     memoryState.guests[idx] = {
       ...memoryState.guests[idx],
       status: payload.status,
-      confirmedPasses: payload.status === 'confirmed' ? Math.min(payload.confirmedPasses, guest.allocatedPasses) : 0,
+      confirmedPasses,
       attendingCeremony: payload.attendingCeremony,
       attendingReception: payload.attendingReception,
       dietaryRestrictions: payload.dietaryRestrictions || '',
@@ -1842,8 +1886,15 @@ export async function submitOpenRsvp(payload: {
   const randomNum = Math.floor(100 + Math.random() * 900);
   const autoCode = `REG-${cleanPrefix}-${randomNum}`;
 
-  const companionNamesJson = JSON.stringify(payload.companionNames || []);
-  const allocated = Math.max(payload.confirmedPasses || 1, 1);
+  const confirmedPasses = payload.status === 'confirmed'
+    ? Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1))
+    : 0;
+  const submittedCompanions = normalizeCompanionNames(payload.companionNames, Math.max(0, confirmedPasses - 1));
+  if (payload.status === 'confirmed' && submittedCompanions.length !== Math.max(0, confirmedPasses - 1)) {
+    throw new Error('Debes escribir el nombre de cada acompañante seleccionado.');
+  }
+  const companionNamesJson = JSON.stringify(submittedCompanions);
+  const allocated = Math.max(confirmedPasses, 1);
 
   const guestData = {
     weddingId: payload.weddingId || 1,
@@ -1851,7 +1902,7 @@ export async function submitOpenRsvp(payload: {
     accessCode: autoCode,
     groupName: 'Invitación Genérica / Registro Abierto',
     allocatedPasses: allocated,
-    confirmedPasses: payload.status === 'confirmed' ? payload.confirmedPasses : 0,
+    confirmedPasses,
     status: payload.status,
     phone: payload.phone || '',
     email: payload.email || '',

@@ -116,6 +116,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   typographyDetailScale: integer('typography_detail_scale').default(100),
   typographyBadgeScale: integer('typography_badge_scale').default(100),
   typographyButtonScale: integer('typography_button_scale').default(100),
+  typographyToggleScale: integer('typography_toggle_scale').default(100),
   dividerStyle: text('divider_style').default('auto'),
   frameOrnamentStyle: text('frame_ornament_style').default('auto'),
   transitionWaveStyle: text('transition_wave_style').default('auto'),
@@ -192,7 +193,7 @@ export const guests = pgTable('guests', {
   attendingCeremony: boolean('attending_ceremony').default(true),
   attendingReception: boolean('attending_reception').default(true),
   dietaryRestrictions: text('dietary_restrictions').default(''),
-  companionNames: text('companion_names').default('[]'), // JSON array of string names
+  companionNames: text('companion_names').default('[]'), // JSON array of accompanying guests; excludes fullName
   suggestedSong: text('suggested_song').default(''),
   message: text('message').default(''),
   confirmedAt: timestamp('confirmed_at'),

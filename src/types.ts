@@ -198,6 +198,7 @@ export interface WeddingSettings {
   typographyDetailScale?: number; // Porcentaje, 80-140
   typographyBadgeScale?: number; // Porcentaje, 80-200
   typographyButtonScale?: number; // Porcentaje, 80-200
+  typographyToggleScale?: number; // Porcentaje, 80-200
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
   frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido
@@ -337,7 +338,7 @@ export interface Guest {
   attendingCeremony: boolean;
   attendingReception: boolean;
   dietaryRestrictions?: string | null;
-  companionNames?: string; // JSON array of string
+  companionNames?: string; // JSON array containing accompanying guests only, never the invitee
   suggestedSong?: string | null;
   message?: string | null;
   confirmedAt?: string | null;

@@ -18,6 +18,7 @@ import {
   Check
 } from 'lucide-react';
 import { Guest } from '../../../types.ts';
+import { parseGuestCompanionNames } from '../../../lib/guestCompanions.ts';
 
 export interface ExtendedGuestFormData {
   fullName: string;
@@ -58,13 +59,7 @@ export const AdminGuestModal: React.FC<AdminGuestModalProps> = ({
   if (!isOpen) return null;
 
   // Companion names parsing
-  let companionList: string[] = [];
-  try {
-    const parsed = JSON.parse(formData.companionNames || '[]');
-    companionList = Array.isArray(parsed) ? parsed : [];
-  } catch {
-    companionList = [];
-  }
+  const companionList = parseGuestCompanionNames(formData.companionNames, formData.fullName, formData.confirmedPasses);
 
   const handleCompanionChange = (index: number, val: string) => {
     const updated = [...companionList];
@@ -73,14 +68,15 @@ export const AdminGuestModal: React.FC<AdminGuestModalProps> = ({
   };
 
   const handleConfirmedPassesChange = (num: number) => {
-    const validNum = Math.max(0, Math.min(num, formData.allocatedPasses || 20));
+    const validNum = Math.max(1, Math.min(num, formData.allocatedPasses || 20));
     const newCompanions = [...companionList];
-    while (newCompanions.length < validNum) {
+    const companionCount = Math.max(0, validNum - 1);
+    while (newCompanions.length < companionCount) {
       newCompanions.push('');
     }
     onChangeFormData({
       confirmedPasses: validNum,
-      companionNames: JSON.stringify(newCompanions.slice(0, validNum)),
+      companionNames: JSON.stringify(newCompanions.slice(0, companionCount)),
       status: validNum > 0 ? 'confirmed' : formData.status,
     });
   };
@@ -335,19 +331,19 @@ export const AdminGuestModal: React.FC<AdminGuestModalProps> = ({
                   </div>
                 </div>
 
-                {/* Nombres de Acompañantes si hay más de 1 pase confirmado */}
+                {/* Sólo almacenar nombres de acompañantes; el titular ya está en fullName. */}
                 {formData.confirmedPasses > 1 && (
                   <div className="p-3.5 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-2">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-[#5A5A40] block">
-                      Nombres de los Acompañantes ({formData.confirmedPasses} personas):
+                      Nombres de los Acompañantes ({formData.confirmedPasses - 1}):
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {Array.from({ length: formData.confirmedPasses }).map((_, idx) => (
+                      {Array.from({ length: formData.confirmedPasses - 1 }).map((_, idx) => (
                         <input
                           key={idx}
                           type="text"
-                          placeholder={idx === 0 ? `Titular: ${formData.fullName}` : `Acompañante ${idx + 1}`}
-                          value={companionList[idx] || (idx === 0 ? formData.fullName : '')}
+                          placeholder={`Acompañante ${idx + 1}`}
+                          value={companionList[idx] || ''}
                           onChange={(e) => handleCompanionChange(idx, e.target.value)}
                           className="bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-stone-800 focus:outline-none focus:border-[#5A5A40]"
                         />

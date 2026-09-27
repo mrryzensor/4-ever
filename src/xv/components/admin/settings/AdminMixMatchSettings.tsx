@@ -142,6 +142,7 @@ const TYPOGRAPHY_SCALE_CONTROLS = [
   { key: 'typographyDetailScale', label: 'Detalles', help: 'Fechas, etiquetas y datos secundarios', cssVar: '--invitation-type-detail' },
   { key: 'typographyBadgeScale', label: 'Badges', help: 'Píldoras, categorías y etiquetas destacadas', cssVar: '--invitation-type-badge', max: 200 },
   { key: 'typographyButtonScale', label: 'Botones', help: 'Acciones y llamados a la acción de la invitación', cssVar: '--invitation-type-button', max: 200 },
+  { key: 'typographyToggleScale', label: 'Interruptores', help: 'Tamaño del control ¿Llevas invitados? en la confirmación', cssVar: '--invitation-type-toggle', max: 200 },
 ] as const;
 
 const TypographyScaleControls: React.FC<{
@@ -155,7 +156,7 @@ const TypographyScaleControls: React.FC<{
         <h4 className="text-sm font-bold text-stone-800">Tamaño de cada tipo de texto</h4>
         <p className="mt-0.5 text-xs text-stone-600">Los cambios se reflejan al instante en el simulador y la invitación.</p>
       </div>
-      <button type="button" onClick={() => onChange({ typographyTitleScale: 100, typographyHeadingScale: 100, typographyBodyScale: 100, typographySubtitleScale: 100, typographyDetailScale: 100, typographyBadgeScale: 100, typographyButtonScale: 100 })} className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100">Restablecer tamaños</button>
+      <button type="button" onClick={() => onChange({ typographyTitleScale: 100, typographyHeadingScale: 100, typographyBodyScale: 100, typographySubtitleScale: 100, typographyDetailScale: 100, typographyBadgeScale: 100, typographyButtonScale: 100, typographyToggleScale: 100 })} className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100">Restablecer tamaños</button>
     </div>
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {TYPOGRAPHY_SCALE_CONTROLS.map((control) => {
@@ -166,13 +167,20 @@ const TypographyScaleControls: React.FC<{
           <label key={key} className="rounded-lg border border-stone-200 bg-white p-3">
             <span className="flex items-center justify-between gap-2 text-xs font-semibold text-stone-800"><span>{label}</span><span className="tabular-nums text-stone-600">{value}%</span></span>
             <span className="mt-0.5 block text-[11px] text-stone-500">{help}</span>
-            <span className={key === 'typographyButtonScale'
+            <span className={key === 'typographyToggleScale'
+              ? 'mt-2 block origin-left'
+              : key === 'typographyButtonScale'
               ? 'mt-2 inline-flex origin-left items-center rounded-full bg-[#5A5A40] px-3 py-1.5 font-sans text-xs font-semibold text-white'
               : key === 'typographyBadgeScale'
                 ? 'mt-2 inline-flex origin-left items-center rounded-full border border-stone-300 bg-stone-50 px-3 py-1 font-sans text-xs font-medium text-stone-700'
                 : `mt-2 block origin-left truncate font-serif text-sm italic text-stone-800 ${accent === 'indigo' ? 'text-indigo-800' : 'text-purple-800'}`}
-              style={{ zoom: `var(${cssVar}, 1)` }} aria-hidden="true">
-              {key === 'typographyButtonScale' ? 'Ver invitación' : key === 'typographyBadgeScale' ? 'Puntualidad' : 'Valeria · Nos emociona compartir este día'}
+              style={{ zoom: key === 'typographyToggleScale' ? value / 100 : `var(${cssVar}, 1)` }} aria-hidden="true">
+              {key === 'typographyToggleScale' ? (
+                <span className="inline-flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-[10px] font-sans not-italic text-stone-700">
+                  <span>¿Llevas acompañantes?</span>
+                  <span className="relative h-4 w-7 rounded-full bg-[#5A5A40]"><span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-white" /></span>
+                </span>
+              ) : key === 'typographyButtonScale' ? 'Ver invitación' : key === 'typographyBadgeScale' ? 'Puntualidad' : 'Valeria · Nos emociona compartir este día'}
             </span>
             <input type="range" min="80" max={max} step="5" value={value} onChange={(event) => onChange({ [key]: Number(event.target.value) })} className={`mt-2 w-full ${accent === 'indigo' ? 'accent-indigo-700' : 'accent-purple-700'}`} aria-label={`Tamaño de ${label.toLowerCase()}`} />
           </label>

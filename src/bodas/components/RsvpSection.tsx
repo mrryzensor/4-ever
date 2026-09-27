@@ -46,6 +46,7 @@ import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { AnimatedChampagneGlasses, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { toast } from '../../lib/toast.ts';
 import { RsvpCompanionToggle } from '../../components/RsvpCompanionToggle.tsx';
+import { normalizeCompanionNames, parseGuestCompanionNames } from '../../lib/guestCompanions.ts';
 
 interface RsvpSectionProps {
   initialGuest?: Guest | null;
@@ -68,7 +69,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
   // Form states
   const [status, setStatus] = useState<'confirmed' | 'declined'>('confirmed');
-  const [confirmedPasses, setConfirmedPasses] = useState(1);
+  const [companionCount, setCompanionCount] = useState(0);
   const [bringingCompanions, setBringingCompanions] = useState(false);
   const [attendingCeremony, setAttendingCeremony] = useState(true);
   const [attendingReception, setAttendingReception] = useState(true);
@@ -81,6 +82,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [showExtraDetails, setShowExtraDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const maxSelectableCompanions = guest ? Math.max((guest.allocatedPasses || 1) - 1, 0) : 5;
   const savedResponseGuest = [guest, initialGuest].find(
     (candidate): candidate is Guest => candidate?.status === 'confirmed' || candidate?.status === 'declined',
   ) ?? null;
@@ -106,8 +108,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setGuest(selected);
     setFullName(selected.fullName);
     const passes = selected.confirmedPasses > 0 ? selected.confirmedPasses : 1;
-    setConfirmedPasses(passes);
-    setBringingCompanions(passes > 1);
+    const selectedCompanionCount = Math.max(0, passes - 1);
+    setCompanionCount(selectedCompanionCount);
+    setBringingCompanions(selectedCompanionCount > 0);
     setStatus(selected.status === 'declined' ? 'declined' : 'confirmed');
     setAttendingCeremony(selected.attendingCeremony ?? true);
     setAttendingReception(selected.attendingReception ?? true);
@@ -117,12 +120,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setPhone(selected.phone || '');
     setEmail(selected.email || '');
 
-    try {
-      const parsed = JSON.parse(selected.companionNames || '[]');
-      setCompanions(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
-    } catch {
-      setCompanions([]);
-    }
+    setCompanions(parseGuestCompanionNames(selected.companionNames, selected.fullName, passes));
     setShowSuggestions(false);
   };
 
@@ -205,13 +203,14 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setCompanions(updated);
   };
 
-  const handlePassesChange = (num: number) => {
-    setConfirmedPasses(num);
-    const newCompanions = [...companions];
-    while (newCompanions.length < num) {
-      newCompanions.push('');
-    }
-    setCompanions(newCompanions.slice(0, num));
+  const handleCompanionCountChange = (num: number) => {
+    const boundedCount = Math.min(maxSelectableCompanions, Math.max(1, Math.trunc(num)));
+    setCompanionCount(boundedCount);
+    setCompanions((current) => {
+      const updated = [...current];
+      while (updated.length < boundedCount) updated.push('');
+      return updated.slice(0, boundedCount);
+    });
   };
 
   const handleSelectSuggestedGuest = (selected: Guest) => {
@@ -221,7 +220,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const handleClearSelectedGuest = () => {
     setGuest(null);
     setFullName('');
-    setConfirmedPasses(1);
+    setCompanionCount(0);
     setBringingCompanions(false);
     setCompanions([]);
     setDietary('');
@@ -238,12 +237,17 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
       return;
     }
 
+    const submittedCompanionCount = status === 'confirmed' && bringingCompanions ? companionCount : 0;
+    const enteredCompanionNames = companions.slice(0, submittedCompanionCount).map((name) => name?.trim() || '');
+    if (enteredCompanionNames.some((name) => !name)) {
+      toast.warning('Escribe el nombre completo de cada acompañante o reduce la cantidad seleccionada.', 'Faltan nombres');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
-      const submittedCompanions = companions
-        .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
-        .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
+      const submittedPasses = status === 'confirmed' ? submittedCompanionCount + 1 : 0;
+      const submittedCompanions = normalizeCompanionNames(enteredCompanionNames, submittedCompanionCount);
       let res;
       if (guest && guest.accessCode) {
         // Confirm assigned guest
@@ -317,14 +321,12 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     }
   };
 
-  const maxSelectablePasses = guest ? Math.max(guest.allocatedPasses || 1, 1) : 6;
   const handleBringCompanionsChange = (enabled: boolean) => {
     setBringingCompanions(enabled);
     if (enabled) {
-      setConfirmedPasses((current) => Math.min(maxSelectablePasses, Math.max(2, current)));
+      setCompanionCount((current) => Math.min(maxSelectableCompanions, Math.max(1, current)));
     } else {
-      setConfirmedPasses(1);
-      setCompanions((current) => current.slice(0, 1));
+      setCompanionCount(0);
     }
   };
 
@@ -386,7 +388,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 <p data-typography-role="detail" className={isDark ? 'text-stone-400' : 'text-stone-600'}>{settings.eventDate} • {settings.receptionVenue}</p>
                 {displayedStatus === 'confirmed' && (
                   <p data-typography-role="detail" className={`font-mono font-semibold pt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                    Pases confirmados: {savedResponseGuest?.confirmedPasses ?? confirmedPasses} persona(s)
+                    Pases confirmados: {savedResponseGuest?.confirmedPasses ?? (status === 'confirmed' ? companionCount + 1 : 0)} persona(s)
                   </p>
                 )}
               </div>
@@ -541,7 +543,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               {status === 'confirmed' && (
                 <div className="space-y-6 pt-2 animate-fadeIn">
                   
-                  {maxSelectablePasses > 1 && (
+                  {maxSelectableCompanions > 0 && (
                     <RsvpCompanionToggle
                       label={settings.rsvpCompanionToggleText?.trim() || '¿Llevas invitados?'}
                       checked={bringingCompanions}
@@ -551,17 +553,17 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     />
                   )}
 
-                  {bringingCompanions && maxSelectablePasses > 1 && (
+                  {bringingCompanions && maxSelectableCompanions > 0 && (
                   <div className="space-y-4 animate-fadeIn">
                     <div className={`p-4 sm:p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
                     <div className="flex-1">
                       <span data-typography-role="heading" className={`text-base sm:text-lg font-bold block ${activeTheme.textPrimaryClass}`}>
-                        Número de asistentes (incluyéndote)
+                        ¿Cuántos acompañantes llevarás?
                       </span>
                       <span data-typography-role="body" className={`text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                         {guest?.allocatedPasses
-                          ? `Tu invitación cuenta con hasta ${guest.allocatedPasses} pases reservados.`
-                          : 'Indica el total de personas que asistirán.'}
+                          ? `Puedes llevar hasta ${maxSelectableCompanions} ${maxSelectableCompanions === 1 ? 'persona más' : 'personas más'} (además de ti).`
+                          : 'Indica cuántas personas más te acompañarán.'}
                       </span>
                     </div>
 
@@ -569,25 +571,25 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       {/* Stepper Minus */}
                       <button
                         type="button"
-                        onClick={() => handlePassesChange(Math.max(2, confirmedPasses - 1))}
-                        disabled={confirmedPasses <= 2}
+                        onClick={() => handleCompanionCountChange(Math.max(1, companionCount - 1))}
+                        disabled={companionCount <= 1}
                         className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer ${isDark ? 'text-stone-300 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'}`}
-                        title="Disminuir asistentes"
+                        title="Disminuir acompañantes"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
 
                       {/* Number Pills */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {Array.from({ length: maxSelectablePasses - 1 }).map((_, idx) => {
-                          const num = idx + 2;
+                        {Array.from({ length: maxSelectableCompanions }).map((_, idx) => {
+                          const num = idx + 1;
                           return (
                             <button
                               key={num}
                               type="button"
-                              onClick={() => handlePassesChange(num)}
+                              onClick={() => handleCompanionCountChange(num)}
                               className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-xl font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center ${
-                                confirmedPasses === num
+                                companionCount === num
                                   ? 'bg-amber-500 text-stone-950 font-bold shadow-xs scale-105'
                                   : isDark ? 'text-stone-400 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'
                               }`}
@@ -601,10 +603,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       {/* Stepper Plus */}
                       <button
                         type="button"
-                        onClick={() => handlePassesChange(Math.min(maxSelectablePasses, confirmedPasses + 1))}
-                        disabled={confirmedPasses >= maxSelectablePasses}
+                        onClick={() => handleCompanionCountChange(Math.min(maxSelectableCompanions, companionCount + 1))}
+                        disabled={companionCount >= maxSelectableCompanions}
                         className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer ${isDark ? 'text-stone-300 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'}`}
-                        title="Aumentar asistentes"
+                        title="Aumentar acompañantes"
                       >
                         <Plus className="w-4 h-4" />
                       </button>
@@ -612,20 +614,20 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   </div>
 
                   {/* Companion names fields */}
-                  {bringingCompanions && confirmedPasses > 1 && (
+                  {bringingCompanions && companionCount > 0 && (
                     <div className={`p-5 sm:p-6 rounded-2xl border space-y-3 ${isDark ? 'bg-stone-900 border-stone-800' : 'bg-white border-stone-200'}`}>
                       <span data-typography-role="heading" className={`text-sm sm:text-base font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                         Nombres de tus Acompañantes
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {Array.from({ length: confirmedPasses - 1 }).map((_, idx) => (
+                        {Array.from({ length: companionCount }).map((_, idx) => (
                           <input
                             key={idx}
                             type="text"
                             data-typography-role="body"
                             placeholder={`Acompañante ${idx + 1}`}
-                            value={companions[idx + 1] || ''}
-                            onChange={(e) => handleCompanionChange(idx + 1, e.target.value)}
+                            value={companions[idx] || ''}
+                            onChange={(e) => handleCompanionChange(idx, e.target.value)}
                             className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-800/80 text-stone-100' : 'border-stone-300 bg-stone-50 text-stone-900'}`}
                           />
                         ))}

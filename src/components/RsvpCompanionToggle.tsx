@@ -16,6 +16,7 @@ export const RsvpCompanionToggle: React.FC<RsvpCompanionToggleProps> = ({
   accentColor = '#5A5A40',
 }) => (
   <label
+    data-typography-role="toggle"
     className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-4 py-3.5 transition-colors cursor-pointer ${
       isDark ? 'bg-stone-900/70' : 'bg-white'
     }`}
@@ -24,7 +25,7 @@ export const RsvpCompanionToggle: React.FC<RsvpCompanionToggleProps> = ({
     <span data-typography-role="heading" className={`min-w-0 break-words text-base sm:text-lg font-semibold ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
       {label}
     </span>
-    <span className="relative inline-flex shrink-0 items-center">
+    <span className="invitation-toggle-switch relative inline-flex shrink-0 items-center">
       <input
         type="checkbox"
         checked={checked}

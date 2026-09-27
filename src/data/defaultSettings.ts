@@ -108,6 +108,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   typographyDetailScale: 100,
   typographyBadgeScale: 100,
   typographyButtonScale: 100,
+  typographyToggleScale: 100,
   dividerStyle: 'auto',
   frameOrnamentStyle: 'auto',
   transitionWaveStyle: 'auto',
