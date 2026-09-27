@@ -1,6 +1,6 @@
 import React from 'react';
 import { Copy, Check } from 'lucide-react';
-import type { BankAccountConfig } from '../types.ts';
+import type { BankAccountConfig, BankAccountDisplayField } from '../types.ts';
 import { BANK_COUNTRIES, hasBankAccountData } from '../lib/bankAccounts.ts';
 import { DEFAULT_GIFT_REGISTRY_COPY, type GiftRegistryCopy } from '../lib/giftRegistryCopy.ts';
 
@@ -31,27 +31,33 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
       </header>
       {visibleAccounts.map((account, accountIndex) => {
         const countryName = BANK_COUNTRIES.find((country) => country.code === account.country)?.name ?? account.country;
-        const fields = [
-          [copy.beneficiaryLabel, account.beneficiary],
-          [copy.bankLabel, account.bankName],
-          [copy.accountNumberLabel, account.accountNumber],
-          ...(account.country === 'PE' ? [[copy.cciLabel, account.cci] as [string, string]] : []),
-          ...(account.country === 'MX' ? [[copy.clabeLabel, account.clabe] as [string, string], [copy.cardNumberLabel, account.cardNumber] as [string, string]] : []),
-          ...(account.country === 'PE' ? [[copy.yapeLabel, account.yapePhone] as [string, string], [copy.plinLabel, account.plinPhone] as [string, string]] : []),
-          [copy.conceptLabel, account.concept],
-        ].filter((field): field is [string, string] => Boolean(field[1]?.trim()));
+        const defaultFields: Array<[BankAccountDisplayField, string, string]> = [
+          ['beneficiary', copy.beneficiaryLabel, account.beneficiary],
+          ['bankName', copy.bankLabel, account.bankName],
+          ['accountNumber', copy.accountNumberLabel, account.accountNumber],
+          ...(account.country === 'PE' ? [['cci', copy.cciLabel, account.cci] as [BankAccountDisplayField, string, string]] : []),
+          ...(account.country === 'MX' ? [
+            ['clabe', copy.clabeLabel, account.clabe] as [BankAccountDisplayField, string, string],
+            ['cardNumber', copy.cardNumberLabel, account.cardNumber] as [BankAccountDisplayField, string, string],
+          ] : []),
+          ...(account.country === 'PE' ? [
+            ['yapePhone', copy.yapeLabel, account.yapePhone] as [BankAccountDisplayField, string, string],
+            ['plinPhone', copy.plinLabel, account.plinPhone] as [BankAccountDisplayField, string, string],
+          ] : []),
+          ['concept', copy.conceptLabel, account.concept],
+        ];
+        const availableFields = defaultFields.filter(([, , value]) => Boolean(value?.trim()));
+        const preferredField = account.primaryDisplayField;
+        const preferredIndex = preferredField && preferredField !== 'auto'
+          ? availableFields.findIndex(([field]) => field === preferredField)
+          : -1;
+        const fields = preferredIndex > 0
+          ? [availableFields[preferredIndex], ...availableFields.slice(0, preferredIndex), ...availableFields.slice(preferredIndex + 1)]
+          : availableFields;
         const allText = [
-          account.bankName && `${copy.bankLabel}: ${account.bankName}`,
-          account.beneficiary && `${copy.beneficiaryLabel}: ${account.beneficiary}`,
-          account.accountNumber && `${copy.accountNumberLabel}: ${account.accountNumber}`,
-          account.country === 'PE' && account.cci && `${copy.cciLabel}: ${account.cci}`,
-          account.country === 'MX' && account.clabe && `${copy.clabeLabel}: ${account.clabe}`,
-          account.country === 'MX' && account.cardNumber && `${copy.cardNumberLabel}: ${account.cardNumber}`,
-          account.country === 'PE' && account.yapePhone && `${copy.yapeLabel}: ${account.yapePhone}`,
-          account.country === 'PE' && account.plinPhone && `${copy.plinLabel}: ${account.plinPhone}`,
-          account.concept && `${copy.conceptLabel}: ${account.concept}`,
+          ...fields.map(([, label, value]) => `${label}: ${value}`),
           `${copy.currencyLabel}: ${account.currency}`,
-        ].filter(Boolean).join('\n');
+        ].join('\n');
 
         return (
           <article key={account.id} className={`rounded-xl border p-3 sm:p-4 space-y-3 ${cardClass}`}>
@@ -74,13 +80,23 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
             </header>
             {fields.length > 0 && (
               <div className="space-y-2">
-                {fields.map(([label, value]) => {
+                {fields.map(([field, label, value]) => {
                   const key = `${account.id}-${label}`;
+                  const isFeatured = preferredIndex >= 0 && fields[0][0] === field;
                   return (
                     <div key={key} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${fieldClass}`}>
                       <div className="min-w-0">
-                        <span data-typography-role="detail" className={`block text-xs uppercase tracking-wide ${mutedClass}`}>{label}</span>
-                        <span data-typography-role="body" className={`break-all text-sm ${label === 'Concepto sugerido' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                        {isFeatured ? (
+                          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <span data-typography-role="detail" className={`text-xs font-bold ${mutedClass}`}>{label}:</span>
+                            <span data-typography-role="body" className={`break-all text-base font-semibold ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span data-typography-role="detail" className={`block text-xs uppercase tracking-wide ${mutedClass}`}>{label}</span>
+                            <span data-typography-role="body" className={`break-all text-sm ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                          </>
+                        )}
                       </div>
                       <button
                         type="button"

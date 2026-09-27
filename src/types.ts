@@ -295,6 +295,7 @@ export interface BankAccountConfig {
   id: string;
   country: string;
   currency: string;
+  primaryDisplayField?: BankAccountDisplayField;
   bankName: string;
   beneficiary: string;
   accountNumber: string;
@@ -305,6 +306,18 @@ export interface BankAccountConfig {
   plinPhone: string;
   concept: string;
 }
+
+export type BankAccountDisplayField =
+  | 'auto'
+  | 'beneficiary'
+  | 'bankName'
+  | 'accountNumber'
+  | 'cci'
+  | 'clabe'
+  | 'cardNumber'
+  | 'yapePhone'
+  | 'plinPhone'
+  | 'concept';
 
 export interface WeddingSummary {
   id: number;

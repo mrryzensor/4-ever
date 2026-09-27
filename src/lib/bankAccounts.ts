@@ -1,4 +1,4 @@
-import type { BankAccountConfig, WeddingSettings } from '../types.ts';
+import type { BankAccountConfig, BankAccountDisplayField, WeddingSettings } from '../types.ts';
 
 export const BANK_COUNTRIES = [
   { code: 'PE', name: 'Perú', currency: 'PEN' },
@@ -24,6 +24,15 @@ export const BANK_CURRENCIES = [
 
 const clean = (value: unknown) => typeof value === 'string' ? value : '';
 const makeId = () => globalThis.crypto?.randomUUID?.() ?? `bank-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const BANK_ACCOUNT_DISPLAY_FIELDS: BankAccountDisplayField[] = [
+  'auto', 'beneficiary', 'bankName', 'accountNumber', 'cci', 'clabe', 'cardNumber', 'yapePhone', 'plinPhone', 'concept',
+];
+
+function normalizePrimaryDisplayField(value: unknown): BankAccountDisplayField {
+  return typeof value === 'string' && BANK_ACCOUNT_DISPLAY_FIELDS.includes(value as BankAccountDisplayField)
+    ? value as BankAccountDisplayField
+    : 'auto';
+}
 
 export function createBankAccount(
   country = 'PE',
@@ -34,6 +43,7 @@ export function createBankAccount(
     id: makeId(),
     country: countryInfo.code,
     currency: countryInfo.currency,
+    primaryDisplayField: 'auto',
     bankName: '',
     beneficiary: '',
     accountNumber: '',
@@ -66,6 +76,7 @@ export function getBankAccounts(settings: WeddingSettings, includeEmpty = false)
           id: clean(item.id) || makeId(),
           country: clean(item.country) || 'PE',
           currency: clean(item.currency) || 'PEN',
+          primaryDisplayField: normalizePrimaryDisplayField(item.primaryDisplayField),
           bankName: clean(item.bankName),
           beneficiary: clean(item.beneficiary),
           accountNumber: clean(item.accountNumber),

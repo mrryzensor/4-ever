@@ -57,6 +57,32 @@ export const BankAccountsEditor: React.FC<BankAccountsEditorProps> = ({ settings
               )}
             </div>
 
+            <div className="max-w-xl">
+              <label className={labelClass} htmlFor={`bank-primary-display-${account.id}`}>Dato que se muestra primero</label>
+              <select
+                id={`bank-primary-display-${account.id}`}
+                value={account.primaryDisplayField || 'auto'}
+                onChange={(event) => updateAccount(index, { primaryDisplayField: event.target.value as BankAccountConfig['primaryDisplayField'] })}
+                className={`${inputClass} cursor-pointer`}
+              >
+                <option value="auto">Orden predeterminado</option>
+                <option value="beneficiary">Titular / beneficiario</option>
+                <option value="bankName">Banco o entidad</option>
+                <option value="accountNumber">Número de cuenta</option>
+                {account.country === 'PE' && <>
+                  <option value="cci">CCI</option>
+                  <option value="yapePhone">Yape · celular</option>
+                  <option value="plinPhone">Plin · celular</option>
+                </>}
+                {account.country === 'MX' && <>
+                  <option value="clabe">CLABE interbancaria</option>
+                  <option value="cardNumber">Número de tarjeta</option>
+                </>}
+                <option value="concept">Concepto sugerido</option>
+              </select>
+              <p className="mt-1 text-[11px] leading-relaxed text-stone-500">El dato elegido aparece primero con su etiqueta y valor; el banco también se identifica en la insignia.</p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
               <div>
                 <label className={labelClass} htmlFor={`bank-country-${account.id}`}>País de la cuenta</label>
