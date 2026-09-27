@@ -4,6 +4,7 @@ import { WeddingSettings, CardStyleId } from '../../../../types.ts';
 import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../AnimatedSvgs.tsx';
 import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
+import { RsvpAvailabilitySettings } from '../../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
 
 interface AdminThemeSettingsProps {
   settings: WeddingSettings;
@@ -224,6 +225,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           />
         </div>
       </div>
+      <RsvpAvailabilitySettings settings={settings} onChange={onChange} />
       <div className="max-w-xl">
         <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">Pregunta para acompañantes:</label>
         <input

@@ -5,6 +5,7 @@ import fs from 'fs';
 import multer from 'multer';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
+import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
 import {
   getWeddingSettings,
   updateWeddingSettings,
@@ -754,7 +755,7 @@ async function startServer() {
       res.json({ success: true, guest: updatedGuest });
     } catch (error: any) {
       console.error('Error confirming RSVP:', error);
-      res.status(500).json({ error: error.message || 'Error confirmando asistencia' });
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error confirmando asistencia' });
     }
   });
 
@@ -781,7 +782,7 @@ async function startServer() {
       res.status(201).json({ success: true, guest: createdGuest });
     } catch (error: any) {
       console.error('Error registering open RSVP:', error);
-      res.status(500).json({ error: error.message || 'Error al registrar asistencia' });
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error al registrar asistencia' });
     }
   };
 

@@ -19,6 +19,7 @@ import {
   Plus,
   Minus,
   ChevronDown,
+  Pencil,
 } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { DEMO_GUESTS } from '../../data/demoGuests.ts';
@@ -47,6 +48,7 @@ import { AnimatedChampagneGlasses, StyleSpecificDivider } from './AnimatedSvgs.t
 import { toast } from '../../lib/toast.ts';
 import { RsvpCompanionToggle } from '../../components/RsvpCompanionToggle.tsx';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../../lib/guestCompanions.ts';
+import { getRsvpClosedMessage, isRsvpActionAllowed } from '../../lib/rsvpAvailability.ts';
 
 interface RsvpSectionProps {
   initialGuest?: Guest | null;
@@ -82,11 +84,16 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [showExtraDetails, setShowExtraDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const maxSelectableCompanions = guest ? Math.max((guest.allocatedPasses || 1) - 1, 0) : 5;
+  const [isEditingSavedResponse, setIsEditingSavedResponse] = useState(false);
+  const maxSelectableCompanions = guest && guest.groupName !== 'Invitación Genérica / Registro Abierto'
+    ? Math.max((guest.allocatedPasses || 1) - 1, 0)
+    : 5;
   const savedResponseGuest = [guest, initialGuest].find(
     (candidate): candidate is Guest => candidate?.status === 'confirmed' || candidate?.status === 'declined',
   ) ?? null;
   const displayedStatus = savedResponseGuest?.status === 'declined' ? 'declined' : status;
+  const canRegisterRsvp = isRsvpActionAllowed(settings, 'register');
+  const canEditRsvp = isRsvpActionAllowed(settings, 'edit');
 
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
   const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
@@ -126,6 +133,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
   // Real-time suggestions search as user types (instant multi-token search with backend sync)
   useEffect(() => {
+    if (isEditingSavedResponse) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
     if (guest && guest.fullName === fullName) {
       return; // Already selected this guest
     }
@@ -184,7 +196,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     }, 80);
 
     return () => clearTimeout(timer);
-  }, [fullName, settings.id, guest]);
+  }, [fullName, settings.id, guest, isEditingSavedResponse]);
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -217,6 +229,20 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     applyGuestData(selected);
   };
 
+  const handleEditSavedResponse = () => {
+    if (!savedResponseGuest || !canEditRsvp) return;
+    applyGuestData(savedResponseGuest);
+    setShowExtraDetails(Boolean(
+      savedResponseGuest.dietaryRestrictions?.trim()
+      || savedResponseGuest.suggestedSong?.trim()
+      || savedResponseGuest.message?.trim()
+      || savedResponseGuest.phone?.trim()
+      || savedResponseGuest.email?.trim(),
+    ));
+    setIsSuccess(false);
+    setIsEditingSavedResponse(true);
+  };
+
   const handleClearSelectedGuest = () => {
     setGuest(null);
     setFullName('');
@@ -232,6 +258,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const action = isEditingSavedResponse ? 'edit' : 'register';
+    if (!isRsvpActionAllowed(settings, action)) {
+      toast.warning(getRsvpClosedMessage(action, settings));
+      return;
+    }
     if (!fullName.trim()) {
       toast.warning('Por favor escribe tu nombre completo para continuar.', 'Nombre requerido');
       return;
@@ -254,6 +285,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         const payload = {
           weddingId: settings.id || 1,
           accessCode: guest.accessCode,
+          fullName: fullName.trim(),
+          editExisting: isEditingSavedResponse,
           status,
           confirmedPasses: submittedPasses,
           attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
@@ -302,6 +335,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
       const result = await res.json();
       setGuest(result.guest);
+      setIsEditingSavedResponse(false);
 
       if (status === 'confirmed') {
         confetti({
@@ -358,7 +392,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
         {/* Main Inline Card Container (Broad and spacious) */}
         <div className={`w-full rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 md:p-14 border shadow-xl transition-all ${activeTheme.cardBgClass}`}>
-          {isSuccess || savedResponseGuest ? (
+          {(isSuccess || savedResponseGuest) && !isEditingSavedResponse ? (
             /* Success View */
             <div className="text-center py-10 sm:py-14 animate-fadeIn">
               <motion.div
@@ -383,27 +417,72 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   : `Sentimos que no puedas acompañarnos ${savedResponseGuest?.fullName || fullName}. Estarás presente en nuestros corazones.`}
               </p>
 
-              <div className={`p-5 rounded-2xl border max-w-md mx-auto text-xs sm:text-sm mb-8 space-y-1 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
-                <p data-typography-role="heading" className={`font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.coupleNames}</p>
-                <p data-typography-role="detail" className={isDark ? 'text-stone-400' : 'text-stone-600'}>{settings.eventDate} • {settings.receptionVenue}</p>
+              <div className={`p-5 rounded-2xl border max-w-md mx-auto mb-8 space-y-1 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
+                <p data-typography-role="heading" className={`text-base sm:text-lg font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.coupleNames}</p>
+                <p data-typography-role="detail" className={`text-sm sm:text-base ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>{settings.eventDate} • {settings.receptionVenue}</p>
                 {displayedStatus === 'confirmed' && (
-                  <p data-typography-role="detail" className={`font-mono font-semibold pt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  <p data-typography-role="body" className={`text-base sm:text-lg font-serif font-semibold pt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                     Pases confirmados: {savedResponseGuest?.confirmedPasses ?? (status === 'confirmed' ? companionCount + 1 : 0)} persona(s)
                   </p>
                 )}
               </div>
+              {savedResponseGuest?.accessCode && canEditRsvp && (
+                <button
+                  type="button"
+                  data-typography-role="button"
+                  onClick={handleEditSavedResponse}
+                  className="mx-auto inline-flex items-center justify-center gap-2 rounded-full border px-5 py-2.5 font-serif font-semibold transition-colors hover:bg-black/5"
+                  style={{ borderColor: rsvpAccentColor, color: rsvpAccentColor }}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  Editar mi respuesta
+                </button>
+              )}
+              {savedResponseGuest?.accessCode && !canEditRsvp && (
+                <p data-typography-role="detail" className={`mx-auto max-w-md text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                  {getRsvpClosedMessage('edit', settings)}
+                </p>
+              )}
             </div>
           ) : (
+            !isEditingSavedResponse && !canRegisterRsvp ? (
+              <div role="status" className={`mx-auto max-w-xl rounded-2xl border p-6 text-center ${isDark ? 'border-stone-700 bg-stone-900/50' : 'border-stone-200 bg-stone-50'}`}>
+                <AlertCircle className={`mx-auto mb-3 h-9 w-9 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
+                <h3 data-typography-role="heading" className={`font-serif text-xl font-bold ${activeTheme.textPrimaryClass}`}>Registro cerrado</h3>
+                <p data-typography-role="body" className={`mt-2 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>{getRsvpClosedMessage('register', settings)}</p>
+              </div>
+            ) : isEditingSavedResponse && !canEditRsvp ? (
+              <div role="status" className={`mx-auto max-w-xl rounded-2xl border p-6 text-center ${isDark ? 'border-stone-700 bg-stone-900/50' : 'border-stone-200 bg-stone-50'}`}>
+                <AlertCircle className={`mx-auto mb-3 h-9 w-9 ${isDark ? 'text-stone-400' : 'text-stone-500'}`} />
+                <h3 data-typography-role="heading" className={`font-serif text-xl font-bold ${activeTheme.textPrimaryClass}`}>Edición cerrada</h3>
+                <p data-typography-role="body" className={`mt-2 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>{getRsvpClosedMessage('edit', settings)}</p>
+              </div>
+            ) : (
             /* Open Inline Registration Form */
             <form onSubmit={handleSubmit} className="space-y-8">
-              
+
+              {isEditingSavedResponse && (
+                <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${isDark ? 'border-stone-700 bg-stone-900/60' : 'border-stone-200 bg-stone-50'}`}>
+                  <p data-typography-role="body" className={isDark ? 'text-stone-200' : 'text-stone-700'}>Estás editando tu respuesta guardada.</p>
+                  <button
+                    type="button"
+                    data-typography-role="button"
+                    onClick={() => { setIsEditingSavedResponse(false); setIsSuccess(false); }}
+                    className="rounded-full border px-4 py-2 font-serif font-semibold"
+                    style={{ borderColor: rsvpAccentColor, color: rsvpAccentColor }}
+                  >
+                    Cancelar edición
+                  </button>
+                </div>
+              )}
+
               {/* 1. Name Input with Real-time Guest Autocomplete & Search */}
               <div className="relative" ref={suggestionsRef}>
                 <div className="flex items-center justify-between mb-2">
                   <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                     Nombre Completo
                   </label>
-                  {guest && (
+                  {guest && !isEditingSavedResponse && (
                     <button
                       type="button"
                       onClick={handleClearSelectedGuest}
@@ -423,7 +502,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                     value={fullName}
                     onChange={(e) => {
                       setFullName(e.target.value);
-                      if (guest && guest.fullName !== e.target.value) {
+                      if (!isEditingSavedResponse && guest && guest.fullName !== e.target.value) {
                         setGuest(null);
                       }
                     }}
@@ -759,11 +838,12 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   {submitting ? (
                     <span>Procesando confirmación...</span>
                   ) : (
-                    <span>Confirmar Respuesta</span>
+                    <span>{isEditingSavedResponse ? 'Guardar cambios' : 'Confirmar Respuesta'}</span>
                   )}
                 </button>
               </div>
             </form>
+            )
           )}
         </div>
       </div>

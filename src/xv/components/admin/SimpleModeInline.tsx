@@ -43,6 +43,7 @@ import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPl
 import { MapDimensionsControls } from '../../../components/admin/settings/MapDimensionsControls.tsx';
 import { RsvpButtonStyleField } from '../../../components/admin/settings/RsvpButtonStyleField.tsx';
 import { GalleryTextSettings } from '../../../components/admin/settings/GalleryTextSettings.tsx';
+import { RsvpAvailabilitySettings } from '../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -2020,6 +2021,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 />
               </div>
             </div>
+            <RsvpAvailabilitySettings settings={settings} onChange={onChange} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">

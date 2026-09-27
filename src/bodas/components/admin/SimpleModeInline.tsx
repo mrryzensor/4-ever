@@ -42,6 +42,7 @@ import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSect
 import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
 import { MapDimensionsControls } from '../../../components/admin/settings/MapDimensionsControls.tsx';
 import { GalleryTextSettings } from '../../../components/admin/settings/GalleryTextSettings.tsx';
+import { RsvpAvailabilitySettings } from '../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -2138,6 +2139,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 />
               </div>
             </div>
+            <RsvpAvailabilitySettings settings={settings} onChange={onChange} />
           </div>
         )}
 

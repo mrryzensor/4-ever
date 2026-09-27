@@ -304,6 +304,13 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_text TEXT DEFAULT 'Confirmar asistencia';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_companion_toggle_text TEXT DEFAULT '¿Llevas invitados?';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_allow_registration BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_registration_cutoff_mode TEXT DEFAULT 'event';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_registration_cutoff_at TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_allow_edit BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_edit_cutoff_mode TEXT DEFAULT 'event';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_edit_cutoff_at TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_cutoff_time_zone TEXT DEFAULT 'America/Lima';
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (

@@ -22,6 +22,7 @@ import {
 } from '../lib/eventUtils.ts';
 import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
+import { assertRsvpActionAllowed } from '../lib/rsvpAvailability.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
 const memoryState = {
@@ -649,6 +650,8 @@ const DEMO_XV_DB_FIELDS = [
   'transitionWaveStyle', 'transitionEffect', 'heroIconStyle', 'heroEmblemColor', 'heroEmblemGlow',
   'heroEmblemSparkle', 'heroEmblemScale',
   'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
+  'rsvpAllowRegistration', 'rsvpRegistrationCutoffMode', 'rsvpRegistrationCutoffAt',
+  'rsvpAllowEdit', 'rsvpEditCutoffMode', 'rsvpEditCutoffAt', 'rsvpCutoffTimeZone',
   'bankName', 'bankBeneficiary',
   'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency', 'bankAccounts',
   'enableBankTransfer', 'showBankAccountsWhenCollapsed', 'enableStoreRegistry', 'enableEnvelopeGift',
@@ -1760,6 +1763,8 @@ export async function submitRsvp(
   accessCode: string,
   payload: {
     weddingId?: number;
+    fullName?: string;
+    editExisting?: boolean;
     status: 'confirmed' | 'declined';
     confirmedPasses: number;
     attendingCeremony: boolean;
@@ -1777,26 +1782,44 @@ export async function submitRsvp(
     throw new Error('Código de invitación no encontrado.');
   }
 
-  // A saved RSVP is immutable from the public form. This also makes stale or
-  // duplicated form submissions idempotent instead of overwriting the answer.
-  if (guest.status === 'confirmed' || guest.status === 'declined') {
+  const hasSavedResponse = guest.status === 'confirmed' || guest.status === 'declined';
+  const weddingSettingsForRsvp = await getWeddingSettings(guest.weddingId || payload.weddingId);
+  if (hasSavedResponse && payload.editExisting) {
+    assertRsvpActionAllowed(weddingSettingsForRsvp || {}, 'edit');
+  } else if (!hasSavedResponse) {
+    assertRsvpActionAllowed(weddingSettingsForRsvp || {}, 'register');
+  }
+
+  // Keep duplicate submissions idempotent unless the guest explicitly opened edit mode.
+  if (hasSavedResponse && !payload.editExisting) {
     return guest;
   }
 
+  const isOpenRegistration = guest.groupName === 'Invitación Genérica / Registro Abierto';
+  const maxAllocatedPasses = isOpenRegistration
+    ? Math.max(6, Math.trunc(Number(guest.allocatedPasses) || 1))
+    : Math.max(1, Math.trunc(Number(guest.allocatedPasses) || 1));
   const confirmedPasses = payload.status === 'confirmed'
-    ? Math.min(Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)), Math.max(1, Math.trunc(Number(guest.allocatedPasses) || 1)))
+    ? Math.min(Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)), maxAllocatedPasses)
     : 0;
   const submittedCompanions = normalizeCompanionNames(payload.companionNames, Math.max(0, confirmedPasses - 1));
   if (payload.status === 'confirmed' && submittedCompanions.length !== Math.max(0, confirmedPasses - 1)) {
     throw new Error('Debes escribir el nombre de cada acompañante seleccionado.');
   }
   const companionNamesJson = JSON.stringify(submittedCompanions);
+  const updatedFullName = payload.editExisting ? payload.fullName?.trim() || guest.fullName : guest.fullName;
+  const nextWishMessage = payload.message?.trim() || '';
+  const wishRelationship = guest.groupName === 'Invitación Genérica / Registro Abierto'
+    ? 'Invitado Registrado'
+    : guest.groupName || 'Invitado';
 
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
       const updated = await db
         .update(guests)
         .set({
+          fullName: updatedFullName,
+          allocatedPasses: isOpenRegistration ? Math.max(guest.allocatedPasses || 1, confirmedPasses) : guest.allocatedPasses,
           status: payload.status,
           confirmedPasses,
           attendingCeremony: payload.attendingCeremony,
@@ -1805,20 +1828,45 @@ export async function submitRsvp(
           companionNames: companionNamesJson,
           suggestedSong: payload.suggestedSong || '',
           message: payload.message || '',
-          phone: payload.phone || guest.phone,
-          email: payload.email || guest.email,
+          phone: payload.phone ?? guest.phone ?? '',
+          email: payload.email ?? guest.email ?? '',
           confirmedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(guests.id, guest.id))
         .returning();
 
-      if (payload.message && payload.message.trim().length > 3) {
+      if (payload.editExisting) {
+        const previousMessage = guest.message?.trim() || '';
+        const previousWish = previousMessage.length > 3
+          ? await db.select({ id: guestbookWishes.id }).from(guestbookWishes).where(and(
+              eq(guestbookWishes.weddingId, guest.weddingId || 1),
+              eq(guestbookWishes.guestName, guest.fullName),
+              eq(guestbookWishes.relationship, wishRelationship),
+              eq(guestbookWishes.message, previousMessage),
+            )).orderBy(desc(guestbookWishes.id)).limit(1)
+          : [];
+
+        if (previousWish.length > 0) {
+          if (nextWishMessage.length > 3) {
+            await db.update(guestbookWishes).set({ guestName: updatedFullName, message: nextWishMessage }).where(eq(guestbookWishes.id, previousWish[0].id));
+          } else {
+            await db.delete(guestbookWishes).where(eq(guestbookWishes.id, previousWish[0].id));
+          }
+        } else if (nextWishMessage.length > 3) {
+          await db.insert(guestbookWishes).values({
+            weddingId: guest.weddingId || 1,
+            guestName: updatedFullName,
+            relationship: wishRelationship,
+            message: nextWishMessage,
+          });
+        }
+      } else if (nextWishMessage.length > 3) {
         await db.insert(guestbookWishes).values({
           weddingId: guest.weddingId || 1,
           guestName: guest.fullName,
-          relationship: guest.groupName || 'Invitado',
-          message: payload.message.trim(),
+          relationship: wishRelationship,
+          message: nextWishMessage,
         });
       }
       return updated[0];
@@ -1831,6 +1879,8 @@ export async function submitRsvp(
   if (idx !== -1) {
     memoryState.guests[idx] = {
       ...memoryState.guests[idx],
+      fullName: updatedFullName,
+      allocatedPasses: isOpenRegistration ? Math.max(guest.allocatedPasses || 1, confirmedPasses) : guest.allocatedPasses,
       status: payload.status,
       confirmedPasses,
       attendingCeremony: payload.attendingCeremony,
@@ -1839,20 +1889,46 @@ export async function submitRsvp(
       companionNames: companionNamesJson,
       suggestedSong: payload.suggestedSong || '',
       message: payload.message || '',
-      phone: payload.phone || guest.phone,
-      email: payload.email || guest.email,
+      phone: payload.phone ?? guest.phone ?? '',
+      email: payload.email ?? guest.email ?? '',
       confirmedAt: new Date(),
       updatedAt: new Date(),
     };
   }
 
-  if (payload.message && payload.message.trim().length > 3) {
+  if (payload.editExisting) {
+    const previousMessage = guest.message?.trim() || '';
+    const wishIndex = previousMessage.length > 3
+      ? memoryState.wishes.findIndex((wish) => wish.weddingId === (guest.weddingId || 1)
+        && wish.guestName === guest.fullName
+        && wish.relationship === wishRelationship
+        && wish.message === previousMessage)
+      : -1;
+
+    if (wishIndex >= 0) {
+      if (nextWishMessage.length > 3) {
+        memoryState.wishes[wishIndex] = { ...memoryState.wishes[wishIndex], guestName: updatedFullName, message: nextWishMessage };
+      } else {
+        memoryState.wishes.splice(wishIndex, 1);
+      }
+    } else if (nextWishMessage.length > 3) {
+      memoryState.wishes.unshift({
+        id: memoryState.wishes.length + 1,
+        weddingId: guest.weddingId || 1,
+        guestName: updatedFullName,
+        relationship: wishRelationship,
+        message: nextWishMessage,
+        isHighlighted: false,
+        createdAt: new Date(),
+      });
+    }
+  } else if (nextWishMessage.length > 3) {
     memoryState.wishes.unshift({
       id: memoryState.wishes.length + 1,
       weddingId: guest.weddingId || 1,
-      guestName: guest.fullName,
-      relationship: guest.groupName || 'Invitado',
-      message: payload.message.trim(),
+      guestName: updatedFullName,
+      relationship: wishRelationship,
+      message: nextWishMessage,
       isHighlighted: false,
       createdAt: new Date(),
     });
@@ -1879,6 +1955,8 @@ export async function submitOpenRsvp(payload: {
   if (!payload.fullName || !payload.fullName.trim()) {
     throw new Error('El nombre completo es requerido.');
   }
+  const weddingSettingsForRsvp = await getWeddingSettings(payload.weddingId);
+  assertRsvpActionAllowed(weddingSettingsForRsvp || {}, 'register');
 
   // Generate unique clean access code (e.g. REG-GARCIA-742)
   const nameParts = payload.fullName.trim().toUpperCase().split(' ');

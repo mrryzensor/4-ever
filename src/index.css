@@ -18,7 +18,8 @@
 .public-invitation h1 { zoom: var(--invitation-type-title, 1); }
 .public-invitation :where(h2, h3, h4, h5, h6, [data-typography-role="heading"]) { zoom: var(--invitation-type-heading, 1); }
 .public-invitation p[data-typography-role="heading"] { zoom: var(--invitation-type-heading, 1); }
-.public-invitation p { zoom: var(--invitation-type-body, 1); }
+.public-invitation p:not([data-typography-role]),
+.public-invitation p[data-typography-role="body"] { zoom: var(--invitation-type-body, 1); }
 .public-invitation p[data-typography-role="subtitle"] { zoom: var(--invitation-type-subtitle, 1); }
 .public-invitation :where(span, label, input, textarea, select)[data-typography-role="body"] {
   zoom: var(--invitation-type-body, 1);

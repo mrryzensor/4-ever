@@ -6,6 +6,7 @@ import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../An
 import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
 import { getDisplayedWaxSealText } from '../../../../lib/eventUtils.ts';
 import { RsvpButtonStyleField } from '../../../../components/admin/settings/RsvpButtonStyleField.tsx';
+import { RsvpAvailabilitySettings } from '../../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
 
 interface AdminThemeSettingsProps {
   settings: WeddingSettings;
@@ -226,6 +227,7 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
           />
         </div>
       </div>
+      <RsvpAvailabilitySettings settings={settings} onChange={onChange} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#E5E2D0] pt-4">
         <div className="sm:col-span-2">
           <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">Texto de confirmación RSVP:</label>
