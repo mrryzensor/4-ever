@@ -36,7 +36,7 @@ import { CARD_THEMES } from '../lib/themes.ts';
 import { HeroCourtCard } from './HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../lib/sectionOrder.ts';
 import { getBankAccounts, hasBankAccountData } from '../lib/bankAccounts.ts';
-import { getGiftRegistryCopy } from '../lib/giftRegistryCopy.ts';
+import { getGiftRegistryCopy, getGiftRegistryMessage } from '../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../lib/colorUtils.ts';
 import { SocialVideoEmbed } from './SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
@@ -138,6 +138,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
   const bankAccounts = getBankAccounts(settings);
   const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
+  const giftMessage = getGiftRegistryMessage(settings.giftRegistryMessage, settings.eventType);
   const hasVisibleBankAccounts = settings.enableBankTransfer === true && bankAccounts.some(hasBankAccountData);
   const showBankAccountsWhenCollapsed = settings.showBankAccountsWhenCollapsed !== false;
   const ceremonyCardOrder = detailSectionOrder.indexOf('ceremony') * 2;
@@ -1181,7 +1182,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     {giftCopy.cardTitle}
                   </h3>
                   <p className={`invitation-card-copy text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
-                    {settings.giftRegistryMessage || 'El mejor regalo es tu presencia. Si deseas hacernos un presente o aportación para nuestra luna de miel, ponemos a tu disposición nuestras cuentas bancarias.'}
+                    {giftMessage}
                   </p>
 
                   <div className="mt-3 flex flex-wrap gap-2">

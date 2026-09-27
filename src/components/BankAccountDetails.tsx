@@ -26,8 +26,8 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
   return (
     <div className={`space-y-3 ${className}`}>
       <header className="col-span-full">
-        <h3 className={`text-sm font-bold ${headingClass}`}>{copy.bankTransferTitle}</h3>
-        {copy.bankTransferSubtitle && <p className={`mt-0.5 text-xs ${mutedClass}`}>{copy.bankTransferSubtitle}</p>}
+        <h3 className={`text-base font-bold ${headingClass}`}>{copy.bankTransferTitle}</h3>
+        {copy.bankTransferSubtitle && <p className={`mt-0.5 text-sm ${mutedClass}`}>{copy.bankTransferSubtitle}</p>}
       </header>
       {visibleAccounts.map((account, accountIndex) => {
         const countryName = BANK_COUNTRIES.find((country) => country.code === account.country)?.name ?? account.country;
@@ -57,15 +57,15 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
           <article key={account.id} className={`rounded-xl border p-3 sm:p-4 space-y-3 ${cardClass}`}>
             <header className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                {account.bankName && <h4 className={`text-sm font-bold ${headingClass}`}>{account.bankName}</h4>}
-                {account.beneficiary && <p className={`text-xs mt-0.5 ${mutedClass}`}>{account.beneficiary}</p>}
-                {!account.bankName && !account.beneficiary && <h4 className={`text-sm font-bold ${headingClass}`}>{copy.accountFallbackTitle.replace('{number}', String(accountIndex + 1))}</h4>}
-                <p className={`text-[10px] mt-1 ${mutedClass}`}>{countryName} · {copy.currencyLabel}: {account.currency}</p>
+                {account.bankName && <h4 className={`text-base font-bold ${headingClass}`}>{account.bankName}</h4>}
+                {account.beneficiary && <p className={`text-sm mt-0.5 ${mutedClass}`}>{account.beneficiary}</p>}
+                {!account.bankName && !account.beneficiary && <h4 className={`text-base font-bold ${headingClass}`}>{copy.accountFallbackTitle.replace('{number}', String(accountIndex + 1))}</h4>}
+                <p className={`text-xs mt-1 ${mutedClass}`}>{countryName} · {copy.currencyLabel}: {account.currency}</p>
               </div>
               <button
                 type="button"
                 onClick={(event) => { event.stopPropagation(); onCopy(allText, `bank-all-${account.id}`); }}
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold cursor-pointer ${isDark ? 'bg-amber-500 text-stone-950' : 'bg-[#5A5A40] text-white'}`}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold cursor-pointer ${isDark ? 'bg-amber-500 text-stone-950' : 'bg-[#5A5A40] text-white'}`}
                 aria-label={copy.copyAccountAriaLabel}
               >
                 {copiedKey === `bank-all-${account.id}` ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -79,8 +79,8 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
                   return (
                     <div key={key} className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${fieldClass}`}>
                       <div className="min-w-0">
-                        <span data-typography-role="detail" className={`block text-[10px] uppercase tracking-wide ${mutedClass}`}>{label}</span>
-                        <span data-typography-role="detail" className={`break-all text-sm ${label === 'Concepto sugerido' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                        <span data-typography-role="detail" className={`block text-xs uppercase tracking-wide ${mutedClass}`}>{label}</span>
+                        <span data-typography-role="body" className={`break-all text-sm ${label === 'Concepto sugerido' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
                       </div>
                       <button
                         type="button"

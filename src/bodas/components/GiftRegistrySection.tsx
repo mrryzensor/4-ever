@@ -16,7 +16,7 @@ import { WeddingSettings, GiftRegistryItem } from '../../types.ts';
 import { AnimatedGiftBox, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { getBankAccounts } from '../../lib/bankAccounts.ts';
-import { getGiftRegistryCopy } from '../../lib/giftRegistryCopy.ts';
+import { getGiftRegistryCopy, getGiftRegistryMessage } from '../../lib/giftRegistryCopy.ts';
 import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
 
 interface GiftRegistrySectionProps {
@@ -50,7 +50,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
   // If host provided direct bank settings and no bank item in registryItems, we construct one
   const bankAccounts = getBankAccounts(settings);
   const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
-  const fallbackGiftMessage = 'El mejor regalo es tu presencia en nuestro gran día. Si deseas tener un detalle con nosotros para nuestro nuevo hogar o luna de miel, ponemos a tu disposición las siguientes opciones:';
+  const giftMessage = getGiftRegistryMessage(settings.giftRegistryMessage, settings.eventType);
   const hasDirectBankSettings = settings.enableBankTransfer === true && bankAccounts.length > 0;
 
   const hasDirectBankInItems = registryItems.some((item) => item.type === 'bank');
@@ -87,7 +87,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          {settings.giftRegistryMessage || fallbackGiftMessage}
+          {giftMessage}
         </p>
 
         {/* Quick Summary Preview (when collapsed) - Larger & Premium Styling */}

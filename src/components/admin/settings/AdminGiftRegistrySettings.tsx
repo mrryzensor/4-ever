@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { WeddingSettings, GiftRegistryItem } from '../../../types.ts';
 import { BankAccountsEditor } from './BankAccountsEditor.tsx';
-import { getGiftRegistryCopy, type GiftRegistryCopy } from '../../../lib/giftRegistryCopy.ts';
+import { getGiftRegistryCopy, getGiftRegistryMessage, type GiftRegistryCopy } from '../../../lib/giftRegistryCopy.ts';
 
 interface AdminGiftRegistrySettingsProps {
   settings: WeddingSettings;
@@ -29,9 +29,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
   const [newItemUrl, setNewItemUrl] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
   const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
-  const defaultMessage = settings.eventType === 'xv'
-    ? 'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.'
-    : 'El mejor regalo es tu compañía. Si deseas tener un detalle con nosotros, te compartimos nuestras cuentas bancarias y mesa de regalos:';
+  const giftMessage = getGiftRegistryMessage(settings.giftRegistryMessage, settings.eventType);
 
   const updateGiftCopy = (key: keyof GiftRegistryCopy, value: string) => {
     onChange({ giftRegistryCopy: JSON.stringify({ ...giftCopy, [key]: value }) });
@@ -127,7 +125,7 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
           <span className="mb-1 block text-[11px] font-semibold text-[#5A5A40]">Mensaje introductorio</span>
           <textarea
             rows={3}
-            value={settings.giftRegistryMessage || defaultMessage}
+            value={giftMessage}
             onChange={(event) => onChange({ giftRegistryMessage: event.target.value })}
             className="w-full rounded-xl border border-[#E5E2D0] bg-white px-3 py-2 text-xs leading-relaxed text-[#3D3D2C] outline-none focus:border-[#7D8C7A]"
           />

@@ -64,6 +64,19 @@ export const DEFAULT_GIFT_REGISTRY_COPY: GiftRegistryCopy = {
   copyFieldAriaLabel: 'Copiar {label}',
 };
 
+export const DEFAULT_WEDDING_GIFT_REGISTRY_MESSAGE =
+  'El mejor regalo es tu compañía. Si deseas tener un detalle con nosotros, te compartimos nuestras cuentas bancarias y mesa de regalos:';
+
+export const DEFAULT_XV_GIFT_REGISTRY_MESSAGE =
+  'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.';
+
+export function getGiftRegistryMessage(value?: string | null, eventType?: string | null): string {
+  if (typeof value === 'string' && value.trim()) return value;
+  return eventType === 'xv'
+    ? DEFAULT_XV_GIFT_REGISTRY_MESSAGE
+    : DEFAULT_WEDDING_GIFT_REGISTRY_MESSAGE;
+}
+
 export function getGiftRegistryCopy(value?: string | null): GiftRegistryCopy {
   if (!value) return DEFAULT_GIFT_REGISTRY_COPY;
 
