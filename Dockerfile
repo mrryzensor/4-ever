@@ -57,8 +57,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/Logo.webp ./Logo.webp
 COPY --from=builder /app/Logo.png ./Logo.png
 
-# Ensure permissions
-RUN chown -R appuser:nodejs /app
+# The server only writes uploaded files under /app/uploads, which was assigned
+# to appuser above. Keep the built assets and dependencies readable as root-owned
+# files instead of recursively changing ownership across the entire app image.
 
 USER appuser
 
