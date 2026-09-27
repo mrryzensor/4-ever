@@ -288,12 +288,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     settings={settings}
                     onChange={onChange}
                     onOpenSimpleMode={() => setEditorMode('simple')}
+                    hidePhotoSourceControls
                     beforeCountdown={(
                       <>
                         {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
                         <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
                       </>
                     )}
+                  />
+                  <SimpleModeInline
+                    settings={settings}
+                    onChange={onChange}
+                    onSaveAllSettings={onSaveAllSettings}
+                    savingSettings={savingSettings}
+                    settingsSavedToast={settingsSavedToast}
+                    advancedMediaOnly
                   />
                   <AudioSettingsPanel settings={settings} onChange={onChange} />
                   <AdminThemeSettings settings={settings} onChange={onChange} />
@@ -460,12 +469,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                       settings={settings}
                       onChange={onChange}
                       onOpenSimpleMode={() => setEditorMode('simple')}
+                      hidePhotoSourceControls
                       beforeCountdown={(
                         <>
                           {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
                           <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
                         </>
                       )}
+                    />
+                    <SimpleModeInline
+                      settings={settings}
+                      onChange={onChange}
+                      onSaveAllSettings={onSaveAllSettings}
+                      savingSettings={savingSettings}
+                      settingsSavedToast={settingsSavedToast}
+                      advancedMediaOnly
                     />
                     <AudioSettingsPanel settings={settings} onChange={onChange} />
                     <AdminThemeSettings settings={settings} onChange={onChange} />

@@ -24,6 +24,7 @@ interface AdminHeroSettingsProps {
   onChange: (updated: Partial<WeddingSettings>) => void;
   onOpenSimpleMode?: () => void;
   beforeCountdown?: ReactNode;
+  hidePhotoSourceControls?: boolean;
 }
 
 export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
@@ -31,6 +32,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   onChange,
   onOpenSimpleMode,
   beforeCountdown,
+  hidePhotoSourceControls = false,
 }) => {
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
   const [heroUploadMessage, setHeroUploadMessage] = useState<string | null>(null);
@@ -144,6 +146,8 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
   // Also support global paste when container is active
   useEffect(() => {
+    if (hidePhotoSourceControls) return;
+
     const handleGlobalPaste = (e: ClipboardEvent) => {
       // Don't intercept paste in text inputs or textareas unless it's an image
       const activeEl = document.activeElement;
@@ -166,7 +170,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
     window.addEventListener('paste', handleGlobalPaste);
     return () => window.removeEventListener('paste', handleGlobalPaste);
-  }, []);
+  }, [hidePhotoSourceControls]);
 
   return (
     <div className="space-y-6">
@@ -181,7 +185,9 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               Fotografía y Portada del Hero
             </h3>
             <p className="text-xs text-[#7D8C7A] mt-0.5 leading-relaxed">
-              Carga tu foto de portada, elige el modo de ajuste a pantalla (Cover, Stretch, Contain) y personaliza textos.
+              {hidePhotoSourceControls
+                ? 'Personaliza el encuadre, la apariencia y los textos de la portada.'
+                : 'Carga tu foto de portada, elige el modo de ajuste a pantalla (Cover, Stretch, Contain) y personaliza textos.'}
             </p>
           </div>
           {onOpenSimpleMode && (
@@ -199,6 +205,8 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
         {/* A. SECCIÓN DE FOTOGRAFÍA DE PORTADA (CARGA & PRESETS) */}
         <div className="space-y-4 bg-[#FAF9F0] p-4 sm:p-5 rounded-2xl border border-[#E5E2D0]">
+        {!hidePhotoSourceControls && (
+        <>
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5">
               <ImageIcon className="w-4 h-4 text-[#5A5A40]" />
@@ -390,6 +398,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               </div>
             </div>
           </div>
+        </>)}
 
           {/* B. ESTILOS DE AJUSTE A PANTALLA (DISPLAY FIT OPTIONS) */}
           <div className="pt-3 border-t border-[#E5E2D0]/80 space-y-2.5">

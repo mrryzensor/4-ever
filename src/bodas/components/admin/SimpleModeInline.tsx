@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Heart,
@@ -41,6 +41,7 @@ import { DrivePhotoPicker } from '../../../components/DrivePhotoPicker.tsx';
 import { SimpleModeSectionsStep } from '../../../components/admin/SimpleModeSectionsStep.tsx';
 import { HeroCourtPlacementControl } from '../../../components/admin/HeroCourtPlacementControl.tsx';
 import { MapDimensionsControls } from '../../../components/admin/settings/MapDimensionsControls.tsx';
+import { GalleryTextSettings } from '../../../components/admin/settings/GalleryTextSettings.tsx';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -49,6 +50,7 @@ interface SimpleModeInlineProps {
   savingSettings: boolean;
   settingsSavedToast: boolean;
   onSwitchToAdvanced?: () => void;
+  advancedMediaOnly?: boolean;
 }
 
 const PERU_BANKS = [
@@ -76,10 +78,12 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   onSaveAllSettings,
   savingSettings,
   settingsSavedToast,
+  advancedMediaOnly = false,
 }) => {
   const [activeStep, setActiveStep] = useState<
     'datos' | 'llegar' | 'itinerario' | 'vestimenta' | 'regalos' | 'galeria' | 'video' | 'libro' | 'secciones' | 'confirmacion' | 'musica'
   >('datos');
+  const simpleModeRootRef = useRef<HTMLDivElement>(null);
 
   // Photo optimization state for Cover Photo
   const [isOptimizingCover, setIsOptimizingCover] = useState(false);
@@ -202,7 +206,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   };
 
   useEffect(() => {
-    if (activeStep === 'galeria' || activeStep === 'pareja') {
+    if (activeStep === 'galeria' || activeStep === 'pareja' || advancedMediaOnly) {
       loadCoupleGalleryPhotos();
     } else if (activeStep === 'video') {
       loadCoupleVideos();
@@ -277,7 +281,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
       // Instant preview in canvas
       const previewUrl = URL.createObjectURL(result.file);
-      onChange({ coverPhoto: previewUrl });
+      applyHeroCoverPhoto(previewUrl);
 
       setCoverUploadMsg('Guardando en almacenamiento persistente...');
       const formData = new FormData();
@@ -291,7 +295,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         if (uploadData.url) {
-          onChange({ coverPhoto: uploadData.url });
+          applyHeroCoverPhoto(uploadData.url);
           setCoverUploadMsg('¡Foto de portada guardada en AVIF con éxito!');
           setTimeout(() => setCoverUploadMsg(null), 3500);
         }
@@ -303,7 +307,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
-          onChange({ coverPhoto: event.target!.result as string });
+          applyHeroCoverPhoto(event.target!.result as string);
         }
       };
       reader.readAsDataURL(file);
@@ -321,6 +325,18 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     }
   };
 
+  const applyHeroCoverPhoto = (url: string) => {
+    let currentPhotos: string[] = [];
+    try {
+      const parsed = JSON.parse(settings.heroPhotos || '[]');
+      if (Array.isArray(parsed)) currentPhotos = parsed.filter((photo): photo is string => typeof photo === 'string');
+    } catch {
+      if (settings.heroPhotos?.includes(',')) currentPhotos = settings.heroPhotos.split(',').map((photo) => photo.trim()).filter(Boolean);
+    }
+    const nextPhotos = [url, ...currentPhotos.filter((photo) => photo !== url)];
+    onChange({ coverPhoto: url, heroPhotos: JSON.stringify(nextPhotos) });
+  };
+
   // Global paste handler for images when SimpleMode is open
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -335,7 +351,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             const file = items[i].getAsFile();
             if (file) {
               e.preventDefault();
-              if (activeStep === 'galeria') {
+              if (activeStep === 'galeria' || (advancedMediaOnly && target.closest('[data-media-destination="gallery"]'))) {
                 processGalleryFiles([file]);
               } else {
                 processCoverFile(file);
@@ -354,7 +370,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
           const file = items[i].getAsFile();
           if (file) {
             e.preventDefault();
-            if (activeStep === 'galeria') {
+            if (activeStep === 'galeria' || (advancedMediaOnly && target.closest('[data-media-destination="gallery"]'))) {
               processGalleryFiles([file]);
             } else {
               processCoverFile(file);
@@ -365,9 +381,22 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
       }
     };
 
-    window.addEventListener('paste', handlePaste);
-    return () => window.removeEventListener('paste', handlePaste);
-  }, [activeStep]);
+    let isListening = false;
+    const syncPasteListener = () => {
+      const isVisible = Boolean(simpleModeRootRef.current?.getClientRects().length);
+      if (isVisible === isListening) return;
+      isListening = isVisible;
+      if (isVisible) window.addEventListener('paste', handlePaste);
+      else window.removeEventListener('paste', handlePaste);
+    };
+
+    syncPasteListener();
+    window.addEventListener('resize', syncPasteListener);
+    return () => {
+      window.removeEventListener('resize', syncPasteListener);
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [activeStep, advancedMediaOnly]);
 
   // Handle Gallery Photo Upload for the Couple (Single or Batch up to 10 photos + Drag & Drop)
   const processGalleryFiles = async (files: FileList | File[]) => {
@@ -539,9 +568,9 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   const activeStepGroup = stepGroups.find((group) => group.steps.some((step) => step.id === activeStep)) || stepGroups[0];
 
   return (
-    <div className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0 animate-fadeIn box-border">
+    <div ref={simpleModeRootRef} className="space-y-4 sm:space-y-6 w-full max-w-full min-w-0 animate-fadeIn box-border">
       {/* 1. Header Banner */}
-      <div className="bg-gradient-to-br from-[#FAF9F0] via-white to-[#F0EEDC] border border-[#E5E2D0] rounded-3xl p-3.5 sm:p-5 shadow-xs w-full max-w-full min-w-0 box-border overflow-hidden">
+      {!advancedMediaOnly && <div className="bg-gradient-to-br from-[#FAF9F0] via-white to-[#F0EEDC] border border-[#E5E2D0] rounded-3xl p-3.5 sm:p-5 shadow-xs w-full max-w-full min-w-0 box-border overflow-hidden">
         <div className="flex items-start sm:items-center gap-3 min-w-0">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-amber-800/10 border border-amber-800/20 text-amber-900 flex items-center justify-center shadow-xs shrink-0 mt-0.5 sm:mt-0">
             <Zap className="w-5 h-5 text-amber-700" />
@@ -601,13 +630,14 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             ))}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* 2. Step Content Form */}
       <div className="bg-white border border-[#E5E2D0] rounded-3xl p-3.5 sm:p-6 shadow-xs space-y-6 w-full max-w-full min-w-0 box-border overflow-hidden">
         {/* STEP 1: DATOS & FOTO DE PORTADA */}
         {activeStep === 'datos' && (
           <div className="space-y-6 animate-fadeIn min-w-0">
+            {!advancedMediaOnly && <>
             <div className="border-b border-[#E5E2D0] pb-3 flex flex-wrap items-center justify-between gap-2 min-w-0">
               <div className="min-w-0 flex-1">
                 <h4 className="font-serif text-sm sm:text-base font-bold text-stone-900 break-words">
@@ -904,8 +934,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </div>
             </div>
 
+            </>}
+
             {/* Cover / Hero Multi-Photo Carousel Settings with AVIF 95% Compression */}
-            <div className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
+            <div data-media-destination="hero" className="p-4 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Camera className="w-4 h-4 text-[#5A5A40]" />
@@ -1137,6 +1169,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               })()}
             </div>
 
+            {!advancedMediaOnly && <>
             {/* Atelier de Estilos & Ilustraciones Animadas (6 Diseños) */}
             <div className="p-4 sm:p-5 rounded-2xl sm:rounded-3xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
               <div className="flex items-center justify-between">
@@ -1208,6 +1241,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 })}
               </div>
             </div>
+            </>}
           </div>
         )}
 
@@ -1560,8 +1594,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
         )}
 
         {/* STEP 6: GALERÍA DE FOTOS (GESTIÓN EXCLUSIVA PARA LOS NOVIOS) */}
-        {activeStep === 'galeria' && (
-          <div className="space-y-6 animate-fadeIn">
+        {(activeStep === 'galeria' || advancedMediaOnly) && (
+          <div data-media-destination="gallery" className="space-y-6 animate-fadeIn">
             <div className="border-b border-[#E5E2D0] pb-3 flex items-center justify-between">
               <div>
                 <h4 className="font-serif text-base font-bold text-stone-900">
@@ -1575,6 +1609,8 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 <Zap className="w-3 h-3" /> AVIF 95%
               </span>
             </div>
+
+            <GalleryTextSettings settings={settings} onChange={onChange} />
 
             {/* Couple Upload Box & Drag and Drop Dropzone */}
             <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
@@ -2106,7 +2142,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
         )}
 
         {/* 3. Bottom Action Bar */}
-        <div className="pt-4 border-t border-[#E5E2D0] flex flex-col sm:flex-row items-center justify-between gap-4">
+        {!advancedMediaOnly && <div className="pt-4 border-t border-[#E5E2D0] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {settingsSavedToast && (
               <span className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-full font-semibold flex items-center gap-1.5">
@@ -2127,7 +2163,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               <span>{savingSettings ? 'Guardando en BD...' : 'Guardar Todo'}</span>
             </button>
           </div>
-        </div>
+        </div>}
       </div>
     </div>
   );

@@ -216,6 +216,25 @@ export interface WeddingSettings {
   showDressCode?: boolean; // Código de vestimenta y paleta
   showGiftRegistry?: boolean; // Mesa de regalos y cuentas bancarias
   showPhotoGallery?: boolean; // Galería colaborativa de fotos
+  gallerySectionEyebrow?: string;
+  gallerySectionTitle?: string;
+  galleryPhotoPromptText?: string;
+  galleryEmptyTitle?: string;
+  galleryEmptyDescription?: string;
+  galleryDrivePhotoBadgeText?: string;
+  gallerySharedAlbumCaption?: string;
+  galleryCommentsButtonText?: string;
+  galleryCommentsCountLabel?: string;
+  galleryCommentsPromptText?: string;
+  galleryFullscreenCommentsTitle?: string;
+  galleryCommentsLoadingText?: string;
+  galleryCommentsEmptyText?: string;
+  galleryCommentsHelperText?: string;
+  galleryCommentNameLabel?: string;
+  galleryCommentNamePlaceholder?: string;
+  galleryCommentTextLabel?: string;
+  galleryCommentTextPlaceholder?: string;
+  galleryCommentSubmitText?: string;
   galleryExternalAlbumUrl?: string; // Link a álbum en Google Photos, Instagram, Facebook, X, etc.
   galleryExternalAlbumTitle?: string; // Título del álbum externo
   galleryExternalAlbumType?: 'google_photos' | 'instagram' | 'facebook' | 'x' | 'drive' | 'custom';

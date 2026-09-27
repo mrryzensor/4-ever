@@ -98,6 +98,28 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   isAdmin = false,
   settings,
 }) => {
+  const galleryText = {
+    eyebrow: settings?.gallerySectionEyebrow || 'Sesión de Fotos & Recuerdos',
+    title: settings?.gallerySectionTitle || 'Nuestra Galería de Fotos',
+    photoPrompt: settings?.galleryPhotoPromptText || 'Presiona en la foto',
+    emptyTitle: settings?.galleryEmptyTitle || 'Galería en preparación',
+    emptyDescription: settings?.galleryEmptyDescription || 'Las fotografías y momentos oficiales de la boda serán compartidos aquí por los novios.',
+    driveBadge: settings?.galleryDrivePhotoBadgeText || 'Google Drive',
+    sharedAlbumCaption: settings?.gallerySharedAlbumCaption || 'Fotos compartidas',
+    commentsButton: settings?.galleryCommentsButtonText || 'Comentar',
+    commentsCount: settings?.galleryCommentsCountLabel || 'Comentarios',
+    commentsPrompt: settings?.galleryCommentsPromptText || 'Ver y dejar comentarios ({count})...',
+    commentsTitle: settings?.galleryFullscreenCommentsTitle || 'Comentarios & Dedicatorias',
+    commentsLoading: settings?.galleryCommentsLoadingText || 'Cargando comentarios...',
+    commentsEmpty: settings?.galleryCommentsEmptyText || 'Sé el primero en comentar esta foto',
+    commentsHelper: settings?.galleryCommentsHelperText || 'Deja un lindo mensaje o dedicatoria.',
+    commentNameLabel: settings?.galleryCommentNameLabel || 'Tu nombre',
+    commentNamePlaceholder: settings?.galleryCommentNamePlaceholder || 'Tu nombre (ej. Familia Pérez)',
+    commentTextLabel: settings?.galleryCommentTextLabel || 'Comentario',
+    commentTextPlaceholder: settings?.galleryCommentTextPlaceholder || 'Escribe un comentario o dedicatoria...',
+    commentSubmit: settings?.galleryCommentSubmitText || 'Enviar',
+  };
+  const formatCommentsPrompt = (count: number) => galleryText.commentsPrompt.replace('{count}', String(count));
   const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
   const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
   const drivePhotoSelectionMode = settings?.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
@@ -684,11 +706,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         </div>
         <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
           }`}>
-          Sesión de Fotos & Recuerdos
+          {galleryText.eyebrow}
         </span>
         <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
           }`}>
-          Nuestra Galería de Fotos
+          {galleryText.title}
         </h2>
         <StyleSpecificDivider
           cardStyle={cardStyle}
@@ -706,7 +728,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Presiona en la foto</span>
+            <span>{galleryText.photoPrompt}</span>
           </button>
         )}
 
@@ -730,10 +752,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           }`}>
           <Camera className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
           <h4 className={`text-base font-serif font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
-            Galería en preparación
+            {galleryText.emptyTitle}
           </h4>
           <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-            Las fotografías y momentos oficiales de la boda serán compartidos aquí por los novios.
+            {galleryText.emptyDescription}
           </p>
         </div>
       ) : (
@@ -812,8 +834,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               <MessageCircle className="w-3.5 h-3.5 text-amber-300" />
                               <span>
                                 {(getCommentsForPhoto(currentCarouselPhoto).length || 0) > 0
-                                  ? `${getCommentsForPhoto(currentCarouselPhoto).length} Comentarios`
-                                  : 'Comentar'}
+                                  ? `${getCommentsForPhoto(currentCarouselPhoto).length} ${galleryText.commentsCount}`
+                                  : galleryText.commentsButton}
                               </span>
                             </button>
                           </div>
@@ -854,7 +876,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           {/* Category Badge positioned nicely above caption */}
                           <div className="mb-1.5">
                             <span data-typography-role="badge" className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
-                              {currentCarouselPhoto.driveOpenUrl ? 'Google Drive' : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
+                              {currentCarouselPhoto.driveOpenUrl ? galleryText.driveBadge : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
                             </span>
                           </div>
 
@@ -864,7 +886,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             </p>
                           )}
                           <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
-                            {currentCarouselPhoto.driveOpenUrl ? 'Fotos compartidas' : currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
+                            {currentCarouselPhoto.driveOpenUrl ? galleryText.sharedAlbumCaption : currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
                           </p>
                         </div>
                       </div>
@@ -1280,7 +1302,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none transition-opacity duration-300 ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
                       <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 px-4 pr-16 text-left">
                         <span data-typography-role="badge" className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
-                          {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
+                          {activePhoto.driveOpenUrl ? galleryText.driveBadge : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                         </span>
 
                         <h3 className="text-sm font-serif font-semibold text-white leading-snug truncate drop-shadow-md">
@@ -1319,7 +1341,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         >
                           <span className="flex items-center gap-2">
                             <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
-                            <span>{comments.length === 0 ? 'Sé el primero en comentar...' : `Ver y dejar comentarios (${comments.length})...`}</span>
+                            <span>{comments.length === 0 ? galleryText.commentsEmpty : formatCommentsPrompt(comments.length)}</span>
                           </span>
                       <span data-typography-role="badge" className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
                             {comments.length}
@@ -1385,7 +1407,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <MessageCircle className="w-4 h-4 text-amber-400" />
-                                <h4 className="text-sm font-semibold text-white">Comentarios & Dedicatorias</h4>
+                                <h4 className="text-sm font-semibold text-white">{galleryText.commentsTitle}</h4>
                                 <span className="text-xs font-mono font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
                                   {comments.length}
                                 </span>
@@ -1406,13 +1428,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             {loadingComments ? (
                               <div className="py-6 text-center text-xs text-stone-400 flex items-center justify-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                                <span>Cargando comentarios...</span>
+                                <span>{galleryText.commentsLoading}</span>
                               </div>
                             ) : comments.length === 0 ? (
                               <div className="py-6 text-center bg-white/5 backdrop-blur-sm rounded-2xl border border-dashed border-white/15 p-4">
                                 <MessageCircle className="w-6 h-6 text-stone-400 mx-auto mb-1" />
-                                <p className="text-xs text-stone-200 font-medium">Sé el primero en comentar esta foto</p>
-                                <p className="text-[11px] text-stone-400 mt-0.5">Deja un lindo mensaje o dedicatoria.</p>
+                                <p className="text-xs text-stone-200 font-medium">{galleryText.commentsEmpty}</p>
+                                <p className="text-[11px] text-stone-400 mt-0.5">{galleryText.commentsHelper}</p>
                               </div>
                             ) : (
                               comments.map((c) => (
@@ -1452,7 +1474,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                   type="text"
                                   value={authorInputName}
                                   onChange={(e) => setAuthorInputName(e.target.value)}
-                                  placeholder="Tu nombre (ej. Familia Pérez)"
+                                  aria-label={galleryText.commentNameLabel}
+                                  placeholder={galleryText.commentNamePlaceholder}
                                   className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
                                   required
                                 />
@@ -1463,7 +1486,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                   type="text"
                                   value={newCommentText}
                                   onChange={(e) => setNewCommentText(e.target.value)}
-                                  placeholder="Escribe un comentario o dedicatoria..."
+                                  aria-label={galleryText.commentTextLabel}
+                                  placeholder={galleryText.commentTextPlaceholder}
                                   className="flex-1 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
                                   required
                                 />
@@ -1471,7 +1495,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                   type="submit"
                                   disabled={isSubmittingComment || !newCommentText.trim()}
                                   className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-serif font-bold flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer"
-                                  title="Enviar comentario"
+                                  title={galleryText.commentSubmit}
+                                  aria-label={galleryText.commentSubmit}
                                 >
                                   {isSubmittingComment ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1492,7 +1517,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     {/* Header & Photo Title */}
                     <div className="p-6 pr-16 pb-4 border-b border-stone-800/80 shrink-0">
                       <span data-typography-role="badge" className="text-xs uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full inline-block mb-2">
-                        {activePhoto.driveOpenUrl ? 'Google Drive' : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
+                        {activePhoto.driveOpenUrl ? galleryText.driveBadge : activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                       </span>
                       <h3 className="text-xl font-serif font-semibold text-white leading-snug">
                         {activePhoto.caption || 'Recuerdo de la Boda'}
@@ -1509,7 +1534,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <div className="flex items-center justify-between text-xs sm:text-sm text-stone-400 pb-2 border-b border-stone-800/40">
                         <div className="flex items-center gap-2 font-semibold text-stone-200">
                           <MessageCircle className="w-4 h-4 text-amber-400" />
-                          <span>Comentarios & Dedicatorias</span>
+                          <span>{galleryText.commentsTitle}</span>
                         </div>
                         <span data-typography-role="badge" className="text-xs font-mono font-bold text-amber-300 bg-stone-800/80 px-2.5 py-0.5 rounded-full">
                           {comments.length}
@@ -1519,13 +1544,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       {loadingComments ? (
                         <div className="py-8 text-center text-sm text-stone-500 flex items-center justify-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                          <span>Cargando comentarios...</span>
+                          <span>{galleryText.commentsLoading}</span>
                         </div>
                       ) : comments.length === 0 ? (
                         <div className="py-10 text-center bg-stone-950/40 rounded-2xl border border-dashed border-stone-800 p-5">
                           <MessageCircle className="w-8 h-8 text-stone-600 mx-auto mb-2" />
-                          <p className="text-sm text-stone-300 font-medium">Sé el primero en comentar esta foto</p>
-                          <p className="text-xs text-stone-500 mt-1">Deja un lindo mensaje o recuerdo.</p>
+                          <p className="text-sm text-stone-300 font-medium">{galleryText.commentsEmpty}</p>
+                          <p className="text-xs text-stone-500 mt-1">{galleryText.commentsHelper}</p>
                         </div>
                       ) : (
                         comments.map((c) => (
@@ -1597,7 +1622,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             type="text"
                             value={authorInputName}
                             onChange={(e) => setAuthorInputName(e.target.value)}
-                            placeholder="Tu nombre (ej. Familia Pérez)"
+                            aria-label={galleryText.commentNameLabel}
+                            placeholder={galleryText.commentNamePlaceholder}
                             className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                             required
                           />
@@ -1608,7 +1634,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             type="text"
                             value={newCommentText}
                             onChange={(e) => setNewCommentText(e.target.value)}
-                            placeholder="Escribe un comentario o dedicatoria..."
+                            aria-label={galleryText.commentTextLabel}
+                            placeholder={galleryText.commentTextPlaceholder}
                             className="flex-1 px-4 py-3 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
                             required
                           />
@@ -1616,13 +1643,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             type="submit"
                             disabled={isSubmittingComment || !newCommentText.trim()}
                             className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-serif font-bold flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 shrink-0"
-                            title="Enviar comentario"
+                            title={galleryText.commentSubmit}
+                            aria-label={galleryText.commentSubmit}
                           >
                             {isSubmittingComment ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <>
-                                <span>Enviar</span>
+                                <span>{galleryText.commentSubmit}</span>
                                 <Send className="w-4 h-4" />
                               </>
                             )}

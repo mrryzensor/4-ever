@@ -133,6 +133,25 @@ export async function autoMigrateDatabase() {
           show_dress_code BOOLEAN DEFAULT true,
           show_gift_registry BOOLEAN DEFAULT false,
           show_photo_gallery BOOLEAN DEFAULT true,
+          gallery_section_eyebrow TEXT DEFAULT 'Sesión de Fotos & Recuerdos',
+          gallery_section_title TEXT DEFAULT '',
+          gallery_photo_prompt_text TEXT DEFAULT 'Presiona en la foto',
+          gallery_empty_title TEXT DEFAULT 'Galería en preparación',
+          gallery_empty_description TEXT DEFAULT '',
+          gallery_drive_photo_badge_text TEXT DEFAULT 'Google Drive',
+          gallery_shared_album_caption TEXT DEFAULT 'Fotos compartidas',
+          gallery_comments_button_text TEXT DEFAULT 'Comentar',
+          gallery_comments_count_label TEXT DEFAULT 'Comentarios',
+          gallery_comments_prompt_text TEXT DEFAULT 'Ver y dejar comentarios ({count})...',
+          gallery_fullscreen_comments_title TEXT DEFAULT 'Comentarios & Dedicatorias',
+          gallery_comments_loading_text TEXT DEFAULT 'Cargando comentarios...',
+          gallery_comments_empty_text TEXT DEFAULT 'Sé el primero en comentar esta foto',
+          gallery_comments_helper_text TEXT DEFAULT 'Deja un lindo mensaje o dedicatoria.',
+          gallery_comment_name_label TEXT DEFAULT 'Tu nombre',
+          gallery_comment_name_placeholder TEXT DEFAULT 'Tu nombre (ej. Familia Pérez)',
+          gallery_comment_text_label TEXT DEFAULT 'Comentario',
+          gallery_comment_text_placeholder TEXT DEFAULT 'Escribe un comentario o dedicatoria...',
+          gallery_comment_submit_text TEXT DEFAULT 'Enviar',
           gallery_external_album_url TEXT DEFAULT '',
           gallery_external_album_title TEXT DEFAULT 'Álbum en Google Photos',
           gallery_external_album_type TEXT DEFAULT 'google_photos',
@@ -199,6 +218,25 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ALTER COLUMN wax_seal_text_is_custom SET DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_tips BOOLEAN DEFAULT true;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_url TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_section_eyebrow TEXT DEFAULT 'Sesión de Fotos & Recuerdos';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_section_title TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_photo_prompt_text TEXT DEFAULT 'Presiona en la foto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_empty_title TEXT DEFAULT 'Galería en preparación';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_empty_description TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_drive_photo_badge_text TEXT DEFAULT 'Google Drive';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_shared_album_caption TEXT DEFAULT 'Fotos compartidas';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_button_text TEXT DEFAULT 'Comentar';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_count_label TEXT DEFAULT 'Comentarios';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_prompt_text TEXT DEFAULT 'Ver y dejar comentarios ({count})...';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_fullscreen_comments_title TEXT DEFAULT 'Comentarios & Dedicatorias';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_loading_text TEXT DEFAULT 'Cargando comentarios...';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_empty_text TEXT DEFAULT 'Sé el primero en comentar esta foto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comments_helper_text TEXT DEFAULT 'Deja un lindo mensaje o dedicatoria.';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comment_name_label TEXT DEFAULT 'Tu nombre';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comment_name_placeholder TEXT DEFAULT 'Tu nombre (ej. Familia Pérez)';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comment_text_label TEXT DEFAULT 'Comentario';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comment_text_placeholder TEXT DEFAULT 'Escribe un comentario o dedicatoria...';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_comment_submit_text TEXT DEFAULT 'Enviar';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_title TEXT DEFAULT 'Álbum en Google Photos';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_external_album_type TEXT DEFAULT 'google_photos';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gallery_drive_photo_selection_mode TEXT DEFAULT 'all';
