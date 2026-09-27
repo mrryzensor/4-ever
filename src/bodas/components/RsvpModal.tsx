@@ -80,7 +80,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
       try {
         const parsed = JSON.parse(initialGuest.companionNames || '[]');
-        setCompanions(Array.isArray(parsed) ? parsed : []);
+        setCompanions(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
       } catch {
         setCompanions([]);
       }
@@ -113,7 +113,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
       try {
         const parsed = JSON.parse(data.companionNames || '[]');
-        setCompanions(Array.isArray(parsed) ? parsed : []);
+        setCompanions(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
       } catch {
         setCompanions([]);
       }
@@ -152,7 +152,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
       const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
       const submittedCompanions = companions
         .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
-        .filter((name) => name.trim() !== '');
+        .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
       const payload = {
         accessCode: guest.accessCode,
         status,
@@ -208,7 +208,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
       const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
       const submittedCompanions = companions
         .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
-        .filter((name) => name.trim() !== '');
+        .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
       const payload = {
         weddingId: settings.id || 1,
         fullName: genericFullName.trim(),

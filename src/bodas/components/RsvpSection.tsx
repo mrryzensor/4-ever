@@ -115,7 +115,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
     try {
       const parsed = JSON.parse(selected.companionNames || '[]');
-      setCompanions(Array.isArray(parsed) ? parsed : []);
+      setCompanions(Array.isArray(parsed) ? parsed.filter((name): name is string => typeof name === 'string') : []);
     } catch {
       setCompanions([]);
     }
@@ -239,7 +239,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
       const submittedPasses = status === 'confirmed' ? (bringingCompanions ? confirmedPasses : 1) : 0;
       const submittedCompanions = companions
         .slice(0, status === 'confirmed' ? (bringingCompanions ? submittedPasses : 1) : companions.length)
-        .filter((name) => name.trim() !== '');
+        .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
       let res;
       if (guest && guest.accessCode) {
         // Confirm assigned guest
