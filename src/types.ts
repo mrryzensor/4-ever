@@ -134,6 +134,8 @@ export interface WeddingSettings {
   dressCodeManOutfit?: 'tuxedo' | 'suit' | 'guayabera' | 'blazer';
   itinerary: string; // JSON array of ItineraryItem
   giftRegistry: string; // JSON array of GiftRegistryItem
+  giftRegistryMessage?: string;
+  giftRegistryCopy?: string; // JSON object with editable gift and bank account copy
   coverPhoto: string;
   secondaryPhoto: string;
   heroPhotos?: string; // JSON array of photo URLs or single comma-separated URLs for hero carousel

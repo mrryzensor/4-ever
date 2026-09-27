@@ -53,6 +53,8 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
     { time: '02:30', title: 'Tornamesa & Chilaquiles', desc: 'Desvelada con mis mejores amigos', icon: 'moon' },
   ]),
   giftRegistry: JSON.stringify([]),
+  giftRegistryMessage: 'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.',
+  giftRegistryCopy: '{}',
   coverPhoto: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80',
   secondaryPhoto: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=1200&q=80',
   heroPhotos: JSON.stringify(['https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80']),

@@ -36,6 +36,7 @@ import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
 import { getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
+import { getGiftRegistryCopy } from '../../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
@@ -138,6 +139,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
   const bankAccounts = getBankAccounts(settings);
+  const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
   const hasVisibleBankAccounts = settings.enableBankTransfer === true && bankAccounts.some(hasBankAccountData);
   const showBankAccountsWhenCollapsed = settings.showBankAccountsWhenCollapsed !== false;
   const ceremonyCardOrder = detailSectionOrder.indexOf('ceremony') * 2;
@@ -1167,15 +1169,15 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <AnimatedGiftBox className="w-8 h-8" color={theme.accentColorHex} />
                     </div>
                     <span data-typography-role="badge" className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
-                      Mesa de Regalos
+                      {giftCopy.badgeText}
                     </span>
                   </div>
 
                   <span className="text-xs uppercase tracking-widest font-semibold block mb-1" style={{ color: theme.accentColorHex }}>
-                    Muestra de Cariño
+                    {giftCopy.eyebrow}
                   </span>
                   <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                    Mesa de Regalos & Cuentas
+                    {giftCopy.cardTitle}
                   </h3>
                   <p className={`invitation-card-copy text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
                     {settings.giftRegistryMessage || 'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.'}
@@ -1187,7 +1189,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{bankAccounts[0]?.bankName || 'Transferencia'}</span>
+                        <span>{bankAccounts[0]?.bankName || giftCopy.bankBadgeFallbackText}</span>
                       </span>
                     )}
                     {settings.enableEnvelopeGift === true && (
@@ -1195,12 +1197,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <Mail className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Lluvia de Sobres</span>
+                        <span>{giftCopy.envelopeGiftTitle}</span>
                       </span>
                     )}
                   </div>
                   {hasVisibleBankAccounts && showBankAccountsWhenCollapsed && (
-                    <BankAccountDetails accounts={bankAccounts} isDark={isDark} copiedKey={copiedKey} onCopy={handleCopy} className="mt-4" />
+                    <BankAccountDetails accounts={bankAccounts} isDark={isDark} copiedKey={copiedKey} onCopy={handleCopy} className="mt-4" copy={giftCopy} />
                   )}
                 </div>
 
@@ -1219,10 +1221,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>{expandedSection === 'gifts'
-                      ? 'Ocultar opciones adicionales'
+                      ? giftCopy.hideOptionsButtonText
                       : hasVisibleBankAccounts && !showBankAccountsWhenCollapsed
-                        ? 'Ver cuentas y opciones adicionales'
-                        : 'Ver opciones adicionales'}</span>
+                        ? giftCopy.showAccountsButtonText
+                        : giftCopy.showOptionsButtonText}</span>
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandedSection === 'gifts' ? 'rotate-180' : ''}`} />
                   </button>
                 </div>}
@@ -1295,6 +1297,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           isDark={isDark}
                           copiedKey={copiedKey}
                           onCopy={handleCopy}
+                          copy={giftCopy}
                         />
                       )}
                       {visibleRegistryItems.map((reg, idx) => (

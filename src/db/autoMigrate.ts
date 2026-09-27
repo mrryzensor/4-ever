@@ -88,6 +88,8 @@ export async function autoMigrateDatabase() {
           dress_code_man_outfit TEXT DEFAULT 'suit',
           itinerary TEXT DEFAULT '[{"time":"17:00","title":"Ceremonia Religiosa","desc":"Parroquia San Francisco de Asís","icon":"church"},{"time":"18:30","title":"Cóctel de Bienvenida","desc":"Jardín de los Naranjos","icon":"cocktail"},{"time":"20:00","title":"Banquete & Brindis","desc":"Salón Principal","icon":"utensils"},{"time":"22:00","title":"Fiesta & DJ","desc":"Pista de baile y barra libre","icon":"music"},{"time":"02:00","title":"Tornaboda & Chilaquiles","desc":"Terraza Nocturna","icon":"moon"}]',
           gift_registry TEXT DEFAULT '[]',
+          gift_registry_message TEXT DEFAULT '',
+          gift_registry_copy TEXT DEFAULT '{}',
           cover_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
           secondary_photo TEXT DEFAULT 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
           hero_photos TEXT DEFAULT '["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]',
@@ -189,6 +191,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_arrival_video_url TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS reception_same_as_ceremony BOOLEAN DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS bank_accounts TEXT DEFAULT '[]';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gift_registry_message TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS gift_registry_copy TEXT DEFAULT '{}';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_bank_accounts_when_collapsed BOOLEAN DEFAULT true;
         ALTER TABLE wedding_settings ALTER COLUMN show_bank_accounts_when_collapsed SET DEFAULT true;
         ALTER TABLE wedding_settings ALTER COLUMN gift_registry SET DEFAULT '[]';

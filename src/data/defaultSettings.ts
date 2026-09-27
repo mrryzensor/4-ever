@@ -50,6 +50,8 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
     { time: '02:00', title: 'Tornaboda & Chilaquiles', desc: 'Terraza Nocturna', icon: 'moon' },
   ]),
   giftRegistry: JSON.stringify([]),
+  giftRegistryMessage: 'El mejor regalo es tu compañía. Si deseas tener un detalle con nosotros, te compartimos nuestras cuentas bancarias y mesa de regalos:',
+  giftRegistryCopy: '{}',
   coverPhoto: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
   secondaryPhoto: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
   heroImageFit: 'cover',

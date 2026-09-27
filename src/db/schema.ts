@@ -60,6 +60,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   dressCodeManOutfit: text('dress_code_man_outfit').default('suit'),
   itinerary: text('itinerary').default('[{"time":"17:00","title":"Ceremonia Religiosa","desc":"Parroquia San Francisco de Asís","icon":"church"},{"time":"18:30","title":"Cóctel de Bienvenida","desc":"Jardín de los Naranjos","icon":"cocktail"},{"time":"20:00","title":"Banquete & Brindis","desc":"Salón Principal","icon":"utensils"},{"time":"22:00","title":"Fiesta & DJ","desc":"Pista de baile y barra libre","icon":"music"},{"time":"02:00","title":"Tornaboda & Chilaquiles","desc":"Terraza Nocturna","icon":"moon"}]'),
   giftRegistry: text('gift_registry').default('[]'),
+  giftRegistryMessage: text('gift_registry_message').default(''),
+  giftRegistryCopy: text('gift_registry_copy').default('{}'),
   coverPhoto: text('cover_photo').default('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80'),
   secondaryPhoto: text('secondary_photo').default('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80'),
   heroPhotos: text('hero_photos').default('["https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"]'),

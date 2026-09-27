@@ -16,6 +16,7 @@ import { WeddingSettings, GiftRegistryItem } from '../types.ts';
 import { AnimatedGiftBox, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { getBankAccounts } from '../lib/bankAccounts.ts';
+import { getGiftRegistryCopy } from '../lib/giftRegistryCopy.ts';
 import { BankAccountDetails } from './BankAccountDetails.tsx';
 
 interface GiftRegistrySectionProps {
@@ -48,6 +49,10 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
   // If host provided direct bank settings and no bank item in registryItems, we construct one
   const bankAccounts = getBankAccounts(settings);
+  const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
+  const fallbackGiftMessage = settings.eventType === 'xv'
+    ? 'El mejor regalo es contar con tu cariño y presencia en mis XV años. Si deseas obsequiarme un detalle para mis metas y recuerdos, pongo a tu disposición las siguientes opciones:'
+    : 'El mejor regalo es tu presencia en nuestro gran día. Si deseas tener un detalle con nosotros para nuestro nuevo hogar o luna de miel, ponemos a tu disposición las siguientes opciones:';
   const hasDirectBankSettings = settings.enableBankTransfer === true && bankAccounts.length > 0;
 
   const hasDirectBankInItems = registryItems.some((item) => item.type === 'bank');
@@ -69,12 +74,12 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
         }`}>
-          Mesa de Regalos & Aportaciones
+          {giftCopy.pageEyebrow}
         </span>
         <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
           isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
         }`}>
-          Mesa de Regalos
+          {giftCopy.pageTitle}
         </h2>
         <StyleSpecificDivider
           cardStyle={settings.cardStyle}
@@ -85,8 +90,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
         <p className={`invitation-card-copy text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
           isDark ? 'text-stone-300' : 'text-stone-600'
         }`}>
-          {settings.giftRegistryMessage ||
-            'El mejor regalo es tu presencia en nuestro gran día. Si deseas tener un detalle con nosotros para nuestro nuevo hogar o luna de miel, ponemos a tu disposición las siguientes opciones:'}
+          {settings.giftRegistryMessage || fallbackGiftMessage}
         </p>
 
         {/* Quick Summary Preview (when collapsed) - Larger & Premium Styling */}
@@ -97,7 +101,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <CreditCard className="w-4 h-4 text-amber-500" />
-                <span>{bankAccounts[0]?.bankName || 'Transferencia Bancaria'}</span>
+                <span>{bankAccounts[0]?.bankName || giftCopy.bankTransferTitle}</span>
               </span>
             )}
             {settings.enableEnvelopeGift !== false && (
@@ -105,7 +109,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <Mail className="w-4 h-4 text-rose-400" />
-                <span>Lluvia de Sobres</span>
+                <span>{giftCopy.envelopeGiftTitle}</span>
               </span>
             )}
             {registryItems.map((item, idx) => (
@@ -130,7 +134,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
             }`}
           >
-            <span>{isExpanded ? 'Ocultar Opciones y Cuentas' : 'Ver Cuentas y Opciones de Regalo'}</span>
+            <span>{isExpanded ? giftCopy.hideOptionsButtonText : giftCopy.showAccountsButtonText}</span>
             <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
               ▼
             </span>
@@ -156,6 +160,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
             copiedKey={copiedKey}
             onCopy={handleCopy}
             className="col-span-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+            copy={giftCopy}
           />
         )}
         {/* ==================================================================== */}
@@ -412,7 +417,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         <span className={`text-[10px] block uppercase font-mono font-semibold ${
                           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
                         }`}>
-                          Titular:
+                          {giftCopy.beneficiaryLabel}:
                         </span>
                         <span className={`font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
                           {item.beneficiary}
@@ -424,7 +429,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         className={`p-1 transition-colors cursor-pointer ${
                           isDark ? 'text-[#C5A059] hover:text-white' : 'text-[#5A5A40] hover:text-[#3D3D2C]'
                         }`}
-                        title="Copiar Titular"
+                        title={giftCopy.copyFieldAriaLabel.replace('{label}', giftCopy.beneficiaryLabel)}
                       >
                         {copiedKey === `item-ben-${index}` ? (
                           <Check className="w-4 h-4 text-emerald-400" />
@@ -442,7 +447,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                       <span className={`text-[10px] block uppercase font-mono font-semibold ${
                         isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
                       }`}>
-                        CLABE Interbancaria / CCI:
+                        {giftCopy.clabeCciLabel}:
                       </span>
                       <div className="flex items-center justify-between mt-1">
                         <span className={`font-mono font-bold text-xs sm:text-sm ${
@@ -456,7 +461,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                           className={`p-1 transition-colors cursor-pointer shrink-0 ${
                             isDark ? 'text-[#C5A059] hover:text-white' : 'text-[#5A5A40] hover:text-[#3D3D2C]'
                           }`}
-                          title="Copiar CLABE"
+                          title={giftCopy.copyFieldAriaLabel.replace('{label}', giftCopy.clabeCciLabel)}
                         >
                           {copiedKey === `item-clabe-${index}` ? (
                             <Check className="w-4 h-4 text-emerald-400" />
@@ -476,7 +481,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         <span className={`text-[10px] block uppercase font-mono font-semibold ${
                           isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
                         }`}>
-                          Número de Cuenta:
+                          {giftCopy.accountNumberLabel}:
                         </span>
                         <span className={`font-mono font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
                           {item.accountNumber}
@@ -488,7 +493,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         className={`p-1 transition-colors cursor-pointer ${
                           isDark ? 'text-[#C5A059] hover:text-white' : 'text-[#5A5A40] hover:text-[#3D3D2C]'
                         }`}
-                        title="Copiar Cuenta"
+                        title={giftCopy.copyFieldAriaLabel.replace('{label}', giftCopy.accountNumberLabel)}
                       >
                         {copiedKey === `item-acc-${index}` ? (
                           <Check className="w-4 h-4 text-emerald-400" />
@@ -501,7 +506,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
                   {item.concept && (
                     <p className={`text-[11px] font-mono ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
-                      <strong>Concepto:</strong> {item.concept}
+                      <strong>{giftCopy.conceptLabel}:</strong> {item.concept}
                     </p>
                   )}
                 </div>
@@ -590,7 +595,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                   type="button"
                   onClick={() =>
                     handleCopy(
-                      `Banco: ${item.bankName || 'Banco'}\nBeneficiario: ${item.beneficiary || ''}\nCLABE: ${item.clabe || ''}\nCuenta: ${item.accountNumber || ''}\nConcepto: ${item.concept || ''}`,
+                      `${giftCopy.bankLabel}: ${item.bankName || giftCopy.bankLabel}\n${giftCopy.beneficiaryLabel}: ${item.beneficiary || ''}\n${giftCopy.clabeCciLabel}: ${item.clabe || ''}\n${giftCopy.accountNumberLabel}: ${item.accountNumber || ''}\n${giftCopy.conceptLabel}: ${item.concept || ''}`,
                       `item-all-${index}`
                     )
                   }
@@ -603,12 +608,12 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                   {copiedKey === `item-all-${index}` ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>¡Datos bancarios copiados!</span>
+                      <span>{giftCopy.copiedBankDataButtonText}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-4 h-4 shrink-0" />
-                      <span>Copiar Datos Bancarios</span>
+                      <span>{giftCopy.copyBankDataButtonText}</span>
                     </>
                   )}
                 </button>
@@ -636,7 +641,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
               </div>
 
               <h3 className={`text-xl font-serif font-bold mb-2 ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
-                Lluvia de Sobres
+                {giftCopy.envelopeGiftTitle}
               </h3>
 
               <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { WeddingSettings, GiftRegistryItem } from '../../../types.ts';
 import { BankAccountsEditor } from './BankAccountsEditor.tsx';
+import { getGiftRegistryCopy, type GiftRegistryCopy } from '../../../lib/giftRegistryCopy.ts';
 
 interface AdminGiftRegistrySettingsProps {
   settings: WeddingSettings;
@@ -27,6 +28,26 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
   const [newEventNumber, setNewEventNumber] = useState('');
   const [newItemUrl, setNewItemUrl] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
+  const giftCopy = getGiftRegistryCopy(settings.giftRegistryCopy);
+  const defaultMessage = settings.eventType === 'xv'
+    ? 'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.'
+    : 'El mejor regalo es tu compañía. Si deseas tener un detalle con nosotros, te compartimos nuestras cuentas bancarias y mesa de regalos:';
+
+  const updateGiftCopy = (key: keyof GiftRegistryCopy, value: string) => {
+    onChange({ giftRegistryCopy: JSON.stringify({ ...giftCopy, [key]: value }) });
+  };
+
+  const renderCopyInput = (key: keyof GiftRegistryCopy, label: string) => (
+    <label key={key} className="block min-w-0">
+      <span className="mb-1 block text-[11px] font-semibold text-[#5A5A40]">{label}</span>
+      <input
+        type="text"
+        value={giftCopy[key]}
+        onChange={(event) => updateGiftCopy(key, event.target.value)}
+        className="w-full min-w-0 rounded-xl border border-[#E5E2D0] bg-white px-3 py-2 text-xs text-[#3D3D2C] outline-none focus:border-[#7D8C7A]"
+      />
+    </label>
+  );
 
   const getParsedStoreItems = (): GiftRegistryItem[] => {
     if (Array.isArray(settings.customStoreItems)) {
@@ -93,6 +114,77 @@ export const AdminGiftRegistrySettings: React.FC<AdminGiftRegistrySettingsProps>
           </span>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-[#E5E2D0] bg-[#FCFBF6] p-4 sm:p-5 space-y-4">
+        <div>
+          <h4 className="text-sm font-bold text-[#3D3D2C]">Textos que ven tus invitados</h4>
+          <p className="mt-1 text-[11px] leading-relaxed text-[#7D8C7A]">
+            Personaliza los encabezados, descripciones, subtítulos, etiquetas y botones de las cuentas para este evento.
+          </p>
+        </div>
+
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold text-[#5A5A40]">Mensaje introductorio</span>
+          <textarea
+            rows={3}
+            value={settings.giftRegistryMessage || defaultMessage}
+            onChange={(event) => onChange({ giftRegistryMessage: event.target.value })}
+            className="w-full rounded-xl border border-[#E5E2D0] bg-white px-3 py-2 text-xs leading-relaxed text-[#3D3D2C] outline-none focus:border-[#7D8C7A]"
+          />
+        </label>
+
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-bold uppercase tracking-wide text-[#7D8C7A]">Encabezados de la sección</h5>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {([
+              ['pageEyebrow', 'Antetítulo de la página'],
+              ['pageTitle', 'Título de la página'],
+              ['badgeText', 'Etiqueta de la tarjeta'],
+              ['eyebrow', 'Antetítulo de la tarjeta'],
+              ['cardTitle', 'Título de la tarjeta'],
+            ] as [keyof GiftRegistryCopy, string][]).map(([key, label]) => renderCopyInput(key, label))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-bold uppercase tracking-wide text-[#7D8C7A]">Transferencia y acciones</h5>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {([
+              ['bankBadgeFallbackText', 'Etiqueta de transferencia'],
+              ['bankTransferTitle', 'Encabezado de transferencia'],
+              ['bankTransferSubtitle', 'Subtítulo de transferencia'],
+              ['envelopeGiftTitle', 'Encabezado de lluvia de sobres'],
+              ['showOptionsButtonText', 'Botón para ver opciones'],
+              ['showAccountsButtonText', 'Botón para ver cuentas'],
+              ['hideOptionsButtonText', 'Botón para ocultar opciones'],
+            ] as [keyof GiftRegistryCopy, string][]).map(([key, label]) => renderCopyInput(key, label))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h5 className="text-[11px] font-bold uppercase tracking-wide text-[#7D8C7A]">Datos de cuenta y botones</h5>
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {([
+              ['accountFallbackTitle', 'Título si la cuenta no tiene banco (usa {number})'],
+              ['beneficiaryLabel', 'Titular o beneficiario'],
+              ['bankLabel', 'Banco'],
+              ['accountNumberLabel', 'Número de cuenta'],
+              ['cciLabel', 'CCI'],
+              ['clabeLabel', 'CLABE'],
+              ['clabeCciLabel', 'Etiqueta combinada CLABE / CCI'],
+              ['cardNumberLabel', 'Número de tarjeta'],
+              ['yapeLabel', 'Yape'],
+              ['plinLabel', 'Plin'],
+              ['conceptLabel', 'Concepto'],
+              ['currencyLabel', 'Moneda'],
+              ['copyDataButtonText', 'Botón para copiar datos'],
+              ['copyBankDataButtonText', 'Botón para copiar todos los datos bancarios'],
+              ['copiedButtonText', 'Confirmación al copiar'],
+              ['copiedBankDataButtonText', 'Confirmación al copiar datos bancarios'],
+            ] as [keyof GiftRegistryCopy, string][]).map(([key, label]) => renderCopyInput(key, label))}
+          </div>
+        </div>
+      </section>
 
       {/* Toggles for Gift Modalities */}
       <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3">
