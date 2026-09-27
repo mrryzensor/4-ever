@@ -1,4 +1,5 @@
 import type { BankAccountConfig, BankAccountDisplayField, WeddingSettings } from '../types.ts';
+import type { GiftRegistryCopy } from './giftRegistryCopy.ts';
 
 export const BANK_COUNTRIES = [
   { code: 'PE', name: 'Perú', currency: 'PEN' },
@@ -32,6 +33,36 @@ function normalizePrimaryDisplayField(value: unknown): BankAccountDisplayField {
   return typeof value === 'string' && BANK_ACCOUNT_DISPLAY_FIELDS.includes(value as BankAccountDisplayField)
     ? value as BankAccountDisplayField
     : 'auto';
+}
+
+export function getBankAccountBadgeText(
+  account: BankAccountConfig | undefined,
+  fallbackText: string,
+  copy: GiftRegistryCopy,
+): string {
+  if (!account) return fallbackText;
+
+  const field = account.primaryDisplayField || 'auto';
+  if (field !== 'auto') {
+    const value = account[field];
+    const labels: Partial<Record<BankAccountDisplayField, string>> = {
+      beneficiary: copy.beneficiaryLabel,
+      bankName: copy.bankLabel,
+      accountNumber: copy.accountNumberLabel,
+      cci: copy.cciLabel,
+      clabe: copy.clabeLabel,
+      cardNumber: copy.cardNumberLabel,
+      yapePhone: copy.yapeLabel,
+      plinPhone: copy.plinLabel,
+      concept: copy.conceptLabel,
+    };
+
+    if (typeof value === 'string' && value.trim()) {
+      return `${labels[field] || copy.bankLabel}: ${value.trim()}`;
+    }
+  }
+
+  return account.bankName.trim() || fallbackText;
 }
 
 export function createBankAccount(

@@ -80,7 +80,7 @@ export const BankAccountsEditor: React.FC<BankAccountsEditorProps> = ({ settings
                 </>}
                 <option value="concept">Concepto sugerido</option>
               </select>
-              <p className="mt-1 text-[11px] leading-relaxed text-stone-500">El dato elegido aparece primero con su etiqueta y valor; el banco también se identifica en la insignia.</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-stone-500">El dato elegido aparece en el badge principal y primero en la lista; el banco se mantiene como título de la cuenta.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">

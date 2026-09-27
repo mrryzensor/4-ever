@@ -35,7 +35,7 @@ import { CardStyleId, WeddingSettings, Guest, ItineraryItem, GiftRegistryItem, W
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { HeroCourtCard } from '../../components/HeroCourtCard.tsx';
 import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
-import { getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
+import { getBankAccountBadgeText, getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
@@ -1190,7 +1190,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{bankAccounts[0]?.bankName || giftCopy.bankBadgeFallbackText}</span>
+                        <span>{getBankAccountBadgeText(bankAccounts[0], giftCopy.bankBadgeFallbackText, giftCopy)}</span>
                       </span>
                     )}
                     {settings.enableEnvelopeGift === true && (
