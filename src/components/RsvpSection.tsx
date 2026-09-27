@@ -366,7 +366,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className={`w-20 h-20 rounded-full aspect-square shrink-0 circle-badge flex items-center justify-center mx-auto mb-6 border ${displayedStatus === 'confirmed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-stone-500/10 text-stone-500 border-stone-500/30'}`}
+                className={`w-20 h-20 rounded-full aspect-square shrink-0 circle-badge flex items-center justify-center mx-auto mb-6 border ${displayedStatus === 'confirmed'
+                  ? isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-50 text-emerald-600 border-emerald-500'
+                  : isDark ? 'bg-rose-950/40 text-rose-400 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-50 text-rose-600 border-rose-500'}`}
               >
                 {displayedStatus === 'confirmed' ? <CheckCircle className="w-12 h-12" /> : <XCircle className="w-12 h-12" />}
               </motion.div>
@@ -383,11 +385,11 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                   : `Sentimos que no puedas acompañarnos ${savedResponseGuest?.fullName || fullName}. Estarás presente en nuestros corazones.`}
               </p>
 
-              <div className="p-5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 max-w-md mx-auto text-xs sm:text-sm mb-8 space-y-1">
-                <p data-typography-role="heading" className="font-bold text-stone-900 dark:text-stone-100">{settings.coupleNames}</p>
-                <p data-typography-role="detail" className="text-stone-600 dark:text-stone-400">{settings.eventDate} • {settings.receptionVenue}</p>
+              <div className={`p-5 rounded-2xl border max-w-md mx-auto text-xs sm:text-sm mb-8 space-y-1 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
+                <p data-typography-role="heading" className={`font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.coupleNames}</p>
+                <p data-typography-role="detail" className={isDark ? 'text-stone-400' : 'text-stone-600'}>{settings.eventDate} • {settings.receptionVenue}</p>
                 {displayedStatus === 'confirmed' && (
-                  <p data-typography-role="detail" className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold pt-1">
+                  <p data-typography-role="detail" className={`font-mono font-semibold pt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                     Pases confirmados: {savedResponseGuest?.confirmedPasses ?? confirmedPasses} persona(s)
                   </p>
                 )}
@@ -446,28 +448,28 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
                 {/* Autocomplete Dropdown when matching existing guest names */}
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 z-30 mt-2 bg-white dark:bg-stone-900 border border-amber-300/80 dark:border-stone-700 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
-                    <div className="p-2.5 bg-amber-50 dark:bg-stone-800/80 border-b border-amber-200/60 dark:border-stone-700 text-[11px] font-semibold text-amber-900 dark:text-amber-300 flex items-center justify-between">
+                  <div className={`absolute top-full left-0 right-0 z-30 mt-2 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn border ${isDark ? 'bg-stone-900 border-stone-700' : 'bg-white border-amber-300/80'}`}>
+                    <div className={`p-2.5 border-b text-[11px] font-semibold flex items-center justify-between ${isDark ? 'bg-stone-800/80 border-stone-700 text-amber-300' : 'bg-amber-50 border-amber-200/60 text-amber-900'}`}>
                       <span>Coincidencias encontradas en la lista de invitados:</span>
                       <span className="font-mono text-[10px]">Toca tu nombre</span>
                     </div>
-                    <div className="max-h-60 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800">
+                    <div className={`max-h-60 overflow-y-auto divide-y ${isDark ? 'divide-stone-800' : 'divide-stone-100'}`}>
                       {suggestions.map((s) => (
                         <button
                           key={s.id}
                           type="button"
                           onClick={() => handleSelectSuggestedGuest(s)}
-                          className="w-full text-left p-3.5 hover:bg-amber-50/70 dark:hover:bg-stone-800 flex items-center justify-between transition-colors cursor-pointer"
+                          className={`w-full text-left p-3.5 flex items-center justify-between transition-colors cursor-pointer ${isDark ? 'hover:bg-stone-800' : 'hover:bg-amber-50/70'}`}
                         >
                           <div>
-                            <p className="text-sm font-serif font-bold text-stone-900 dark:text-stone-100">
+                            <p className={`text-sm font-serif font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
                               {s.fullName}
                             </p>
-                            <p className="text-xs text-stone-500 dark:text-stone-400">
+                            <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                               {s.groupName || 'Invitado'} • Pases reservados: <strong>{s.allocatedPasses} personas</strong>
                             </p>
                           </div>
-                          <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 text-xs font-semibold shrink-0">
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 ${isDark ? 'bg-amber-900/40 text-amber-300' : 'bg-amber-100 text-amber-900'}`}>
                             Seleccionar
                           </span>
                         </button>
@@ -477,14 +479,14 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 )}
 
                 {guest && (
-                  <div className="mt-3 p-3.5 rounded-2xl bg-amber-50/80 dark:bg-stone-800/80 border border-amber-300/70 dark:border-stone-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-2 text-amber-950 dark:text-stone-200">
+                  <div className={`mt-3 p-3.5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${isDark ? 'bg-stone-800/80 border-stone-700' : 'bg-amber-50/80 border-amber-300/70'}`}>
+                    <div className={`flex items-center gap-2 ${isDark ? 'text-stone-200' : 'text-amber-950'}`}>
                       <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>
                         Invitación identificada: <strong>{guest.fullName}</strong> • Grupo: {guest.groupName || 'General'}
                       </span>
                     </div>
-                    <span className="font-mono text-amber-900 dark:text-amber-300 font-bold">
+                    <span className={`font-mono font-bold ${isDark ? 'text-amber-300' : 'text-amber-900'}`}>
                       {guest.allocatedPasses} pases asignados
                     </span>
                   </div>
@@ -555,25 +557,25 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
                   {bringingCompanions && maxSelectablePasses > 1 && (
                     <div className="space-y-4 animate-fadeIn">
-                    <div className="p-4 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className={`p-4 sm:p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
                     <div className="flex-1">
                       <span data-typography-role="heading" className={`text-base sm:text-lg font-bold block ${activeTheme.textPrimaryClass}`}>
                         Número de asistentes (incluyéndote)
                       </span>
-                      <span data-typography-role="body" className="text-sm text-stone-500 dark:text-stone-400">
+                      <span data-typography-role="body" className={`text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                         {guest?.allocatedPasses
                           ? `Tu invitación cuenta con hasta ${guest.allocatedPasses} pases reservados.`
                           : 'Indica el total de personas que asistirán.'}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-2xl p-1.5 shadow-2xs">
+                    <div className={`flex flex-wrap items-center gap-2 border rounded-2xl p-1.5 shadow-2xs ${isDark ? 'bg-stone-900 border-stone-700' : 'bg-white border-stone-200'}`}>
                       {/* Stepper Minus */}
                       <button
                         type="button"
                         onClick={() => handlePassesChange(Math.max(2, confirmedPasses - 1))}
                         disabled={confirmedPasses <= 2}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer ${isDark ? 'text-stone-300 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'}`}
                         title="Disminuir asistentes"
                       >
                         <Minus className="w-4 h-4" />
@@ -591,7 +593,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                               className={`min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 rounded-xl font-mono font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center ${
                                 confirmedPasses === num
                                   ? 'bg-amber-500 text-stone-950 font-bold shadow-xs scale-105'
-                                  : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+                                  : isDark ? 'text-stone-400 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'
                               }`}
                             >
                               {num}
@@ -605,7 +607,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                         type="button"
                         onClick={() => handlePassesChange(Math.min(maxSelectablePasses, confirmedPasses + 1))}
                         disabled={confirmedPasses >= maxSelectablePasses}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer"
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer ${isDark ? 'text-stone-300 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'}`}
                         title="Aumentar asistentes"
                       >
                         <Plus className="w-4 h-4" />
@@ -615,7 +617,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
                   {/* Companion names fields */}
                   {bringingCompanions && confirmedPasses > 1 && (
-                    <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-3">
+                    <div className={`p-5 sm:p-6 rounded-2xl border space-y-3 ${isDark ? 'bg-stone-900 border-stone-800' : 'bg-white border-stone-200'}`}>
                       <span data-typography-role="heading" className={`text-sm sm:text-base font-bold uppercase tracking-wider block ${activeTheme.textPrimaryClass}`}>
                         Nombres de tus Acompañantes
                       </span>
@@ -628,7 +630,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                             placeholder={`Acompañante ${idx + 1}`}
                             value={companions[idx + 1] || ''}
                             onChange={(e) => handleCompanionChange(idx + 1, e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                            className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-800/80 text-stone-100' : 'border-stone-300 bg-stone-50 text-stone-900'}`}
                           />
                         ))}
                       </div>
@@ -657,7 +659,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
                 {/* Collapsible Content */}
                 {showExtraDetails && (
-                  <div className="mt-4 space-y-6 p-5 sm:p-6 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 animate-fadeIn">
+                  <div className={`mt-4 space-y-6 p-5 sm:p-6 rounded-2xl border animate-fadeIn ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
                     
                     {/* Dietary & DJ Song Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -672,7 +674,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                           placeholder="Ej. Vegetariano, celíaco, alergia..."
                           value={dietary}
                           onChange={(e) => setDietary(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
                         />
                       </div>
 
@@ -687,7 +689,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                           placeholder="Ej. Vivir Mi Vida - Marc Anthony"
                           value={song}
                           onChange={(e) => setSong(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
                         />
                       </div>
                     </div>
@@ -704,7 +706,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                         placeholder="Escribe unas palabras de felicitación o buenos deseos..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        className="w-full p-4 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600 resize-none"
+                        className={`w-full p-4 rounded-xl border text-base focus:outline-none focus:border-amber-600 resize-none ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
                       />
                     </div>
 
@@ -721,7 +723,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                           placeholder="Ej. +51 987 654 321"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
                         />
                       </div>
 
@@ -736,7 +738,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                           placeholder="correo@ejemplo.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-base text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-600"
+                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
                         />
                       </div>
                     </div>

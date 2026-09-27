@@ -745,7 +745,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </div>
 
               {/* Action Toolbar */}
-              <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex flex-wrap items-center justify-between gap-2">
+              <div className={`mt-6 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} flex flex-wrap items-center justify-between gap-2`}>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -791,7 +791,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
+                    className={`mt-5 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} space-y-3 overflow-hidden`}
                   >
                     <div className="invitation-responsive-map w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
                       <iframe title="Mapa Ceremonia" width="100%" height="100%" src={ceremonyEmbedUrl} className="w-full h-full border-0" loading="lazy" />
@@ -858,7 +858,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </div>
 
               {/* Action Toolbar */}
-              <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between gap-2">
+              <div className={`mt-6 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} flex items-center justify-between gap-2`}>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -904,7 +904,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="mt-5 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 space-y-3 overflow-hidden"
+                    className={`mt-5 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} space-y-3 overflow-hidden`}
                   >
                     <div className="invitation-responsive-map w-full h-52 sm:h-64 rounded-2xl overflow-hidden border shadow-inner">
                       <iframe title="Mapa Recepción" width="100%" height="100%" src={receptionEmbedUrl} className="w-full h-full border-0" loading="lazy" />
@@ -1020,7 +1020,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex justify-center">
+                <div className={`mt-6 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} flex justify-center`}>
                   <button data-typography-role="button"
                     type="button"
                     onClick={(e) => {
@@ -1046,7 +1046,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-6 pt-5 border-t border-stone-200/40 dark:border-stone-700/40 space-y-4 overflow-hidden"
+                      className={`mt-6 pt-5 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} space-y-4 overflow-hidden`}
                     >
                       <div className="relative pl-14 sm:pl-16 space-y-6">
                         {/* Organic Curving S-Wave SVG Connector */}
@@ -1082,7 +1082,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               {/* Animated SVG ring node with curving horizontal offset */}
                               <div
                                 style={{ backgroundImage: `linear-gradient(135deg, color-mix(in srgb, ${theme.itineraryAccentColorHex} 62%, white), ${theme.itineraryAccentColorHex}, color-mix(in srgb, ${theme.itineraryAccentColorHex} 78%, black))` }}
-                                className={`absolute top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-white dark:border-stone-900 shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10 transition-transform duration-300 group-hover:scale-110 ${
+                                className={`absolute top-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 ${isDark ? 'border-stone-900' : 'border-white'} shadow-md flex items-center justify-center text-stone-950 shrink-0 z-10 transition-transform duration-300 group-hover:scale-110 ${
                                   isOdd ? '-left-12 sm:-left-13' : '-left-14 sm:-left-15'
                                 }`}
                               >
@@ -1171,7 +1171,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   )}
                 </div>
 
-                {hasAdditionalGiftOptions && <div className="mt-6 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 flex items-center justify-between">
+                {hasAdditionalGiftOptions && <div className={`mt-6 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} flex items-center justify-between`}>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1201,7 +1201,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 pt-5 border-t border-stone-200/40 dark:border-stone-700/40 space-y-4 overflow-hidden"
+                      className={`mt-6 pt-5 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} space-y-4 overflow-hidden`}
                     >
                       {false && settings.enableBankTransfer !== false && (settings.bankAccountNumber || settings.bankClabe) && (
                         <div className={`p-4 rounded-2xl border space-y-3 ${
@@ -1322,7 +1322,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <span data-typography-role="detail" className={`text-xs font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
                       Paleta de colores sugerida:
                     </span>
-                    <div className="flex items-center gap-2 p-1.5 rounded-full border bg-black/5 dark:bg-white/5 backdrop-blur-xs shadow-xs">
+                    <div className={`flex items-center gap-2 p-1.5 rounded-full border ${isDark ? 'bg-white/5' : 'bg-black/5'} backdrop-blur-xs shadow-xs`}>
                       {paletteList.map((hex, idx) => (
                         <button
                           key={idx}
@@ -1372,7 +1372,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
+                      className={`mt-8 pt-6 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} overflow-hidden text-left`}
                     >
                       {/* View Switcher: Pareja / Damas / Caballeros */}
                       <div className="flex items-center justify-center gap-2 mb-6">
@@ -1408,7 +1408,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               accessoryColor="#D4AF37"
                               outfitType={activeWomanOutfit}
                             />
-                            <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
+                            <p className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
                               Vestido de Gala / Dama
                             </p>
                             <div className="mt-2 flex justify-center">
@@ -1442,7 +1442,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               tieColor={activePaletteColor}
                               outfitType={activeManOutfit}
                             />
-                            <p className="font-serif font-bold text-sm mt-3 text-center text-stone-900 dark:text-stone-100">
+                            <p className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
                               Traje Formal / Caballero
                             </p>
                             <div className="mt-2 flex justify-center">
@@ -1469,8 +1469,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       </div>
 
                       {/* Palette Swatches Bar Inside Simulator */}
-                      <div className="mt-8 pt-4 border-t border-stone-200/40 dark:border-stone-700/40 text-center">
-                        <p className="text-xs text-stone-500 dark:text-stone-400 mb-3 font-serif">
+                      <div className={`mt-8 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} text-center`}>
+                        <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'} mb-3 font-serif`}>
                           Toca un color para probarlo en las prendas:
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-2.5">
@@ -1570,7 +1570,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-8 pt-6 border-t border-stone-200/40 dark:border-stone-700/40 overflow-hidden text-left"
+                      className={`mt-8 pt-6 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} overflow-hidden text-left`}
                     >
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {tipsList.map((tip, idx) => (
