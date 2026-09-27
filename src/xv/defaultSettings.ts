@@ -105,6 +105,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   typographyBadgeScale: 100,
   typographyButtonScale: 100,
   typographyToggleScale: 100,
+  typographyGalleryFullscreenScale: 100,
   dividerStyle: 'auto',
   frameOrnamentStyle: 'auto',
   transitionWaveStyle: 'auto',

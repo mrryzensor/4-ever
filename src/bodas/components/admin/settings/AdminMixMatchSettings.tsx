@@ -139,7 +139,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
   onChange,
   isXv = false,
 }) => {
-  const [openSection, setOpenSection] = useState<string | null>('waves');
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   const toggleSection = (id: string) => {
     setOpenSection((prev) => (prev === id ? null : id));

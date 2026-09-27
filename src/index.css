@@ -72,6 +72,36 @@
 .public-invitation [data-typography-role="button"] {
   zoom: var(--invitation-type-button, 1);
 }
+
+/* The enlarged gallery is rendered in a portal outside .public-invitation.
+   Give every text role there one dedicated scale, without resizing the photo. */
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] {
+  --invitation-type-title: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-heading: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-body: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-subtitle: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-detail: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-badge: var(--invitation-type-gallery-fullscreen, 1);
+  --invitation-type-button: var(--invitation-type-gallery-fullscreen, 1);
+}
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] h1 { zoom: var(--invitation-type-title, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(h2, h3, h4, h5, h6, [data-typography-role="heading"]) { zoom: var(--invitation-type-heading, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] p[data-typography-role="heading"] { zoom: var(--invitation-type-heading, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] p { zoom: var(--invitation-type-body, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] p[data-typography-role="subtitle"] { zoom: var(--invitation-type-subtitle, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(span, label, input, textarea, select)[data-typography-role="body"] { zoom: var(--invitation-type-body, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(label):not([data-typography-role]) { zoom: var(--invitation-type-detail, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(input, textarea, select):not([data-typography-role]) { zoom: var(--invitation-type-body, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] span[class*="rounded-full"]:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *) { zoom: var(--invitation-type-badge, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] span[class*="uppercase"]:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *) { zoom: var(--invitation-type-detail, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] span:not([data-typography-role]):not(button *):not(a *):not(p *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *):not([data-typography-role] *):not(span *) { zoom: var(--invitation-type-body, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] a:not([data-typography-role="badge"]) { zoom: var(--invitation-type-button, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(small, time, [data-typography-role="detail"]):not(button *):not(a *):not([role="button"] *) { zoom: var(--invitation-type-detail, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] [data-typography-role="badge"] { zoom: var(--invitation-type-badge, 1); }
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] button:not([data-typography-children]):not([aria-label]):not([title]):not(:has(> svg:only-child)),
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] a[class*="cursor-pointer"]:not([data-typography-role="badge"]),
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] [data-typography-role="button"] { zoom: var(--invitation-type-button, 1); }
+
 .public-invitation .invitation-card-action {
   display: inline-flex !important;
   min-height: 2.75rem;

@@ -117,6 +117,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   typographyBadgeScale: integer('typography_badge_scale').default(100),
   typographyButtonScale: integer('typography_button_scale').default(100),
   typographyToggleScale: integer('typography_toggle_scale').default(100),
+  typographyGalleryFullscreenScale: integer('typography_gallery_fullscreen_scale').default(100),
   dividerStyle: text('divider_style').default('auto'),
   frameOrnamentStyle: text('frame_ornament_style').default('auto'),
   transitionWaveStyle: text('transition_wave_style').default('auto'),

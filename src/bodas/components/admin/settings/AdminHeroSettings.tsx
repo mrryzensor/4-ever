@@ -24,6 +24,7 @@ interface AdminHeroSettingsProps {
   onChange: (updated: Partial<WeddingSettings>) => void;
   onOpenSimpleMode?: () => void;
   beforeCountdown?: ReactNode;
+  afterWelcome?: ReactNode;
   hidePhotoSourceControls?: boolean;
 }
 
@@ -32,6 +33,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
   onChange,
   onOpenSimpleMode,
   beforeCountdown,
+  afterWelcome,
   hidePhotoSourceControls = false,
 }) => {
   const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
@@ -1465,6 +1467,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           </div>
         </div>
       </div>
+      {afterWelcome}
     </div>
   );
 };

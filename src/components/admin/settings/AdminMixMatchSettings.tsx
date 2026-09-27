@@ -143,6 +143,7 @@ const TYPOGRAPHY_SCALE_CONTROLS = [
   { key: 'typographyBadgeScale', label: 'Badges', help: 'Píldoras, categorías y etiquetas destacadas', cssVar: '--invitation-type-badge', max: 200 },
   { key: 'typographyButtonScale', label: 'Botones', help: 'Acciones y llamados a la acción de la invitación', cssVar: '--invitation-type-button', max: 200 },
   { key: 'typographyToggleScale', label: 'Interruptores', help: 'Tamaño del control ¿Llevas invitados? en la confirmación', cssVar: '--invitation-type-toggle', max: 200 },
+  { key: 'typographyGalleryFullscreenScale', label: 'Galería ampliada', help: 'Todos los textos dentro de la foto a pantalla completa', cssVar: '--invitation-type-gallery-fullscreen', max: 200 },
 ] as const;
 
 const TypographyScaleControls: React.FC<{
@@ -158,7 +159,7 @@ const TypographyScaleControls: React.FC<{
       </div>
       <button
         type="button"
-        onClick={() => onChange({ typographyTitleScale: 100, typographyHeadingScale: 100, typographyBodyScale: 100, typographySubtitleScale: 100, typographyDetailScale: 100, typographyBadgeScale: 100, typographyButtonScale: 100, typographyToggleScale: 100 })}
+        onClick={() => onChange({ typographyTitleScale: 100, typographyHeadingScale: 100, typographyBodyScale: 100, typographySubtitleScale: 100, typographyDetailScale: 100, typographyBadgeScale: 100, typographyButtonScale: 100, typographyToggleScale: 100, typographyGalleryFullscreenScale: 100 })}
         className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100"
       >
         Restablecer tamaños
@@ -183,7 +184,7 @@ const TypographyScaleControls: React.FC<{
                 : key === 'typographyBadgeScale'
                   ? 'mt-2 inline-flex origin-left items-center rounded-full border border-stone-300 bg-stone-50 px-3 py-1 font-sans text-xs font-medium text-stone-700'
                   : `mt-2 block origin-left truncate font-serif text-sm italic text-stone-800 ${accent === 'indigo' ? 'text-indigo-800' : 'text-purple-800'}`}
-              style={{ zoom: key === 'typographyToggleScale' ? value / 100 : `var(${cssVar}, 1)` }}
+              style={{ zoom: key === 'typographyToggleScale' || key === 'typographyGalleryFullscreenScale' ? value / 100 : `var(${cssVar}, 1)` }}
               aria-hidden="true"
             >
               {key === 'typographyToggleScale' ? (
@@ -191,7 +192,7 @@ const TypographyScaleControls: React.FC<{
                   <span>¿Llevas acompañantes?</span>
                   <span className="relative h-4 w-7 rounded-full bg-[#5A5A40]"><span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-white" /></span>
                 </span>
-              ) : key === 'typographyButtonScale' ? 'Ver invitación' : key === 'typographyBadgeScale' ? 'Puntualidad' : 'Sofía & Alejandro · Nos emociona compartir este día'}
+              ) : key === 'typographyButtonScale' ? 'Ver invitación' : key === 'typographyBadgeScale' ? 'Puntualidad' : key === 'typographyGalleryFullscreenScale' ? 'Comentarios · Tu nombre y dedicatoria' : 'Sofía & Alejandro · Nos emociona compartir este día'}
             </span>
             <input
               type="range"
@@ -215,7 +216,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
   onChange,
   isXv = false,
 }) => {
-  const [openSection, setOpenSection] = useState<string | null>('waves');
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   const toggleSection = (id: string) => {
     setOpenSection((prev) => (prev === id ? null : id));

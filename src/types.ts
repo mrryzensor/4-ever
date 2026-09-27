@@ -199,6 +199,7 @@ export interface WeddingSettings {
   typographyBadgeScale?: number; // Porcentaje, 80-200
   typographyButtonScale?: number; // Porcentaje, 80-200
   typographyToggleScale?: number; // Porcentaje, 80-200
+  typographyGalleryFullscreenScale?: number; // Porcentaje, escala de todos los textos dentro de la galería ampliada
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
   frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido

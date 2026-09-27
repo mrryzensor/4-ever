@@ -29,6 +29,7 @@ import { AudioSettingsPanel } from '../../../components/admin/settings/AudioSett
 import { SimpleModeInline } from './SimpleModeInline.tsx';
 import { VideoSection } from '../VideoSection.tsx';
 import { AdminSimpleCoverageSettings } from '../../../components/admin/settings/AdminSimpleCoverageSettings.tsx';
+import { AdvancedModeOrganizer } from '../../../components/admin/AdvancedModeOrganizer.tsx';
 
 interface AdminSettingsTabProps {
   settings: WeddingSettings;
@@ -56,6 +57,66 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   // Mobile floating config sheet state (expanded by default or minimizable to highlight canvas)
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(true);
+
+  const renderAdvancedGroups = () => (
+    <AdvancedModeOrganizer groups={[
+      {
+        id: 'evento',
+        title: 'Portada, lugares y regalos',
+        description: 'Fotos del Hero, ubicaciones, cuenta regresiva y mesa de regalos.',
+        icon: <Settings className="w-4 h-4" />,
+        content: (
+          <AdminHeroSettings
+            settings={settings}
+            onChange={onChange}
+            onOpenSimpleMode={() => setEditorMode('simple')}
+            hidePhotoSourceControls
+            beforeCountdown={(
+              <>
+                {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
+                <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+              </>
+            )}
+            afterWelcome={<AdminSimpleCoverageSettings settings={settings} onChange={onChange} />}
+          />
+        ),
+      },
+      {
+        id: 'multimedia',
+        title: 'Fotos, música y video',
+        description: 'Galería, pista musical y recuerdos en video.',
+        icon: <Eye className="w-4 h-4" />,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <SimpleModeInline settings={settings} onChange={onChange} onSaveAllSettings={onSaveAllSettings} savingSettings={savingSettings} settingsSavedToast={settingsSavedToast} advancedMediaOnly />
+            <AudioSettingsPanel settings={settings} onChange={onChange} />
+            <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
+          </div>
+        ),
+      },
+      {
+        id: 'apariencia',
+        title: 'Estilo de la invitación',
+        description: 'Paleta, tipografías, motivos animados, sello y textos de RSVP.',
+        icon: <Palette className="w-4 h-4" />,
+        content: <AdminThemeSettings settings={settings} onChange={onChange} />,
+      },
+      {
+        id: 'vestimenta',
+        title: 'Vestimenta',
+        description: 'Código, recomendaciones y paleta de colores.',
+        icon: <CheckCircle className="w-4 h-4" />,
+        content: settings.showDressCode !== false ? <AdminDressCodeSettings settings={settings} onChange={onChange} /> : <div className="rounded-2xl border border-[#E5E2D0] bg-[#FAF9F0] p-4 text-sm text-stone-600">La sección está desactivada. Puedes volver a activarla en “Secciones y ajustes”.</div>,
+      },
+      {
+        id: 'secciones',
+        title: 'Secciones y ajustes',
+        description: 'Visibilidad y orden de las secciones de la invitación.',
+        icon: <SlidersHorizontal className="w-4 h-4" />,
+        content: <div className="space-y-5 min-w-0"><AdminSectionToggles settings={settings} onChange={onChange} /></div>,
+      },
+    ]} />
+  );
 
   return (
     <div className="space-y-3 sm:space-y-3.5 w-full animate-fadeIn">
@@ -284,34 +345,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                     </button>
                   </div>
 
-                  <AdminHeroSettings
-                    settings={settings}
-                    onChange={onChange}
-                    onOpenSimpleMode={() => setEditorMode('simple')}
-                    hidePhotoSourceControls
-                    beforeCountdown={(
-                      <>
-                        {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
-                        <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-                      </>
-                    )}
-                  />
-                  <SimpleModeInline
-                    settings={settings}
-                    onChange={onChange}
-                    onSaveAllSettings={onSaveAllSettings}
-                    savingSettings={savingSettings}
-                    settingsSavedToast={settingsSavedToast}
-                    advancedMediaOnly
-                  />
-                  <AudioSettingsPanel settings={settings} onChange={onChange} />
-                  <AdminThemeSettings settings={settings} onChange={onChange} />
-                  <AdminSectionToggles settings={settings} onChange={onChange} />
-                  <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
-                  {settings.showDressCode !== false && (
-                    <AdminDressCodeSettings settings={settings} onChange={onChange} />
-                  )}
-                  <AdminSimpleCoverageSettings settings={settings} onChange={onChange} />
+                  {renderAdvancedGroups()}
 
                   <div className="pt-2 flex items-center justify-between gap-4">
                     {settingsSavedToast && (
@@ -465,34 +499,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                       </button>
                     </div>
 
-                    <AdminHeroSettings
-                      settings={settings}
-                      onChange={onChange}
-                      onOpenSimpleMode={() => setEditorMode('simple')}
-                      hidePhotoSourceControls
-                      beforeCountdown={(
-                        <>
-                          {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
-                          <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-                        </>
-                      )}
-                    />
-                    <SimpleModeInline
-                      settings={settings}
-                      onChange={onChange}
-                      onSaveAllSettings={onSaveAllSettings}
-                      savingSettings={savingSettings}
-                      settingsSavedToast={settingsSavedToast}
-                      advancedMediaOnly
-                    />
-                    <AudioSettingsPanel settings={settings} onChange={onChange} />
-                    <AdminThemeSettings settings={settings} onChange={onChange} />
-                    <AdminSectionToggles settings={settings} onChange={onChange} />
-                    <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
-                    {settings.showDressCode !== false && (
-                      <AdminDressCodeSettings settings={settings} onChange={onChange} />
-                    )}
-                    <AdminSimpleCoverageSettings settings={settings} onChange={onChange} />
+                    {renderAdvancedGroups()}
                   </div>
                 )}
               </div>

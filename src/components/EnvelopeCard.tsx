@@ -14,6 +14,8 @@ import {
   CreditCard,
   Mail,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Building2,
   Palette,
   Check,
@@ -63,6 +65,20 @@ import {
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 import { BankAccountDetails } from './BankAccountDetails.tsx';
 import { HeroEmblem } from './HeroEmblem.tsx';
+
+const WOMAN_OUTFIT_OPTIONS = [
+  { id: 'long-gown', label: 'Gala / Vestido Largo' },
+  { id: 'cocktail', label: 'Cóctel / Midi' },
+  { id: 'jumpsuit', label: 'Enterizo / Palazzo' },
+  { id: 'boho', label: 'Bohemio / Fluido' },
+] as const;
+
+const MAN_OUTFIT_OPTIONS = [
+  { id: 'tuxedo', label: 'Esmoquin / Smoking' },
+  { id: 'suit', label: 'Traje Clásico' },
+  { id: 'guayabera', label: 'Guayabera Formal' },
+  { id: 'blazer', label: 'Blazer & Pantalón' },
+] as const;
 
 interface EnvelopeCardProps {
   settings: WeddingSettings;
@@ -199,9 +215,24 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(0);
   const activePaletteColor = paletteList[selectedPaletteIndex] || paletteList[0] || '#5A5A40';
-  const [activeWomanOutfit, setActiveWomanOutfit] = useState<'long-gown' | 'cocktail' | 'jumpsuit' | 'boho'>('long-gown');
-  const [activeManOutfit, setActiveManOutfit] = useState<'tuxedo' | 'suit' | 'guayabera' | 'blazer'>('tuxedo');
+  const [activeWomanOutfit, setActiveWomanOutfit] = useState<'long-gown' | 'cocktail' | 'jumpsuit' | 'boho'>(settings.dressCodeWomanOutfit || 'long-gown');
+  const [activeManOutfit, setActiveManOutfit] = useState<'tuxedo' | 'suit' | 'guayabera' | 'blazer'>(settings.dressCodeManOutfit || 'tuxedo');
   const [activeGenderView, setActiveGenderView] = useState<'both' | 'women' | 'men'>('both');
+
+  const activeWomanOutfitIndex = WOMAN_OUTFIT_OPTIONS.findIndex((option) => option.id === activeWomanOutfit);
+  const activeManOutfitIndex = MAN_OUTFIT_OPTIONS.findIndex((option) => option.id === activeManOutfit);
+  const activeWomanOutfitLabel = WOMAN_OUTFIT_OPTIONS[activeWomanOutfitIndex]?.label || WOMAN_OUTFIT_OPTIONS[0].label;
+  const activeManOutfitLabel = MAN_OUTFIT_OPTIONS[activeManOutfitIndex]?.label || MAN_OUTFIT_OPTIONS[0].label;
+  const stepWomanOutfit = (direction: -1 | 1) => setActiveWomanOutfit((current) => {
+    const index = WOMAN_OUTFIT_OPTIONS.findIndex((option) => option.id === current);
+    return WOMAN_OUTFIT_OPTIONS[(index + direction + WOMAN_OUTFIT_OPTIONS.length) % WOMAN_OUTFIT_OPTIONS.length].id;
+  });
+  const stepManOutfit = (direction: -1 | 1) => setActiveManOutfit((current) => {
+    const index = MAN_OUTFIT_OPTIONS.findIndex((option) => option.id === current);
+    return MAN_OUTFIT_OPTIONS[(index + direction + MAN_OUTFIT_OPTIONS.length) % MAN_OUTFIT_OPTIONS.length].id;
+  });
+  useEffect(() => setActiveWomanOutfit(settings.dressCodeWomanOutfit || 'long-gown'), [settings.dressCodeWomanOutfit]);
+  useEffect(() => setActiveManOutfit(settings.dressCodeManOutfit || 'tuxedo'), [settings.dressCodeManOutfit]);
 
   const getItineraryIcon = (iconName?: string) => {
     switch (iconName) {
@@ -1410,77 +1441,54 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         {/* Woman Mockup */}
                         {(activeGenderView === 'both' || activeGenderView === 'women') && (
                           <div className="flex flex-col items-center">
-                            <WomanFashionMockup
-                              dressColor={activePaletteColor}
-                              accessoryColor="#D4AF37"
-                              outfitType={activeWomanOutfit}
-                            />
-                            <p className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
-                              Vestido de Gala / Dama
-                            </p>
-                            <div className="mt-2 flex justify-center">
-                              <select
-                                value={activeWomanOutfit}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  setActiveWomanOutfit(e.target.value as any);
-                                }}
-                                className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
-                                  isDark
-                                    ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
-                                    : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
-                                }`}
-                              >
-                                <option value="long-gown">Gala / Vestido Largo</option>
-                                <option value="cocktail">Cóctel / Midi</option>
-                                <option value="jumpsuit">Enterizo / Palazzo</option>
-                                <option value="boho">Bohemio / Fluido</option>
-                              </select>
+                            <div className="relative mx-auto w-full max-w-[280px]">
+                              <AnimatePresence mode="wait" initial={false}>
+                                <motion.div className="mx-auto w-full max-w-[240px]" key={`woman-${activeWomanOutfit}`} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }}>
+                                  <WomanFashionMockup dressColor={activePaletteColor} accessoryColor="#D4AF37" outfitType={activeWomanOutfit} />
+                                </motion.div>
+                              </AnimatePresence>
+                              <button type="button" aria-label={`Estilo anterior para damas, ${activeWomanOutfitIndex + 1} de ${WOMAN_OUTFIT_OPTIONS.length}`} onClick={(e) => { e.stopPropagation(); stepWomanOutfit(-1); }} className={`absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border shadow-md transition-transform hover:scale-105 ${isDark ? 'bg-[#282B25]' : 'bg-white'}`} style={{ borderColor: theme.accentColorHex, color: theme.accentColorHex }}>
+                                <ChevronLeft className="h-5 w-5" />
+                              </button>
+                              <button type="button" aria-label={`Siguiente estilo para damas, ${activeWomanOutfitIndex + 1} de ${WOMAN_OUTFIT_OPTIONS.length}`} onClick={(e) => { e.stopPropagation(); stepWomanOutfit(1); }} className={`absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border shadow-md transition-transform hover:scale-105 ${isDark ? 'bg-[#282B25]' : 'bg-white'}`} style={{ borderColor: theme.accentColorHex, color: theme.accentColorHex }}>
+                                <ChevronRight className="h-5 w-5" />
+                              </button>
                             </div>
+                            <p aria-live="polite" data-typography-role="detail" className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
+                              {activeWomanOutfitLabel} · Damas
+                            </p>
                           </div>
                         )}
 
                         {/* Man Mockup */}
                         {(activeGenderView === 'both' || activeGenderView === 'men') && (
                           <div className="flex flex-col items-center">
-                            <ManFashionMockup
-                              suitColor={activePaletteColor}
-                              shirtColor="#FFFFFF"
-                              tieColor={activePaletteColor}
-                              outfitType={activeManOutfit}
-                            />
-                            <p className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
-                              Traje Formal / Caballero
-                            </p>
-                            <div className="mt-2 flex justify-center">
-                              <select
-                                value={activeManOutfit}
-                                onChange={(e) => {
-                                  e.stopPropagation();
-                                  setActiveManOutfit(e.target.value as any);
-                                }}
-                                className={`text-[11px] rounded-lg px-2.5 py-1 font-medium shadow-2xs cursor-pointer focus:outline-none border ${
-                                  isDark
-                                    ? 'bg-[#282B25] border-[#5A5A40] text-[#FDFCF0] focus:border-[#C5A059]'
-                                    : 'bg-white border-[#E5E2D0] text-[#3D3D3D] focus:border-[#5A5A40]'
-                                }`}
-                              >
-                                <option value="tuxedo">Esmoquin / Smoking</option>
-                                <option value="suit">Traje Clásico</option>
-                                <option value="guayabera">Guayabera Formal</option>
-                                <option value="blazer">Blazer & Pantalón</option>
-                              </select>
+                            <div className="relative mx-auto w-full max-w-[280px]">
+                              <AnimatePresence mode="wait" initial={false}>
+                                <motion.div className="mx-auto w-full max-w-[240px]" key={`man-${activeManOutfit}`} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2 }}>
+                                  <ManFashionMockup suitColor={activePaletteColor} shirtColor="#FFFFFF" tieColor={activePaletteColor} outfitType={activeManOutfit} />
+                                </motion.div>
+                              </AnimatePresence>
+                              <button type="button" aria-label={`Estilo anterior para caballeros, ${activeManOutfitIndex + 1} de ${MAN_OUTFIT_OPTIONS.length}`} onClick={(e) => { e.stopPropagation(); stepManOutfit(-1); }} className={`absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border shadow-md transition-transform hover:scale-105 ${isDark ? 'bg-[#282B25]' : 'bg-white'}`} style={{ borderColor: theme.accentColorHex, color: theme.accentColorHex }}>
+                                <ChevronLeft className="h-5 w-5" />
+                              </button>
+                              <button type="button" aria-label={`Siguiente estilo para caballeros, ${activeManOutfitIndex + 1} de ${MAN_OUTFIT_OPTIONS.length}`} onClick={(e) => { e.stopPropagation(); stepManOutfit(1); }} className={`absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border shadow-md transition-transform hover:scale-105 ${isDark ? 'bg-[#282B25]' : 'bg-white'}`} style={{ borderColor: theme.accentColorHex, color: theme.accentColorHex }}>
+                                <ChevronRight className="h-5 w-5" />
+                              </button>
                             </div>
+                            <p aria-live="polite" data-typography-role="detail" className={`font-serif font-bold text-sm mt-3 text-center ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
+                              {activeManOutfitLabel} · Caballeros
+                            </p>
                           </div>
                         )}
                       </div>
 
                       {/* Palette Swatches Bar Inside Simulator */}
-                      <div className={`mt-8 pt-4 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} text-center`}>
+                      <div className={`mt-8 pt-4 pb-2 border-t ${isDark ? 'border-stone-700/40' : 'border-stone-200/40'} text-center`}>
                         <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'} mb-3 font-serif`}>
                           Toca un color para probarlo en las prendas:
                         </p>
-                        <div className="flex flex-wrap items-center justify-center gap-2.5">
+                        <div className="flex flex-wrap items-center justify-center gap-2.5 p-2">
                           {paletteList.map((hex, idx) => (
                             <button
                               key={idx}
