@@ -81,6 +81,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [showExtraDetails, setShowExtraDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const savedResponseGuest = [guest, initialGuest].find(
+    (candidate): candidate is Guest => candidate?.status === 'confirmed' || candidate?.status === 'declined',
+  ) ?? null;
+  const displayedStatus = savedResponseGuest?.status === 'declined' ? 'declined' : status;
 
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
   const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
@@ -352,44 +356,38 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
         {/* Main Inline Card Container (Broad and spacious) */}
         <div className={`w-full rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 md:p-14 border shadow-xl transition-all ${activeTheme.cardBgClass}`}>
-          {isSuccess ? (
+          {isSuccess || savedResponseGuest ? (
             /* Success View */
             <div className="text-center py-10 sm:py-14 animate-fadeIn">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="w-20 h-20 rounded-full aspect-square shrink-0 circle-badge bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto mb-6 border border-emerald-500/30"
+                className={`w-20 h-20 rounded-full aspect-square shrink-0 circle-badge flex items-center justify-center mx-auto mb-6 border ${displayedStatus === 'confirmed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' : 'bg-stone-500/10 text-stone-500 border-stone-500/30'}`}
               >
-                <CheckCircle className="w-12 h-12" />
+                {displayedStatus === 'confirmed' ? <CheckCircle className="w-12 h-12" /> : <XCircle className="w-12 h-12" />}
               </motion.div>
 
-              <h3 className={`text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-3 ${activeTheme.textPrimaryClass}`}>
-                {status === 'confirmed' ? '¡Confirmación Registrada con Éxito!' : 'Respuesta Registrada'}
+              <h3 data-typography-role="heading" className={`text-2xl sm:text-3xl md:text-4xl font-serif font-bold mb-3 ${activeTheme.textPrimaryClass}`}>
+                {savedResponseGuest
+                  ? displayedStatus === 'confirmed' ? 'Tu asistencia ya está confirmada' : 'Ya registraste que no podrás asistir'
+                  : displayedStatus === 'confirmed' ? '¡Confirmación Registrada con Éxito!' : 'Respuesta Registrada'}
               </h3>
 
-              <p className={`text-sm sm:text-base max-w-lg mx-auto leading-relaxed mb-8 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-                {status === 'confirmed'
-                  ? `Muchas gracias ${fullName}. Nos llena de felicidad que nos acompañes a celebrar nuestro amor.`
-                  : `Sentimos que no puedas acompañarnos ${fullName}. Estarás presente en nuestros corazones.`}
+              <p data-typography-role="body" className={`text-base sm:text-lg max-w-lg mx-auto leading-relaxed mb-8 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                {displayedStatus === 'confirmed'
+                  ? `Muchas gracias ${savedResponseGuest?.fullName || fullName}. Nos llena de felicidad que nos acompañes a celebrar nuestro amor.`
+                  : `Sentimos que no puedas acompañarnos ${savedResponseGuest?.fullName || fullName}. Estarás presente en nuestros corazones.`}
               </p>
 
               <div className="p-5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 max-w-md mx-auto text-xs sm:text-sm mb-8 space-y-1">
-                <p className="font-bold text-stone-900 dark:text-stone-100">{settings.coupleNames}</p>
-                <p className="text-stone-600 dark:text-stone-400">{settings.eventDate} • {settings.receptionVenue}</p>
-                {status === 'confirmed' && (
-                  <p className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold pt-1">
-                    Pases confirmados: {confirmedPasses} persona(s)
+                <p data-typography-role="heading" className="font-bold text-stone-900 dark:text-stone-100">{settings.coupleNames}</p>
+                <p data-typography-role="detail" className="text-stone-600 dark:text-stone-400">{settings.eventDate} • {settings.receptionVenue}</p>
+                {displayedStatus === 'confirmed' && (
+                  <p data-typography-role="detail" className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold pt-1">
+                    Pases confirmados: {savedResponseGuest?.confirmedPasses ?? confirmedPasses} persona(s)
                   </p>
                 )}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIsSuccess(false)}
-                className="px-8 py-3 rounded-full bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 font-medium text-xs sm:text-sm hover:opacity-90 transition-all cursor-pointer shadow-md"
-              >
-                Modificar o Verificar mi Respuesta
-              </button>
             </div>
           ) : (
             /* Open Inline Registration Form */
@@ -434,7 +432,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                         : 'bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 focus:border-amber-600 focus:ring-amber-600/20 shadow-xs'
                     }`}
                   />
-                  <User className="w-5 h-5 text-stone-400 absolute left-4 top-4" />
+                  <User className="w-5 h-5 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   {isSearching && (
                     <span className="absolute right-4 top-4 text-xs font-mono text-stone-400 animate-pulse">
                       Buscando...

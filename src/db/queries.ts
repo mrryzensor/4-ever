@@ -1739,6 +1739,12 @@ export async function submitRsvp(
     throw new Error('Código de invitación no encontrado.');
   }
 
+  // A saved RSVP is immutable from the public form. This also makes stale or
+  // duplicated form submissions idempotent instead of overwriting the answer.
+  if (guest.status === 'confirmed' || guest.status === 'declined') {
+    return guest;
+  }
+
   const companionNamesJson = JSON.stringify(payload.companionNames || []);
 
   try {
