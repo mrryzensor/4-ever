@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useDeferredValue, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Palette,
@@ -57,6 +57,17 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   // Mobile floating config sheet state (expanded by default or minimizable to highlight canvas)
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(true);
+  const [isDesktopLayout, setIsDesktopLayout] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches
+  );
+  const previewSettings = useDeferredValue(settings);
+
+  useEffect(() => {
+    const breakpoint = window.matchMedia('(min-width: 1280px)');
+    const updateLayout = () => setIsDesktopLayout(breakpoint.matches);
+    breakpoint.addEventListener('change', updateLayout);
+    return () => breakpoint.removeEventListener('change', updateLayout);
+  }, []);
 
   const renderAdvancedGroups = () => (
     <AdvancedModeOrganizer groups={[
@@ -313,7 +324,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       {/* ==================================================================== */}
       {/* DESKTOP LAYOUT (xl and wider) */}
       {/* ==================================================================== */}
-      <div className="hidden xl:block w-full">
+      {isDesktopLayout && (
+      <div className="w-full">
         <div
           className={`w-full ${
             atelierViewMode === 'split'
@@ -392,22 +404,24 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               } space-y-3`}
             >
               <LiveInvitationCanvas
-                settings={settings}
+                settings={previewSettings}
                 onOpenFullInvitation={onBackToInvitation}
               />
             </div>
           )}
         </div>
       </div>
+      )}
 
       {/* ==================================================================== */}
       {/* MOBILE / TABLET LAYOUT (< xl): CANVAS PROMINENT + FLOATING SEMITRANSPARENT CONFIG */}
       {/* ==================================================================== */}
-      <div className="xl:hidden relative w-full space-y-4 pb-28">
+      {!isDesktopLayout && (
+      <div className="relative w-full space-y-4 pb-28">
         {/* 1. Main Live Invitation Canvas (Always Prominent & Interactive) */}
         <div className="w-full relative rounded-3xl overflow-hidden shadow-sm border border-[#E5E2D0]/80">
           <LiveInvitationCanvas
-            settings={settings}
+            settings={previewSettings}
             onOpenFullInvitation={onBackToInvitation}
           />
         </div>
@@ -520,6 +534,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
           </motion.div>
         </div>
       </div>
+      )}
     </div>
   );
 };

@@ -528,10 +528,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               </div>
             </div>
 
-            {/* Scroll blur toggle */}
+            {/* Lightweight scroll transition toggle */}
             <div className="space-y-2 flex flex-col justify-between">
               <label className="text-xs font-bold text-[#1a1a1a] block">
-                Desenfoque Progresivo al Scroll:
+                Transición suave de portada al desplazarse:
               </label>
               <label className="flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#E5E2D0] cursor-pointer hover:bg-stone-50 transition-colors">
                 <input
@@ -543,11 +543,11 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
                 />
                 <span className="text-xs text-[#3D3D3D] font-medium">
-                  Efecto Cinemático de Blur al deslizar hacia abajo
+                  Atenuar y ampliar suavemente la imagen al deslizar hacia abajo
                 </span>
               </label>
               <span className="text-[10px] text-[#7D8C7A] block">
-                Transiciona la portada suavemente hacia el color de fondo de la boda.
+                Usa opacidad y escala para conservar un desplazamiento fluido.
               </span>
             </div>
           </div>

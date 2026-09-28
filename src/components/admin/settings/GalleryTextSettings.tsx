@@ -9,6 +9,7 @@ type GalleryTextKey = keyof Pick<WeddingSettings,
   | 'galleryEmptyDescription'
   | 'galleryDrivePhotoBadgeText'
   | 'gallerySharedAlbumCaption'
+  | 'galleryExternalAlbumTitle'
   | 'galleryCommentsButtonText'
   | 'galleryCommentsCountLabel'
   | 'galleryCommentsPromptText'
@@ -36,6 +37,7 @@ const weddingDefaults: Record<GalleryTextKey, string> = {
   galleryEmptyDescription: 'Las fotografías y momentos oficiales de la boda serán compartidos aquí por los novios.',
   galleryDrivePhotoBadgeText: 'Google Drive',
   gallerySharedAlbumCaption: 'Fotos compartidas',
+  galleryExternalAlbumTitle: 'Ver Álbum en Google Photos',
   galleryCommentsButtonText: 'Comentar',
   galleryCommentsCountLabel: 'Comentarios',
   galleryCommentsPromptText: 'Ver y dejar comentarios ({count})...',
@@ -54,6 +56,7 @@ const quinceDefaults: Record<GalleryTextKey, string> = {
   ...weddingDefaults,
   gallerySectionTitle: 'Mi Galería de Fotos',
   galleryEmptyDescription: 'Las fotografías y momentos oficiales de mis XV serán compartidos aquí.',
+  galleryExternalAlbumTitle: 'Galería de Mis XV',
   galleryCommentTextPlaceholder: 'Escribe un comentario o felicitación...',
 };
 
@@ -101,6 +104,7 @@ export const GalleryTextSettings: React.FC<GalleryTextSettingsProps> = ({ settin
             {field('galleryEmptyDescription', 'Descripción cuando aún no hay fotos', true)}
             {field('galleryDrivePhotoBadgeText', 'Etiqueta de fotos de Google Drive')}
             {field('gallerySharedAlbumCaption', 'Crédito de fotos compartidas')}
+            {field('galleryExternalAlbumTitle', 'Texto del botón del álbum externo')}
           </div>
         </section>
 

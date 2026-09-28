@@ -377,12 +377,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const receptionWazeUrl = getWazeUrl(receptionLocationName, receptionLocationAddress);
 
   const { scrollY } = useScroll();
-  const heroBgBlur = useTransform(scrollY, [0, 80, 240, 480], ['blur(0px)', 'blur(4px)', 'blur(14px)', 'blur(28px)']);
-  const heroBgScale = useTransform(scrollY, [0, 480], [1, 1.1]);
-  const heroBgOpacity = useTransform(scrollY, [0, 300, 600], [1, 0.85, 0.4]);
+  const heroTransitionEnabled = settings.heroEnableScrollBlur !== false;
+  const heroBgScale = useTransform(scrollY, [0, 480], [1, heroTransitionEnabled ? 1.06 : 1]);
+  const heroBgOpacity = useTransform(scrollY, [0, 300, 600], heroTransitionEnabled ? [1, 0.9, 0.72] : [1, 1, 1]);
   const heroContentOpacity = useTransform(scrollY, [0, 260], [1, 0]);
   const heroContentY = useTransform(scrollY, [0, 320], ['0px', '-35px']);
-  const heroContentBlur = useTransform(scrollY, [0, 80, 260], ['blur(0px)', 'blur(0px)', 'blur(6px)']);
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -533,7 +532,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       className={`relative z-10 flex min-h-screen w-full items-center justify-center px-4 py-16 sm:py-20 ${showHeroTransition ? 'overflow-visible' : 'overflow-hidden'}`}
       style={{ backgroundColor: theme.bgHex }}
     >
-      <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={18} />
+      <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={12} />
       {showHeroTransition && renderHeroTransitionDivider()}
       <div className="relative z-10 w-full">
         <AnimatedCountdown
@@ -551,7 +550,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
       <div ref={heroContainerRef} className="sticky top-0 h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-6 sm:py-10 select-none z-0">
-        <motion.div style={{ opacity: heroBgOpacity, filter: settings.heroEnableScrollBlur !== false ? heroBgBlur : undefined }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity,filter]">
+        <motion.div style={{ opacity: heroBgOpacity }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity]">
           {settings.heroImageFit === 'contain' && (
             <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${displayedCoverImage})` }} />
           )}
@@ -563,7 +562,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.2, ease: 'easeInOut' }}
-              className="absolute inset-0 bg-no-repeat"
+              className="absolute inset-0 bg-no-repeat will-change-transform"
               style={{
                 backgroundImage: `url(${displayedCoverImage})`,
                 backgroundSize: settings.heroImageFit || 'cover',
@@ -604,10 +603,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             </div>
           )}
 
-          <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={14} />
+          <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={8} />
         </motion.div>
 
-        <motion.div style={{ opacity: heroContentOpacity, y: heroContentY, filter: heroContentBlur }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,filter,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
+        <motion.div style={{ opacity: heroContentOpacity, y: heroContentY }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
           <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : 'gap-1 sm:gap-2'}`}>
             {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1 sm:mb-2">

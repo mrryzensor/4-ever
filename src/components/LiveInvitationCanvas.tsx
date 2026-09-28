@@ -99,6 +99,8 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const [selectedDevice, setSelectedDevice] = useState<DevicePreset>('iphone15');
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
@@ -189,9 +191,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
   const currentSpec = DEVICE_SPECS[selectedDevice];
 
-  // The admin layout keeps desktop and mobile canvases in the DOM for CSS
-  // responsiveness. Only the canvas with real dimensions may mount an iframe;
-  // otherwise the hidden preview can load and play its own audio in parallel.
+  // Keep a size guard as a fallback for layouts that temporarily collapse the canvas.
   useEffect(() => {
     const element = containerRef.current;
     if (!element) return;
@@ -213,21 +213,23 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     };
   }, []);
 
-  // Sync settings to the iframe in real time via postMessage, sessionStorage & localStorage
-  const sendSettingsToIframe = useCallback(() => {
-    try {
-      sessionStorage.setItem('atelier_live_settings', JSON.stringify(settings));
-      localStorage.setItem('atelier_live_settings', JSON.stringify(settings));
-    } catch (e) {
-      console.warn('Failed to save to storage', e);
+  // Batch preview and storage updates so typing does not serialize settings on every keystroke.
+  const sendSettingsToIframe = useCallback((nextSettings: WeddingSettings, persist = true) => {
+    if (persist) {
+      try {
+        const serializedSettings = JSON.stringify(nextSettings);
+        sessionStorage.setItem('atelier_live_settings', serializedSettings);
+        localStorage.setItem('atelier_live_settings', serializedSettings);
+      } catch (e) {
+        console.warn('Failed to save to storage', e);
+      }
     }
-
     if (iframeRef.current && iframeRef.current.contentWindow) {
       try {
         iframeRef.current.contentWindow.postMessage(
           {
             type: 'ATELIER_SYNC_SETTINGS',
-            settings: settings,
+            settings: nextSettings,
           },
           '*'
         );
@@ -235,17 +237,21 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
         console.warn('postMessage to preview iframe failed:', err);
       }
     }
-  }, [settings]);
+  }, []);
 
   useEffect(() => {
-    sendSettingsToIframe();
+    const timeoutId = window.setTimeout(() => {
+      sendSettingsToIframe(settings);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
   }, [settings, sendSettingsToIframe]);
 
   // Listen for iframe ready signal to immediately push latest settings
   useEffect(() => {
     const handleParentMessage = (e: MessageEvent) => {
       if (e.data?.type === 'ATELIER_EMBED_READY') {
-        sendSettingsToIframe();
+        sendSettingsToIframe(settingsRef.current, false);
       }
     };
     window.addEventListener('message', handleParentMessage);
@@ -369,7 +375,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
         iframeRef.current.contentWindow.postMessage(
           {
             type: 'ATELIER_SYNC_SETTINGS',
-            settings: settings,
+            settings: settingsRef.current,
           },
           '*'
         );

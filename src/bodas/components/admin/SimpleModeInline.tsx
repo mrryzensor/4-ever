@@ -1812,19 +1812,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 </h5>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-stone-600 mb-1">
-                    Título del Botón
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.galleryExternalAlbumTitle || 'Ver Álbum en Google Photos'}
-                    onChange={(e) => onChange({ galleryExternalAlbumTitle: e.target.value })}
-                    placeholder="Ej. Ver Álbum en Google Photos"
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800"
-                  />
-                </div>
+              <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-stone-600 mb-1">
                     URL Pública del Álbum Compartido
