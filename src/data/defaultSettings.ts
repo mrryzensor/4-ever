@@ -150,6 +150,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   galleryExternalAlbumUrl: '',
   galleryExternalAlbumTitle: 'Álbum en Google Photos',
   galleryExternalAlbumType: 'google_photos',
+  galleryDrivePhotoTitles: '{}',
   showVideoMemories: false,
   showGuestbook: false,
   showHotels: false,

@@ -643,7 +643,7 @@ const DEMO_XV_DB_FIELDS = [
   'heroCourtTitle', 'heroCourtPageHeading', 'showCountdown', 'countdownStyle', 'countdownTitle',
   'countdownPlacement', 'showCountdownGuestsBadge', 'showItinerary', 'showLocations', 'showDressCode',
   'showGiftRegistry', 'showPhotoGallery', 'galleryExternalAlbumUrl', 'galleryExternalAlbumTitle',
-  'galleryExternalAlbumType', 'galleryDrivePhotoSelectionMode', 'galleryDrivePhotoIds',
+  'galleryExternalAlbumType', 'galleryDrivePhotoSelectionMode', 'galleryDrivePhotoIds', 'galleryDrivePhotoTitles',
   'showVideoMemories', 'showGuestbook',
   'showHotels', 'hotelsTitle', 'hotelRecommendations', 'landingSectionOrder',
   'detailSectionOrder', 'galleryPlacement', 'galleryAfterDetailSection',
@@ -2082,6 +2082,27 @@ export async function addGalleryPhoto(data: typeof galleryPhotos.$inferInsert) {
   };
   memoryState.gallery.unshift(newPhoto);
   return newPhoto;
+}
+
+export async function updateGalleryPhotoCaption(id: number, weddingId: number, caption: string) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const updated = await db
+        .update(galleryPhotos)
+        .set({ caption })
+        .where(and(eq(galleryPhotos.id, id), eq(galleryPhotos.weddingId, weddingId)))
+        .returning();
+      if (updated.length > 0) return updated[0];
+      return null;
+    }
+  } catch (err) {
+    console.warn('updateGalleryPhotoCaption fallback to memory');
+  }
+
+  const photo = memoryState.gallery.find((item) => item.id === id && item.weddingId === weddingId);
+  if (!photo) return null;
+  photo.caption = caption;
+  return photo;
 }
 
 export async function likePhoto(id: number) {

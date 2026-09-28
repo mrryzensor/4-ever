@@ -3,6 +3,8 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import multer from 'multer';
+import sharp from 'sharp';
+import { GoogleGenAI } from '@google/genai';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
@@ -24,6 +26,7 @@ import {
   submitOpenRsvp,
   getGalleryPhotos,
   addGalleryPhoto,
+  updateGalleryPhotoCaption,
   likePhoto,
   deleteGalleryPhoto,
   getPhotoComments,
@@ -64,6 +67,7 @@ import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
 import { getEventPresentation } from './src/lib/eventUtils.ts';
 import { parseDriveFolderUrl } from './src/lib/driveFolder.ts';
+import { parseDrivePhotoTitles } from './src/lib/galleryPhotoTitles.ts';
 
 // Setup uploads volume storage directory (compatible with Docker volumes and local env)
 const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
@@ -1543,6 +1547,228 @@ async function startServer() {
     } catch (error: any) {
       console.error('Failed to add gallery photo:', error);
       res.status(500).json({ error: error.message || 'Error saving photo' });
+    }
+  });
+
+  app.get('/api/gallery/ai-titles/status', requireAuth, async (req: AuthRequest, res) => {
+    const weddingId = Number(req.query.weddingId);
+    if (!Number.isSafeInteger(weddingId) || weddingId < 1) return res.status(400).json({ error: 'No se pudo identificar el evento.' });
+    const eventSettings = await getWeddingSettings(weddingId);
+    if (!eventSettings) return res.status(404).json({ error: 'No se encontró el evento.' });
+    const claims = req.user as (typeof req.user & { role?: string; admin?: boolean });
+    const canManageEvent = claims?.uid === eventSettings.ownerUid || claims?.role === 'ceo' || claims?.role === 'admin' || claims?.admin === true;
+    if (!canManageEvent) return res.status(403).json({ error: 'No tienes permiso para editar las fotos de este evento.' });
+    return res.json({ configured: Boolean(process.env.GEMINI_API_KEY?.trim()) });
+  });
+
+  app.post('/api/gallery/ai-titles', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
+      if (!apiKey) {
+        return res.status(503).json({ error: 'La IA no está configurada. Añade GEMINI_API_KEY a las variables del backend y vuelve a desplegar.' });
+      }
+
+      const weddingId = Number(req.body?.weddingId);
+      const requestedPhotos = req.body?.photos;
+      if (!Number.isSafeInteger(weddingId) || weddingId < 1 || !Array.isArray(requestedPhotos) || requestedPhotos.length < 1 || requestedPhotos.length > 8) {
+        return res.status(400).json({ error: 'Envía entre 1 y 8 fotos válidas para generar sus títulos.' });
+      }
+
+      const eventSettings = await getWeddingSettings(weddingId);
+      if (!eventSettings) return res.status(404).json({ error: 'No se encontró el evento.' });
+      const claims = req.user as (typeof req.user & { role?: string; admin?: boolean });
+      const canManageEvent = claims?.uid === eventSettings.ownerUid || claims?.role === 'ceo' || claims?.role === 'admin' || claims?.admin === true;
+      if (!canManageEvent) return res.status(403).json({ error: 'No tienes permiso para editar las fotos de este evento.' });
+
+      const readBoundedImageBody = async (response: Response, maxBytes: number) => {
+        const declaredLength = Number(response.headers.get('content-length') || 0);
+        if (declaredLength > maxBytes) throw new Error('Una foto supera el tamaño permitido para generar su título.');
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No se pudo leer una de las fotos.');
+        const chunks: Uint8Array[] = [];
+        let totalBytes = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          totalBytes += value.byteLength;
+          if (totalBytes > maxBytes) {
+            await reader.cancel();
+            throw new Error('Una foto supera el tamaño permitido para generar su título.');
+          }
+          chunks.push(value);
+        }
+        if (totalBytes === 0) throw new Error('Una de las fotos está vacía.');
+        return Buffer.concat(chunks.map((chunk) => Buffer.from(chunk)), totalBytes);
+      };
+
+      const driveFolder = parseDriveFolderUrl(eventSettings.galleryExternalAlbumUrl);
+      const uploadedPhotos = await getGalleryPhotos(undefined, weddingId);
+      const aiPhotos = await Promise.all(requestedPhotos.map(async (reference: any) => {
+        if (reference?.type === 'uploaded') {
+          const photoId = Number(reference.id);
+          if (!Number.isSafeInteger(photoId) || photoId < 1) throw new Error('Una foto subida no tiene un identificador válido.');
+          const photo = uploadedPhotos.find((item: any) => Number(item.id) === photoId);
+          if (!photo) throw new Error('Una de las fotos subidas ya no pertenece a esta galería.');
+
+          const photoUrl = String(photo.url || '');
+          let imageBuffer: Buffer;
+          if (/^\/?uploads\/[A-Za-z0-9._-]+$/.test(photoUrl)) {
+            const filename = path.basename(photoUrl.replace(/^\/?uploads\//, ''));
+            const resolvedUploadsDir = path.resolve(uploadsDir);
+            const imagePath = path.resolve(resolvedUploadsDir, filename);
+            if (!imagePath.startsWith(`${resolvedUploadsDir}${path.sep}`)) throw new Error('No se pudo abrir una foto subida.');
+            const stat = await fs.promises.stat(imagePath);
+            if (!stat.isFile() || stat.size < 1 || stat.size > 25 * 1024 * 1024) throw new Error('Una foto supera el tamaño permitido para generar su título.');
+            imageBuffer = await fs.promises.readFile(imagePath);
+          } else {
+            const externalUrl = new URL(photoUrl);
+            const allowedHosts = new Set(['firebasestorage.googleapis.com', 'storage.googleapis.com', 'images.unsplash.com']);
+            if (externalUrl.protocol !== 'https:' || !allowedHosts.has(externalUrl.hostname.toLowerCase())) {
+              throw new Error('No se puede analizar una foto guardada fuera del almacenamiento compatible.');
+            }
+            const imageResponse = await fetch(externalUrl, { signal: AbortSignal.timeout(15000), redirect: 'error' });
+            const mimeType = imageResponse.headers.get('content-type')?.split(';')[0].trim().toLowerCase() || '';
+            if (!imageResponse.ok || !mimeType.startsWith('image/')) throw new Error('No se pudo descargar una foto para analizarla.');
+            imageBuffer = await readBoundedImageBody(imageResponse, 25 * 1024 * 1024);
+          }
+
+          const normalizedImage = await sharp(imageBuffer, { failOn: 'none', limitInputPixels: 40_000_000 })
+            .rotate()
+            .resize({ width: 768, height: 768, fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 78 })
+            .toBuffer();
+          return { key: `uploaded:${photoId}`, type: 'uploaded' as const, id: photoId, image: normalizedImage };
+        }
+
+        if (reference?.type === 'drive') {
+          if (!driveFolder || typeof reference.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(reference.id) || typeof reference.assetUrl !== 'string') {
+            throw new Error('Una referencia de Google Drive no es válida.');
+          }
+          const assetUrl = new URL(reference.assetUrl, 'https://local.invalid');
+          const match = assetUrl.pathname.match(/^\/api\/drive-folders\/([A-Za-z0-9_-]{1,200})\/photos\/([A-Za-z0-9_-]{1,200})\/thumbnail$/);
+          const folderId = match?.[1] || '';
+          const fileId = match?.[2] || '';
+          const resourceKey = assetUrl.searchParams.get('resourceKey') || '';
+          const signature = assetUrl.searchParams.get('signature') || '';
+          if (
+            assetUrl.origin !== 'https://local.invalid' || folderId !== driveFolder.folderId || fileId !== reference.id ||
+            assetUrl.searchParams.get('weddingId') !== String(weddingId) || assetUrl.searchParams.get('variant') !== 'full' ||
+            assetUrl.searchParams.has('source') || assetUrl.searchParams.has('width') ||
+            (resourceKey && !/^[A-Za-z0-9_-]{1,512}$/.test(resourceKey)) || !/^[a-f0-9]{64}$/.test(signature)
+          ) throw new Error('No se pudo validar una foto de Drive. Vuelve a cargar la carpeta.');
+
+          const expectedSignature = signStableDriveAsset(apiKey, weddingId, folderId, fileId, resourceKey, 'full');
+          if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+            throw new Error('No se pudo validar una foto de Drive. Vuelve a cargar la carpeta.');
+          }
+
+          const resourcePairs = [[driveFolder.folderId, driveFolder.resourceKey || ''], [fileId, resourceKey]]
+            .filter(([id, key], index, entries) => Boolean(key) && entries.findIndex(([otherId]) => otherId === id) === index)
+            .map(([id, key]) => `${id}/${key}`);
+          const driveHeaders: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
+          if (resourcePairs.length) driveHeaders['X-Goog-Drive-Resource-Keys'] = resourcePairs.join(',');
+          const metadataUrl = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+          metadataUrl.searchParams.set('fields', 'mimeType,thumbnailLink');
+          metadataUrl.searchParams.set('supportsAllDrives', 'true');
+          const metadataResponse = await fetch(metadataUrl, { headers: driveHeaders, signal: AbortSignal.timeout(12000) });
+          if (!metadataResponse.ok) throw new Error('Drive no pudo abrir una de las fotos.');
+          const metadata = await metadataResponse.json() as { mimeType?: string; thumbnailLink?: string };
+          if (!metadata.mimeType?.startsWith('image/') || !metadata.thumbnailLink) throw new Error('Una referencia de Drive no corresponde a una foto.');
+          const imageUrl = new URL(metadata.thumbnailLink);
+          if (imageUrl.protocol !== 'https:' || !imageUrl.hostname.toLowerCase().endsWith('.googleusercontent.com')) {
+            throw new Error('Drive devolvió una dirección de imagen no compatible.');
+          }
+          if (/=s\d+(?:-[a-z-]+)?$/i.test(imageUrl.pathname)) imageUrl.pathname = imageUrl.pathname.replace(/=s\d+(?:-[a-z-]+)?$/i, '=s768');
+          else imageUrl.pathname = `${imageUrl.pathname}=s768`;
+          const imageResponse = await fetch(imageUrl, { signal: AbortSignal.timeout(15000), redirect: 'error' });
+          const mimeType = imageResponse.headers.get('content-type')?.split(';')[0].trim().toLowerCase() || '';
+          if (!imageResponse.ok || !mimeType.startsWith('image/')) throw new Error('No se pudo descargar una foto de Drive.');
+          const imageBytes = await readBoundedImageBody(imageResponse, 12 * 1024 * 1024);
+          const normalizedImage = await sharp(imageBytes, { failOn: 'none', limitInputPixels: 40_000_000 })
+            .rotate()
+            .resize({ width: 768, height: 768, fit: 'inside', withoutEnlargement: true })
+            .jpeg({ quality: 78 })
+            .toBuffer();
+          return { key: `drive:${fileId}`, type: 'drive' as const, id: fileId, image: normalizedImage };
+        }
+
+        throw new Error('Tipo de foto no válido.');
+      }));
+
+      const ai = new GoogleGenAI({ apiKey });
+      const contents: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+      for (const photo of aiPhotos) {
+        contents.push({ text: `ID de foto: ${photo.key}` });
+        contents.push({ inlineData: { mimeType: 'image/jpeg', data: photo.image.toString('base64') } });
+      }
+      contents.push({ text: 'Para cada imagen, crea un título breve y elegante en español (2 a 6 palabras), que describa solo lo que se ve y no invente nombres, lugares ni hechos. Haz títulos diferentes cuando las imágenes lo permitan. Devuelve únicamente un JSON válido con este formato: {"titles":[{"id":"uploaded:123","title":"..."}]}. Incluye exactamente una entrada para cada ID proporcionado y conserva los IDs sin cambios.' });
+
+      const response = await ai.models.generateContent({
+        model: process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash-lite',
+        contents,
+        config: { responseMimeType: 'application/json', temperature: 0.25 },
+      });
+      let decoded: any;
+      try {
+        decoded = JSON.parse((response.text || '').trim());
+      } catch {
+        throw new Error('La IA devolvió un formato de títulos inválido. Inténtalo de nuevo.');
+      }
+      const titleRows = Array.isArray(decoded) ? decoded : decoded?.titles;
+      if (!Array.isArray(titleRows)) throw new Error('La IA no devolvió títulos para las fotos.');
+      const titles = new Map<string, string>();
+      for (const row of titleRows) {
+        if (typeof row?.id !== 'string' || typeof row?.title !== 'string') continue;
+        const title = row.title.trim().replace(/^["'“”]+|["'“”]+$/g, '').replace(/[.!?]+$/g, '').slice(0, 120).trim();
+        if (title) titles.set(row.id, title);
+      }
+      if (aiPhotos.some((photo) => !titles.has(photo.key))) throw new Error('La IA no generó un título para cada foto. Vuelve a intentarlo.');
+
+      const uploadUpdates = aiPhotos.filter((photo) => photo.type === 'uploaded').map(async (photo) => {
+        const updated = await updateGalleryPhotoCaption(Number(photo.id), weddingId, titles.get(photo.key)!);
+        if (!updated) throw new Error('No se pudo guardar uno de los títulos de fotos subidas.');
+        return { type: 'uploaded' as const, id: photo.id, title: titles.get(photo.key)! };
+      });
+      const driveTitles = aiPhotos.filter((photo) => photo.type === 'drive');
+      let galleryDrivePhotoTitles = eventSettings.galleryDrivePhotoTitles || '{}';
+      if (driveTitles.length > 0) {
+        const latestSettings = await getWeddingSettings(weddingId);
+        const nextDriveTitles = parseDrivePhotoTitles(latestSettings?.galleryDrivePhotoTitles);
+        for (const photo of driveTitles) nextDriveTitles[String(photo.id)] = titles.get(photo.key)!;
+        galleryDrivePhotoTitles = JSON.stringify(nextDriveTitles);
+      }
+      const uploadedTitles = await Promise.all(uploadUpdates);
+      if (driveTitles.length > 0) {
+        await updateWeddingSettings({ galleryDrivePhotoTitles }, weddingId);
+      }
+
+      return res.json({
+        titles: aiPhotos.map((photo) => ({ type: photo.type, id: photo.id, title: titles.get(photo.key)! })),
+        galleryDrivePhotoTitles,
+        updatedCount: uploadedTitles.length + driveTitles.length,
+      });
+    } catch (error: any) {
+      console.error('AI photo title generation failed:', error instanceof Error ? error.message : 'Unknown error');
+      const message = error instanceof Error ? error.message : 'No se pudieron generar los títulos.';
+      return res.status(500).json({ error: message });
+    }
+  });
+
+  app.patch('/api/gallery/:id', async (req, res) => {
+    try {
+      const id = Number.parseInt(req.params.id, 10);
+      const weddingId = Number(req.body?.weddingId) || 1;
+      if (!Number.isInteger(id) || id <= 0 || typeof req.body?.caption !== 'string') {
+        return res.status(400).json({ error: 'Se necesita el título de la foto.' });
+      }
+
+      const caption = req.body.caption.trim().slice(0, 160);
+      const photo = await updateGalleryPhotoCaption(id, weddingId, caption);
+      if (!photo) return res.status(404).json({ error: 'No se encontró la foto de esta galería.' });
+      res.json(photo);
+    } catch (error: any) {
+      console.error('Failed to update gallery photo title:', error);
+      res.status(500).json({ error: error.message || 'Error al actualizar el título' });
     }
   });
 

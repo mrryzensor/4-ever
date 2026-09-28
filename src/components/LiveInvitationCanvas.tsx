@@ -258,6 +258,16 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     return () => window.removeEventListener('message', handleParentMessage);
   }, [sendSettingsToIframe]);
 
+  useEffect(() => {
+    const handleGalleryRefresh = (event: Event) => {
+      const weddingId = (event as CustomEvent<{ weddingId?: number }>).detail?.weddingId;
+      if (Number(weddingId) !== Number(settingsRef.current.id || 1)) return;
+      iframeRef.current?.contentWindow?.postMessage({ type: 'ATELIER_REFRESH_GALLERY', weddingId }, window.location.origin);
+    };
+    window.addEventListener('atelier:gallery-refresh', handleGalleryRefresh);
+    return () => window.removeEventListener('atelier:gallery-refresh', handleGalleryRefresh);
+  }, []);
+
   // Fit to Viewport / Auto-fit calculator
   const fitToViewport = useCallback(() => {
     if (!containerRef.current) return;

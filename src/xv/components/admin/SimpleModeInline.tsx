@@ -31,6 +31,7 @@ import {
   Music2,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../../types.ts';
+import { auth } from '../../../lib/firebase.ts';
 import { BankAccountsEditor } from '../../../components/admin/settings/BankAccountsEditor.tsx';
 import { AudioSettingsPanel } from '../../../components/admin/settings/AudioSettingsPanel.tsx';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../../lib/mediaOptimizer.ts';
@@ -44,6 +45,7 @@ import { MapDimensionsControls } from '../../../components/admin/settings/MapDim
 import { RsvpButtonStyleField } from '../../../components/admin/settings/RsvpButtonStyleField.tsx';
 import { GalleryTextSettings } from '../../../components/admin/settings/GalleryTextSettings.tsx';
 import { RsvpAvailabilitySettings } from '../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
+import { loadAllDrivePhotoTitleReferences } from '../../../lib/galleryPhotoTitles.ts';
 
 interface SimpleModeInlineProps {
   settings: WeddingSettings;
@@ -94,6 +96,12 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
   // Gallery Management State for Novios
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
+  const [galleryPhotoTitleDrafts, setGalleryPhotoTitleDrafts] = useState<Record<number, string>>({});
+  const [savingGalleryPhotoTitleId, setSavingGalleryPhotoTitleId] = useState<number | null>(null);
+  const [galleryPhotoTitleError, setGalleryPhotoTitleError] = useState<string | null>(null);
+  const [isGeneratingGalleryAiTitles, setIsGeneratingGalleryAiTitles] = useState(false);
+  const [galleryAiTitleStatus, setGalleryAiTitleStatus] = useState('');
+  const [galleryAiTitleError, setGalleryAiTitleError] = useState<string | null>(null);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [isUploadingGalleryPhoto, setIsUploadingGalleryPhoto] = useState(false);
   const [galleryCategory, setGalleryCategory] = useState<'preparativos' | 'ceremonia' | 'brindis' | 'fiesta' | 'photobooth' | 'recuerdos'>('ceremonia');
@@ -554,6 +562,109 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
       await fetch(`/api/gallery/${photoId}`, { method: 'DELETE' });
     } catch (err) {
       console.error('Error deleting photo:', err);
+    }
+  };
+
+  const handleSaveGalleryPhotoTitle = async (photoId: number) => {
+    const photo = galleryPhotos.find((item) => item.id === photoId);
+    if (!photo) return;
+    const caption = (galleryPhotoTitleDrafts[photoId] ?? photo.caption ?? '').trim();
+    setSavingGalleryPhotoTitleId(photoId);
+    setGalleryPhotoTitleError(null);
+    try {
+      const response = await fetch(`/api/gallery/${photoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ weddingId: settings.id || 1, caption }),
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || 'No se pudo guardar el título.');
+      }
+      setGalleryPhotos((previous) => previous.map((item) => item.id === photoId ? { ...item, caption } : item));
+      setGalleryPhotoTitleDrafts((previous) => {
+        const next = { ...previous };
+        delete next[photoId];
+        return next;
+      });
+      window.dispatchEvent(new CustomEvent('atelier:gallery-refresh', { detail: { weddingId: settings.id || 1 } }));
+    } catch (error) {
+      setGalleryPhotoTitleError(error instanceof Error ? error.message : 'No se pudo guardar el título.');
+    } finally {
+      setSavingGalleryPhotoTitleId(null);
+    }
+  };
+
+  const handleGenerateGalleryAiTitles = async () => {
+    if (isGeneratingGalleryAiTitles) return;
+    setIsGeneratingGalleryAiTitles(true);
+    setGalleryAiTitleError(null);
+    setGalleryAiTitleStatus('Preparando fotos…');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Inicia sesión para generar títulos con IA.');
+      const token = await user.getIdToken();
+      const authHeaders = { Authorization: `Bearer ${token}` };
+      const statusResponse = await fetch(`/api/gallery/ai-titles/status?weddingId=${settings.id || 1}`, { headers: authHeaders });
+      const status = await statusResponse.json();
+      if (!statusResponse.ok) throw new Error(status.error || 'No se pudo verificar la configuración de IA.');
+      if (!status.configured) throw new Error('Añade GEMINI_API_KEY a las variables del backend y vuelve a desplegar para habilitar los títulos con IA.');
+      const driveReferences = await loadAllDrivePhotoTitleReferences(settings.galleryExternalAlbumUrl, settings.id || 1, (_folderCount, photoCount) => {
+        setGalleryAiTitleStatus(`Buscando fotos de Drive… ${photoCount} encontradas`);
+      });
+      let drivePhotoIds: string[] = [];
+      try {
+        const parsed: unknown = JSON.parse(settings.galleryDrivePhotoIds || '[]');
+        if (Array.isArray(parsed)) drivePhotoIds = parsed.filter((id): id is string => typeof id === 'string');
+      } catch {
+        drivePhotoIds = [];
+      }
+      const selectedDriveReferences = driveReferences.filter((photo) => settings.galleryDrivePhotoSelectionMode === 'selected'
+        ? drivePhotoIds.includes(photo.id)
+        : !drivePhotoIds.includes(photo.id));
+      const references = [
+        ...galleryPhotos.map((photo) => ({ type: 'uploaded' as const, id: photo.id })),
+        ...selectedDriveReferences.map((photo) => ({ type: 'drive' as const, id: photo.id, assetUrl: photo.assetUrl })),
+      ];
+      if (references.length === 0) throw new Error('No hay fotos de galería seleccionadas para generar títulos.');
+
+      const batchSize = 8;
+      for (let start = 0; start < references.length; start += batchSize) {
+        const batch = references.slice(start, start + batchSize);
+        const batchNumber = Math.floor(start / batchSize) + 1;
+        const batchCount = Math.ceil(references.length / batchSize);
+        setGalleryAiTitleStatus(`Generando títulos… lote ${batchNumber} de ${batchCount}`);
+        const response = await fetch('/api/gallery/ai-titles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify({ weddingId: settings.id || 1, photos: batch }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'No se pudieron generar los títulos.');
+        if (Array.isArray(result.titles)) {
+          const uploadedTitles = new Map<number, string>(result.titles
+            .filter((item: any) => item.type === 'uploaded')
+            .map((item: any) => [Number(item.id), String(item.title)]));
+          setGalleryPhotos((previous) => previous.map((photo) => uploadedTitles.has(photo.id)
+            ? { ...photo, caption: uploadedTitles.get(photo.id)! }
+            : photo));
+          setGalleryPhotoTitleDrafts((previous) => {
+            const next = { ...previous };
+            for (const id of uploadedTitles.keys()) delete next[id];
+            return next;
+          });
+        }
+        if (typeof result.galleryDrivePhotoTitles === 'string') {
+          onChange({ galleryDrivePhotoTitles: result.galleryDrivePhotoTitles });
+        }
+      }
+      window.dispatchEvent(new CustomEvent('atelier:gallery-refresh', { detail: { weddingId: settings.id || 1 } }));
+      setGalleryAiTitleStatus(`Títulos asignados a ${references.length} fotos.`);
+    } catch (error) {
+      setGalleryAiTitleError(error instanceof Error ? error.message : 'No se pudieron generar los títulos con IA.');
+      setGalleryAiTitleStatus('');
+    } finally {
+      setIsGeneratingGalleryAiTitles(false);
     }
   };
 
@@ -1616,17 +1727,23 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
             {/* Current Uploaded Photos Grid */}
             <div className="space-y-3">
+              {galleryPhotoTitleError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{galleryPhotoTitleError}</p>}
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-[#5A5A40]" />
                   Fotos en la Galería ({galleryPhotos.length})
                 </span>
-                {loadingGallery && (
-                  <span className="text-[11px] text-stone-400 flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin text-amber-700" /> Cargando fotos...
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {loadingGallery && <span className="text-[11px] text-stone-400 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin text-amber-700" /> Cargando fotos...</span>}
+                  <button type="button" onClick={() => void handleGenerateGalleryAiTitles()} disabled={isGeneratingGalleryAiTitles || (galleryPhotos.length === 0 && !settings.galleryExternalAlbumUrl)} className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2 text-[10px] font-bold text-amber-900 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50">
+                    {isGeneratingGalleryAiTitles ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {isGeneratingGalleryAiTitles ? 'Generando…' : 'Generar títulos con IA'}
+                  </button>
+                </div>
               </div>
+              {galleryAiTitleError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{galleryAiTitleError}</p>}
+              {galleryAiTitleStatus && !galleryAiTitleError && <p aria-live="polite" className="text-[11px] text-stone-500">{galleryAiTitleStatus}</p>}
+              <p className="text-[10px] text-stone-500">Incluye fotos subidas y seleccionadas de Drive; Gemini analiza las imágenes, consume cuota de API y sustituye sus títulos actuales.</p>
 
               {galleryPhotos.length === 0 ? (
                 <div className="p-8 border border-dashed border-[#E5E2D0] rounded-2xl text-center bg-[#FAF9F0]">
@@ -1641,34 +1758,25 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {galleryPhotos.map((photo) => (
-                    <div
-                      key={photo.id}
-                      className="relative aspect-square rounded-2xl overflow-hidden border border-[#E5E2D0] bg-stone-100 group shadow-2xs"
-                    >
-                      <img
-                        src={photo.url}
-                        alt={photo.caption || 'Foto'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between">
-                        <span className="text-[9px] uppercase font-bold bg-white/30 backdrop-blur-xs text-white px-2 py-0.5 rounded-full self-start flex items-center gap-1">
-                          <Heart className="w-2.5 h-2.5 fill-rose-400 text-rose-400" />
-                          <span>{photo.likesCount || 0}</span>
-                        </span>
-                        <div className="flex items-center justify-between text-white">
-                          <span className="text-[10px] truncate max-w-[70%] font-medium">
-                            {photo.caption || 'Foto de los novios'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteGalleryPhoto(photo.id)}
-                            className="p-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
-                            title="Eliminar foto"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                    <div key={photo.id} className="min-w-0 space-y-2">
+                      <div className="relative aspect-square overflow-hidden rounded-2xl border border-[#E5E2D0] bg-stone-100 group shadow-2xs">
+                        <img src={photo.url} alt={photo.caption || 'Foto'} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-between">
+                          <span className="text-[9px] uppercase font-bold bg-white/30 backdrop-blur-xs text-white px-2 py-0.5 rounded-full self-start flex items-center gap-1"><Heart className="w-2.5 h-2.5 fill-rose-400 text-rose-400" /><span>{photo.likesCount || 0}</span></span>
+                          <div className="flex items-center justify-between text-white">
+                            <span className="text-[10px] truncate max-w-[70%] font-medium">{photo.caption || 'Foto de los novios'}</span>
+                            <button type="button" onClick={() => handleDeleteGalleryPhoto(photo.id)} className="p-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer" title="Eliminar foto"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
                         </div>
                       </div>
+                      <label className="block space-y-1">
+                        <span className="text-[10px] font-semibold text-stone-600">Título de la foto</span>
+                        <input type="text" maxLength={160} value={galleryPhotoTitleDrafts[photo.id] ?? photo.caption ?? ''} onChange={(event) => setGalleryPhotoTitleDrafts((previous) => ({ ...previous, [photo.id]: event.target.value }))} className="w-full min-w-0 rounded-lg border border-[#E5E2D0] bg-white px-2.5 py-2 text-xs text-stone-800 focus:border-[#5A5A40] focus:outline-none focus:ring-1 focus:ring-[#5A5A40]" aria-label={`Título para ${photo.caption || 'la foto'}`} />
+                      </label>
+                      <button type="button" onClick={() => void handleSaveGalleryPhotoTitle(photo.id)} disabled={savingGalleryPhotoTitleId === photo.id || (galleryPhotoTitleDrafts[photo.id] ?? photo.caption ?? '').trim() === (photo.caption ?? '').trim()} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5A5A40] px-2 py-2 text-[11px] font-semibold text-white transition hover:bg-[#484833] disabled:cursor-not-allowed disabled:opacity-45">
+                        {savingGalleryPhotoTitleId === photo.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                        {savingGalleryPhotoTitleId === photo.id ? 'Guardando…' : 'Guardar título'}
+                      </button>
                     </div>
                   ))}
                 </div>

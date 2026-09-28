@@ -146,6 +146,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   galleryExternalAlbumUrl: '',
   galleryExternalAlbumTitle: 'Galería de Mis XV',
   galleryExternalAlbumType: 'google_photos',
+  galleryDrivePhotoTitles: '{}',
   showVideoMemories: true,
   showGuestbook: true,
   showHotels: false,

@@ -28,6 +28,7 @@ import { GalleryPhoto, PhotoComment, WeddingSettings } from '../../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
+import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../../lib/galleryPhotoTitles.ts';
 import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
 
 type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string; driveFileId?: string; driveInteractionToken?: string; responsiveUrls?: Record<640 | 960 | 1440 | 1920, string> };
@@ -126,6 +127,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       return new Set<string>();
     }
   }, [settings?.galleryDrivePhotoIds]);
+  const drivePhotoTitles = useMemo(() => parseDrivePhotoTitles(settings?.galleryDrivePhotoTitles), [settings?.galleryDrivePhotoTitles]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
@@ -162,7 +164,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         weddingId,
         url: photo.fullUrl || photo.thumbnailUrl,
         thumbnailUrl: photo.thumbnailUrl,
-        caption: photo.name,
+        caption: Object.prototype.hasOwnProperty.call(drivePhotoTitles, photo.id) ? drivePhotoTitles[photo.id] : getDrivePhotoFallbackTitle(photo.name),
         authorName: 'Carpeta compartida',
         category: 'recuerdos' as const,
         likesCount: 0,
@@ -173,7 +175,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         driveInteractionToken: photo.interactionToken,
         responsiveUrls: photo.responsiveUrls,
       })),
-  ], [driveGallery.photos, drivePhotoSelectionIds, drivePhotoSelectionMode, photos, weddingId]);
+  ], [driveGallery.photos, drivePhotoSelectionIds, drivePhotoSelectionMode, drivePhotoTitles, photos, weddingId]);
 
   const activePhoto = activePhotoIndex !== null && carouselPhotos[activePhotoIndex] ? carouselPhotos[activePhotoIndex] : null;
   const getCommentsForPhoto = (photo?: CarouselPhoto | null) => photo
@@ -344,7 +346,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, [activePhotoIndex, handlePrevPhoto, handleNextPhoto, closePhotoViewer]);
 
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     try {
       setLoading(true);
       const url = `/api/gallery?weddingId=${weddingId}`;
@@ -358,11 +360,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [weddingId]);
 
   useEffect(() => {
-    fetchPhotos();
-  }, [weddingId]);
+    void fetchPhotos();
+  }, [fetchPhotos]);
+
+  useEffect(() => {
+    const handleParentMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin || event.source !== window.parent) return;
+      if (event.data?.type !== 'ATELIER_REFRESH_GALLERY' || Number(event.data.weddingId) !== weddingId) return;
+      void fetchPhotos();
+    };
+    window.addEventListener('message', handleParentMessage);
+    return () => window.removeEventListener('message', handleParentMessage);
+  }, [fetchPhotos, weddingId]);
 
   const handleLike = async (photo: CarouselPhoto, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -903,7 +915,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 )}
 
                 {/* Top Bar: Slide Index Pill + Auto-Play Play/Pause Button */}
-                <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+                <div className="absolute top-4 left-4 z-20 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2">
                   <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
                     <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
                     <span className="text-stone-500">/</span>

@@ -37,7 +37,11 @@ Configura las siguientes variables de entorno en tu aplicación en Coolify:
 | `SQL_DB_NAME` | `2date_db` | Nombre de la base de datos (**2date_db**) |
 | `SQL_USER` | `tu_usuario_postgres` | Usuario de la base de datos |
 | `SQL_PASSWORD` | `tu_password_seguro` | Contraseña de PostgreSQL |
+| `GEMINI_API_KEY` | *(opcional)* | Clave de Google AI Studio, solo del servidor; habilita títulos automáticos con IA para las fotos |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Modelo de Gemini usado para generar títulos de fotos |
 | `GOOGLE_DRIVE_API_KEY` | *(opcional)* | API key solo del servidor para mostrar fotos de carpetas públicas de Drive dentro de la galería |
+
+Para activar **Generar títulos con IA**, crea una clave en [Google AI Studio](https://aistudio.google.com/apikey) y añádela como variable secreta `GEMINI_API_KEY` en Coolify. No uses el prefijo `VITE_`: la clave se utiliza únicamente en el backend. Guarda y redepliega el servicio. En desarrollo local, configura `GEMINI_API_KEY` en `.env`.
 
 > 💡 **Auto-Creación de Tablas**: Al iniciar el contenedor en Coolify, el script `autoMigrateDatabase()` se conecta automáticamente a tu PostgreSQL y crea todas las tablas de la base de datos `2date_db` con sus índices y datos semilla iniciales sin requerir migraciones manuales.
 

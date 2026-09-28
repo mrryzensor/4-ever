@@ -164,6 +164,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   galleryExternalAlbumType: text('gallery_external_album_type').default('google_photos'),
   galleryDrivePhotoSelectionMode: text('gallery_drive_photo_selection_mode').default('all'),
   galleryDrivePhotoIds: text('gallery_drive_photo_ids').default('[]'),
+  galleryDrivePhotoTitles: text('gallery_drive_photo_titles').default('{}'),
   showVideoMemories: boolean('show_video_memories').default(false),
   showGuestbook: boolean('show_guestbook').default(false),
   showHotels: boolean('show_hotels').default(false),

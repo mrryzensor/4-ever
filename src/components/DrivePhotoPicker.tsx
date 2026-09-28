@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { WeddingSettings } from '../types.ts';
 import { parseDriveFolderUrl } from '../lib/driveFolder.ts';
+import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../lib/galleryPhotoTitles.ts';
 import type { DriveGalleryPhoto } from './DriveFolderPhotos.tsx';
 
 type Destination = 'gallery' | 'hero';
@@ -67,10 +68,21 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
+  const [drivePhotoTitleDrafts, setDrivePhotoTitleDrafts] = useState<Record<string, string>>(() => parseDrivePhotoTitles(settings.galleryDrivePhotoTitles));
+  const [pendingDrivePhotoTitleIds, setPendingDrivePhotoTitleIds] = useState<Set<string>>(() => new Set());
 
   const selectionMode = settings.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
   const galleryPhotoIds = useMemo(() => new Set(parsePhotoIds(settings.galleryDrivePhotoIds)), [settings.galleryDrivePhotoIds]);
+  const galleryPhotoTitles = drivePhotoTitleDrafts;
   const heroPhotoUrls = useMemo(() => new Set(parseHeroPhotos(settings)), [settings.heroPhotos, settings.coverPhoto]);
+
+  useEffect(() => {
+    const savedTitles = parseDrivePhotoTitles(settings.galleryDrivePhotoTitles);
+    setDrivePhotoTitleDrafts((current) => ({
+      ...savedTitles,
+      ...Object.fromEntries([...pendingDrivePhotoTitleIds].filter((id) => id in current).map((id) => [id, current[id]])),
+    }));
+  }, [settings.galleryDrivePhotoTitles, pendingDrivePhotoTitleIds]);
 
   const loadFolder = useCallback(async (token: string | undefined, pageToken?: string, append = false) => {
     if (!folder) return;
@@ -138,6 +150,21 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
       ? (updated[0] || '')
       : (settings.coverPhoto || updated[0] || '');
     onChange({ heroPhotos: JSON.stringify(updated), ...(nextCover ? { coverPhoto: nextCover } : {}) });
+  };
+
+  const handleDrivePhotoTitleChange = (photoId: string, title: string) => {
+    setDrivePhotoTitleDrafts((current) => ({ ...current, [photoId]: title }));
+    setPendingDrivePhotoTitleIds((current) => new Set(current).add(photoId));
+  };
+
+  const saveDrivePhotoTitleDraft = (photoId: string) => {
+    if (!pendingDrivePhotoTitleIds.has(photoId)) return;
+    onChange({ galleryDrivePhotoTitles: JSON.stringify({ ...parseDrivePhotoTitles(settings.galleryDrivePhotoTitles), ...drivePhotoTitleDrafts }) });
+    setPendingDrivePhotoTitleIds((current) => {
+      const next = new Set(current);
+      next.delete(photoId);
+      return next;
+    });
   };
 
   const setVisibleGalleryPhotos = (select: boolean) => {
@@ -225,11 +252,19 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {photos.map((photo) => {
                     const selected = isPhotoSelected(photo);
-                    return <button type="button" key={photo.id} onClick={() => destination === 'gallery' ? toggleGalleryPhoto(photo.id) : toggleHeroPhoto(photo)} className={`group relative aspect-square overflow-hidden rounded-xl border-2 text-left transition ${selected ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/15' : 'border-transparent hover:border-stone-300'}`} aria-pressed={selected} title={photo.name}>
-                      <img src={photo.thumbnailUrl} alt={photo.name} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                      <span className={`absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md shadow ${selected ? 'bg-[#5A5A40] text-white' : 'bg-white/90 text-stone-500'}`}><Check className="h-4 w-4" /></span>
-                      <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-6 text-[10px] text-white">{photo.name}</span>
-                    </button>;
+                    const fallbackTitle = getDrivePhotoFallbackTitle(photo.name);
+                    const photoTitle = galleryPhotoTitles[photo.id] ?? fallbackTitle;
+                    return <div key={photo.id} className="min-w-0 space-y-1.5">
+                      <button type="button" onClick={() => destination === 'gallery' ? toggleGalleryPhoto(photo.id) : toggleHeroPhoto(photo)} className={`group relative aspect-square w-full overflow-hidden rounded-xl border-2 text-left transition ${selected ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/15' : 'border-transparent hover:border-stone-300'}`} aria-pressed={selected} title={photoTitle}>
+                        <img src={photo.thumbnailUrl} alt={photoTitle} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                        <span className={`absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md shadow ${selected ? 'bg-[#5A5A40] text-white' : 'bg-white/90 text-stone-500'}`}><Check className="h-4 w-4" /></span>
+                        <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-6 text-[10px] text-white">{photoTitle}</span>
+                      </button>
+                      {destination === 'gallery' && <label className="block text-[10px] font-medium text-stone-600">
+                        <span className="mb-1 block">Título de la foto</span>
+                        <input type="text" maxLength={120} value={photoTitle} onChange={(event) => handleDrivePhotoTitleChange(photo.id, event.target.value)} onBlur={() => saveDrivePhotoTitleDraft(photo.id)} className="w-full rounded-lg border border-[#E5E2D0] bg-white px-2 py-1.5 text-[11px] text-stone-800 focus:border-[#5A5A40] focus:outline-none focus:ring-1 focus:ring-[#5A5A40]" aria-label={`Título para ${photo.name}`} />
+                      </label>}
+                    </div>;
                   })}
                 </div>
                 {nextPageToken && <div className="mt-4 text-center"><button type="button" disabled={loadingMore} onClick={() => void loadFolder(currentToken, nextPageToken, true)} className="inline-flex items-center gap-2 rounded-xl border border-[#E5E2D0] bg-white px-4 py-2 text-xs font-semibold text-stone-700 disabled:opacity-50">{loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más fotos</button></div>}

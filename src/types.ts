@@ -243,6 +243,7 @@ export interface WeddingSettings {
   galleryExternalAlbumType?: 'google_photos' | 'instagram' | 'facebook' | 'x' | 'drive' | 'custom';
   galleryDrivePhotoSelectionMode?: 'all' | 'selected'; // all usa IDs como exclusiones; selected usa IDs como inclusiones
   galleryDrivePhotoIds?: string; // JSON de IDs seleccionados/excluidos de la carpeta compartida
+  galleryDrivePhotoTitles?: string; // JSON de títulos personalizados por ID de foto de Google Drive
   showVideoMemories?: boolean; // Recuerdos en video
   showGuestbook?: boolean; // Libro de firmas y deseos
   showHotels?: boolean; // Hospedaje y hoteles recomendados
