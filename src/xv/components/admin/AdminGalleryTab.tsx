@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { GalleryPhoto, PhotoComment, WeddingSettings } from '../../../types.ts';
 import { toast } from '../../../lib/toast.ts';
+import { parseDriveFolderUrl } from '../../../lib/driveFolder.ts';
+import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../../../lib/galleryPhotoTitles.ts';
 
 interface AdminGalleryTabProps {
   settings: WeddingSettings;
@@ -30,7 +32,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedPhotoFilter, setSelectedPhotoFilter] = useState<number | 'all'>('all');
   const [commentSearch, setCommentSearch] = useState('');
-  const [isDeletingCommentId, setIsDeletingCommentId] = useState<number | null>(null);
+  const [isDeletingCommentId, setIsDeletingCommentId] = useState<string | null>(null);
 
   const weddingId = settings.id || 1;
 
@@ -41,12 +43,99 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
         fetch(`/api/gallery?weddingId=${weddingId}`),
         fetch(`/api/gallery-comments?weddingId=${weddingId}`),
       ]);
-
+      if (!photosRes.ok || !commentsRes.ok) throw new Error('No se pudieron cargar las interacciones guardadas.');
       const photosData = await photosRes.json();
       const commentsData = await commentsRes.json();
+      const uploadedPhotos: GalleryPhoto[] = Array.isArray(photosData) ? photosData : [];
+      const uploadedComments: PhotoComment[] = Array.isArray(commentsData) ? commentsData : [];
+      let driveAdminPhotos: any[] = [];
+      let driveAdminComments: any[] = [];
+      const driveFolder = parseDriveFolderUrl(settings.galleryExternalAlbumUrl);
 
-      if (Array.isArray(photosData)) setPhotos(photosData);
-      if (Array.isArray(commentsData)) setComments(commentsData);
+      if (driveFolder) {
+        try {
+          const allDrivePhotos: any[] = [];
+          let pageToken = '';
+          const seenTokens = new Set<string>();
+          do {
+            const query = new URLSearchParams({ weddingId: String(weddingId) });
+            if (driveFolder.resourceKey) query.set('resourceKey', driveFolder.resourceKey);
+            if (pageToken) query.set('pageToken', pageToken);
+            const response = await fetch(`/api/drive-folders/${encodeURIComponent(driveFolder.folderId)}/photos?${query}`);
+            const page = await response.json();
+            if (!response.ok) throw new Error(page.error || 'No se pudieron cargar las fotos de Google Drive.');
+            if (Array.isArray(page.photos)) allDrivePhotos.push(...page.photos);
+            pageToken = typeof page.nextPageToken === 'string' ? page.nextPageToken : '';
+            if (pageToken && seenTokens.has(pageToken)) throw new Error('Google Drive devolvió una página repetida.');
+            if (pageToken) seenTokens.add(pageToken);
+          } while (pageToken);
+
+          const excludedIds = new Set<string>();
+          try {
+            const parsedIds = JSON.parse(settings.galleryDrivePhotoIds || '[]');
+            if (Array.isArray(parsedIds)) {
+              for (const id of parsedIds) if (typeof id === 'string') excludedIds.add(id);
+            }
+          } catch { /* Ignore invalid legacy selection data. */ }
+          const visibleDrivePhotos = allDrivePhotos.filter((photo) => settings.galleryDrivePhotoSelectionMode === 'selected'
+            ? excludedIds.has(photo.id)
+            : !excludedIds.has(photo.id));
+          const driveTitles = parseDrivePhotoTitles(settings.galleryDrivePhotoTitles);
+          const drivePhotoIds = visibleDrivePhotos.map((photo, index) => ({
+            fileId: photo.id,
+            signature: photo.interactionToken,
+            syntheticId: -(index + 1),
+          }));
+          const driveEngagementById = new Map<string, any>();
+          for (let index = 0; index < drivePhotoIds.length; index += 200) {
+            const batch = drivePhotoIds.slice(index, index + 200);
+            const response = await fetch(`/api/drive-folders/${encodeURIComponent(driveFolder.folderId)}/interactions/batch`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ weddingId, photos: batch }),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'No se pudieron cargar los likes y comentarios de Drive.');
+            if (Array.isArray(result)) result.forEach((entry: any) => driveEngagementById.set(entry.fileId, entry));
+          }
+
+          driveAdminPhotos = visibleDrivePhotos.map((photo, index) => {
+            const id = -(index + 1);
+            const engagement = driveEngagementById.get(photo.id);
+            return {
+              id,
+              weddingId,
+              url: photo.thumbnailUrl,
+              thumbnailUrl: photo.thumbnailUrl,
+              caption: Object.prototype.hasOwnProperty.call(driveTitles, photo.id) ? driveTitles[photo.id] : getDrivePhotoFallbackTitle(photo.name || ''),
+              authorName: 'Carpeta compartida',
+              category: 'recuerdos',
+              likesCount: Number(engagement?.likesCount) || 0,
+              approved: true,
+              createdAt: '',
+              driveFileId: photo.id,
+              driveInteractionToken: photo.interactionToken,
+            };
+          });
+          driveAdminComments = visibleDrivePhotos.flatMap((photo, index) => {
+            const engagement = driveEngagementById.get(photo.id);
+            return (Array.isArray(engagement?.comments) ? engagement.comments : []).map((comment: any) => ({
+              ...comment,
+              photoId: -(index + 1),
+              driveFileId: photo.id,
+              driveInteractionToken: photo.interactionToken,
+            }));
+          });
+        } catch (driveError) {
+          console.error('Error loading Drive gallery metrics:', driveError);
+          toast.error(driveError instanceof Error ? driveError.message : 'No se pudieron cargar las métricas de Google Drive', 'Drive');
+        }
+      }
+
+      setPhotos([...uploadedPhotos, ...driveAdminPhotos] as GalleryPhoto[]);
+      setComments([...uploadedComments, ...driveAdminComments].sort((a, b) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+      ) as PhotoComment[]);
     } catch (err) {
       console.error('Error loading gallery admin metrics:', err);
       toast.error('Error al cargar métricas de la galería', 'Error');
@@ -57,14 +146,19 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
 
   useEffect(() => {
     loadData();
-  }, [weddingId]);
+  }, [weddingId, settings.galleryExternalAlbumUrl, settings.galleryExternalAlbumType, settings.galleryDrivePhotoSelectionMode, settings.galleryDrivePhotoIds, settings.galleryDrivePhotoTitles]);
 
-  const handleDeleteComment = async (commentId: number) => {
+  const handleDeleteComment = async (comment: PhotoComment & { driveFileId?: string; driveInteractionToken?: string }) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este comentario?')) return;
+    const deletingKey = `${comment.driveFileId ? 'drive' : 'upload'}:${comment.id}:${comment.driveFileId || ''}`;
     try {
-      setIsDeletingCommentId(commentId);
-      await fetch(`/api/gallery/comments/${commentId}`, { method: 'DELETE' });
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setIsDeletingCommentId(deletingKey);
+      const url = comment.driveFileId && comment.driveInteractionToken
+        ? `/api/drive-folders/${encodeURIComponent(parseDriveFolderUrl(settings.galleryExternalAlbumUrl)?.folderId || '')}/photos/${encodeURIComponent(comment.driveFileId)}/comments/${comment.id}?${new URLSearchParams({ weddingId: String(weddingId), signature: comment.driveInteractionToken })}`
+        : `/api/gallery/comments/${comment.id}`;
+      const response = await fetch(url, { method: 'DELETE' });
+      if (!response.ok) throw new Error('No se pudo eliminar el comentario.');
+      setComments((prev) => prev.filter((item) => !(item.id === comment.id && item.driveFileId === comment.driveFileId && item.photoId === comment.photoId)));
       toast.success('Comentario eliminado con éxito', 'Eliminado');
     } catch (err) {
       console.error('Error deleting comment:', err);
@@ -107,7 +201,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
             Métricas & Comentarios de la Galería
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            Supervisa las reacciones con "Me gusta", lecturas y dedicatorias que los invitados dejan en tus fotografías de los XV Años.
+            Supervisa las reacciones con "Me gusta", lecturas y dedicatorias que los invitados dejan en tus fotografías de boda.
           </p>
         </div>
 
@@ -189,7 +283,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
               Foto Más Querida
             </span>
             <h3 className="text-base font-serif font-bold text-stone-900 truncate">
-              {topLikedPhoto ? (topLikedPhoto.caption || 'Foto de XV Años') : 'Sin fotos'}
+              {topLikedPhoto ? (topLikedPhoto.caption || 'Foto de Boda') : 'Sin fotos'}
             </h3>
             <span className="text-[10px] text-rose-600 font-bold mt-0.5 flex items-center gap-1">
               <Heart className="w-3 h-3 fill-rose-500" /> {topLikedPhoto?.likesCount || 0} Me gusta
@@ -233,7 +327,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
           {photos.length === 0 ? (
             <div className="p-8 text-center bg-[#FAF9F0] rounded-2xl border border-dashed border-[#E5E2D0]">
               <Camera className="w-8 h-8 text-stone-400 mx-auto mb-2" />
-              <p className="text-xs text-stone-600">No hay fotos subidas en la galería todavía.</p>
+              <p className="text-xs text-stone-600">No hay fotos en la galería todavía.</p>
             </div>
           ) : (
             <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
@@ -337,11 +431,15 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
           ) : (
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
               {filteredComments.map((comment) => {
-                const relatedPhoto = photos.find((p) => p.id === comment.photoId);
+                const typedComment = comment as PhotoComment & { driveFileId?: string; driveInteractionToken?: string };
+                const relatedPhoto = photos.find((photo) => typedComment.driveFileId
+                  ? (photo as GalleryPhoto & { driveFileId?: string }).driveFileId === typedComment.driveFileId
+                  : photo.id === comment.photoId);
+                const deletingKey = `${typedComment.driveFileId ? 'drive' : 'upload'}:${comment.id}:${typedComment.driveFileId || ''}`;
 
                 return (
                   <div
-                    key={comment.id}
+                    key={deletingKey}
                     className="p-4 rounded-2xl bg-[#FAF9F0]/80 border border-[#E5E2D0] hover:border-[#5A5A40]/40 transition-colors space-y-2"
                   >
                     {/* Comment Header */}
@@ -377,12 +475,12 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
                           />
                           <button
                             type="button"
-                            onClick={() => handleDeleteComment(comment.id)}
-                            disabled={isDeletingCommentId === comment.id}
+                            onClick={() => handleDeleteComment(typedComment)}
+                            disabled={isDeletingCommentId === deletingKey}
                             className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             title="Eliminar este comentario"
                           >
-                            {isDeletingCommentId === comment.id ? (
+                            {isDeletingCommentId === deletingKey ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             ) : (
                               <Trash2 className="w-3.5 h-3.5" />

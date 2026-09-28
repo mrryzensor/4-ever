@@ -31,7 +31,6 @@ import {
   Music2,
 } from 'lucide-react';
 import { WeddingSettings, GalleryPhoto, CardStyleId } from '../../types.ts';
-import { auth } from '../../lib/firebase.ts';
 import { BankAccountsEditor } from './settings/BankAccountsEditor.tsx';
 import { AudioSettingsPanel } from './settings/AudioSettingsPanel.tsx';
 import { optimizeImageClient, formatBytes, ImageOptimizationResult } from '../../lib/mediaOptimizer.ts';
@@ -102,6 +101,9 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   const [isGeneratingGalleryAiTitles, setIsGeneratingGalleryAiTitles] = useState(false);
   const [galleryAiTitleStatus, setGalleryAiTitleStatus] = useState('');
   const [galleryAiTitleError, setGalleryAiTitleError] = useState<string | null>(null);
+  const [galleryAiAccessMode, setGalleryAiAccessMode] = useState<'loading' | 'server' | 'personal' | 'unavailable'>('loading');
+  const [galleryAiAccessMessage, setGalleryAiAccessMessage] = useState('');
+  const [galleryAiPersonalApiKey, setGalleryAiPersonalApiKey] = useState('');
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [isUploadingGalleryPhoto, setIsUploadingGalleryPhoto] = useState(false);
   const [galleryCategory, setGalleryCategory] = useState<'preparativos' | 'ceremonia' | 'brindis' | 'fiesta' | 'photobooth' | 'recuerdos'>('ceremonia');
@@ -133,6 +135,35 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
   // Guestbook Wishes State for Novios
   const [wishesList, setWishesList] = useState<any[]>([]);
   const [loadingWishes, setLoadingWishes] = useState(false);
+
+  useEffect(() => {
+    if (activeStep !== 'galeria' && !advancedMediaOnly) return;
+    let cancelled = false;
+    setGalleryAiAccessMode('loading');
+    setGalleryAiAccessMessage('');
+
+    const checkAccess = async () => {
+      const response = await fetch(`/api/gallery/ai-titles/status?weddingId=${settings.id || 1}`, { cache: 'no-store' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'No se pudo verificar el acceso a Gemini.');
+      if (cancelled) return;
+      if (result.credentialSource === 'server') {
+        setGalleryAiAccessMode('server');
+        if (!result.configured) setGalleryAiAccessMessage('La API key de Gemini del CEO no está configurada en el backend.');
+      } else if (result.credentialSource === 'personal') {
+        setGalleryAiAccessMode('personal');
+      } else {
+        throw new Error('No se pudo determinar el acceso a la generación de títulos.');
+      }
+    };
+
+    void checkAccess().catch((error) => {
+      if (cancelled) return;
+      setGalleryAiAccessMode('unavailable');
+      setGalleryAiAccessMessage(error instanceof Error ? error.message : 'No se pudo verificar el acceso a Gemini.');
+    });
+    return () => { cancelled = true; };
+  }, [activeStep, advancedMediaOnly, settings.id]);
 
   // Parse itinerary items
   const itineraryItems: { time: string; title: string; desc: string }[] = (() => {
@@ -601,14 +632,17 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     setGalleryAiTitleError(null);
     setGalleryAiTitleStatus('Preparando fotos…');
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('Inicia sesión para generar títulos con IA.');
-      const token = await user.getIdToken();
-      const authHeaders = { Authorization: `Bearer ${token}` };
-      const statusResponse = await fetch(`/api/gallery/ai-titles/status?weddingId=${settings.id || 1}`, { headers: authHeaders });
+      const statusResponse = await fetch(`/api/gallery/ai-titles/status?weddingId=${settings.id || 1}`, { cache: 'no-store' });
       const status = await statusResponse.json();
       if (!statusResponse.ok) throw new Error(status.error || 'No se pudo verificar la configuración de IA.');
-      if (!status.configured) throw new Error('Añade GEMINI_API_KEY a las variables del backend y vuelve a desplegar para habilitar los títulos con IA.');
+      const personalApiKey = status.requiresPersonalApiKey ? galleryAiPersonalApiKey.trim() : '';
+      if (status.requiresPersonalApiKey && !personalApiKey) {
+        setGalleryAiAccessMode('personal');
+        throw new Error('Ingresa tu propia API key de Gemini para generar títulos.');
+      }
+      if (status.credentialSource === 'server' && !status.configured) {
+        throw new Error('Añade GEMINI_API_KEY al backend y vuelve a desplegar para habilitar los títulos con IA del CEO.');
+      }
       const driveReferences = await loadAllDrivePhotoTitleReferences(settings.galleryExternalAlbumUrl, settings.id || 1, (_folderCount, photoCount) => {
         setGalleryAiTitleStatus(`Buscando fotos de Drive… ${photoCount} encontradas`);
       });
@@ -636,7 +670,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
         setGalleryAiTitleStatus(`Generando títulos… lote ${batchNumber} de ${batchCount}`);
         const response = await fetch('/api/gallery/ai-titles', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(personalApiKey ? { 'X-Gemini-Api-Key': personalApiKey } : {}),
+          },
           body: JSON.stringify({ weddingId: settings.id || 1, photos: batch }),
         });
         const result = await response.json();
@@ -1908,6 +1945,23 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
               </div>
               {galleryAiTitleError && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{galleryAiTitleError}</p>}
               {galleryAiTitleStatus && !galleryAiTitleError && <p aria-live="polite" className="text-[11px] text-stone-500">{galleryAiTitleStatus}</p>}
+              {galleryAiAccessMode === 'personal' && (
+                <label className="block max-w-lg space-y-1.5 text-[11px] font-semibold text-stone-700">
+                  Tu API key de Gemini
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={galleryAiPersonalApiKey}
+                    onChange={(event) => setGalleryAiPersonalApiKey(event.target.value)}
+                    placeholder="Pega aquí tu API key"
+                    className="w-full rounded-lg border border-[#E5E2D0] bg-white px-3 py-2 text-xs font-normal text-stone-800 outline-none focus:border-[#5A5A40] focus:ring-2 focus:ring-[#5A5A40]/15"
+                  />
+                  <span className="block font-normal text-stone-500">Se usa solo durante esta sesión y no se guarda en el evento.</span>
+                </label>
+              )}
+              {galleryAiAccessMode === 'server' && galleryAiAccessMessage && <p role="status" className="text-[11px] text-amber-800">{galleryAiAccessMessage}</p>}
+              {galleryAiAccessMode === 'unavailable' && <p role="alert" className="text-[11px] text-rose-700">{galleryAiAccessMessage}</p>}
               <p className="text-[10px] text-stone-500">Incluye fotos subidas y seleccionadas de Drive; Gemini analiza las imágenes, consume cuota de API y sustituye sus títulos actuales.</p>
 
               {galleryPhotos.length === 0 ? (

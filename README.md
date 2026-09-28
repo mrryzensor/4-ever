@@ -37,11 +37,12 @@ Configura las siguientes variables de entorno en tu aplicación en Coolify:
 | `SQL_DB_NAME` | `2date_db` | Nombre de la base de datos (**2date_db**) |
 | `SQL_USER` | `tu_usuario_postgres` | Usuario de la base de datos |
 | `SQL_PASSWORD` | `tu_password_seguro` | Contraseña de PostgreSQL |
-| `GEMINI_API_KEY` | *(opcional)* | Clave de Google AI Studio, solo del servidor; habilita títulos automáticos con IA para las fotos |
+| `GEMINI_API_KEY` | *(opcional)* | Clave de Google AI Studio, solo del servidor; habilita títulos con IA para la cuenta CEO |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Modelo de Gemini usado para generar títulos de fotos |
+| `APP_SESSION_SECRET` | *(recomendado)* | Secreto para firmar la sesión segura del editor. Genera uno largo y aleatorio; si falta, el backend usa `GEMINI_API_KEY` como alternativa |
 | `GOOGLE_DRIVE_API_KEY` | *(opcional)* | API key solo del servidor para mostrar fotos de carpetas públicas de Drive dentro de la galería |
 
-Para activar **Generar títulos con IA**, crea una clave en [Google AI Studio](https://aistudio.google.com/apikey) y añádela como variable secreta `GEMINI_API_KEY` en Coolify. No uses el prefijo `VITE_`: la clave se utiliza únicamente en el backend. Guarda y redepliega el servicio. En desarrollo local, configura `GEMINI_API_KEY` en `.env`.
+Para activar **Generar títulos con IA para el CEO**, crea una clave en [Google AI Studio](https://aistudio.google.com/apikey) y añádela como variable secreta `GEMINI_API_KEY` en Coolify. Otros editores usan su propia clave durante la generación; no se guarda en el servidor. Configura también `APP_SESSION_SECRET` como secreto aleatorio para firmar la sesión del editor. No uses el prefijo `VITE_` para ninguna de estas variables. Guarda y redepliega el servicio. En desarrollo local, configúralas en `.env`.
 
 > 💡 **Auto-Creación de Tablas**: Al iniciar el contenedor en Coolify, el script `autoMigrateDatabase()` se conecta automáticamente a tu PostgreSQL y crea todas las tablas de la base de datos `2date_db` con sus índices y datos semilla iniciales sin requerir migraciones manuales.
 

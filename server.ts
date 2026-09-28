@@ -37,6 +37,8 @@ import {
   likeDrivePhoto,
   getDrivePhotoComments,
   addDrivePhotoComment,
+  deleteDrivePhotoComment,
+  getDrivePhotoEngagementForWedding,
   getAllVideos,
   addWeddingVideo,
   deleteWeddingVideo,
@@ -63,6 +65,7 @@ import {
   updateWeddingStatus,
 } from './src/db/queries.ts';
 import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
+import { adminAuth } from './src/lib/firebase-admin.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
 import { getEventPresentation } from './src/lib/eventUtils.ts';
@@ -155,6 +158,103 @@ async function startServer() {
   const COUPLE_PASSWORD = process.env.COUPLE_PASSWORD || 'Novios2026!';
   const COUPLE_NAME = process.env.COUPLE_NAME || 'Sofía & Alejandro';
 
+  const APP_AUTH_COOKIE = 'atelier_auth_session';
+  const APP_AUTH_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+  const getAppSessionSecret = () => process.env.APP_SESSION_SECRET?.trim() || process.env.GEMINI_API_KEY?.trim() || '';
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  const issueAppSessionCookie = (res: any, user: { uid: string; email: string; role?: string | null }) => {
+    const secret = getAppSessionSecret();
+    if (!secret) return false;
+
+    const payload = Buffer.from(JSON.stringify({
+      uid: user.uid,
+      email: user.email,
+      role: user.role || 'couple',
+      exp: Math.floor((Date.now() + APP_AUTH_SESSION_TTL_MS) / 1000),
+    })).toString('base64url');
+    const signature = createHmac('sha256', secret).update(`atelier-auth:${payload}`).digest('base64url');
+    res.cookie(APP_AUTH_COOKIE, `${payload}.${signature}`, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: APP_AUTH_SESSION_TTL_MS,
+    });
+    return true;
+  };
+
+  const readAppSessionCookie = (req: any) => {
+    const secret = getAppSessionSecret();
+    if (!secret) return null;
+    const cookie = String(req.headers.cookie || '').split(';').map((part: string) => part.trim())
+      .find((part: string) => part.startsWith(`${APP_AUTH_COOKIE}=`));
+    if (!cookie) return null;
+
+    const token = cookie.slice(APP_AUTH_COOKIE.length + 1);
+    const [payload, signature, extra] = token.split('.');
+    if (!payload || !signature || extra !== undefined) return null;
+    const expected = createHmac('sha256', secret).update(`atelier-auth:${payload}`).digest();
+    let actual: Buffer;
+    try {
+      actual = Buffer.from(signature, 'base64url');
+    } catch {
+      return null;
+    }
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
+
+    try {
+      const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+      if (
+        typeof claims?.uid !== 'string' || !claims.uid ||
+        typeof claims?.email !== 'string' ||
+        typeof claims?.role !== 'string' ||
+        !Number.isSafeInteger(claims?.exp) || claims.exp <= Math.floor(Date.now() / 1000)
+      ) return null;
+      return { uid: claims.uid, email: claims.email, role: claims.role };
+    } catch {
+      return null;
+    }
+  };
+
+  const resolveGalleryAiUser = async (req: any) => {
+    const appSession = readAppSessionCookie(req);
+    if (appSession) {
+      const storedProfile = await getUserProfile(appSession.uid);
+      return {
+        uid: appSession.uid,
+        email: appSession.email,
+        role: storedProfile?.role || appSession.role,
+      };
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!adminAuth || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return null;
+    try {
+      const firebaseUser = await adminAuth.verifyIdToken(authHeader.slice('Bearer '.length));
+      const storedProfile = await getUserProfile(firebaseUser.uid);
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        role: storedProfile?.role || (firebaseUser as any).role || ((firebaseUser as any).admin ? 'admin' : 'couple'),
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const clearAppSessionCookie = (res: any) => res.clearCookie(APP_AUTH_COOKIE, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+  });
+
+  const completeAppLogin = (res: any, user: any) => {
+    const authSessionReady = issueAppSessionCookie(res, user);
+    return res.json({ success: true, user, authSessionReady });
+  };
+
   // ----------------------------------------------------
   // AUTHENTICATION API ENDPOINTS
   // ----------------------------------------------------
@@ -177,15 +277,12 @@ async function startServer() {
           role: 'ceo',
           plan: 'ceo_unlimited',
         });
-        return res.json({
-          success: true,
-          user: {
+        return completeAppLogin(res, {
             uid: user.uid || 'ceo-daviex-master',
             email: CEO_EMAIL,
             name: user.name || CEO_NAME,
             role: 'ceo',
             plan: 'ceo_unlimited',
-          },
         });
       }
 
@@ -199,16 +296,13 @@ async function startServer() {
           plan: 'planner_pro',
           agencyName: PLANNER_AGENCY,
         });
-        return res.json({
-          success: true,
-          user: {
+        return completeAppLogin(res, {
             uid: user.uid || 'wp-valeria-01',
             email: PLANNER_EMAIL,
             name: user.name || PLANNER_NAME,
             role: 'wedding_planner',
             plan: 'planner_pro',
             agencyName: user.agencyName || PLANNER_AGENCY,
-          },
         });
       }
 
@@ -221,31 +315,29 @@ async function startServer() {
           role: 'couple',
           plan: 'atelier',
         });
-        return res.json({
-          success: true,
-          user: {
+        return completeAppLogin(res, {
             uid: user.uid || 'demo-user-master',
             email: COUPLE_EMAIL,
             name: user.name || COUPLE_NAME,
             role: 'couple',
             plan: 'atelier',
-          },
         });
+      }
+
+      if (cleanEmail === CEO_EMAIL) {
+        return res.status(401).json({ error: 'Credenciales inválidas. Verifica tu correo y contraseña.' });
       }
 
       // 4. Check Database / registered users
       const dbUser = await verifyDatabaseUserCredentials(cleanEmail, cleanPass);
       if (dbUser) {
-        return res.json({
-          success: true,
-          user: {
+        return completeAppLogin(res, {
             uid: dbUser.uid,
             email: dbUser.email,
             name: dbUser.name,
             role: dbUser.role || 'couple',
             plan: dbUser.plan || 'atelier',
             agencyName: dbUser.agencyName || undefined,
-          },
         });
       }
 
@@ -269,12 +361,14 @@ async function startServer() {
       const cleanPass = String(password).trim();
       const cleanName = (name || 'Novia/Novio').trim();
 
-      const isCeo = cleanEmail === CEO_EMAIL;
-      const determinedRole = isCeo ? 'ceo' : (role || (plan?.startsWith('planner_') ? 'wedding_planner' : 'couple'));
-      const determinedPlan = isCeo ? 'ceo_unlimited' : (plan || 'atelier');
-      const generatedUid = isCeo
-        ? 'ceo-daviex-master'
-        : ('usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x'));
+      if (cleanEmail === CEO_EMAIL) {
+        return res.status(409).json({ error: 'La cuenta CEO debe iniciar sesión con sus credenciales maestras.' });
+      }
+
+      const determinedRole = role === 'wedding_planner' || plan?.startsWith('planner_') ? 'wedding_planner' : 'couple';
+      const publicPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro'];
+      const determinedPlan = publicPlans.includes(plan) ? plan : (determinedRole === 'wedding_planner' ? 'planner_starter' : 'atelier');
+      const generatedUid = 'usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x');
 
       const user = await registerOrUpdateUser({
         uid: generatedUid,
@@ -286,16 +380,13 @@ async function startServer() {
         agencyName: agencyName || undefined,
       });
 
-      return res.json({
-        success: true,
-        user: {
+      return completeAppLogin(res, {
           uid: user.uid || generatedUid,
           email: cleanEmail,
           name: user.name || cleanName,
-          role: user.role || determinedRole,
+          role: determinedRole,
           plan: user.plan || determinedPlan,
           agencyName: user.agencyName || agencyName || undefined,
-        },
       });
     } catch (error: any) {
       console.error('Register error:', error);
@@ -1309,6 +1400,52 @@ async function startServer() {
     }
   });
 
+  app.post('/api/drive-folders/:folderId/interactions/batch', async (req, res) => {
+    try {
+      const apiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+      const folderId = req.params.folderId;
+      const weddingId = Number(req.body?.weddingId);
+      const fileRefs = req.body?.photos;
+      if (!apiKey) return res.status(503).json({ error: 'La integración con Google Drive aún no está configurada.' });
+      if (!/^[A-Za-z0-9_-]{1,200}$/.test(folderId) || !Number.isSafeInteger(weddingId) || weddingId < 1) {
+        return res.status(400).json({ error: 'La referencia de la galería no es válida.' });
+      }
+      if (!Array.isArray(fileRefs) || fileRefs.length > 200 || fileRefs.some((photo: any) =>
+        !photo || typeof photo.fileId !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(photo.fileId) ||
+        typeof photo.signature !== 'string' || !/^[a-f0-9]{64}$/.test(photo.signature),
+      )) return res.status(400).json({ error: 'La lista de fotos no es válida.' });
+
+      const eventSettings = await getWeddingSettings(weddingId);
+      const configuredFolder = parseDriveFolderUrl(eventSettings?.galleryExternalAlbumUrl);
+      if (!configuredFolder || configuredFolder.folderId !== folderId) {
+        return res.status(404).json({ error: 'Esta carpeta no está configurada para el evento.' });
+      }
+      for (const photo of fileRefs) {
+        const expectedSignature = signDrivePhotoInteraction(apiKey, weddingId, folderId, photo.fileId);
+        if (!timingSafeEqual(Buffer.from(photo.signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+          return res.status(403).json({ error: 'No se pudo validar el acceso a una de las fotos.' });
+        }
+      }
+
+      const engagement = await getDrivePhotoEngagementForWedding(weddingId, fileRefs.map((photo: any) => photo.fileId));
+      const likesByFileId = new Map(engagement.likes.map((item: any) => [item.driveFileId, item.likesCount] as const));
+      const commentsByFileId = new Map<string, any[]>();
+      for (const comment of engagement.comments as any[]) {
+        const list = commentsByFileId.get(comment.driveFileId) || [];
+        list.push(comment);
+        commentsByFileId.set(comment.driveFileId, list);
+      }
+      return res.json(fileRefs.map((photo: any) => ({
+        fileId: photo.fileId,
+        likesCount: likesByFileId.get(photo.fileId) || 0,
+        comments: commentsByFileId.get(photo.fileId) || [],
+      })));
+    } catch (error) {
+      console.error('Failed to load batch Drive photo interactions:', error);
+      return res.status(500).json({ error: 'No se pudieron cargar las interacciones de Drive.' });
+    }
+  });
+
   app.post('/api/drive-folders/:folderId/photos/:fileId/like', async (req, res) => {
     try {
       const weddingId = await authorizeDrivePhotoInteraction(req, res);
@@ -1345,6 +1482,21 @@ async function startServer() {
     } catch (error: any) {
       console.error('Failed to comment on Drive photo:', error);
       return res.status(500).json({ error: 'No se pudo guardar el comentario.' });
+    }
+  });
+
+  app.delete('/api/drive-folders/:folderId/photos/:fileId/comments/:commentId', async (req, res) => {
+    try {
+      const weddingId = await authorizeDrivePhotoInteraction(req, res);
+      if (weddingId === null) return;
+      const commentId = Number.parseInt(req.params.commentId, 10);
+      if (!Number.isSafeInteger(commentId) || commentId < 1) return res.status(400).json({ error: 'El comentario no es válido.' });
+      const result = await deleteDrivePhotoComment(commentId, weddingId, req.params.fileId);
+      if (!result.success) return res.status(404).json({ error: 'No se encontró el comentario de esta foto.' });
+      return res.json(result);
+    } catch (error) {
+      console.error('Failed to delete Drive photo comment:', error);
+      return res.status(500).json({ error: 'No se pudo eliminar el comentario.' });
     }
   });
 
@@ -1550,35 +1702,61 @@ async function startServer() {
     }
   });
 
-  app.get('/api/gallery/ai-titles/status', requireAuth, async (req: AuthRequest, res) => {
-    const weddingId = Number(req.query.weddingId);
-    if (!Number.isSafeInteger(weddingId) || weddingId < 1) return res.status(400).json({ error: 'No se pudo identificar el evento.' });
-    const eventSettings = await getWeddingSettings(weddingId);
-    if (!eventSettings) return res.status(404).json({ error: 'No se encontró el evento.' });
-    const claims = req.user as (typeof req.user & { role?: string; admin?: boolean });
-    const canManageEvent = claims?.uid === eventSettings.ownerUid || claims?.role === 'ceo' || claims?.role === 'admin' || claims?.admin === true;
-    if (!canManageEvent) return res.status(403).json({ error: 'No tienes permiso para editar las fotos de este evento.' });
-    return res.json({ configured: Boolean(process.env.GEMINI_API_KEY?.trim()) });
+  app.post('/api/auth/logout', (_req, res) => {
+    clearAppSessionCookie(res);
+    return res.json({ success: true });
   });
 
-  app.post('/api/gallery/ai-titles', requireAuth, async (req: AuthRequest, res) => {
-    try {
-      const apiKey = process.env.GEMINI_API_KEY?.trim();
-      if (!apiKey) {
-        return res.status(503).json({ error: 'La IA no está configurada. Añade GEMINI_API_KEY a las variables del backend y vuelve a desplegar.' });
-      }
+  const authorizeGalleryAiRequest = async (req: any, weddingId: number) => {
+    const identity = await resolveGalleryAiUser(req);
+    if (!identity) {
+      return { error: getAppSessionSecret() ? 'La sesión no es válida. Cierra sesión y vuelve a ingresar.' : 'Configura APP_SESSION_SECRET en el backend para habilitar la sesión segura del editor.', status: getAppSessionSecret() ? 401 : 503 };
+    }
+    const eventSettings = await getWeddingSettings(weddingId);
+    if (!eventSettings) return { error: 'No se encontró el evento.', status: 404 };
+    const isCeo = identity.role === 'ceo';
+    const canManageEvent = identity.uid === eventSettings.ownerUid || isCeo || identity.role === 'admin';
+    if (!canManageEvent) return { error: 'No tienes permiso para editar las fotos de este evento.', status: 403 };
+    return { identity, eventSettings, isCeo };
+  };
 
+  app.get('/api/gallery/ai-titles/status', async (req: any, res) => {
+    try {
+      const weddingId = Number(req.query.weddingId);
+      if (!Number.isSafeInteger(weddingId) || weddingId < 1) return res.status(400).json({ error: 'No se pudo identificar el evento.' });
+      const authorization = await authorizeGalleryAiRequest(req, weddingId);
+      if ('error' in authorization) return res.status(authorization.status).json({ error: authorization.error });
+      return res.json({
+        credentialSource: authorization.isCeo ? 'server' : 'personal',
+        requiresPersonalApiKey: !authorization.isCeo,
+        configured: authorization.isCeo ? Boolean(process.env.GEMINI_API_KEY?.trim()) : false,
+      });
+    } catch (error) {
+      console.error('Failed to check AI photo title access:', error instanceof Error ? error.message : 'Unknown error');
+      return res.status(500).json({ error: 'No se pudo verificar el acceso a los títulos con IA.' });
+    }
+  });
+
+  app.post('/api/gallery/ai-titles', async (req: any, res) => {
+    let apiKey = '';
+    try {
       const weddingId = Number(req.body?.weddingId);
       const requestedPhotos = req.body?.photos;
       if (!Number.isSafeInteger(weddingId) || weddingId < 1 || !Array.isArray(requestedPhotos) || requestedPhotos.length < 1 || requestedPhotos.length > 8) {
         return res.status(400).json({ error: 'Envía entre 1 y 8 fotos válidas para generar sus títulos.' });
       }
 
-      const eventSettings = await getWeddingSettings(weddingId);
-      if (!eventSettings) return res.status(404).json({ error: 'No se encontró el evento.' });
-      const claims = req.user as (typeof req.user & { role?: string; admin?: boolean });
-      const canManageEvent = claims?.uid === eventSettings.ownerUid || claims?.role === 'ceo' || claims?.role === 'admin' || claims?.admin === true;
-      if (!canManageEvent) return res.status(403).json({ error: 'No tienes permiso para editar las fotos de este evento.' });
+      const authorization = await authorizeGalleryAiRequest(req, weddingId);
+      if ('error' in authorization) return res.status(authorization.status).json({ error: authorization.error });
+      apiKey = authorization.isCeo
+        ? process.env.GEMINI_API_KEY?.trim() || ''
+        : String(req.headers['x-gemini-api-key'] || '').trim();
+      if (!apiKey) {
+        return authorization.isCeo
+          ? res.status(503).json({ error: 'La IA del CEO no está configurada. Añade GEMINI_API_KEY al backend y vuelve a desplegar.' })
+          : res.status(400).json({ error: 'Ingresa tu propia API key de Gemini para generar títulos.' });
+      }
+      const { eventSettings } = authorization;
 
       const readBoundedImageBody = async (response: Response, maxBytes: number) => {
         const declaredLength = Number(response.headers.get('content-length') || 0);
@@ -1641,6 +1819,8 @@ async function startServer() {
         }
 
         if (reference?.type === 'drive') {
+          const driveApiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+          if (!driveApiKey) throw new Error('Para generar títulos de fotos de Drive, configura GOOGLE_DRIVE_API_KEY en el backend.');
           if (!driveFolder || typeof reference.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(reference.id) || typeof reference.assetUrl !== 'string') {
             throw new Error('Una referencia de Google Drive no es válida.');
           }
@@ -1657,7 +1837,7 @@ async function startServer() {
             (resourceKey && !/^[A-Za-z0-9_-]{1,512}$/.test(resourceKey)) || !/^[a-f0-9]{64}$/.test(signature)
           ) throw new Error('No se pudo validar una foto de Drive. Vuelve a cargar la carpeta.');
 
-          const expectedSignature = signStableDriveAsset(apiKey, weddingId, folderId, fileId, resourceKey, 'full');
+          const expectedSignature = signStableDriveAsset(driveApiKey, weddingId, folderId, fileId, resourceKey, 'full');
           if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
             throw new Error('No se pudo validar una foto de Drive. Vuelve a cargar la carpeta.');
           }
@@ -1665,7 +1845,7 @@ async function startServer() {
           const resourcePairs = [[driveFolder.folderId, driveFolder.resourceKey || ''], [fileId, resourceKey]]
             .filter(([id, key], index, entries) => Boolean(key) && entries.findIndex(([otherId]) => otherId === id) === index)
             .map(([id, key]) => `${id}/${key}`);
-          const driveHeaders: Record<string, string> = { 'X-Goog-Api-Key': apiKey };
+          const driveHeaders: Record<string, string> = { 'X-Goog-Api-Key': driveApiKey };
           if (resourcePairs.length) driveHeaders['X-Goog-Drive-Resource-Keys'] = resourcePairs.join(',');
           const metadataUrl = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
           metadataUrl.searchParams.set('fields', 'mimeType,thumbnailLink');
@@ -1748,8 +1928,9 @@ async function startServer() {
         updatedCount: uploadedTitles.length + driveTitles.length,
       });
     } catch (error: any) {
-      console.error('AI photo title generation failed:', error instanceof Error ? error.message : 'Unknown error');
-      const message = error instanceof Error ? error.message : 'No se pudieron generar los títulos.';
+      const rawMessage = error instanceof Error ? error.message : 'No se pudieron generar los títulos.';
+      const message = apiKey ? rawMessage.replaceAll(apiKey, '[redacted]') : rawMessage;
+      console.error('AI photo title generation failed:', message);
       return res.status(500).json({ error: message });
     }
   });
@@ -1774,8 +1955,13 @@ async function startServer() {
 
   app.post('/api/gallery/:id/like', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-      const updated = await likePhoto(id);
+      const id = Number.parseInt(req.params.id, 10);
+      const weddingId = Number(req.query.weddingId);
+      if (!Number.isSafeInteger(id) || id < 1 || !Number.isSafeInteger(weddingId) || weddingId < 1) {
+        return res.status(400).json({ error: 'La referencia de la foto no es válida.' });
+      }
+      const updated = await likePhoto(id, weddingId);
+      if (!updated) return res.status(404).json({ error: 'No se encontró la foto en esta galería.' });
       res.json(updated);
     } catch (error: any) {
       console.error('Failed to like photo:', error);

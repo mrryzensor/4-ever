@@ -11,7 +11,7 @@ import {
   guestbookWishes,
   users
 } from './schema.ts';
-import { eq, desc, asc, ilike, or, and, sql } from 'drizzle-orm';
+import { eq, desc, asc, ilike, or, and, inArray, sql } from 'drizzle-orm';
 import {
   generateDynamicInitials,
   generateEventHashtag,
@@ -612,6 +612,10 @@ const memoryState = {
 
 // Check if PostgreSQL is available
 let sqlEnabled = false;
+const hasPostgresConfig = () => Boolean(
+  sqlEnabled || process.env.DATABASE_URL || process.env.POSTGRES_URL ||
+  process.env.SQL_HOST || process.env.POSTGRES_HOST || process.env.DB_HOST || process.env.NODE_ENV === 'production',
+);
 
 const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
 
@@ -2040,7 +2044,7 @@ export async function submitOpenRsvp(payload: {
 // 4. Gallery Photos
 export async function getGalleryPhotos(category?: string, weddingId: number = 1) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       let conditions = [eq(galleryPhotos.weddingId, weddingId)];
       if (category && category !== 'all') {
         conditions.push(eq(galleryPhotos.category, category));
@@ -2052,7 +2056,10 @@ export async function getGalleryPhotos(category?: string, weddingId: number = 1)
         .orderBy(desc(galleryPhotos.id));
     }
   } catch (err) {
-    console.warn('getGalleryPhotos fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to load gallery photos from PostgreSQL:', err);
+      throw err;
+    }
   }
 
   let list = memoryState.gallery.filter((p) => p.weddingId === weddingId);
@@ -2105,24 +2112,22 @@ export async function updateGalleryPhotoCaption(id: number, weddingId: number, c
   return photo;
 }
 
-export async function likePhoto(id: number) {
+export async function likePhoto(id: number, weddingId: number) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
-      const photo = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id)).limit(1);
-      if (photo.length > 0) {
-        const updated = await db
-          .update(galleryPhotos)
-          .set({ likesCount: (photo[0].likesCount || 0) + 1 })
-          .where(eq(galleryPhotos.id, id))
-          .returning();
-        return updated[0];
-      }
+    if (hasPostgresConfig()) {
+      const updated = await db
+        .update(galleryPhotos)
+        .set({ likesCount: sql`${galleryPhotos.likesCount} + 1` })
+        .where(and(eq(galleryPhotos.id, id), eq(galleryPhotos.weddingId, weddingId)))
+        .returning();
+      return updated[0] || null;
     }
   } catch (err) {
-    console.warn('likePhoto fallback to memory');
+    console.error('Failed to persist photo like:', err);
+    throw err;
   }
 
-  const found = memoryState.gallery.find((p) => p.id === id);
+  const found = memoryState.gallery.find((p) => p.id === id && p.weddingId === weddingId);
   if (found) {
     found.likesCount = (found.likesCount || 0) + 1;
     return found;
@@ -2132,7 +2137,7 @@ export async function likePhoto(id: number) {
 
 export async function getDrivePhotoLikesCount(weddingId: number, driveFileId: string) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       const rows = await db
         .select({ likesCount: drivePhotoInteractions.likesCount })
         .from(drivePhotoInteractions)
@@ -2144,7 +2149,10 @@ export async function getDrivePhotoLikesCount(weddingId: number, driveFileId: st
       return rows[0]?.likesCount || 0;
     }
   } catch (err) {
-    console.warn('getDrivePhotoLikesCount fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to load Drive photo like count from PostgreSQL:', err);
+      throw err;
+    }
   }
 
   return memoryState.drivePhotoLikes.find((photo) =>
@@ -2154,7 +2162,7 @@ export async function getDrivePhotoLikesCount(weddingId: number, driveFileId: st
 
 export async function likeDrivePhoto(weddingId: number, driveFileId: string) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       const rows = await db
         .insert(drivePhotoInteractions)
         .values({ weddingId, driveFileId, likesCount: 1 })
@@ -2163,10 +2171,14 @@ export async function likeDrivePhoto(weddingId: number, driveFileId: string) {
           set: { likesCount: sql`${drivePhotoInteractions.likesCount} + 1` },
         })
         .returning({ likesCount: drivePhotoInteractions.likesCount });
-      return rows[0]?.likesCount || 0;
+      if (rows.length === 0) throw new Error('No se actualizó el contador de likes de Drive.');
+      return rows[0].likesCount;
     }
   } catch (err) {
-    console.warn('likeDrivePhoto fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to persist Drive photo like:', err);
+      throw err;
+    }
   }
 
   const existing = memoryState.drivePhotoLikes.find((photo) =>
@@ -2179,7 +2191,7 @@ export async function likeDrivePhoto(weddingId: number, driveFileId: string) {
 
 export async function getDrivePhotoComments(weddingId: number, driveFileId: string) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       const rows = await db
         .select()
         .from(drivePhotoComments)
@@ -2191,7 +2203,10 @@ export async function getDrivePhotoComments(weddingId: number, driveFileId: stri
       return rows.map((comment) => ({ ...comment, photoId: -1 }));
     }
   } catch (err) {
-    console.warn('getDrivePhotoComments fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to load Drive photo comments from PostgreSQL:', err);
+      throw err;
+    }
   }
 
   return memoryState.drivePhotoComments
@@ -2208,12 +2223,14 @@ export async function addDrivePhotoComment(data: {
   message: string;
 }) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       const inserted = await db.insert(drivePhotoComments).values(data).returning();
       if (inserted.length > 0) return { ...inserted[0], photoId: -1 };
+      throw new Error('No se insertó el comentario de Drive.');
     }
   } catch (err) {
-    console.warn('addDrivePhotoComment fallback to memory');
+    console.error('Failed to persist Drive photo comment:', err);
+    throw err;
   }
 
   const comment = {
@@ -2227,6 +2244,63 @@ export async function addDrivePhotoComment(data: {
   };
   memoryState.drivePhotoComments.push(comment);
   return { ...comment, photoId: -1 };
+}
+
+export async function getDrivePhotoEngagementForWedding(weddingId: number, driveFileIds?: string[]) {
+  const ids = driveFileIds ? [...new Set(driveFileIds)] : undefined;
+  if (ids?.length === 0) return { likes: [], comments: [] };
+  try {
+    if (hasPostgresConfig()) {
+      const conditions = [eq(drivePhotoInteractions.weddingId, weddingId)];
+      const commentConditions = [eq(drivePhotoComments.weddingId, weddingId)];
+      if (ids) {
+        conditions.push(inArray(drivePhotoInteractions.driveFileId, ids));
+        commentConditions.push(inArray(drivePhotoComments.driveFileId, ids));
+      }
+      const [likes, comments] = await Promise.all([
+        db.select({ driveFileId: drivePhotoInteractions.driveFileId, likesCount: drivePhotoInteractions.likesCount })
+          .from(drivePhotoInteractions).where(and(...conditions)),
+        db.select().from(drivePhotoComments).where(and(...commentConditions))
+          .orderBy(desc(drivePhotoComments.id)),
+      ]);
+      return { likes, comments: comments.map((comment) => ({ ...comment, photoId: -1 })) };
+    }
+  } catch (err) {
+    console.error('Failed to load Drive photo engagement metrics:', err);
+    throw err;
+  }
+
+  return {
+    likes: memoryState.drivePhotoLikes
+      .filter((item) => item.weddingId === weddingId && (!ids || ids.includes(item.driveFileId)))
+      .map(({ driveFileId, likesCount }) => ({ driveFileId, likesCount })),
+    comments: memoryState.drivePhotoComments
+      .filter((item) => item.weddingId === weddingId && (!ids || ids.includes(item.driveFileId)))
+      .sort((a, b) => b.id - a.id)
+      .map((comment) => ({ ...comment, photoId: -1 })),
+  };
+}
+
+export async function deleteDrivePhotoComment(id: number, weddingId: number, driveFileId: string) {
+  try {
+    if (hasPostgresConfig()) {
+      const deleted = await db.delete(drivePhotoComments).where(and(
+        eq(drivePhotoComments.id, id),
+        eq(drivePhotoComments.weddingId, weddingId),
+        eq(drivePhotoComments.driveFileId, driveFileId),
+      )).returning({ id: drivePhotoComments.id });
+      return { success: deleted.length > 0 };
+    }
+  } catch (err) {
+    console.error('Failed to delete Drive photo comment:', err);
+    throw err;
+  }
+  const index = memoryState.drivePhotoComments.findIndex((item) =>
+    item.id === id && item.weddingId === weddingId && item.driveFileId === driveFileId,
+  );
+  if (index < 0) return { success: false };
+  memoryState.drivePhotoComments.splice(index, 1);
+  return { success: true };
 }
 
 export async function deleteGalleryPhoto(id: number) {
@@ -2247,7 +2321,7 @@ export async function deleteGalleryPhoto(id: number) {
 // 4.1 Photo Comments
 export async function getPhotoComments(photoId: number, weddingId: number = 1) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       return await db
         .select()
         .from(photoComments)
@@ -2255,7 +2329,10 @@ export async function getPhotoComments(photoId: number, weddingId: number = 1) {
         .orderBy(asc(photoComments.createdAt));
     }
   } catch (err) {
-    console.warn('getPhotoComments fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to load photo comments from PostgreSQL:', err);
+      throw err;
+    }
   }
 
   return memoryState.photoComments
@@ -2265,7 +2342,7 @@ export async function getPhotoComments(photoId: number, weddingId: number = 1) {
 
 export async function getAllPhotoCommentsForWedding(weddingId: number = 1) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       return await db
         .select()
         .from(photoComments)
@@ -2273,7 +2350,10 @@ export async function getAllPhotoCommentsForWedding(weddingId: number = 1) {
         .orderBy(desc(photoComments.id));
     }
   } catch (err) {
-    console.warn('getAllPhotoCommentsForWedding fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to load gallery comments from PostgreSQL:', err);
+      throw err;
+    }
   }
 
   return [...memoryState.photoComments]
@@ -2284,12 +2364,16 @@ export async function getAllPhotoCommentsForWedding(weddingId: number = 1) {
 export async function addPhotoComment(data: typeof photoComments.$inferInsert) {
   if (!data.weddingId) data.weddingId = 1;
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       const inserted = await db.insert(photoComments).values(data).returning();
       if (inserted.length > 0) return inserted[0];
+      throw new Error('No se insertó el comentario.');
     }
   } catch (err) {
-    console.warn('addPhotoComment fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to persist photo comment:', err);
+      throw err;
+    }
   }
 
   const newComment = {
@@ -2307,12 +2391,15 @@ export async function addPhotoComment(data: typeof photoComments.$inferInsert) {
 
 export async function deletePhotoComment(id: number) {
   try {
-    if (sqlEnabled || process.env.SQL_HOST) {
+    if (hasPostgresConfig()) {
       await db.delete(photoComments).where(eq(photoComments.id, id));
       return { success: true };
     }
   } catch (err) {
-    console.warn('deletePhotoComment fallback to memory');
+    if (hasPostgresConfig()) {
+      console.error('Failed to delete photo comment from PostgreSQL:', err);
+      throw err;
+    }
   }
   memoryState.photoComments = memoryState.photoComments.filter((c) => c.id !== id);
   return { success: true };

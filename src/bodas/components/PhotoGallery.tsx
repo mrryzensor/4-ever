@@ -403,8 +403,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     );
 
     try {
-      await fetch(`/api/gallery/${photoId}/like`, { method: 'POST' });
+      const response = await fetch(`/api/gallery/${photoId}/like?weddingId=${weddingId}`, { method: 'POST' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'No se pudo registrar el “Me gusta”.');
+      setPhotos((prev) => prev.map((item) => (item.id === photoId ? { ...item, likesCount: Number(data.likesCount) || 0 } : item)));
     } catch (err) {
+      setLikedPhotoIds((prev) => prev.filter((id) => id !== photoId));
+      setPhotos((prev) => prev.map((item) => (item.id === photoId ? { ...item, likesCount: Math.max(0, (item.likesCount || 1) - 1) } : item)));
       console.error('Error liking photo:', err);
     }
   };

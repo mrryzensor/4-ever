@@ -849,6 +849,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    void fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => undefined);
     setCurrentUser(null);
     localStorage.removeItem('atelier_user_session');
     setCurrentView('portal');
