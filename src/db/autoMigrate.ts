@@ -360,10 +360,34 @@ export async function autoMigrateDatabase() {
         CREATE TABLE IF NOT EXISTS photo_comments (
           id SERIAL PRIMARY KEY,
           photo_id INTEGER NOT NULL,
-          author_name TEXT NOT NULL,
-          comment TEXT NOT NULL,
+          wedding_id INTEGER DEFAULT 1,
+          guest_name TEXT NOT NULL DEFAULT 'Invitado Especial',
+          guest_code TEXT,
+          message TEXT NOT NULL,
           created_at TIMESTAMP DEFAULT NOW()
         );
+
+        -- Migrate older comment records without discarding their original fields.
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS wedding_id INTEGER;
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS guest_name TEXT;
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS guest_code TEXT;
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS message TEXT;
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS author_name TEXT;
+        ALTER TABLE photo_comments ADD COLUMN IF NOT EXISTS comment TEXT;
+        UPDATE photo_comments
+        SET wedding_id = COALESCE(wedding_id, 1),
+            guest_name = COALESCE(NULLIF(guest_name, ''), NULLIF(author_name, ''), 'Invitado Especial'),
+            message = COALESCE(NULLIF(message, ''), comment, '');
+        ALTER TABLE photo_comments ALTER COLUMN wedding_id SET DEFAULT 1;
+        ALTER TABLE photo_comments ALTER COLUMN wedding_id SET NOT NULL;
+        ALTER TABLE photo_comments ALTER COLUMN guest_name SET DEFAULT 'Invitado Especial';
+        ALTER TABLE photo_comments ALTER COLUMN guest_name SET NOT NULL;
+        ALTER TABLE photo_comments ALTER COLUMN message SET DEFAULT '';
+        ALTER TABLE photo_comments ALTER COLUMN message SET NOT NULL;
+        ALTER TABLE photo_comments ALTER COLUMN author_name DROP NOT NULL;
+        ALTER TABLE photo_comments ALTER COLUMN comment DROP NOT NULL;
+        CREATE INDEX IF NOT EXISTS photo_comments_event_created_idx
+          ON photo_comments (wedding_id, created_at DESC);
 
         -- Google Drive photo engagement remains stable across carousel ordering.
         CREATE TABLE IF NOT EXISTS drive_photo_interactions (
