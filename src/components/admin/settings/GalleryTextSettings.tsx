@@ -103,7 +103,7 @@ export const GalleryTextSettings: React.FC<GalleryTextSettingsProps> = ({ settin
             {field('galleryEmptyTitle', 'Título cuando aún no hay fotos')}
             {field('galleryEmptyDescription', 'Descripción cuando aún no hay fotos', true)}
             {field('galleryDrivePhotoBadgeText', 'Etiqueta de fotos de Google Drive')}
-            {field('gallerySharedAlbumCaption', 'Crédito de fotos compartidas')}
+            {field('gallerySharedAlbumCaption', 'Nombre del fotógrafo / crédito de fotos compartidas')}
             {field('galleryExternalAlbumTitle', 'Texto del botón del álbum externo')}
           </div>
         </section>

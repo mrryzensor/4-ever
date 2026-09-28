@@ -1220,12 +1220,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                           {/* Photo Subtitle (Author & Date underneath the photo on desktop) */}
                           <div className="hidden lg:flex mt-2.5 items-center justify-center gap-3 text-xs sm:text-sm text-stone-300 font-serif">
-                            {activePhoto.authorName && (
+                            {(activePhoto.driveOpenUrl || activePhoto.authorName) && (
                               <span data-typography-role="detail" className="text-amber-200/90 italic">
-                                Fotografía por: {activePhoto.authorName}
+                                {activePhoto.driveOpenUrl ? `Fotografía por: ${galleryText.sharedAlbumCaption}` : `Fotografía por: ${activePhoto.authorName}`}
                               </span>
                             )}
-                            {activePhoto.authorName && activePhoto.createdAt && (
+                            {!activePhoto.driveOpenUrl && activePhoto.authorName && activePhoto.createdAt && (
                               <span className="text-stone-600">•</span>
                             )}
                             {activePhoto.createdAt && (
@@ -1295,9 +1295,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           {activePhoto.caption || 'Recuerdo de Mis Quince Años'}
                         </h3>
 
-                        {activePhoto.authorName && (
+                        {(activePhoto.driveOpenUrl || activePhoto.authorName) && (
                           <p className="text-[11px] text-stone-300/90 italic truncate drop-shadow-sm mt-0.5">
-                            Por: {activePhoto.authorName}
+                            {activePhoto.driveOpenUrl ? `Por: ${galleryText.sharedAlbumCaption}` : `Por: ${activePhoto.authorName}`}
                           </p>
                         )}
 
