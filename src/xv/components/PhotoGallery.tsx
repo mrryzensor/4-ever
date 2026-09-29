@@ -1168,7 +1168,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 exit={isMobileViewport ? undefined : { opacity: 0 }}
                 onClick={closePhotoViewer}
                 data-typography-area="gallery-fullscreen"
-                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
+                data-gallery-fullscreen="true"
+                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-0 sm:p-4 lg:p-6"
                 style={{ '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}` } as React.CSSProperties}
               >
                 <div

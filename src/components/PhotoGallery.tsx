@@ -136,6 +136,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches);
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
   const lightboxNavigationRequestRef = useRef(0);
@@ -154,6 +155,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
   const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
+
   // Mobile browsers can leave a blank strip between a fixed lightbox and the
   // keyboard. Size the lightbox to the visual viewport as it changes.
   useEffect(() => {
@@ -165,8 +174,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     const syncViewport = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const height = visualViewport?.height ?? window.innerHeight;
-        modal.style.top = `${visualViewport?.offsetTop ?? 0}px`;
+        // Keep the fullscreen surface on the layout viewport's bottom edge.
+        // Some Android browsers report a shorter visual viewport than the
+        // space visible above their keyboard/browser controls.
+        const height = window.innerHeight;
+        modal.style.top = '0px';
         modal.style.bottom = 'auto';
         modal.style.height = `${height}px`;
         modal.style.setProperty('--gallery-comments-max-height', `${height * 0.62}px`);
@@ -1194,17 +1206,18 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             {activePhoto && (
               <motion.div
                 ref={fullscreenModalRef}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={isMobileViewport ? false : { opacity: 0 }}
+                animate={isMobileViewport ? undefined : { opacity: 1 }}
+                exit={isMobileViewport ? undefined : { opacity: 0 }}
                 onClick={closePhotoViewer}
                 data-typography-area="gallery-fullscreen"
-                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
+                data-gallery-fullscreen="true"
+                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-0 sm:p-4 lg:p-6"
                 style={{ '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}` } as React.CSSProperties}
               >
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-full h-full sm:w-[96vw] sm:max-w-7xl sm:h-[94vh] bg-stone-950 sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
+                  className="relative w-full h-full sm:w-[96vw] sm:max-w-7xl sm:h-[94vh] bg-stone-950 sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-stone-800 flex flex-col lg:flex-row lg:animate-in lg:fade-in lg:zoom-in-95 lg:duration-200"
                 >
                   {/* Top Bar Actions: High-res Download & Close Button */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
@@ -1271,13 +1284,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         }
                       }}
                     >
-                      <AnimatePresence mode="wait">
+                      <AnimatePresence mode={isMobileViewport ? 'sync' : 'wait'} initial={false}>
                         <motion.div
                           key={activePhoto.id}
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ duration: 0.25 }}
+                          initial={isMobileViewport ? false : { opacity: 0, scale: 0.98 }}
+                          animate={isMobileViewport ? undefined : { opacity: 1, scale: 1 }}
+                          exit={isMobileViewport ? undefined : { opacity: 0, scale: 0.98 }}
+                          transition={isMobileViewport ? undefined : { duration: 0.25 }}
                           className="flex flex-col items-center justify-center h-full w-full relative"
                         >
                           <img
@@ -1437,21 +1450,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   </div>
 
                   {/* MOBILE COMMENTS SLIDE-UP SHEET (Translucent Frosted Glass, Non-intrusive) */}
-                  <AnimatePresence>
-                    {mobileCommentsOpen && (
+                  {mobileCommentsOpen && (
                       <>
                         {/* Tap backdrop to close */}
                         <div
-                          className="lg:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
+                          className="lg:hidden absolute inset-0 z-30 bg-black/55"
                           onClick={() => setMobileCommentsOpen(false)}
                         />
 
-                        <motion.div
-                          initial={{ y: '100%', opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: '100%', opacity: 0 }}
-                          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[var(--gallery-comments-max-height,62vh)] flex flex-col bg-stone-950/95 border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
+                        <div
+                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[var(--gallery-comments-max-height,62vh)] flex flex-col bg-stone-950 border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Drag Handle & Header */}
@@ -1563,10 +1571,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               </div>
                             </form>
                           </div>
-                        </motion.div>
+                        </div>
                       </>
                     )}
-                  </AnimatePresence>
 
                   {/* DESKTOP SIDEBAR PANEL - 100% full experience on desktop */}
                   <div className="hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
