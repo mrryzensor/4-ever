@@ -38,6 +38,7 @@ import { getDetailSectionOrder } from '../lib/sectionOrder.ts';
 import { getBankAccountBadgeText, getBankAccounts, hasBankAccountData } from '../lib/bankAccounts.ts';
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../lib/colorUtils.ts';
+import { preserveViewportPosition } from '../lib/preserveViewportPosition.ts';
 import { SocialVideoEmbed } from './SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../lib/dateFormatters.ts';
@@ -273,7 +274,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     }
   };
 
-  const toggleSection = (section: 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips') => {
+  const toggleSection = (section: 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips', trigger?: HTMLElement | null) => {
+    preserveViewportPosition(trigger);
     setExpandedSection((prev) => (prev === section ? 'none' : section));
   };
 
@@ -784,7 +786,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleSection('ceremony');
+                    toggleSection('ceremony', e.currentTarget);
                   }}
                   className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'ceremony'
@@ -898,7 +900,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleSection('reception');
+                    toggleSection('reception', e.currentTarget);
                   }}
                   className={`invitation-card-action inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     expandedSection === 'reception'
@@ -1061,7 +1063,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSection('itinerary');
+                      toggleSection('itinerary', e.currentTarget);
                     }}
                     className={`invitation-card-action inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                       expandedSection === 'itinerary'
@@ -1219,7 +1221,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSection('gifts');
+                      toggleSection('gifts', e.currentTarget);
                     }}
                     className={`inline-flex w-full items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                       expandedSection === 'gifts'
@@ -1374,7 +1376,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedPaletteIndex(idx);
-                            if (expandedSection !== 'dresscode') setExpandedSection('dresscode');
+                            if (expandedSection !== 'dresscode') toggleSection('dresscode', e.currentTarget);
                           }}
                           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full shadow-md border-2 transition-all cursor-pointer ${
                             selectedPaletteIndex === idx
@@ -1394,7 +1396,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSection('dresscode');
+                      toggleSection('dresscode', e.currentTarget);
                     }}
                     className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                       expandedSection === 'dresscode'
@@ -1569,7 +1571,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleSection('tips');
+                      toggleSection('tips', e.currentTarget);
                     }}
                     className={`invitation-card-action inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm ${
                       expandedSection === 'tips'

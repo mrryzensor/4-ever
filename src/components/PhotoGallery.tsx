@@ -174,11 +174,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     const syncViewport = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        // Keep the fullscreen surface on the layout viewport's bottom edge.
-        // Some Android browsers report a shorter visual viewport than the
-        // space visible above their keyboard/browser controls.
-        const height = window.innerHeight;
-        modal.style.top = '0px';
+        // Match the visible viewport so the comment composer stays attached
+        // to the keyboard instead of leaving the obscured layout viewport exposed.
+        const top = visualViewport?.offsetTop ?? 0;
+        const height = visualViewport?.height ?? window.innerHeight;
+        modal.style.top = `${top}px`;
         modal.style.bottom = 'auto';
         modal.style.height = `${height}px`;
         modal.style.setProperty('--gallery-comments-max-height', `${height * 0.62}px`);
@@ -198,6 +198,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
       visualViewport?.removeEventListener('resize', syncViewport);
       visualViewport?.removeEventListener('scroll', syncViewport);
       window.removeEventListener('resize', syncViewport);
+      modal.style.removeProperty('top');
+      modal.style.removeProperty('bottom');
+      modal.style.removeProperty('height');
+      modal.style.removeProperty('--gallery-comments-max-height');
     };
   }, [activePhotoIndex]);
 

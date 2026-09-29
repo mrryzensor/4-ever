@@ -122,6 +122,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
   const lightboxNavigationRequestRef = useRef(0);
+  const fullscreenModalRef = useRef<HTMLDivElement>(null);
 
   // Comments state for the active photo
   const [comments, setComments] = useState<PhotoComment[]>([]);
@@ -144,6 +145,46 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     mediaQuery.addEventListener('change', updateViewport);
     return () => mediaQuery.removeEventListener('change', updateViewport);
   }, []);
+
+  // Keep the lightbox and comment sheet aligned with the visible viewport
+  // while Android/iOS opens or closes the virtual keyboard.
+  useEffect(() => {
+    const modal = fullscreenModalRef.current;
+    if (activePhotoIndex === null || !modal) return;
+
+    const visualViewport = window.visualViewport;
+    let frame = 0;
+    const syncViewport = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const top = visualViewport?.offsetTop ?? 0;
+        const height = visualViewport?.height ?? window.innerHeight;
+        modal.style.top = `${top}px`;
+        modal.style.bottom = 'auto';
+        modal.style.height = `${height}px`;
+        modal.style.setProperty('--gallery-comments-max-height', `${height * 0.62}px`);
+      });
+    };
+
+    const originalBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    syncViewport();
+    visualViewport?.addEventListener('resize', syncViewport);
+    visualViewport?.addEventListener('scroll', syncViewport);
+    window.addEventListener('resize', syncViewport);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = originalBodyOverflow;
+      visualViewport?.removeEventListener('resize', syncViewport);
+      visualViewport?.removeEventListener('scroll', syncViewport);
+      window.removeEventListener('resize', syncViewport);
+      modal.style.removeProperty('top');
+      modal.style.removeProperty('bottom');
+      modal.style.removeProperty('height');
+      modal.style.removeProperty('--gallery-comments-max-height');
+    };
+  }, [activePhotoIndex]);
 
   // Close mobile comments drawer whenever active photo changes so the photo is protagonist
   useEffect(() => {
@@ -1144,6 +1185,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 onClick={closePhotoViewer}
                 data-typography-area="gallery-fullscreen"
                 data-gallery-fullscreen="true"
+                ref={fullscreenModalRef}
                 className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-0 sm:p-4 lg:p-6"
                 style={{ '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}` } as React.CSSProperties}
               >
@@ -1391,7 +1433,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         />
 
                         <div
-                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 h-[min(52dvh,420px)] flex flex-col bg-stone-950 border-t border-white/20 rounded-t-2xl shadow-[0_-8px_24px_rgba(0,0,0,0.65)] overflow-hidden"
+                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 h-[min(var(--gallery-comments-max-height,52dvh),420px)] flex flex-col bg-stone-950 border-t border-white/20 rounded-t-2xl shadow-[0_-8px_24px_rgba(0,0,0,0.65)] overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Drag Handle & Header */}
