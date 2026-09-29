@@ -1351,7 +1351,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     </div>
 
                     {/* Keep the mobile viewport dedicated to the photo; thumbnails remain on larger screens. */}
-                    {photos.length > 1 && (
+                    {!isMobileViewport && photos.length > 1 && (
                       <div className="hidden lg:flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
                         <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
                         <div ref={thumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">

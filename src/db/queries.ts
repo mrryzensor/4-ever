@@ -2058,7 +2058,7 @@ export async function getGalleryPhotos(category?: string, weddingId: number = 1)
   } catch (err) {
     if (hasPostgresConfig()) {
       console.error('Failed to load gallery photos from PostgreSQL:', err);
-      throw err;
+      if (process.env.NODE_ENV === 'production') throw err;
     }
   }
 

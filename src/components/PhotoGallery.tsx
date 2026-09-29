@@ -139,6 +139,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
   const lightboxNavigationRequestRef = useRef(0);
+  const fullscreenModalRef = useRef<HTMLDivElement>(null);
 
   // Comments state for the active photo
   const [comments, setComments] = useState<PhotoComment[]>([]);
@@ -152,6 +153,41 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [drivePhotoCommentsById, setDrivePhotoCommentsById] = useState<Record<string, PhotoComment[]>>({});
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
   const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
+
+  // Mobile browsers can leave a blank strip between a fixed lightbox and the
+  // keyboard. Size the lightbox to the visual viewport as it changes.
+  useEffect(() => {
+    const modal = fullscreenModalRef.current;
+    if (activePhotoIndex === null || !modal) return;
+
+    const visualViewport = window.visualViewport;
+    let frame = 0;
+    const syncViewport = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const height = visualViewport?.height ?? window.innerHeight;
+        modal.style.top = `${visualViewport?.offsetTop ?? 0}px`;
+        modal.style.bottom = 'auto';
+        modal.style.height = `${height}px`;
+        modal.style.setProperty('--gallery-comments-max-height', `${height * 0.62}px`);
+      });
+    };
+
+    const originalBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    syncViewport();
+    visualViewport?.addEventListener('resize', syncViewport);
+    visualViewport?.addEventListener('scroll', syncViewport);
+    window.addEventListener('resize', syncViewport);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = originalBodyOverflow;
+      visualViewport?.removeEventListener('resize', syncViewport);
+      visualViewport?.removeEventListener('scroll', syncViewport);
+      window.removeEventListener('resize', syncViewport);
+    };
+  }, [activePhotoIndex]);
 
   // Close mobile comments drawer whenever active photo changes so the photo is protagonist
   useEffect(() => {
@@ -1157,6 +1193,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <AnimatePresence>
             {activePhoto && (
               <motion.div
+                ref={fullscreenModalRef}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -1371,7 +1408,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                     {/* Navigable thumbnail rail */}
                     {carouselPhotos.length > 1 && (
-                      <div className="flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
+                      <div className="hidden lg:flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
                         <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
                         <div ref={thumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
                           <div className="flex w-max min-w-full items-center justify-center gap-2">
@@ -1414,7 +1451,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           animate={{ y: 0, opacity: 1 }}
                           exit={{ y: '100%', opacity: 0 }}
                           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[62vh] flex flex-col bg-stone-950/80 backdrop-blur-2xl border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
+                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[var(--gallery-comments-max-height,62vh)] flex flex-col bg-stone-950/95 border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Drag Handle & Header */}
