@@ -81,6 +81,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   heroCustomDateText: text('hero_custom_date_text').default(''),
   heroQuote: text('hero_quote').default('El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'),
   heroVerse: text('hero_verse').default('1 Corintios 13:7'),
+  heroVersePosition: text('hero_verse_position').default('center'),
   heroShowCountdown: boolean('hero_show_countdown').default(false),
   heroShowRsvpButton: boolean('hero_show_rsvp_button').default(false),
   heroShowIcon: boolean('hero_show_icon').default(false),

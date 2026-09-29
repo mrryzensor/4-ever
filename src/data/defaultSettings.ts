@@ -73,6 +73,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   heroCustomDateText: '',
   heroQuote: 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.',
   heroVerse: '1 Corintios 13:7',
+  heroVersePosition: 'center',
   heroShowCountdown: false,
   heroShowRsvpButton: false,
   heroShowIcon: false,

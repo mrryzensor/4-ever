@@ -633,8 +633,14 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <span className="text-white/80">· {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)} {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
               </motion.div>
             )}
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="max-w-2xl mx-auto mt-2">
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="w-full max-w-2xl mx-auto mt-2">
               <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.'}</p>
+
+              {(settings.heroVerse ?? '1 Corintios 13:7').trim() && (
+                <p className={`mt-2 w-full text-xs sm:text-sm font-sans font-semibold uppercase tracking-[0.2em] text-amber-100 drop-shadow-md ${settings.heroVersePosition === 'left' ? 'text-left' : settings.heroVersePosition === 'right' ? 'text-right' : 'text-center'}`}>
+                  {(settings.heroVerse ?? '1 Corintios 13:7').trim()}
+                </p>
+              )}
             </motion.div>
             {heroCountdownEnabled && (
               <div className="mt-2 w-full px-1 sm:mt-3">

@@ -723,9 +723,23 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               placeholder="Ej. TextoBiblico 14:17 o 1 Corintios 13:7 o Antoine de Saint-Exupéry"
               className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] font-sans"
             />
-            <span className="text-[10px] text-[#7D8C7A] mt-1 block">
-              Aparece centrado, con tipografía en mayúsculas espaciadas, debajo de la comilla de cierre.
-            </span>
+            <div className="mt-3">
+              <label className="text-xs font-bold text-[#1a1a1a] block mb-1">
+                Posición de la cita debajo de las comillas:
+              </label>
+              <select
+                value={settings.heroVersePosition || 'center'}
+                onChange={(e) => onChange({ heroVersePosition: e.target.value as 'left' | 'center' | 'right' })}
+                className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+              >
+                <option value="left">Abajo a la izquierda</option>
+                <option value="center">Abajo al centro</option>
+                <option value="right">Abajo a la derecha</option>
+              </select>
+              <span className="text-[10px] text-[#7D8C7A] mt-1 block">
+                La referencia o autor aparece justo debajo del texto entre comillas.
+              </span>
+            </div>
           </div>
         </div>
 
@@ -807,7 +821,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderMiniCourtCard()}
 
                 {/* Quote with quotes */}
-                <div className="flex flex-col items-center max-w-md mx-auto pt-1">
+                <div className="flex w-full max-w-md flex-col items-center mx-auto pt-1">
                   <span className="text-3xl sm:text-4xl font-serif text-amber-200/90 leading-none select-none drop-shadow">
                     “
                   </span>
@@ -822,7 +836,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
                   {/* Bible verse */}
                   {(settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17') && (
-                    <p className="text-[10px] sm:text-xs font-sans tracking-[0.25em] uppercase font-semibold text-amber-200 mt-2 drop-shadow">
+                    <p className={`mt-2 w-full text-[10px] sm:text-xs font-sans tracking-[0.25em] uppercase font-semibold text-amber-200 drop-shadow ${settings.heroVersePosition === 'left' ? 'text-left' : settings.heroVersePosition === 'right' ? 'text-right' : 'text-center'}`}>
                       {settings.heroVerse !== undefined ? settings.heroVerse : 'TextoBiblico 14:17'}
                     </p>
                   )}

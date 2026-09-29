@@ -158,7 +158,8 @@ export interface WeddingSettings {
   heroDateFormat?: string; // e.g. 'dd.mm.aaaa', 'dd / mm / aaaa', 'literal-full', 'custom'
   heroCustomDateText?: string; // custom date string if heroDateFormat === 'custom'
   heroQuote?: string; // e.g. 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'
-  heroVerse?: string; // e.g. '1 Corintios 13:7'
+  heroVerse?: string; // e.g. 'Eclesiastés 4:12'
+  heroVersePosition?: 'left' | 'center' | 'right';
   heroShowCountdown?: boolean; // false by default for minimal hero
   heroShowRsvpButton?: boolean; // false by default
   heroShowIcon?: boolean; // false by default

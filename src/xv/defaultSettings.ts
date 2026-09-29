@@ -78,6 +78,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   heroCustomDateText: '',
   heroQuote: 'Deja que la vida te despeine, sueña en grande y baila como si el mundo fuera tuyo.',
   heroVerse: 'Proverbios 31:25 - Fuerza y dignidad son su vestidura, y se ríe de lo por venir.',
+  heroVersePosition: 'center',
   heroShowCountdown: false,
   heroShowRsvpButton: false,
   heroShowIcon: true,
