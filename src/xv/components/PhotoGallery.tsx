@@ -131,6 +131,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
+  const [loadedCarouselPhotoKeys, setLoadedCarouselPhotoKeys] = useState<string[]>([]);
+  const [isLightboxNavigationLoading, setIsLightboxNavigationLoading] = useState(false);
   const thumbnailRailRef = useRef<HTMLDivElement>(null);
   const landingThumbnailRailRef = useRef<HTMLDivElement>(null);
   const lightboxNavigationRequestRef = useRef(0);
@@ -346,33 +348,44 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
   const closePhotoViewer = useCallback(() => {
     lightboxNavigationRequestRef.current += 1;
+    setIsLightboxNavigationLoading(false);
     setActivePhotoIndex(null);
   }, []);
 
-  const openPhotoAtIndex = useCallback(async (index: number) => {
+  const openPhotoAtIndex = useCallback(async (index: number, showNavigationLoader = false) => {
     const photo = carouselPhotos[index];
     if (!photo) return;
     const requestId = ++lightboxNavigationRequestRef.current;
+    const photoKey = getCarouselPhotoLoadKey(photo);
+    const isPhotoLoaded = loadedCarouselPhotoKeys.includes(photoKey);
+    setIsLightboxNavigationLoading(showNavigationLoader && !isPhotoLoaded);
     try {
-      await preloadCarouselImage(photo);
+      if (!isPhotoLoaded) await preloadCarouselImage(photo);
     } catch {
+      if (requestId === lightboxNavigationRequestRef.current) setIsLightboxNavigationLoading(false);
       return;
     }
-    if (requestId === lightboxNavigationRequestRef.current) setActivePhotoIndex(index);
-  }, [carouselPhotos]);
+    if (requestId === lightboxNavigationRequestRef.current) {
+      if (!isPhotoLoaded) {
+        setLoadedCarouselPhotoKeys((previous) => previous.includes(photoKey) ? previous : [...previous, photoKey]);
+      }
+      setActivePhotoIndex(index);
+      setIsLightboxNavigationLoading(false);
+    }
+  }, [carouselPhotos, loadedCarouselPhotoKeys]);
 
   const handlePrevPhoto = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (carouselPhotos.length === 0) return;
     const currentIndex = activePhotoIndex ?? 0;
-    void openPhotoAtIndex(currentIndex === 0 ? carouselPhotos.length - 1 : currentIndex - 1);
+    void openPhotoAtIndex(currentIndex === 0 ? carouselPhotos.length - 1 : currentIndex - 1, Boolean(e));
   }, [activePhotoIndex, carouselPhotos.length, openPhotoAtIndex]);
 
   const handleNextPhoto = useCallback((e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (carouselPhotos.length === 0) return;
     const currentIndex = activePhotoIndex ?? 0;
-    void openPhotoAtIndex(currentIndex === carouselPhotos.length - 1 ? 0 : currentIndex + 1);
+    void openPhotoAtIndex(currentIndex === carouselPhotos.length - 1 ? 0 : currentIndex + 1, Boolean(e));
   }, [activePhotoIndex, carouselPhotos.length, openPhotoAtIndex]);
 
   // Keyboard arrow navigation (Left / Right / Escape)
@@ -649,7 +662,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [photoRatios, setPhotoRatios] = useState<Record<number, number>>({});
-  const [loadedCarouselPhotoKeys, setLoadedCarouselPhotoKeys] = useState<string[]>([]);
   const [isLoadingNextPhoto, setIsLoadingNextPhoto] = useState(false);
   const [carouselLoadError, setCarouselLoadError] = useState(false);
   const carouselNavigationRequestRef = useRef(0);
@@ -1244,6 +1256,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <div className="flex-1 w-full h-full bg-black flex flex-col justify-center items-center p-0 sm:p-4 min-h-0 overflow-hidden relative select-none">
 
                     {/* Photo Position Counter at top */}
+                    {isLightboxNavigationLoading && (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 pointer-events-none" role="status" aria-live="polite">
+                        <div className="flex items-center gap-3 rounded-full border border-white/20 bg-black/80 px-4 py-3 text-sm text-white shadow-xl">
+                          <Loader2 className={isMobileViewport ? 'h-5 w-5 text-amber-300' : 'h-5 w-5 animate-spin text-amber-300'} />
+                          <span>Cargando foto...</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 lg:backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
                       <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
                       <span className="text-stone-500">/</span>
