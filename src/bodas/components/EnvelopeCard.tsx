@@ -697,8 +697,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
-              className={`w-full ${settings.receptionSameAsCeremony ? 'md:col-span-2 max-w-4xl mx-auto' : ''} p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full ${settings.receptionSameAsCeremony ? 'md:col-span-2 max-w-4xl mx-auto' : ''} p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -821,8 +821,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 2. RECEPCIÓN & BANQUETE (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             {!settings.receptionSameAsCeremony && (
             <div
-              className={`p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -934,8 +934,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 3. ITINERARIO & CRONOGRAMA (Full Interactive Timeline Inline - Fully Clickable) */}
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+                className={`p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
                 <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1079,8 +1079,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 4. MESA DE REGALOS & CUENTAS BANCARIAS (Interactive Card with Copyable Bank Accounts - Fully Clickable) */}
             {settings.showGiftRegistry === true && (
               <div
-                className={`p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+                className={`p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
                 <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1246,8 +1246,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {/* 5. DRESS CODE INTERACTIVE CARD & VISUAL FASHION GUIDE WITH COLOR PALETTE SELECTION (Fully Clickable) */}
           {settings.showDressCode !== false && (
             <div
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
-                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1439,8 +1439,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {/* 6. TIPS & RECOMENDACIONES DE LOS NOVIOS (Configurable Interactive Section - Fully Clickable) */}
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
-              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
-                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />

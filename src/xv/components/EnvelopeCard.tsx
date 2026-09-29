@@ -739,8 +739,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               style={{ order: settings.receptionSameAsCeremony ? sharedLocationCardOrder : ceremonyCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full min-w-0 max-w-full ${settings.receptionSameAsCeremony ? 'md:w-full md:max-w-4xl mx-auto overflow-hidden' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full min-w-0 max-w-full ${settings.receptionSameAsCeremony ? 'md:w-full md:max-w-4xl mx-auto overflow-hidden' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -864,8 +864,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {!settings.receptionSameAsCeremony && (
             <div
               style={{ order: receptionCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                expandedSection === 'reception' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1012,8 +1012,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 style={{ order: detailSectionOrder.indexOf('itinerary') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
                 <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1158,8 +1158,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry === true && (
               <div
                 style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-all flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
-                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                  expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
                 <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1330,8 +1330,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               style={{ order: detailSectionOrder.indexOf('dress-code') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
-                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
@@ -1521,8 +1521,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               style={{ order: detailSectionOrder.indexOf('tips') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-all group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
-                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50 scale-[1.01]' : 'hover:-translate-y-1 hover:shadow-xl'
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+                expandedSection === 'tips' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
               <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />

@@ -126,7 +126,6 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Comments state for the active photo
   const [comments, setComments] = useState<PhotoComment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
-  const [newCommentText, setNewCommentText] = useState('');
   const [authorInputName, setAuthorInputName] = useState(guestName || '');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [likedPhotoIds, setLikedPhotoIds] = useState<number[]>([]);
@@ -135,11 +134,27 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [drivePhotoCommentsById, setDrivePhotoCommentsById] = useState<Record<string, PhotoComment[]>>({});
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
   const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
+  const mobileCommentInputRef = useRef<HTMLInputElement>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+    updateViewport();
+    mediaQuery.addEventListener('change', updateViewport);
+    return () => mediaQuery.removeEventListener('change', updateViewport);
+  }, []);
 
   // Close mobile comments drawer whenever active photo changes so the photo is protagonist
   useEffect(() => {
     setMobileCommentsOpen(false);
   }, [activePhotoIndex]);
+
+  useEffect(() => {
+    if (!mobileCommentsOpen) return;
+    const frame = window.requestAnimationFrame(() => mobileCommentInputRef.current?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [mobileCommentsOpen]);
 
   const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
   const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
@@ -414,15 +429,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     }
   };
 
-  const handleAddComment = async (e: React.FormEvent) => {
+  const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!activePhoto || !newCommentText.trim() || isSubmittingComment) return;
+    if (!activePhoto || isSubmittingComment) return;
 
-    const guestDisplayName = authorInputName.trim() || 'Invitado Especial';
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const message = String(formData.get('message') || '').trim();
+    const authorName = String(formData.get('guestName') || '').trim();
+    if (!message) return;
+
+    const guestDisplayName = authorName || 'Invitado Especial';
     const payload = {
       guestName: guestDisplayName,
       guestCode: guestCode || null,
-      message: newCommentText.trim(),
+      message,
       weddingId,
     };
 
@@ -445,7 +466,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
         } else {
           setPhotoCommentsMap((prev) => ({ ...prev, [activePhoto.id]: [...(prev[activePhoto.id] || []), createdComment] }));
         }
-        setNewCommentText('');
+        const messageInput = form.elements.namedItem('message') as HTMLInputElement | null;
+        if (messageInput) messageInput.value = '';
       }
     } catch (err) {
       console.error('Error submitting comment:', err);
@@ -1116,17 +1138,17 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <AnimatePresence>
             {activePhoto && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={isMobileViewport ? false : { opacity: 0 }}
+                animate={isMobileViewport ? undefined : { opacity: 1 }}
+                exit={isMobileViewport ? undefined : { opacity: 0 }}
                 onClick={closePhotoViewer}
                 data-typography-area="gallery-fullscreen"
-                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
+                className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-2 sm:p-4 lg:p-6"
                 style={{ '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}` } as React.CSSProperties}
               >
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-full h-full sm:w-[96vw] sm:max-w-7xl sm:h-[94vh] bg-stone-950 sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-stone-800 flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-200"
+                  className="relative w-full h-[100dvh] sm:w-[96vw] sm:max-w-7xl sm:h-[94vh] bg-stone-950 sm:rounded-3xl overflow-hidden shadow-2xl border-0 sm:border border-stone-800 flex flex-col lg:flex-row lg:animate-in lg:fade-in lg:zoom-in-95 lg:duration-200"
                 >
                   {/* Top Bar Actions: High-res Download & Close Button */}
                   <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-40 flex items-center gap-2">
@@ -1135,7 +1157,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       download
-                      className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-lg cursor-pointer transition-all hover:scale-105"
+                      className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center border border-white/20 lg:backdrop-blur-md shadow-lg cursor-pointer lg:transition-all lg:hover:scale-105"
                       title="Abrir imagen original"
                     >
                       <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1143,7 +1165,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     <button
                       type="button"
                       onClick={closePhotoViewer}
-                      className="w-10 h-10 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer transition-all hover:scale-105"
+                      className="w-10 h-10 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center border border-white/20 shadow-lg cursor-pointer lg:transition-all lg:hover:scale-105"
                       title="Cerrar galería (Esc)"
                     >
                       <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -1154,7 +1176,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <div className="flex-1 w-full h-full bg-black flex flex-col justify-center items-center p-0 sm:p-4 min-h-0 overflow-hidden relative select-none">
 
                     {/* Photo Position Counter at top */}
-                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
+                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 lg:backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
                       <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
                       <span className="text-stone-500">/</span>
                       <span>{photos.length}</span>
@@ -1165,7 +1187,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <button
                         type="button"
                         onClick={handlePrevPhoto}
-                        className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        className="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 lg:backdrop-blur-md shadow-xl cursor-pointer lg:transition-all lg:hover:scale-110"
                         title="Foto anterior"
                       >
                         <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7 -translate-x-0.5" />
@@ -1177,14 +1199,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       <button
                         type="button"
                         onClick={handleNextPhoto}
-                        className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 backdrop-blur-md shadow-xl cursor-pointer transition-all hover:scale-110 active:scale-95"
+                        className="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center border border-white/20 lg:backdrop-blur-md shadow-xl cursor-pointer lg:transition-all lg:hover:scale-110"
                         title="Siguiente foto"
                       >
                         <ChevronRight className="w-7 h-7 translate-x-0.5" />
                       </button>
                     )}
 
-                    {/* Main Photo with smooth transition */}
+                    {/* Main Photo: transitions are disabled on mobile and retained on desktop. */}
                     <div
                       className="flex-1 w-full h-full flex flex-col items-center justify-center min-h-0 relative px-0 sm:px-2 cursor-pointer"
                       onClick={() => {
@@ -1193,13 +1215,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         }
                       }}
                     >
-                      <AnimatePresence mode="wait">
+                      <AnimatePresence mode={isMobileViewport ? 'sync' : 'wait'} initial={false}>
                         <motion.div
                           key={activePhoto.id}
-                          initial={{ opacity: 0, scale: 0.98 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ duration: 0.25 }}
+                          initial={isMobileViewport ? false : { opacity: 0, scale: 0.98 }}
+                          animate={isMobileViewport ? undefined : { opacity: 1, scale: 1 }}
+                          exit={isMobileViewport ? undefined : { opacity: 0, scale: 0.98 }}
+                          transition={isMobileViewport ? undefined : { duration: 0.25 }}
                           className="flex flex-col items-center justify-center h-full w-full relative"
                         >
                           <img
@@ -1243,14 +1265,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           e.stopPropagation();
                           handleLike(activePhoto);
                         }}
-                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${hasLikedPhoto(activePhoto)
+                        className={`w-12 h-12 rounded-full border shadow-2xl flex flex-col items-center justify-center cursor-pointer ${hasLikedPhoto(activePhoto)
                           ? 'bg-rose-950/80 border-rose-500 text-rose-200 ring-2 ring-rose-500/40 scale-105'
                           : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
                           }`}
                         title="Me gusta"
                       >
                         <Heart
-                          className={`w-5 h-5 transition-transform ${hasLikedPhoto(activePhoto)
+                          className={`w-5 h-5 ${hasLikedPhoto(activePhoto)
                             ? 'fill-rose-500 text-rose-500 scale-110'
                             : 'fill-rose-500 text-rose-500'
                             }`}
@@ -1265,7 +1287,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           e.stopPropagation();
                           setMobileCommentsOpen((prev) => !prev);
                         }}
-                        className={`w-12 h-12 rounded-full backdrop-blur-md border shadow-2xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-90 ${mobileCommentsOpen
+                        className={`w-12 h-12 rounded-full border shadow-2xl flex flex-col items-center justify-center cursor-pointer ${mobileCommentsOpen
                           ? 'bg-amber-950/80 border-amber-400 text-amber-200 ring-2 ring-amber-400/40'
                           : 'bg-black/55 hover:bg-black/75 border-white/20 text-white'
                           }`}
@@ -1277,8 +1299,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     </div>
 
                     {/* MOBILE BOTTOM GRADIENT OVERLAY - Subtle & Elegant (Photo is the real protagonist) */}
-                    <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none transition-opacity duration-300 ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
-                      <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-4 px-4 pr-16 text-left">
+                    <div className={`lg:hidden absolute inset-x-0 bottom-0 z-20 pointer-events-none ${mobileCommentsOpen ? 'opacity-0' : 'opacity-100'}`}>
+                      <div className="bg-gradient-to-t from-black/90 via-black/40 to-transparent pt-16 pb-3 px-4 pr-16 text-left">
                         <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full inline-block mb-1">
                           {activePhoto.caption ? 'Sesión de Fotos' : 'Álbum de los Novios'}
                         </span>
@@ -1300,7 +1322,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               e.stopPropagation();
                               setMobileCommentsOpen(true);
                             }}
-                            className="pointer-events-auto mt-1.5 inline-flex items-center gap-2 max-w-full px-3 py-1 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 text-[11px] text-stone-200 cursor-pointer shadow-md active:scale-95 transition-all"
+                            className="pointer-events-auto mt-1.5 inline-flex items-center gap-2 max-w-full px-3 py-1 rounded-full bg-black/55 hover:bg-black/70 border border-white/15 text-[11px] text-stone-200 cursor-pointer shadow-md"
                           >
                             <MessageCircle className="w-3 h-3 text-amber-400 shrink-0" />
                             <span className="font-semibold text-amber-200 truncate shrink-0">{comments[comments.length - 1].guestName}:</span>
@@ -1315,7 +1337,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             e.stopPropagation();
                             setMobileCommentsOpen(true);
                           }}
-                          className="pointer-events-auto mt-2 w-full flex items-center justify-between px-3.5 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/15 text-xs text-stone-300 shadow-md active:scale-98 transition-all cursor-pointer"
+                          className="pointer-events-auto mt-2 w-full flex items-center justify-between px-3.5 py-2 rounded-full bg-black/55 hover:bg-black/70 border border-white/15 text-xs text-stone-300 shadow-md cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
                             <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
@@ -1328,9 +1350,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       </div>
                     </div>
 
-                    {/* Navigable thumbnail rail */}
+                    {/* Keep the mobile viewport dedicated to the photo; thumbnails remain on larger screens. */}
                     {photos.length > 1 && (
-                      <div className="flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
+                      <div className="hidden lg:flex w-full max-w-2xl shrink-0 items-center gap-1 px-2 pt-2 pb-1 z-20">
                         <button type="button" onClick={() => scrollThumbnailRail(-1)} aria-label="Ver miniaturas anteriores" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"><ChevronLeft className="h-5 w-5" /></button>
                         <div ref={thumbnailRailRef} className="min-w-0 flex-1 overflow-x-auto px-1 no-scrollbar scroll-smooth">
                           <div className="flex w-max min-w-full items-center justify-center gap-2">
@@ -1358,26 +1380,21 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     )}
                   </div>
 
-                  {/* MOBILE COMMENTS SLIDE-UP SHEET (Translucent Frosted Glass, Non-intrusive) */}
-                  <AnimatePresence>
-                    {mobileCommentsOpen && (
+                  {/* MOBILE COMMENTS PANEL */}
+                  {mobileCommentsOpen && (
                       <>
                         {/* Tap backdrop to close */}
                         <div
-                          className="lg:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm"
+                          className="lg:hidden absolute inset-0 z-30 bg-black/50"
                           onClick={() => setMobileCommentsOpen(false)}
                         />
 
-                        <motion.div
-                          initial={{ y: '100%', opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: '100%', opacity: 0 }}
-                          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 max-h-[62vh] flex flex-col bg-stone-950/80 backdrop-blur-2xl border-t border-white/20 rounded-t-3xl shadow-[0_-15px_45px_rgba(0,0,0,0.85)] overflow-hidden"
+                        <div
+                          className="lg:hidden absolute bottom-0 inset-x-0 z-40 h-[min(52dvh,420px)] flex flex-col bg-stone-950 border-t border-white/20 rounded-t-2xl shadow-[0_-8px_24px_rgba(0,0,0,0.65)] overflow-hidden"
                           onClick={(e) => e.stopPropagation()}
                         >
                           {/* Drag Handle & Header */}
-                          <div className="p-3.5 pb-2.5 border-b border-white/10 shrink-0">
+                          <div className="p-2.5 pb-2 border-b border-white/10 shrink-0">
                             <div
                               onClick={() => setMobileCommentsOpen(false)}
                               className="w-10 h-1 rounded-full bg-white/30 mx-auto mb-2 cursor-pointer hover:bg-white/50"
@@ -1402,14 +1419,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           </div>
 
                           {/* Comments List */}
-                          <div className="flex-1 p-3.5 py-2.5 overflow-y-auto space-y-2 min-h-0 custom-scrollbar">
+                          <div className="flex-1 p-3 py-2 overflow-y-auto space-y-2 min-h-0 custom-scrollbar">
                             {loadingComments ? (
                               <div className="py-6 text-center text-xs text-stone-400 flex items-center justify-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
                                 <span>{galleryText.commentsLoading}</span>
                               </div>
                             ) : comments.length === 0 ? (
-                              <div className="py-6 text-center bg-white/5 backdrop-blur-sm rounded-2xl border border-dashed border-white/15 p-4">
+                                  <div className="py-6 text-center bg-white/5 rounded-2xl border border-dashed border-white/15 p-4">
                                 <MessageCircle className="w-6 h-6 text-stone-400 mx-auto mb-1" />
                                 <p className="text-xs text-stone-200 font-medium">{galleryText.commentsEmpty}</p>
                                 <p className="text-[11px] text-stone-400 mt-0.5">{galleryText.commentsHelper}</p>
@@ -1418,7 +1435,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               comments.map((c) => (
                                 <div
                                   key={c.id}
-                                  className="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-2.5 sm:p-3 space-y-1"
+                                  className="bg-white/10 border border-white/15 rounded-2xl p-2.5 sm:p-3 space-y-1"
                                 >
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
@@ -1444,14 +1461,14 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           </div>
 
                           {/* Mobile Comment Form */}
-                          <div className="p-3 bg-black/50 border-t border-white/15 shrink-0">
+                          <div className="p-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] bg-stone-950 border-t border-white/15 shrink-0">
                             <form onSubmit={handleAddComment} className="space-y-2">
                               <div className="relative">
                                 <User className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
                                   type="text"
-                                  value={authorInputName}
-                                  onChange={(e) => setAuthorInputName(e.target.value)}
+                                  name="guestName"
+                                  defaultValue={authorInputName}
                                   aria-label={galleryText.commentNameLabel}
                                   placeholder={galleryText.commentNamePlaceholder}
                                   className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
@@ -1461,18 +1478,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
                               <div className="flex gap-2">
                                 <input
+                                  ref={mobileCommentInputRef}
                                   type="text"
-                                  value={newCommentText}
-                                  onChange={(e) => setNewCommentText(e.target.value)}
+                                  name="message"
                                   aria-label={galleryText.commentTextLabel}
                                   placeholder={galleryText.commentTextPlaceholder}
-                                  className="flex-1 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
+                                  className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-stone-900 border border-white/20 text-base text-white placeholder-stone-400 focus:outline-none focus:border-amber-400"
+                                  enterKeyHint="send"
                                   required
                                 />
                                 <button
                                   type="submit"
-                                  disabled={isSubmittingComment || !newCommentText.trim()}
-                                  className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-serif font-bold flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer"
+                                  disabled={isSubmittingComment}
+                                  className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-serif font-bold flex items-center justify-center gap-1 shadow-md cursor-pointer"
                                   title={galleryText.commentSubmit}
                                   aria-label={galleryText.commentSubmit}
                                 >
@@ -1485,10 +1503,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               </div>
                             </form>
                           </div>
-                        </motion.div>
+                        </div>
                       </>
                     )}
-                  </AnimatePresence>
 
                   {/* DESKTOP SIDEBAR PANEL - 100% full experience on desktop */}
                   <div className="hidden lg:flex w-[440px] flex-col justify-between bg-stone-900/95 text-stone-100 border-l border-stone-800 shrink-0 max-h-[94vh] overflow-hidden">
@@ -1598,8 +1615,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           <User className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type="text"
-                            value={authorInputName}
-                            onChange={(e) => setAuthorInputName(e.target.value)}
+                            name="guestName"
+                            defaultValue={authorInputName}
                             aria-label={galleryText.commentNameLabel}
                             placeholder={galleryText.commentNamePlaceholder}
                             className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
@@ -1610,8 +1627,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            value={newCommentText}
-                            onChange={(e) => setNewCommentText(e.target.value)}
+                            name="message"
                             aria-label={galleryText.commentTextLabel}
                             placeholder={galleryText.commentTextPlaceholder}
                             className="flex-1 px-4 py-3 rounded-2xl bg-stone-900 border border-stone-700 text-sm text-stone-100 placeholder-stone-400 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
@@ -1619,7 +1635,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           />
                           <button
                             type="submit"
-                            disabled={isSubmittingComment || !newCommentText.trim()}
+                            disabled={isSubmittingComment}
                             className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-sm font-serif font-bold flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 shrink-0"
                             title={galleryText.commentSubmit}
                             aria-label={galleryText.commentSubmit}
