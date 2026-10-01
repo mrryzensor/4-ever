@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Send, Heart, Sparkles, User } from 'lucide-react';
-import { GuestWish } from '../../types.ts';
+import { GuestWish, WeddingSettings } from '../../types.ts';
 import { AnimatedQuillPen, StyleSpecificDivider } from './AnimatedSvgs.tsx';
-import { CARD_THEMES } from '../../lib/themes.ts';
+import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
+import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { toast } from '../../lib/toast.ts';
 
 interface GuestbookSectionProps {
@@ -11,6 +13,7 @@ interface GuestbookSectionProps {
   defaultAuthor?: string;
   cardStyle?: string;
   dividerStyle?: string;
+  settings?: WeddingSettings;
 }
 
 export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
@@ -18,6 +21,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
   defaultAuthor = '',
   cardStyle = 'classic-gold',
   dividerStyle,
+  settings,
 }) => {
   const [wishes, setWishes] = useState<GuestWish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,28 +87,20 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
     }
   };
 
-  const isDark = cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings ? { ...settings, cardStyle: settings.cardStyle || cardStyle } : { cardStyle }, CARD_THEMES, 'romantic-floral');
+  const isDark = activeTheme.isDark;
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="libro-firmas">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
-          isDark
-            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
-            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
-        }`}>
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ color: activeTheme.accentColorHex, backgroundColor: `${activeTheme.accentColorHex}1A`, borderColor: `${activeTheme.accentColorHex}66` }}>
           <AnimatedQuillPen className="w-10 h-10" color={activeTheme.accentColorHex} />
         </div>
-        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
-          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
-        }`}>
+        <span data-typography-role="detail" className="text-xs uppercase tracking-[0.3em] font-semibold block mb-2" style={{ color: activeTheme.accentColorHex }}>
           Mensajes de Cariño
         </span>
-        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
-          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
-        }`}>
+        <h2 className="text-3xl sm:text-5xl font-serif font-normal" style={{ color: activeTheme.primaryColorHex }}>
           Libro de Firmas Virtual
         </h2>
         <StyleSpecificDivider
@@ -113,9 +109,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
-          isDark ? 'text-stone-300' : 'text-stone-600'
-        }`}>
+        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${activeTheme.textSecondaryClass}`}>
           Déjame tus mejores deseos y bendiciones para esta hermosa etapa de mis quince años.
         </p>
 
@@ -142,6 +136,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                 ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d]'
                 : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
             }`}
+            style={{ backgroundColor: activeTheme.accentColorHex, color: getContrastTextColor(activeTheme.accentColorHex) }}
           >
             <span>{isExpanded ? 'Ocultar Libro de Firmas' : 'Ver y Dejar Felicitaciones'}</span>
             <span className={`transition-transform duration-300 text-xs ${isExpanded ? 'rotate-180' : ''}`}>
@@ -164,8 +159,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
         {/* Form to leave wish */}
         <div className={`lg:col-span-1 backdrop-blur-sm rounded-3xl p-8 border shadow-sm h-fit ${
           isDark
-            ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
-            : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+            ? `${activeTheme.cardBgClass} text-[#FDFCF0]`
+            : activeTheme.cardBgClass
         }`}>
           <h3 className={`text-xl font-serif font-bold mb-1 flex items-center gap-2 ${
             isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
@@ -261,8 +256,8 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
           ) : wishes.length === 0 ? (
             <div className={`py-12 text-center rounded-3xl border border-dashed p-6 ${
               isDark
-                ? 'bg-[#282B25]/60 border-[#5A5A40]/60 text-stone-300'
-                : 'bg-white/60 border-stone-300 text-stone-500'
+                ? `${activeTheme.cardBgClass} text-stone-300`
+                : activeTheme.cardBgClass
             }`}>
               <Sparkles className="w-8 h-8 text-amber-500/70 mx-auto mb-2 shrink-0" />
               <p className={`text-xs ${isDark ? 'text-stone-300' : 'text-stone-500'}`}>
@@ -279,10 +274,10 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                     isDark
                       ? item.isHighlighted
                         ? 'bg-[#333830] border-[#C5A059]/60 shadow-lg text-stone-100'
-                        : 'bg-[#282B25] border-[#5A5A40]/50 shadow-sm text-stone-200'
+                        : `${activeTheme.cardBgClass} text-stone-200`
                       : item.isHighlighted
                         ? 'bg-amber-50/70 border-amber-300/80 shadow-md text-stone-800'
-                        : 'bg-white border-stone-200 shadow-sm text-stone-700'
+                        : activeTheme.cardBgClass
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2.5">
@@ -292,16 +287,16 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                       {item.guestName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className={`text-sm font-serif font-bold leading-tight ${isDark ? 'text-[#FDFCF0]' : 'text-stone-900'}`}>
+                      <h4 className="text-sm font-serif font-bold leading-tight" style={{ color: activeTheme.primaryColorHex }}>
                         {item.guestName}
                       </h4>
-                      <span className={`text-[10px] font-medium ${isDark ? 'text-[#C5A059]' : 'text-amber-800/80'}`}>
+                      <span className="text-[10px] font-medium" style={{ color: activeTheme.accentColorHex }}>
                         {item.relationship || 'Invitado Especial'}
                       </span>
                     </div>
                   </div>
 
-                  <p className={`text-xs leading-relaxed italic font-serif ${isDark ? 'text-stone-300' : 'text-stone-700'}`}>
+                  <p className={`text-xs leading-relaxed italic font-serif ${activeTheme.textSecondaryClass}`}>
                     "{item.message}"
                   </p>
 

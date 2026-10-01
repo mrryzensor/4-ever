@@ -26,7 +26,6 @@ export const AnimatedWatercolorBranchDivider: React.FC<{ className?: string; col
         {[
           { cx: 65, cy: 18, rx: 7, ry: 5, rot: -20, delay: 0 },
           { cx: 115, cy: 26, rx: 8, ry: 6, rot: 30, delay: 0.3 },
-          { cx: 160, cy: 18, rx: 9, ry: 7, rot: 0, delay: 0.6 },
           { cx: 205, cy: 14, rx: 8, ry: 6, rot: -30, delay: 0.9 },
           { cx: 255, cy: 22, rx: 7, ry: 5, rot: 20, delay: 1.2 },
         ].map((leaf, idx) => (
@@ -44,15 +43,27 @@ export const AnimatedWatercolorBranchDivider: React.FC<{ className?: string; col
           />
         ))}
 
-        {/* Dew Drop Sparkling */}
-        <motion.circle
-          cx="160"
-          cy="18"
-          r="2.5"
-          fill="#FFF"
-          animate={{ opacity: [0.3, 1, 0.3] }}
-          transition={{ duration: 1.8, repeat: Infinity }}
-        />
+        {/* Center leaf and dew drop stay upright in vertical dividers. */}
+        <g data-divider-center>
+          <motion.ellipse
+            cx="160"
+            cy="18"
+            rx="9"
+            ry="7"
+            fill="#7D947B"
+            opacity="0.8"
+            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.7, 0.95, 0.7] }}
+            transition={{ duration: 2.5, repeat: Infinity, delay: 0.6 }}
+          />
+          <motion.circle
+            cx="160"
+            cy="18"
+            r="2.5"
+            fill="#FFF"
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.8, repeat: Infinity }}
+          />
+        </g>
       </svg>
     </div>
   );

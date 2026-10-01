@@ -43,14 +43,16 @@ export const AnimatedEmeraldBotanicalDivider: React.FC<{ className?: string; col
         ))}
 
         {/* Center Emerald Gold Palm Diamond */}
-        <motion.g
-          animate={{ scale: [0.9, 1.15, 0.9], rotate: [0, 45, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          <rect x="153" y="15" width="14" height="14" fill="#D4AF37" transform="rotate(45 160 22)" opacity="0.9" />
-          <circle cx="160" cy="22" r="3" fill="#0B2017" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.9, 1.15, 0.9], rotate: [0, 45, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            <rect x="153" y="15" width="14" height="14" fill="#D4AF37" transform="rotate(45 160 22)" opacity="0.9" />
+            <circle cx="160" cy="22" r="3" fill="#0B2017" />
+          </motion.g>
+        </g>
 
         {/* Right Palm Frond Spine */}
         <motion.path

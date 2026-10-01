@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
 import { DEMO_XV_ID } from '../../lib/eventUtils.ts';
-import { CARD_THEMES } from '../../lib/themes.ts';
+import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 
 interface LiveInvitationCanvasProps {
   settings: WeddingSettings;
@@ -189,7 +190,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     panY: 0,
   });
 
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'romantic-floral');
   const currentSpec = DEVICE_SPECS[selectedDevice];
 
   // Keep a size guard as a fallback for layouts that temporarily collapse the canvas.

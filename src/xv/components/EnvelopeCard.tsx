@@ -38,6 +38,7 @@ import { getDetailSectionOrder } from '../../lib/sectionOrder.ts';
 import { getBankAccountBadgeText, getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../../lib/colorUtils.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 import { preserveViewportPosition } from '../../lib/preserveViewportPosition.ts';
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
@@ -69,6 +70,7 @@ import {
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
 import { HeroEmblem } from '../../components/HeroEmblem.tsx';
+import { CardGroupDecorations } from '../../components/CardGroupDecorations.tsx';
 
 const WOMAN_OUTFIT_OPTIONS = [
   { id: 'long-gown', label: 'Gala / Vestido Largo' },
@@ -111,30 +113,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 }) => {
   const heroContainerRef = useRef<HTMLDivElement>(null);
   
-  // Composite Theme Resolution: inherit base, overlay custom colors and typography
-  const baseTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const colorTheme = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
-    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || baseTheme)
-    : baseTheme;
-  const fontTheme = (settings.fontPairStyle && settings.fontPairStyle !== 'auto')
-    ? (CARD_THEMES[settings.fontPairStyle as CardStyleId] || baseTheme)
-    : baseTheme;
-
-  const theme = {
-    ...baseTheme,
-    bgHex: settings.customBgColor || colorTheme.bgHex,
-    secondaryBgHex: colorTheme.secondaryBgHex,
-    accentColorHex: settings.customAccentColor || colorTheme.accentColorHex,
-    itineraryAccentColorHex: settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex,
-    primaryColorHex: colorTheme.primaryColorHex,
-    cardBgClass: colorTheme.cardBgClass,
-    textPrimaryClass: colorTheme.textPrimaryClass,
-    textSecondaryClass: colorTheme.textSecondaryClass,
-    accentClass: colorTheme.accentClass,
-    borderClass: colorTheme.borderClass,
-    fontDisplay: fontTheme.fontDisplay,
-    fontBody: fontTheme.fontBody,
-  };
+  const theme = resolveInvitationTheme(settings, CARD_THEMES, 'romantic-floral');
   const accentContrastColor = getContrastTextColor(theme.accentColorHex);
   const themeDisplayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
@@ -148,9 +127,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const receptionCardOrder = detailSectionOrder.indexOf('reception') * 2;
   const sharedLocationCardOrder = Math.min(ceremonyCardOrder, receptionCardOrder);
   const rsvpButtonOrder = detailSectionOrder.indexOf('rsvp') * 2;
-  const isDark = (settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
-    ? (settings.colorPaletteStyle === 'dark-luxury' || settings.colorPaletteStyle === 'royal-navy' || settings.colorPaletteStyle === 'emerald-botanical')
-    : (settings.cardStyle === 'dark-luxury' || settings.cardStyle === 'royal-navy' || settings.cardStyle === 'emerald-botanical');
+  const isDark = theme.isDark;
 
   const activeFrameStyle = (settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto')
     ? settings.frameOrnamentStyle
@@ -161,10 +138,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const activeWaveStyle = (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto')
     ? settings.transitionWaveStyle
     : settings.cardStyle;
-  const activeWaveTheme = CARD_THEMES[activeWaveStyle as CardStyleId] || baseTheme;
+  const activeWaveTheme = CARD_THEMES[activeWaveStyle as CardStyleId] || theme;
   const activeWaveAccentColor = settings.customAccentColor
     || ((settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto')
-      ? colorTheme.accentColorHex
+      ? theme.accentColorHex
       : activeWaveTheme.accentColorHex);
 
   const [expandedSection, setExpandedSection] = useState<'none' | 'ceremony' | 'reception' | 'itinerary' | 'dresscode' | 'gifts' | 'tips'>('none');
@@ -742,12 +719,17 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </div>
 
           {/* Ordered flexible cards keep the integrated gallery at its selected position. */}
-          <div className="flex flex-col md:flex-row md:flex-wrap justify-center gap-8 text-left my-8 items-start">
+          <CardGroupDecorations
+            settings={settings}
+            accentColor={theme.accentColorHex}
+            className="flex flex-col md:flex-row md:flex-wrap justify-center gap-8 text-left my-8 items-start"
+          >
             
             {/* 1. CEREMONIA RELIGIOSA (Interactive Card with Embedded Map, GPS and Waze - Fully Clickable) */}
             <div
               style={{ order: settings.receptionSameAsCeremony ? sharedLocationCardOrder : ceremonyCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full min-w-0 max-w-full ${settings.receptionSameAsCeremony ? 'md:w-full md:max-w-4xl mx-auto overflow-hidden' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              data-invitation-card="true"
+              className={`w-full min-w-0 max-w-full ${settings.receptionSameAsCeremony ? 'md:w-full md:max-w-4xl mx-auto overflow-hidden' : 'md:w-[calc(50%-1rem)]'} p-6 sm:p-8 transition-shadow flex flex-col justify-between ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                 expandedSection === 'ceremony' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
@@ -872,7 +854,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {!settings.receptionSameAsCeremony && (
             <div
               style={{ order: receptionCardOrder, display: settings.showLocations === false ? 'none' : undefined }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+              data-invitation-card="true"
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                 expandedSection === 'reception' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
@@ -1020,7 +1003,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showItinerary !== false && itineraryList.length > 0 && (
               <div
                 style={{ order: detailSectionOrder.indexOf('itinerary') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                data-invitation-card="true"
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                   expandedSection === 'itinerary' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
@@ -1166,7 +1150,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             {settings.showGiftRegistry === true && (
               <div
                 style={{ order: detailSectionOrder.indexOf('gifts') * 2 }}
-                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between border select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${
+                data-invitation-card="true"
+                className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 transition-shadow flex flex-col justify-between ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-sm'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                   expandedSection === 'gifts' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
                 }`}
               >
@@ -1338,7 +1323,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showDressCode !== false && (
             <div
               style={{ order: detailSectionOrder.indexOf('dress-code') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              data-invitation-card="true"
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                 expandedSection === 'dresscode' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
@@ -1529,7 +1515,8 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           {settings.showTips !== false && tipsList.length > 0 && (
             <div
               style={{ order: detailSectionOrder.indexOf('tips') * 2 }}
-              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center border select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${
+              data-invitation-card="true"
+              className={`w-full md:w-[calc(50%-1rem)] p-6 sm:p-8 max-w-5xl 2xl:max-w-6xl mx-auto my-8 text-center ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} select-none transition-shadow group relative ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''} ${
                 expandedSection === 'tips' ? 'ring-2 ring-amber-400/50' : 'hover:shadow-xl'
               }`}
             >
@@ -1629,7 +1616,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               {inlineGallery}
             </div>
           )}
-          </div>
+          </CardGroupDecorations>
         </div>
       </section>
     </div>

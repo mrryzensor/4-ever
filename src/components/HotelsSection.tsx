@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Building2, ChevronDown, ExternalLink, MapPin, Phone } from 'lucide-react';
-import { CardThemeConfig, EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
+import { EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
+import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 
 interface HotelsSectionProps {
   settings: WeddingSettings;
@@ -40,14 +41,12 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
   const hotels = parseHotels(settings.hotelRecommendations);
   if (hotels.length === 0) return null;
 
-  const theme: CardThemeConfig = eventType === 'xv'
-    ? (XV_CARD_THEMES[settings.cardStyle] || XV_CARD_THEMES['romantic-floral'])
-    : (CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold']);
-  const darkStyles = ['dark-luxury', 'royal-navy', 'emerald-botanical'];
-  const palette = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
-    ? settings.colorPaletteStyle
-    : settings.cardStyle;
-  const isDark = darkStyles.includes(palette);
+  const theme = resolveInvitationTheme(
+    settings,
+    eventType === 'xv' ? XV_CARD_THEMES : CARD_THEMES,
+    eventType === 'xv' ? 'romantic-floral' : 'classic-gold',
+  );
+  const isDark = theme.isDark;
 
   return (
     <section id="hoteles" className="w-full px-4 py-12 sm:px-8 sm:py-16 lg:px-12" style={{ backgroundColor: theme.bgHex }}>

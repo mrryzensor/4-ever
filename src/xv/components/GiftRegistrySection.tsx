@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { WeddingSettings, GiftRegistryItem } from '../../types.ts';
 import { AnimatedGiftBox, StyleSpecificDivider } from './AnimatedSvgs.tsx';
-import { CARD_THEMES } from '../../lib/themes.ts';
+import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 import { getBankAccountBadgeText, getBankAccounts } from '../../lib/bankAccounts.ts';
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../../lib/giftRegistryCopy.ts';
 import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
@@ -55,8 +56,8 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
   const hasDirectBankInItems = registryItems.some((item) => item.type === 'bank');
 
-  const isDark = settings.cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'romantic-floral');
+  const isDark = activeTheme.isDark;
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (

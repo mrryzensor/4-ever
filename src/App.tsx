@@ -26,7 +26,7 @@ import {
   Maximize2,
   Minimize2
 } from 'lucide-react';
-import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId } from './types.ts';
+import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId, CardStyle } from './types.ts';
 import { AudioPlayer } from './components/AudioPlayer.tsx';
 import { EnvelopeCard } from './components/EnvelopeCard.tsx';
 import { RsvpSection } from './components/RsvpSection.tsx';
@@ -73,8 +73,8 @@ import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } f
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { getLandingSectionOrder } from './lib/sectionOrder.ts';
 import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
+import { resolveInvitationTheme } from './lib/invitationTheme.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
-import { CardStyle } from './types.ts';
 
 type AppView = 'portal' | 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
 type EventCategory = 'bodas' | 'xv';
@@ -424,16 +424,24 @@ export default function App() {
     };
   }, []);
 
-  // Update theme-reactive scrollbars whenever wedding style changes
+  // Keep site chrome in sync with the effective palette, including advanced overrides.
   useEffect(() => {
     if (settings?.cardStyle) {
+      const paletteStyle = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
+        ? settings.colorPaletteStyle
+        : settings.cardStyle;
       if (settingsEventCategory === 'xv') {
-        applyXvThemeScrollbar(settings.cardStyle);
+        applyXvThemeScrollbar(paletteStyle as CardStyle);
       } else {
-        applyThemeScrollbar(settings.cardStyle);
+        applyThemeScrollbar(paletteStyle as CardStyle);
+      }
+      if (settings.customAccentColor) {
+        const prefix = settingsEventCategory === 'xv' ? '--theme-scrollbar' : '--scrollbar';
+        document.documentElement.style.setProperty(`${prefix}-thumb`, settings.customAccentColor);
+        document.documentElement.style.setProperty(`${prefix}-thumb-hover`, settings.customAccentColor);
       }
     }
-  }, [settings?.cardStyle, settingsEventCategory]);
+  }, [settings?.cardStyle, settings?.colorPaletteStyle, settings?.customAccentColor, settingsEventCategory]);
 
   // Keep browser title and share metadata synchronized with the resolved event.
   useEffect(() => {
@@ -1270,17 +1278,18 @@ export default function App() {
     );
   }
 
-  const activeTheme = settingsEventCategory === 'xv'
-    ? (XV_CARD_THEMES[settings.cardStyle] || XV_CARD_THEMES['romantic-floral'])
-    : (CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold']);
-  const activeFontTheme = settings.fontPairStyle && settings.fontPairStyle !== 'auto'
-    ? settingsEventCategory === 'xv'
-      ? (XV_CARD_THEMES[settings.fontPairStyle as CardStyle] || activeTheme)
-      : (CARD_THEMES[settings.fontPairStyle as CardStyle] || activeTheme)
-    : activeTheme;
+  const activeTheme = resolveInvitationTheme(
+    settings,
+    settingsEventCategory === 'xv' ? XV_CARD_THEMES : CARD_THEMES,
+    settingsEventCategory === 'xv' ? 'romantic-floral' : 'classic-gold',
+  );
   const invitationFontStyle = {
-    '--invitation-font-body': getThemeFontFamily(activeFontTheme.fontBody, 'Georgia, serif'),
-    '--invitation-font-display': getThemeFontFamily(activeFontTheme.fontDisplay, 'Georgia, serif'),
+    '--invitation-font-body': getThemeFontFamily(activeTheme.fontBody, 'Georgia, serif'),
+    '--invitation-font-display': getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+    '--invitation-primary-color': activeTheme.primaryColorHex,
+    '--invitation-accent-color': activeTheme.accentColorHex,
+    '--invitation-secondary-bg': activeTheme.secondaryBgHex,
+    '--ornament-accent': activeTheme.accentColorHex,
     '--invitation-type-title': `${Math.min(140, Math.max(80, settings.typographyTitleScale ?? 100)) / 100}`,
     '--invitation-type-heading': `${Math.min(140, Math.max(80, settings.typographyHeadingScale ?? 100)) / 100}`,
     '--invitation-type-body': `${Math.min(140, Math.max(80, settings.typographyBodyScale ?? 100)) / 100}`,
@@ -1358,9 +1367,9 @@ export default function App() {
     gallery: galleryInEventDetails ? null : gallerySection,
     video: settings.showVideoMemories === true ? (
       settingsEventCategory === 'xv' ? (
-        <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
+        <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       ) : (
-        <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
+        <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       )
     ) : null,
     hotels: <HotelsSection key="hotels" settings={settings} eventType={settingsEventCategory} />,
@@ -1373,9 +1382,9 @@ export default function App() {
     ) : null,
     guestbook: settings.showGuestbook === true ? (
       settingsEventCategory === 'xv' ? (
-        <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
+        <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       ) : (
-        <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} />
+        <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       )
     ) : null,
   };
@@ -1383,7 +1392,7 @@ export default function App() {
   return (
     <div
       className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
-      style={{ backgroundColor: activeTheme.bgHex, ...invitationFontStyle }}
+      style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
     >
       {/* Interactive Demo Style Selector Bar in Demo Mode */}
       {isDemoMode && (

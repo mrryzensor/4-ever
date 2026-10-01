@@ -41,24 +41,26 @@ export const AnimatedCoastalBreezeDivider: React.FC<{ className?: string; color?
         />
 
         {/* Center Pearl Seashell with Glowing Core */}
-        <motion.g
-          animate={{ scale: [0.92, 1.08, 0.92], y: [-2, 2, -2] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          {/* Fan Shell */}
-          <path
-            d="M148 28 C144 18, 154 12, 160 12 C166 12, 176 18, 172 28 Z"
-            fill="#D4A373"
-            opacity="0.85"
-          />
-          {/* Shell ribs */}
-          <line x1="160" y1="28" x2="152" y2="16" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
-          <line x1="160" y1="28" x2="160" y2="13" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
-          <line x1="160" y1="28" x2="168" y2="16" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
-          {/* Glowing Pearl */}
-          <circle cx="160" cy="24" r="3" fill="#FFFFFF" filter="drop-shadow(0 0 4px #90CDF4)" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.92, 1.08, 0.92], y: [-2, 2, -2] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            {/* Fan Shell */}
+            <path
+              d="M148 28 C144 18, 154 12, 160 12 C166 12, 176 18, 172 28 Z"
+              fill="#D4A373"
+              opacity="0.85"
+            />
+            {/* Shell ribs */}
+            <line x1="160" y1="28" x2="152" y2="16" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
+            <line x1="160" y1="28" x2="160" y2="13" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
+            <line x1="160" y1="28" x2="168" y2="16" stroke="#FFFFFF" strokeWidth="0.8" opacity="0.8" />
+            {/* Glowing Pearl */}
+            <circle cx="160" cy="24" r="3" fill="#FFFFFF" filter="drop-shadow(0 0 4px #90CDF4)" />
+          </motion.g>
+        </g>
 
         {/* Right Rolling Wave */}
         <motion.path

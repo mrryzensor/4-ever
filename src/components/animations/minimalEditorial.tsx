@@ -25,19 +25,21 @@ export const AnimatedEditorialLineDivider: React.FC<{ className?: string; color?
         />
 
         {/* Center Diamond & Monogram Square */}
-        <motion.rect
-          x="153"
-          y="8"
-          width="14"
-          height="14"
-          stroke={color}
-          strokeWidth="1.2"
-          fill="none"
-          transform="rotate(45 160 15)"
-          animate={{ rotate: [45, 135, 45] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <circle cx="160" cy="15" r="2" fill={color} />
+        <g data-divider-center>
+          <motion.rect
+            x="153"
+            y="8"
+            width="14"
+            height="14"
+            stroke={color}
+            strokeWidth="1.2"
+            fill="none"
+            transform="rotate(45 160 15)"
+            animate={{ rotate: [45, 135, 45] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          <circle cx="160" cy="15" r="2" fill={color} />
+        </g>
 
         {/* Right Fine Line */}
         <motion.line

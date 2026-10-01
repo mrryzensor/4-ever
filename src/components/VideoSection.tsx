@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Video, Plus, Trash2, Play, Film, ExternalLink, Sparkles } from 'lucide-react';
-import { WeddingVideo } from '../types.ts';
+import { WeddingSettings, WeddingVideo } from '../types.ts';
 import { AnimatedFilmReel, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../lib/toast.ts';
+import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
+import { getContrastTextColor } from '../lib/colorUtils.ts';
 
 interface VideoSectionProps {
   weddingId?: number;
   isAdmin?: boolean;
   cardStyle?: string;
   dividerStyle?: string;
+  settings?: WeddingSettings;
 }
 
 export const VideoSection: React.FC<VideoSectionProps> = ({
@@ -19,6 +22,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
   isAdmin = false,
   cardStyle = 'classic-gold',
   dividerStyle,
+  settings,
 }) => {
   const [videos, setVideos] = useState<WeddingVideo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,27 +173,19 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
     );
   };
 
-  const isDark = cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings ? { ...settings, cardStyle: settings.cardStyle || cardStyle } : { cardStyle }, CARD_THEMES, 'classic-gold');
+  const isDark = activeTheme.isDark;
 
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="videos">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${
-          isDark
-            ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
-            : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
-        }`}>
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ color: activeTheme.accentColorHex, backgroundColor: `${activeTheme.accentColorHex}1A`, borderColor: `${activeTheme.accentColorHex}66` }}>
           <AnimatedFilmReel className="w-10 h-10" color={activeTheme?.accentColorHex} />
         </div>
-        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${
-          isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
-        }`}>
+        <span data-typography-role="detail" className="text-xs uppercase tracking-[0.3em] font-semibold block mb-2" style={{ color: activeTheme.accentColorHex }}>
           Momentos en Video
         </span>
-        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${
-          isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
-        }`}>
+        <h2 className="text-3xl sm:text-5xl font-serif font-normal" style={{ color: activeTheme.primaryColorHex }}>
           Nuestra Historia en Video
         </h2>
         <StyleSpecificDivider
@@ -198,9 +194,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
           className="w-48 sm:w-60 h-8 mx-auto mt-2"
           color={activeTheme?.accentColorHex}
         />
-        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${
-          isDark ? 'text-stone-300' : 'text-stone-600'
-        }`}>
+        <p className={`text-sm max-w-xl mx-auto mt-1 leading-relaxed font-serif italic ${activeTheme.textSecondaryClass}`}>
           Revive el Save The Date, la propuesta de matrimonio y los mensajes más emotivos de nuestros seres queridos.
         </p>
 
@@ -213,6 +207,7 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                   ? 'bg-[#C5A059] text-stone-950 hover:bg-[#d8b46d] font-bold'
                   : 'bg-[#5A5A40] text-[#FDFCF0] hover:bg-[#484833]'
               }`}
+              style={{ backgroundColor: activeTheme.accentColorHex, color: getContrastTextColor(activeTheme.accentColorHex) }}
               id="btn-add-video"
             >
               <Plus className={`w-4 h-4 ${isDark ? 'text-stone-950' : 'text-amber-300'}`} />
@@ -230,8 +225,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
         ) : videos.length === 0 ? (
           <div className={`py-12 text-center backdrop-blur-sm border border-dashed rounded-3xl p-8 max-w-md mx-auto ${
             isDark
-              ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
-              : 'bg-white/60 border-[#E5E2D0] text-stone-800'
+              ? `${activeTheme.cardBgClass} text-stone-200`
+              : activeTheme.cardBgClass
           }`}>
             <Film className={`w-10 h-10 mx-auto mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
             <h4 className={`text-sm font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
@@ -249,8 +244,8 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                 key={video.id}
                 className={`min-w-0 w-full backdrop-blur-sm rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
                   isDark
-                    ? 'bg-[#282B25]/95 border-[#5A5A40]/60 text-[#FDFCF0]'
-                    : 'bg-white/90 border-[#E5E2D0] text-[#3D3D2C]'
+                  ? `${activeTheme.cardBgClass} text-[#FDFCF0]`
+                  : activeTheme.cardBgClass
                 }`}
               >
                 {renderEmbed(video)}
@@ -269,11 +264,11 @@ export const VideoSection: React.FC<VideoSectionProps> = ({
                         Por: {video.authorName || 'Novios'}
                       </span>
                     </div>
-                    <h3 className={`mt-1.5 break-words text-base font-serif font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
+                    <h3 className="mt-1.5 break-words text-base font-serif font-bold" style={{ color: activeTheme.primaryColorHex }}>
                       {video.title}
                     </h3>
                     {video.description && (
-                      <p className={`mt-1 break-words text-xs leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                      <p className={`mt-1 break-words text-xs leading-relaxed ${activeTheme.textSecondaryClass}`}>
                         {video.description}
                       </p>
                     )}

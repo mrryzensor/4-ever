@@ -26,7 +26,9 @@ import {
 } from 'lucide-react';
 import { GalleryPhoto, PhotoComment, WeddingSettings } from '../../types.ts';
 import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
-import { CARD_THEMES } from '../../lib/themes.ts';
+import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
+import { getThemeFontFamily } from '../../lib/rsvpButtonStyle.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
 import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../../lib/galleryPhotoTitles.ts';
 import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
@@ -655,8 +657,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     return () => window.removeEventListener('paste', handlePaste);
   }, [weddingId, authorInputName, guestName, guestCode, uploadCaption]);
 
-  const isDark = cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[cardStyle as keyof typeof CARD_THEMES] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings ? { ...settings, cardStyle: settings.cardStyle || cardStyle } : { cardStyle }, CARD_THEMES, 'romantic-floral');
+  const isDark = activeTheme.isDark;
 
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -775,18 +777,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   return (
     <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs ${isDark
-          ? 'bg-[#C5A059]/15 text-[#C5A059] border-[#5A5A40]/60'
-          : 'bg-[#5A5A40]/10 text-[#5A5A40] border-[#E5E2D0]'
-        }`}>
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ color: activeTheme.accentColorHex, backgroundColor: `${activeTheme.accentColorHex}1A`, borderColor: `${activeTheme.accentColorHex}66` }}>
           <AnimatedCameraLens className="w-10 h-10" color={activeTheme?.accentColorHex} />
         </div>
-        <span data-typography-role="detail" className={`text-xs uppercase tracking-[0.3em] font-semibold block mb-2 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'
-          }`}>
+        <span data-typography-role="detail" className="text-xs uppercase tracking-[0.3em] font-semibold block mb-2" style={{ color: activeTheme.accentColorHex }}>
           {galleryText.eyebrow}
         </span>
-        <h2 className={`text-3xl sm:text-5xl font-serif font-normal ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
-          }`}>
+        <h2 className="text-3xl sm:text-5xl font-serif font-normal" style={{ color: activeTheme.primaryColorHex }}>
           {galleryText.title}
         </h2>
         <StyleSpecificDivider
@@ -822,15 +819,12 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <Camera className="h-10 w-10" />
         </div>
       ) : carouselPhotos.length === 0 ? (
-        <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${isDark
-          ? 'bg-[#282B25]/90 border-[#5A5A40]/60 text-stone-200'
-          : 'bg-white/70 border-[#E5E2D0] text-stone-800'
-          }`}>
-          <Camera className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]/70'}`} />
-          <h4 className={`text-base font-serif font-semibold ${isDark ? 'text-[#FDFCF0]' : 'text-stone-800'}`}>
+        <div className={`py-16 text-center backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-xs border ${activeTheme.cardBgClass}`}>
+          <Camera className="w-12 h-12 mx-auto mb-3" style={{ color: activeTheme.accentColorHex }} />
+          <h4 className={`text-base font-serif font-semibold ${activeTheme.textPrimaryClass}`}>
             {galleryText.emptyTitle}
           </h4>
-          <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+          <p className={`text-xs mt-1 leading-relaxed ${activeTheme.textSecondaryClass}`}>
             {galleryText.emptyDescription}
           </p>
         </div>
@@ -1224,7 +1218,13 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 data-gallery-fullscreen="true"
                 ref={fullscreenModalRef}
                 className="public-invitation-typography fixed inset-0 z-[99999] bg-black/95 lg:backdrop-blur-xl flex items-center justify-center p-0 sm:p-4 lg:p-6"
-                style={{ '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}` } as React.CSSProperties}
+                style={{
+                  '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}`,
+                  '--invitation-font-body': getThemeFontFamily(activeTheme.fontBody, 'Georgia, serif'),
+                  '--invitation-font-display': getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+                  '--invitation-primary-color': activeTheme.primaryColorHex,
+                  '--invitation-accent-color': activeTheme.accentColorHex,
+                } as React.CSSProperties}
               >
                 <div
                   onClick={(e) => e.stopPropagation()}

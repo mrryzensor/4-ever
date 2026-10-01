@@ -24,14 +24,16 @@ export const AnimatedConstellationDivider: React.FC<{ className?: string; color?
         />
 
         {/* Center Golden Starburst */}
-        <motion.g
-          animate={{ scale: [0.8, 1.3, 0.8], rotate: [0, 90, 0] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 12px' }}
-        >
-          <path d="M160 4 L160 20 M152 12 L168 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="160" cy="12" r="3" fill="#FDFCF0" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.8, 1.3, 0.8], rotate: [0, 90, 0] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 12px' }}
+          >
+            <path d="M160 4 L160 20 M152 12 L168 12" stroke={color} strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="160" cy="12" r="3" fill="#FDFCF0" />
+          </motion.g>
+        </g>
 
         {/* Twinkling Stars */}
         {[

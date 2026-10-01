@@ -23,18 +23,20 @@ export const AnimatedRoseArchDivider: React.FC<{ className?: string; color?: str
         />
 
         {/* Center Blooming Rose */}
-        <motion.g
-          animate={{ scale: [0.9, 1.12, 0.9] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          <circle cx="160" cy="22" r="8" fill="#E2B18E" opacity="0.9" />
-          <path
-            d="M156 18 C158 14, 162 14, 164 18 C166 22, 160 26, 156 22"
-            fill="#C59B7E"
-          />
-          <circle cx="160" cy="22" r="3" fill="#FFF" opacity="0.8" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.9, 1.12, 0.9] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            <circle cx="160" cy="22" r="8" fill="#E2B18E" opacity="0.9" />
+            <path
+              d="M156 18 C158 14, 162 14, 164 18 C166 22, 160 26, 156 22"
+              fill="#C59B7E"
+            />
+            <circle cx="160" cy="22" r="3" fill="#FFF" opacity="0.8" />
+          </motion.g>
+        </g>
 
         {/* Left Rose Buds */}
         <motion.circle

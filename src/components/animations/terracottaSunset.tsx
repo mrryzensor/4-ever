@@ -23,16 +23,18 @@ export const AnimatedTerracottaSunsetDivider: React.FC<{ className?: string; col
         />
 
         {/* Setting Sun with Glowing Gradient Rings */}
-        <motion.g
-          animate={{ scale: [0.9, 1.12, 0.9], y: [-2, 2, -2] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          {/* Half Sun Arch */}
-          <path d="M142 22 A 18 18 0 0 1 178 22 Z" fill="#DDA15E" opacity="0.9" />
-          <path d="M148 22 A 12 12 0 0 1 172 22 Z" fill="#E07A5F" />
-          <circle cx="160" cy="16" r="3" fill="#FFF" opacity="0.8" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.9, 1.12, 0.9], y: [-2, 2, -2] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            {/* Half Sun Arch */}
+            <path d="M142 22 A 18 18 0 0 1 178 22 Z" fill="#DDA15E" opacity="0.9" />
+            <path d="M148 22 A 12 12 0 0 1 172 22 Z" fill="#E07A5F" />
+            <circle cx="160" cy="16" r="3" fill="#FFF" opacity="0.8" />
+          </motion.g>
+        </g>
 
         {/* Floating warm sparkles / evening dust */}
         {[

@@ -15,29 +15,31 @@ export const AnimatedPampasGrassDivider: React.FC<{ className?: string; color?: 
         <line x1="20" y1="22" x2="300" y2="22" stroke={color} strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
 
         {/* Central Boho Sun Arch */}
-        <motion.g
-          animate={{ scale: [0.92, 1.08, 0.92] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          <path d="M145 22 A 15 15 0 0 1 175 22 Z" fill="#E8B4A2" opacity="0.85" />
-          <circle cx="160" cy="14" r="3" fill="#B26E59" />
-          {/* Sun Rays */}
-          {[0, 30, 60, 90, 120, 150, 180].map((deg, i) => (
-            <motion.line
-              key={i}
-              x1="160"
-              y1="22"
-              x2={160 + 20 * Math.cos(((deg - 180) * Math.PI) / 180)}
-              y2={22 + 20 * Math.sin(((deg - 180) * Math.PI) / 180)}
-              stroke="#B26E59"
-              strokeWidth="1.2"
-              opacity="0.7"
-              animate={{ opacity: [0.3, 0.9, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }}
-            />
-          ))}
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.92, 1.08, 0.92] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            <path d="M145 22 A 15 15 0 0 1 175 22 Z" fill="#E8B4A2" opacity="0.85" />
+            <circle cx="160" cy="14" r="3" fill="#B26E59" />
+            {/* Sun Rays */}
+            {[0, 30, 60, 90, 120, 150, 180].map((deg, i) => (
+              <motion.line
+                key={i}
+                x1="160"
+                y1="22"
+                x2={160 + 20 * Math.cos(((deg - 180) * Math.PI) / 180)}
+                y2={22 + 20 * Math.sin(((deg - 180) * Math.PI) / 180)}
+                stroke="#B26E59"
+                strokeWidth="1.2"
+                opacity="0.7"
+                animate={{ opacity: [0.3, 0.9, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, delay: i * 0.15 }}
+              />
+            ))}
+          </motion.g>
+        </g>
 
         {/* Left Pampas Plume */}
         <motion.path

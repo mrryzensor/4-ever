@@ -204,6 +204,9 @@ export interface WeddingSettings {
   typographyToggleScale?: number; // Porcentaje, 80-200
   typographyGalleryFullscreenScale?: number; // Porcentaje, escala de todos los textos dentro de la galería ampliada
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
+  showCardDividers?: boolean; // Separadores SVG entre tarjetas en móvil y en filas de escritorio
+  borderlessCards?: boolean; // Oculta el borde exterior de las tarjetas principales
+  transparentCards?: boolean; // Oculta el fondo y la sombra de las tarjetas principales
   frameOrnamentStyle?: string; // 'auto' | CardStyleId - Filigranas y marcos de esquina de tarjetas
   transitionWaveStyle?: string; // 'auto' | CardStyleId - Ola orgánica de transición Hero ➔ Contenido
   transitionEffect?: 'wave' | 'petals' | 'sparkles' | 'drape' | 'orbit' | 'cascade' | 'ribbons' | 'bloom' | 'arch' | 'aurora' | 'constellation' | 'confetti';

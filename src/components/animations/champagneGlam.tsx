@@ -24,31 +24,33 @@ export const AnimatedChampagneGlamDivider: React.FC<{ className?: string; color?
         />
 
         {/* Center Art Deco Sunburst Fan with Pearls */}
-        <motion.g
-          animate={{ scale: [0.92, 1.1, 0.92], rotate: [0, 4, 0] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          {/* Fan Rays */}
-          {[-45, -30, -15, 0, 15, 30, 45].map((deg, i) => (
-            <line
-              key={i}
-              x1="160"
-              y1="28"
-              x2={160 + 16 * Math.sin((deg * Math.PI) / 180)}
-              y2={28 - 16 * Math.cos((deg * Math.PI) / 180)}
-              stroke={color}
-              strokeWidth="1.2"
-            />
-          ))}
-          {/* Concentric Arcs */}
-          <path d="M148 28 A 12 12 0 0 1 172 28" stroke={color} strokeWidth="1.2" fill="none" />
-          <path d="M152 28 A 8 8 0 0 1 168 28" stroke={color} strokeWidth="1.2" fill="none" />
-          {/* Central Champagne Crystal Gem */}
-          <rect x="156" y="24" width="8" height="8" fill="#FFFDF0" stroke={color} strokeWidth="1" transform="rotate(45 160 28)" />
-          {/* Top Pearl Sparkle */}
-          <circle cx="160" cy="10" r="2" fill="#FFFFFF" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.92, 1.1, 0.92], rotate: [0, 4, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            {/* Fan Rays */}
+            {[-45, -30, -15, 0, 15, 30, 45].map((deg, i) => (
+              <line
+                key={i}
+                x1="160"
+                y1="28"
+                x2={160 + 16 * Math.sin((deg * Math.PI) / 180)}
+                y2={28 - 16 * Math.cos((deg * Math.PI) / 180)}
+                stroke={color}
+                strokeWidth="1.2"
+              />
+            ))}
+            {/* Concentric Arcs */}
+            <path d="M148 28 A 12 12 0 0 1 172 28" stroke={color} strokeWidth="1.2" fill="none" />
+            <path d="M152 28 A 8 8 0 0 1 168 28" stroke={color} strokeWidth="1.2" fill="none" />
+            {/* Central Champagne Crystal Gem */}
+            <rect x="156" y="24" width="8" height="8" fill="#FFFDF0" stroke={color} strokeWidth="1" transform="rotate(45 160 28)" />
+            {/* Top Pearl Sparkle */}
+            <circle cx="160" cy="10" r="2" fill="#FFFFFF" />
+          </motion.g>
+        </g>
 
         {/* Right Art Deco Stepped Lines */}
         <motion.path

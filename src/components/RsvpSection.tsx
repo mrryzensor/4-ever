@@ -21,7 +21,7 @@ import {
   ChevronDown,
   Pencil,
 } from 'lucide-react';
-import { CardStyleId, Guest, WeddingSettings } from '../types.ts';
+import { Guest, WeddingSettings } from '../types.ts';
 import { DEMO_GUESTS } from '../data/demoGuests.ts';
 import { formatRsvpDeadlineMessage } from '../lib/dateFormatters.ts';
 
@@ -50,6 +50,7 @@ import { toast } from '../lib/toast.ts';
 import { RsvpCompanionToggle } from './RsvpCompanionToggle.tsx';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
 import { getRsvpClosedMessage, isRsvpActionAllowed } from '../lib/rsvpAvailability.ts';
+import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 
 interface RsvpSectionProps {
   initialGuest?: Guest | null;
@@ -98,11 +99,8 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const canRegisterRsvp = isRsvpActionAllowed(settings, 'register');
   const canEditRsvp = isRsvpActionAllowed(settings, 'edit');
 
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
-    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || activeTheme)
-    : activeTheme;
-  const rsvpAccentColor = settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex;
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'classic-gold');
+  const rsvpAccentColor = activeTheme.itineraryAccentColorHex || activeTheme.accentColorHex;
   const rsvpAccentTextColor = getContrastTextColor(rsvpAccentColor);
   const isDark = activeTheme.isDark;
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -368,7 +366,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   };
 
   return (
-    <section id={inline ? 'rsvp-inline' : 'rsvp'} className={`w-full ${inline ? 'py-2 px-0' : 'py-10 sm:py-14 px-4 sm:px-6 lg:px-12'} transition-colors duration-500 ${inline ? '' : activeTheme.bgClass}`}>
+    <section id={inline ? 'rsvp-inline' : 'rsvp'} className={`w-full ${inline ? 'py-2 px-0' : 'py-10 sm:py-14 px-4 sm:px-6 lg:px-12'} transition-colors duration-500 ${inline ? '' : activeTheme.bgClass}`} style={inline ? undefined : { backgroundColor: activeTheme.bgHex }}>
       <div className={`w-full ${inline ? '' : 'max-w-7xl 2xl:max-w-[1600px] mx-auto'}`}>
         
         {/* Section Header */}

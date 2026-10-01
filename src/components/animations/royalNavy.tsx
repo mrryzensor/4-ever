@@ -32,25 +32,27 @@ export const AnimatedRoyalNavyDivider: React.FC<{ className?: string; color?: st
         />
 
         {/* Center Imperial Crown / Fleur-de-lis Crest */}
-        <motion.g
-          animate={{ scale: [0.92, 1.1, 0.92], y: [-1.5, 1.5, -1.5] }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 22px' }}
-        >
-          {/* Crown Base */}
-          <path d="M148 28 L172 28 L170 31 L150 31 Z" fill={color} />
-          {/* Crown Spikes */}
-          <path
-            d="M148 28 L145 16 L153 22 L160 12 L167 22 L175 16 L172 28 Z"
-            fill={color}
-            stroke="#96773B"
-            strokeWidth="0.8"
-          />
-          {/* Crown Jewels */}
-          <circle cx="160" cy="12" r="2" fill="#FFFFFF" />
-          <circle cx="145" cy="16" r="1.5" fill="#FFFFFF" />
-          <circle cx="175" cy="16" r="1.5" fill="#FFFFFF" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            animate={{ scale: [0.92, 1.1, 0.92], y: [-1.5, 1.5, -1.5] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '160px 22px' }}
+          >
+            {/* Crown Base */}
+            <path d="M148 28 L172 28 L170 31 L150 31 Z" fill={color} />
+            {/* Crown Spikes */}
+            <path
+              d="M148 28 L145 16 L153 22 L160 12 L167 22 L175 16 L172 28 Z"
+              fill={color}
+              stroke="#96773B"
+              strokeWidth="0.8"
+            />
+            {/* Crown Jewels */}
+            <circle cx="160" cy="12" r="2" fill="#FFFFFF" />
+            <circle cx="145" cy="16" r="1.5" fill="#FFFFFF" />
+            <circle cx="175" cy="16" r="1.5" fill="#FFFFFF" />
+          </motion.g>
+        </g>
 
         {/* Right Baroque Flourish */}
         <motion.path

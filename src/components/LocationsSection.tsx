@@ -15,6 +15,7 @@ import {
 import { WeddingSettings } from '../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
+import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 
 interface LocationsSectionProps {
   settings: WeddingSettings;
@@ -95,8 +96,8 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
     settings.receptionEmbedUrl
   );
 
-  const isDark = settings.cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'classic-gold');
+  const isDark = activeTheme.isDark;
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (

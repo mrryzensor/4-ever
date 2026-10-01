@@ -231,6 +231,9 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       countdownStyle: 'auto',
       countdownLayout: 'circle',
       dividerStyle: 'auto',
+      showCardDividers: false,
+      borderlessCards: false,
+      transparentCards: false,
       frameOrnamentStyle: 'auto',
       transitionWaveStyle: 'auto',
       transitionEffect: 'wave',
@@ -263,6 +266,9 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     (settings.countdownStyle && settings.countdownStyle !== 'auto') ||
     (settings.countdownLayout && settings.countdownLayout !== 'circle') ||
     (settings.dividerStyle && settings.dividerStyle !== 'auto') ||
+    settings.showCardDividers === true ||
+    settings.borderlessCards === true ||
+    settings.transparentCards === true ||
     (settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto') ||
     (settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto') ||
     (settings.transitionEffect && settings.transitionEffect !== 'wave') ||
@@ -673,6 +679,18 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
 
         {openSection === 'dividers' && (
           <div className="p-4 space-y-3 border-t border-stone-200">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-rose-200 bg-rose-50/40 p-3">
+              <input
+                type="checkbox"
+                checked={settings.showCardDividers === true}
+                onChange={(event) => onChange({ showCardDividers: event.target.checked })}
+                className="mt-0.5 h-4 w-4 accent-rose-600"
+              />
+              <span>
+                <span className="block text-xs font-semibold text-stone-800">Separadores SVG entre tarjetas</span>
+                <span className="mt-0.5 block text-[11px] text-stone-600">Horizontales al apilarse en móvil y verticales entre tarjetas de una misma fila en desktop.</span>
+              </span>
+            </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
               {/* Auto */}
               <button
@@ -753,6 +771,30 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
 
         {openSection === 'frames' && (
           <div className="p-4 space-y-3 border-t border-stone-200">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-purple-200 bg-purple-50/40 p-3">
+              <input
+                type="checkbox"
+                checked={settings.borderlessCards === true}
+                onChange={(event) => onChange({ borderlessCards: event.target.checked })}
+                className="mt-0.5 h-4 w-4 accent-purple-600"
+              />
+              <span>
+                <span className="block text-xs font-semibold text-stone-800">Tarjetas sin borde exterior</span>
+                <span className="mt-0.5 block text-[11px] text-stone-600">Conserva los motivos y las sombras del estilo, pero oculta el borde y el anillo exterior.</span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-sky-200 bg-sky-50/40 p-3">
+              <input
+                type="checkbox"
+                checked={settings.transparentCards === true}
+                onChange={(event) => onChange({ transparentCards: event.target.checked })}
+                className="mt-0.5 h-4 w-4 accent-sky-600"
+              />
+              <span>
+                <span className="block text-xs font-semibold text-stone-800">Fondo transparente</span>
+                <span className="mt-0.5 block text-[11px] text-stone-600">Quita el fondo y la sombra para integrar los motivos con el fondo. Combínalo con «sin borde» para eliminar la caja visual.</span>
+              </span>
+            </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               <button
                 type="button"

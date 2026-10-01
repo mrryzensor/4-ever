@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+.vertical-divider [data-divider-center] {
+  transform-box: view-box;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
 /* Keep template-styled controls intact on mobile browsers that otherwise apply native button skins. */
 .public-invitation {
   color-scheme: only light;
@@ -84,6 +90,12 @@
   --invitation-type-detail: var(--invitation-type-gallery-fullscreen, 1);
   --invitation-type-badge: var(--invitation-type-gallery-fullscreen, 1);
   --invitation-type-button: var(--invitation-type-gallery-fullscreen, 1);
+}
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(*) {
+  font-family: var(--invitation-font-body, inherit) !important;
+}
+.public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(h1, h2, h3, h4, h5, h6, [data-typography-role="heading"]) {
+  font-family: var(--invitation-font-display, inherit) !important;
 }
 .public-invitation-typography[data-typography-area="gallery-fullscreen"] h1 { zoom: var(--invitation-type-title, 1); }
 .public-invitation-typography[data-typography-area="gallery-fullscreen"] :where(h2, h3, h4, h5, h6, [data-typography-role="heading"]) { zoom: var(--invitation-type-heading, 1); }

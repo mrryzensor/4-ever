@@ -45,18 +45,20 @@ export const AnimatedFloralDivider: React.FC<{ className?: string; color?: strin
         />
 
         {/* Center Heart / Blossom */}
-        <motion.g
-          initial={{ scale: 0.8 }}
-          animate={{ scale: [0.85, 1.15, 0.85] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '150px 20px' }}
-        >
-          <path
-            d="M150 25 C146 20, 140 18, 140 14 C140 10, 144 7, 148 9 C149 10, 150 12, 150 13 C150 12, 151 10, 152 9 C156 7, 160 10, 160 14 C160 18, 154 20, 150 25 Z"
-            fill="#D4A373"
-          />
-          <circle cx="150" cy="15" r="1.5" fill="#FFF" opacity="0.8" />
-        </motion.g>
+        <g data-divider-center>
+          <motion.g
+            initial={{ scale: 0.8 }}
+            animate={{ scale: [0.85, 1.15, 0.85] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ transformOrigin: '150px 20px' }}
+          >
+            <path
+              d="M150 25 C146 20, 140 18, 140 14 C140 10, 144 7, 148 9 C149 10, 150 12, 150 13 C150 12, 151 10, 152 9 C156 7, 160 10, 160 14 C160 18, 154 20, 150 25 Z"
+              fill="#D4A373"
+            />
+            <circle cx="150" cy="15" r="1.5" fill="#FFF" opacity="0.8" />
+          </motion.g>
+        </g>
 
         {/* Right Vine */}
         <motion.path

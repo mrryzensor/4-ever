@@ -42,33 +42,35 @@ export const AnimatedLavenderDivider: React.FC<{ className?: string; color?: str
         ))}
 
         {/* Center Animated Provence Butterfly */}
-        <motion.g
-          animate={{
-            y: [-3, 3, -3],
-            rotate: [-4, 4, -4],
-          }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '160px 20px' }}
-        >
-          {/* Butterfly Body */}
-          <line x1="160" y1="14" x2="160" y2="26" stroke="#4A3E56" strokeWidth="1.5" strokeLinecap="round" />
-          {/* Left Wings */}
-          <motion.path
-            d="M160 16 C152 8, 146 16, 160 20 C150 22, 152 28, 160 24"
-            fill="#9D8BB0"
-            animate={{ scaleX: [1, 0.4, 1] }}
-            transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+        <g data-divider-center>
+          <motion.g
+            animate={{
+              y: [-3, 3, -3],
+              rotate: [-4, 4, -4],
+            }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
             style={{ transformOrigin: '160px 20px' }}
-          />
-          {/* Right Wings */}
-          <motion.path
-            d="M160 16 C168 8, 174 16, 160 20 C170 22, 168 28, 160 24"
-            fill="#9D8BB0"
-            animate={{ scaleX: [1, 0.4, 1] }}
-            transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformOrigin: '160px 20px' }}
-          />
-        </motion.g>
+          >
+            {/* Butterfly Body */}
+            <line x1="160" y1="14" x2="160" y2="26" stroke="#4A3E56" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Left Wings */}
+            <motion.path
+              d="M160 16 C152 8, 146 16, 160 20 C150 22, 152 28, 160 24"
+              fill="#9D8BB0"
+              animate={{ scaleX: [1, 0.4, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: '160px 20px' }}
+            />
+            {/* Right Wings */}
+            <motion.path
+              d="M160 16 C168 8, 174 16, 160 20 C170 22, 168 28, 160 24"
+              fill="#9D8BB0"
+              animate={{ scaleX: [1, 0.4, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ transformOrigin: '160px 20px' }}
+            />
+          </motion.g>
+        </g>
 
         {/* Right Lavender Stem */}
         <motion.path

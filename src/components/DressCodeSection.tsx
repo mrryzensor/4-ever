@@ -18,6 +18,7 @@ import {
 import { WeddingSettings } from '../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
+import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 import { ManFashionIllustration, WomanFashionIllustration } from './FashionIllustrations.tsx';
 
 interface DressCodeSectionProps {
@@ -903,8 +904,8 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
   const [activeGenderView, setActiveGenderView] = useState<'both' | 'women' | 'men'>('both');
 
   const activePaletteColor = paletteList[selectedPaletteIndex] || paletteList[0];
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const isDark = settings.cardStyle === 'dark-luxury';
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'classic-gold');
+  const isDark = activeTheme.isDark;
 
   // Identify general style to adjust default recommendation texts
   const dressCodeTitle = settings.dressCode || 'Formal Riguroso';

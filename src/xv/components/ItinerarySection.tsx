@@ -11,9 +11,10 @@ import {
   Palette,
   Clock
 } from 'lucide-react';
-import { CardStyleId, WeddingSettings, ItineraryItem } from '../../types.ts';
+import { WeddingSettings, ItineraryItem } from '../../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
+import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 
 interface ItinerarySectionProps {
   settings: WeddingSettings;
@@ -51,12 +52,9 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
     itineraryList = [];
   }
 
-  const isDark = settings.cardStyle === 'dark-luxury';
-  const activeTheme = CARD_THEMES[settings.cardStyle] || CARD_THEMES['classic-gold'];
-  const colorTheme = settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
-    ? (CARD_THEMES[settings.colorPaletteStyle as CardStyleId] || activeTheme)
-    : activeTheme;
-  const itineraryAccentColor = settings.customAccentColor || colorTheme.itineraryAccentColorHex || colorTheme.accentColorHex;
+  const activeTheme = resolveInvitationTheme(settings, CARD_THEMES, 'romantic-floral');
+  const isDark = activeTheme.isDark;
+  const itineraryAccentColor = activeTheme.itineraryAccentColorHex || activeTheme.accentColorHex;
 
   // In compact preview, show the first 2-3 key highlights or summary badges
   const previewItems = itineraryList.slice(0, 3);
