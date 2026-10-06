@@ -6,14 +6,9 @@ import {
   XCircle,
   Users,
   Search,
-  Music,
-  Utensils,
-  MessageSquare,
   Sparkles,
   UserCheck,
   AlertCircle,
-  Phone,
-  Mail,
   User,
   CalendarCheck,
   Plus,
@@ -52,6 +47,8 @@ import { NumeralText } from '../../components/NumeralText.tsx';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../../lib/guestCompanions.ts';
 import { getRsvpClosedMessage, isRsvpActionAllowed } from '../../lib/rsvpAvailability.ts';
 import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
+import { RsvpOptionalDetailsFields } from '../../components/RsvpOptionalDetailsFields.tsx';
+import { collectActiveRsvpOptionalValues, getGuestRsvpOptionalValues, hasRsvpOptionalAnswers, parseCustomRsvpDetails, parseRsvpOptionalFields, resolveRsvpMaxCompanions } from '../../lib/rsvpOptionalFields.ts';
 
 interface RsvpSectionProps {
   initialGuest?: Guest | null;
@@ -86,13 +83,27 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const [message, setMessage] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [customOptionalDetails, setCustomOptionalDetails] = useState<Record<string, string>>({});
   const [showExtraDetails, setShowExtraDetails] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isEditingSavedResponse, setIsEditingSavedResponse] = useState(false);
-  const maxSelectableCompanions = guest && guest.groupName !== 'Invitación Genérica / Registro Abierto'
-    ? Math.max((guest.allocatedPasses || 1) - 1, 0)
-    : 5;
+  const configuredMaxCompanions = resolveRsvpMaxCompanions(settings.rsvpMaxCompanions);
+  const maxSelectableCompanions = Math.min(
+    configuredMaxCompanions,
+    guest && guest.groupName !== 'Invitación Genérica / Registro Abierto'
+      ? Math.max((guest.allocatedPasses || 1) - 1, 0)
+      : configuredMaxCompanions,
+  );
+  const optionalFields = parseRsvpOptionalFields(settings.rsvpOptionalFields);
+  const optionalValues = {
+    dietaryRestrictions: dietary,
+    suggestedSong: song,
+    message,
+    phone,
+    email,
+    ...customOptionalDetails,
+  };
   const savedResponseGuest = [guest, initialGuest].find(
     (candidate): candidate is Guest => candidate?.status === 'confirmed' || candidate?.status === 'declined',
   ) ?? null;
@@ -117,7 +128,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setGuest(selected);
     setFullName(selected.fullName);
     const passes = selected.confirmedPasses > 0 ? selected.confirmedPasses : 1;
-    const selectedCompanionCount = Math.max(0, passes - 1);
+    const selectedCompanionCount = Math.min(
+      resolveRsvpMaxCompanions(settings.rsvpMaxCompanions),
+      Math.max(0, passes - 1),
+    );
     setCompanionCount(selectedCompanionCount);
     setBringingCompanions(selectedCompanionCount > 0);
     setStatus(selected.status === 'declined' ? 'declined' : 'confirmed');
@@ -128,8 +142,9 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setMessage(selected.message || '');
     setPhone(selected.phone || '');
     setEmail(selected.email || '');
+    setCustomOptionalDetails(parseCustomRsvpDetails(selected.customRsvpDetails));
 
-    setCompanions(parseGuestCompanionNames(selected.companionNames, selected.fullName, passes));
+    setCompanions(parseGuestCompanionNames(selected.companionNames, selected.fullName, selectedCompanionCount + 1));
     setShowSuggestions(false);
   };
 
@@ -217,6 +232,17 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setCompanions(updated);
   };
 
+  const handleOptionalDetailChange = (id: string, value: string) => {
+    switch (id) {
+      case 'dietaryRestrictions': setDietary(value); break;
+      case 'suggestedSong': setSong(value); break;
+      case 'message': setMessage(value); break;
+      case 'phone': setPhone(value); break;
+      case 'email': setEmail(value); break;
+      default: setCustomOptionalDetails((current) => ({ ...current, [id]: value }));
+    }
+  };
+
   const handleCompanionCountChange = (num: number) => {
     const boundedCount = Math.min(maxSelectableCompanions, Math.max(1, Math.trunc(num)));
     setCompanionCount(boundedCount);
@@ -234,13 +260,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const handleEditSavedResponse = () => {
     if (!savedResponseGuest || !canEditRsvp) return;
     applyGuestData(savedResponseGuest);
-    setShowExtraDetails(Boolean(
-      savedResponseGuest.dietaryRestrictions?.trim()
-      || savedResponseGuest.suggestedSong?.trim()
-      || savedResponseGuest.message?.trim()
-      || savedResponseGuest.phone?.trim()
-      || savedResponseGuest.email?.trim(),
-    ));
+    setShowExtraDetails(hasRsvpOptionalAnswers(optionalFields, getGuestRsvpOptionalValues(savedResponseGuest)));
     setIsSuccess(false);
     setIsEditingSavedResponse(true);
   };
@@ -256,6 +276,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     setMessage('');
     setPhone('');
     setEmail('');
+    setCustomOptionalDetails({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -270,12 +291,23 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
       return;
     }
 
-    const submittedCompanionCount = status === 'confirmed' && bringingCompanions ? companionCount : 0;
+    const submittedCompanionCount = status === 'confirmed' && bringingCompanions
+      ? Math.min(companionCount, maxSelectableCompanions)
+      : 0;
     const enteredCompanionNames = companions.slice(0, submittedCompanionCount).map((name) => name?.trim() || '');
     if (enteredCompanionNames.some((name) => !name)) {
       toast.warning('Escribe el nombre completo de cada acompañante o reduce la cantidad seleccionada.', 'Faltan nombres');
       return;
     }
+
+    const activeOptionalDetails = collectActiveRsvpOptionalValues(optionalFields, optionalValues);
+    const activeBuiltInDetails = activeOptionalDetails.builtIn;
+    const activeCustomDetails = JSON.stringify({
+      ...parseCustomRsvpDetails(guest?.customRsvpDetails),
+      ...activeOptionalDetails.custom,
+    });
+    const getSubmittedDetail = (id: string, currentValue: string, savedValue?: string | null) =>
+      Object.prototype.hasOwnProperty.call(activeBuiltInDetails, id) ? activeBuiltInDetails[id] : savedValue ?? currentValue;
 
     setSubmitting(true);
     try {
@@ -293,12 +325,13 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           confirmedPasses: submittedPasses,
           attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
           attendingReception: status === 'confirmed' ? attendingReception : false,
-          dietaryRestrictions: dietary,
+          dietaryRestrictions: getSubmittedDetail('dietaryRestrictions', dietary, guest?.dietaryRestrictions),
           companionNames: submittedCompanions,
-          suggestedSong: song,
-          message,
-          phone,
-          email,
+          suggestedSong: getSubmittedDetail('suggestedSong', song, guest?.suggestedSong),
+          message: getSubmittedDetail('message', message, guest?.message),
+          phone: getSubmittedDetail('phone', phone, guest?.phone),
+          email: getSubmittedDetail('email', email, guest?.email),
+          customRsvpDetails: activeCustomDetails,
         };
 
         res = await fetch('/api/rsvp/confirm', {
@@ -315,12 +348,13 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
           confirmedPasses: submittedPasses,
           attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
           attendingReception: status === 'confirmed' ? attendingReception : false,
-          dietaryRestrictions: dietary,
+          dietaryRestrictions: getSubmittedDetail('dietaryRestrictions', dietary),
           companionNames: submittedCompanions,
-          suggestedSong: song,
-          message,
-          phone,
-          email,
+          suggestedSong: getSubmittedDetail('suggestedSong', song),
+          message: getSubmittedDetail('message', message),
+          phone: getSubmittedDetail('phone', phone),
+          email: getSubmittedDetail('email', email),
+          customRsvpDetails: activeCustomDetails,
         };
 
         res = await fetch('/api/rsvp/register-open', {
@@ -722,7 +756,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
               )}
 
               {/* 4. OPTIONAL DETAILS ACCORDION TOGGLE (Restricciones, Canción DJ, Dedicatoria, Teléfono, Correo) */}
-              <div className="pt-2">
+              {optionalFields.length > 0 && <div className="pt-2">
                 <button
                   type="button"
                   onClick={() => setShowExtraDetails(!showExtraDetails)}
@@ -740,91 +774,18 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 {/* Collapsible Content */}
                 {showExtraDetails && (
                   <div className={`mt-4 space-y-6 p-5 sm:p-6 rounded-2xl border animate-fadeIn ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
-                    
-                    {/* Dietary & DJ Song Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                          <Utensils className="w-4 h-4 text-amber-700 shrink-0" />
-                          Restricciones Alimentarias (Opcional)
-                        </label>
-                        <input
-                          type="text"
-                          data-typography-role="body"
-                          placeholder="Ej. Vegetariano, celíaco, alergia..."
-                          value={dietary}
-                          onChange={(e) => setDietary(e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
-                        />
-                      </div>
+                    <RsvpOptionalDetailsFields
+                      fields={optionalFields}
+                      values={optionalValues}
+                      onChange={handleOptionalDetailChange}
+                      isDark={isDark}
+                      labelColorClass={activeTheme.textPrimaryClass}
+                    />
 
-                      <div>
-                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                          <Music className="w-4 h-4 text-amber-700 shrink-0" />
-                          Canción para la Fiesta (DJ)
-                        </label>
-                        <input
-                          type="text"
-                          data-typography-role="body"
-                          placeholder="Ej. Vivir Mi Vida - Marc Anthony"
-                          value={song}
-                          onChange={(e) => setSong(e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Dedication message for quinceañera */}
-                    <div>
-                      <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                        <MessageSquare className="w-4 h-4 text-amber-700 shrink-0" />
-                        Mensaje o Dedicatoria para la Quinceañera
-                      </label>
-                      <textarea
-                        rows={3}
-                        data-typography-role="body"
-                        placeholder="Escribe tus mejores deseos para mis quince años..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className={`w-full p-4 rounded-xl border text-base focus:outline-none focus:border-amber-600 resize-none ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
-                      />
-                    </div>
-
-                    {/* Contact Info */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                          <Phone className="w-4 h-4 text-amber-700 shrink-0" />
-                          Teléfono / WhatsApp
-                        </label>
-                        <input
-                          type="tel"
-                          data-typography-role="body"
-                          placeholder="Ej. +51 987 654 321"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
-                        />
-                      </div>
-
-                      <div>
-                        <label data-typography-role="detail" className={`text-sm sm:text-base font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5 ${activeTheme.textPrimaryClass}`}>
-                          <Mail className="w-4 h-4 text-amber-700 shrink-0" />
-                          Correo Electrónico (Opcional)
-                        </label>
-                        <input
-                          type="email"
-                          data-typography-role="body"
-                          placeholder="correo@ejemplo.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl border text-base focus:outline-none focus:border-amber-600 ${isDark ? 'border-stone-700 bg-stone-900 text-stone-100' : 'border-stone-300 bg-white text-stone-900'}`}
-                        />
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
+              }
 
               {/* Submit CTA */}
               <div className="pt-4">

@@ -856,7 +856,7 @@ async function startServer() {
 
   const handleOpenRsvp = async (req: express.Request, res: express.Response) => {
     try {
-      const { weddingId, fullName, status, confirmedPasses, attendingCeremony, attendingReception, dietaryRestrictions, companionNames, suggestedSong, message, phone, email } = req.body;
+      const { weddingId, fullName, status, confirmedPasses, attendingCeremony, attendingReception, dietaryRestrictions, companionNames, suggestedSong, message, phone, email, customRsvpDetails } = req.body;
       if (!fullName || !fullName.trim()) {
         return res.status(400).json({ error: 'El nombre completo es requerido para registrarse.' });
       }
@@ -873,6 +873,7 @@ async function startServer() {
         message,
         phone,
         email,
+        customRsvpDetails,
       });
       res.status(201).json({ success: true, guest: createdGuest });
     } catch (error: any) {

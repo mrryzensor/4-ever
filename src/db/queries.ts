@@ -23,6 +23,7 @@ import {
 import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
 import { assertRsvpActionAllowed } from '../lib/rsvpAvailability.ts';
+import { parseCustomRsvpDetails, resolveRsvpMaxCompanions } from '../lib/rsvpOptionalFields.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
 const memoryState = {
@@ -82,6 +83,8 @@ const memoryState = {
       showGuestbook: true,
       showHotels: false,
       showRsvpSection: true,
+      rsvpMaxCompanions: 5,
+      rsvpOptionalFields: '[{"id":"dietaryRestrictions","label":"Restricciones alimentarias / alergias","placeholder":"Ej. vegetariano, celíaco, alergia...","type":"text"},{"id":"suggestedSong","label":"Canción para la fiesta (DJ)","placeholder":"Ej. Vivir Mi Vida - Marc Anthony","type":"text"},{"id":"message","label":"Mensaje o dedicatoria para los anfitriones","placeholder":"Escribe unas palabras de felicitación o buenos deseos...","type":"textarea"},{"id":"phone","label":"Teléfono / WhatsApp","placeholder":"Ej. +51 987 654 321","type":"tel"},{"id":"email","label":"Correo electrónico","placeholder":"correo@ejemplo.com","type":"email"}]',
       bankTransferDetails: '',
       liverpoolRegistryUrl: '',
       amazonRegistryUrl: '',
@@ -663,7 +666,7 @@ const DEMO_XV_DB_FIELDS = [
   'heroEmblemSparkle', 'heroEmblemScale',
   'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
   'rsvpAllowRegistration', 'rsvpRegistrationCutoffMode', 'rsvpRegistrationCutoffAt',
-  'rsvpAllowEdit', 'rsvpEditCutoffMode', 'rsvpEditCutoffAt', 'rsvpCutoffTimeZone',
+  'rsvpAllowEdit', 'rsvpEditCutoffMode', 'rsvpEditCutoffAt', 'rsvpCutoffTimeZone', 'rsvpMaxCompanions', 'rsvpOptionalFields',
   'bankName', 'bankBeneficiary',
   'bankAccountNumber', 'bankClabe', 'bankCardNumber', 'bankConcept', 'bankCurrency', 'bankAccounts',
   'enableBankTransfer', 'showBankAccountsWhenCollapsed', 'enableStoreRegistry', 'enableEnvelopeGift',
@@ -1787,6 +1790,7 @@ export async function submitRsvp(
     message?: string;
     phone?: string;
     email?: string;
+    customRsvpDetails?: string | Record<string, string>;
   }
 ) {
   const guest = await getGuestByCode(accessCode, payload.weddingId);
@@ -1808,17 +1812,22 @@ export async function submitRsvp(
   }
 
   const isOpenRegistration = guest.groupName === 'Invitación Genérica / Registro Abierto';
+  const maxEventPasses = resolveRsvpMaxCompanions(weddingSettingsForRsvp?.rsvpMaxCompanions) + 1;
   const maxAllocatedPasses = isOpenRegistration
-    ? Math.max(6, Math.trunc(Number(guest.allocatedPasses) || 1))
+    ? Math.min(Math.max(6, Math.trunc(Number(guest.allocatedPasses) || 1)), maxEventPasses)
     : Math.max(1, Math.trunc(Number(guest.allocatedPasses) || 1));
   const confirmedPasses = payload.status === 'confirmed'
-    ? Math.min(Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)), maxAllocatedPasses)
+    ? Math.min(Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)), maxAllocatedPasses, maxEventPasses)
     : 0;
   const submittedCompanions = normalizeCompanionNames(payload.companionNames, Math.max(0, confirmedPasses - 1));
   if (payload.status === 'confirmed' && submittedCompanions.length !== Math.max(0, confirmedPasses - 1)) {
     throw new Error('Debes escribir el nombre de cada acompañante seleccionado.');
   }
   const companionNamesJson = JSON.stringify(submittedCompanions);
+  const customRsvpDetailsJson = JSON.stringify({
+    ...parseCustomRsvpDetails(guest.customRsvpDetails),
+    ...parseCustomRsvpDetails(payload.customRsvpDetails),
+  });
   const updatedFullName = payload.editExisting ? payload.fullName?.trim() || guest.fullName : guest.fullName;
   const nextWishMessage = payload.message?.trim() || '';
   const wishRelationship = guest.groupName === 'Invitación Genérica / Registro Abierto'
@@ -1840,6 +1849,7 @@ export async function submitRsvp(
           companionNames: companionNamesJson,
           suggestedSong: payload.suggestedSong || '',
           message: payload.message || '',
+          customRsvpDetails: customRsvpDetailsJson,
           phone: payload.phone ?? guest.phone ?? '',
           email: payload.email ?? guest.email ?? '',
           confirmedAt: new Date(),
@@ -1901,6 +1911,7 @@ export async function submitRsvp(
       companionNames: companionNamesJson,
       suggestedSong: payload.suggestedSong || '',
       message: payload.message || '',
+      customRsvpDetails: customRsvpDetailsJson,
       phone: payload.phone ?? guest.phone ?? '',
       email: payload.email ?? guest.email ?? '',
       confirmedAt: new Date(),
@@ -1963,6 +1974,7 @@ export async function submitOpenRsvp(payload: {
   companionNames?: string[];
   suggestedSong?: string;
   message?: string;
+  customRsvpDetails?: string | Record<string, string>;
 }) {
   if (!payload.fullName || !payload.fullName.trim()) {
     throw new Error('El nombre completo es requerido.');
@@ -1977,14 +1989,16 @@ export async function submitOpenRsvp(payload: {
   const randomNum = Math.floor(100 + Math.random() * 900);
   const autoCode = `REG-${cleanPrefix}-${randomNum}`;
 
+  const maxEventPasses = resolveRsvpMaxCompanions(weddingSettingsForRsvp?.rsvpMaxCompanions) + 1;
   const confirmedPasses = payload.status === 'confirmed'
-    ? Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1))
+    ? Math.min(maxEventPasses, Math.max(1, Math.trunc(Number(payload.confirmedPasses) || 1)))
     : 0;
   const submittedCompanions = normalizeCompanionNames(payload.companionNames, Math.max(0, confirmedPasses - 1));
   if (payload.status === 'confirmed' && submittedCompanions.length !== Math.max(0, confirmedPasses - 1)) {
     throw new Error('Debes escribir el nombre de cada acompañante seleccionado.');
   }
   const companionNamesJson = JSON.stringify(submittedCompanions);
+  const customRsvpDetailsJson = JSON.stringify(parseCustomRsvpDetails(payload.customRsvpDetails));
   const allocated = Math.max(confirmedPasses, 1);
 
   const guestData = {
@@ -2003,6 +2017,7 @@ export async function submitOpenRsvp(payload: {
     companionNames: companionNamesJson,
     suggestedSong: payload.suggestedSong || '',
     message: payload.message || '',
+    customRsvpDetails: customRsvpDetailsJson,
     confirmedAt: new Date(),
   };
 

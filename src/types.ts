@@ -275,6 +275,8 @@ export interface WeddingSettings {
   rsvpEditCutoffMode?: 'event' | 'custom';
   rsvpEditCutoffAt?: string;
   rsvpCutoffTimeZone?: string;
+  rsvpMaxCompanions?: number;
+  rsvpOptionalFields?: RsvpOptionalField[] | string;
   // Bank Account & Transfer Quick Settings (Perú & Latam)
   bankName?: string;
   bankBeneficiary?: string;
@@ -297,6 +299,13 @@ export interface WeddingSettings {
   contactPhone: string;
   contactEmail: string;
   updatedAt?: string;
+}
+
+export interface RsvpOptionalField {
+  id: string;
+  label: string;
+  placeholder: string;
+  type: 'text' | 'textarea' | 'tel' | 'email';
 }
 
 export interface BankAccountConfig {
@@ -391,6 +400,7 @@ export interface Guest {
   companionNames?: string; // JSON array containing accompanying guests only, never the invitee
   suggestedSong?: string | null;
   message?: string | null;
+  customRsvpDetails?: string | null;
   confirmedAt?: string | null;
   viewedAt?: string | null;
   createdAt?: string;

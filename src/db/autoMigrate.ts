@@ -318,6 +318,8 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_text TEXT DEFAULT 'Confirmar asistencia';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_button_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_companion_toggle_text TEXT DEFAULT '¿Llevas invitados?';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_max_companions INTEGER DEFAULT 5;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_optional_fields TEXT DEFAULT '[{"id":"dietaryRestrictions","label":"Restricciones alimentarias / alergias","placeholder":"Ej. vegetariano, celíaco, alergia...","type":"text"},{"id":"suggestedSong","label":"Canción para la fiesta (DJ)","placeholder":"Ej. Vivir Mi Vida - Marc Anthony","type":"text"},{"id":"message","label":"Mensaje o dedicatoria para los anfitriones","placeholder":"Escribe unas palabras de felicitación o buenos deseos...","type":"textarea"},{"id":"phone","label":"Teléfono / WhatsApp","placeholder":"Ej. +51 987 654 321","type":"tel"},{"id":"email","label":"Correo electrónico","placeholder":"correo@ejemplo.com","type":"email"}]';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_allow_registration BOOLEAN DEFAULT true;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_registration_cutoff_mode TEXT DEFAULT 'event';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_registration_cutoff_at TEXT DEFAULT '';
@@ -344,11 +346,13 @@ export async function autoMigrateDatabase() {
           companion_names TEXT DEFAULT '[]',
           suggested_song TEXT DEFAULT '',
           message TEXT DEFAULT '',
+          custom_rsvp_details TEXT DEFAULT '{}',
           confirmed_at TIMESTAMP,
           viewed_at TIMESTAMP,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
+        ALTER TABLE guests ADD COLUMN IF NOT EXISTS custom_rsvp_details TEXT DEFAULT '{}';
 
         -- 4. Gallery Photos Table
         CREATE TABLE IF NOT EXISTS gallery_photos (

@@ -1,4 +1,5 @@
 import { WeddingSettings } from '../types.ts';
+import { DEFAULT_RSVP_OPTIONAL_FIELDS, DEFAULT_RSVP_MAX_COMPANIONS } from '../lib/rsvpOptionalFields.ts';
 
 export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   id: 1,
@@ -193,6 +194,8 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   rsvpButtonText: 'Confirmar asistencia',
   rsvpButtonStyle: 'auto',
   rsvpCompanionToggleText: '¿Llevas invitados?',
+  rsvpMaxCompanions: DEFAULT_RSVP_MAX_COMPANIONS,
+  rsvpOptionalFields: JSON.stringify(DEFAULT_RSVP_OPTIONAL_FIELDS),
   contactPhone: '+52 55 1234 5678',
   contactEmail: 'boda.sofyale@gmail.com',
   isPublished: true,

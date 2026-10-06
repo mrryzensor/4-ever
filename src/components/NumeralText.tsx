@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { NumberFontContext } from '../lib/NumberFontContext.ts';
 
 interface NumeralTextProps {
   children?: string | number | null;
@@ -7,14 +8,18 @@ interface NumeralTextProps {
 }
 
 export const NumeralText: React.FC<NumeralTextProps> = ({ children, scope = 'global', fontFamily }) => {
+  const globalFontFamily = useContext(NumberFontContext);
   const parts = String(children ?? '').split(/(\d+)/g);
   const numeralAttribute = scope === 'countdown'
     ? { 'data-countdown-numerals': '' }
     : { 'data-global-numerals': '' };
-  const numeralStyle = fontFamily
+  const appliedFontFamily = fontFamily || (scope === 'global' ? globalFontFamily : null);
+  const numeralStyle = appliedFontFamily
     ? {
-        fontFamily,
-        ...(scope === 'countdown' ? { '--countdown-number-font': fontFamily } : {}),
+        fontFamily: appliedFontFamily,
+        ...(scope === 'countdown'
+          ? { '--countdown-number-font': appliedFontFamily }
+          : { '--invitation-numeral-font': appliedFontFamily }),
       } as React.CSSProperties
     : undefined;
 

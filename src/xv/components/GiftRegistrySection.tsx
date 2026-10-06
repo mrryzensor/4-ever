@@ -101,7 +101,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                 isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-100 shadow-black/40' : 'bg-white/95 border-[#E5E2D0] text-[#3D3D2C] shadow-stone-200/60'
               }`}>
                 <CreditCard className="w-4 h-4 text-amber-500" />
-                <span>{getBankAccountBadgeText(bankAccounts[0], giftCopy.bankTransferTitle, giftCopy)}</span>
+                <span><NumeralText>{getBankAccountBadgeText(bankAccounts[0], giftCopy.bankTransferTitle, giftCopy)}</NumeralText></span>
               </span>
             )}
             {settings.enableEnvelopeGift !== false && (

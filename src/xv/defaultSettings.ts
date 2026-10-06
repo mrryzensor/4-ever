@@ -1,4 +1,5 @@
 import { WeddingSettings } from '../types.ts';
+import { DEFAULT_RSVP_OPTIONAL_FIELDS, DEFAULT_RSVP_MAX_COMPANIONS } from '../lib/rsvpOptionalFields.ts';
 
 export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   id: 6,
@@ -189,6 +190,8 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   rsvpButtonText: 'Confirmar asistencia',
   rsvpButtonStyle: 'auto',
   rsvpCompanionToggleText: '¿Llevas invitados?',
+  rsvpMaxCompanions: DEFAULT_RSVP_MAX_COMPANIONS,
+  rsvpOptionalFields: JSON.stringify(DEFAULT_RSVP_OPTIONAL_FIELDS),
   contactPhone: '+52 55 9876 5432',
   contactEmail: 'xv.valeriamontserrat@gmail.com',
   isPublished: true,

@@ -63,6 +63,7 @@ import {
 } from './AnimatedSvgs.tsx';
 import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 import { BankAccountDetails } from '../../components/BankAccountDetails.tsx';
+import { NumeralText } from '../../components/NumeralText.tsx';
 import { HeroEmblem } from '../../components/HeroEmblem.tsx';
 
 const WOMAN_OUTFIT_OPTIONS = [
@@ -1118,7 +1119,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                       }`}>
                         <CreditCard className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{getBankAccountBadgeText(bankAccounts[0], giftCopy.bankBadgeFallbackText, giftCopy)}</span>
+                        <span><NumeralText>{getBankAccountBadgeText(bankAccounts[0], giftCopy.bankBadgeFallbackText, giftCopy)}</NumeralText></span>
                       </span>
                     )}
                     {settings.enableEnvelopeGift === true && (

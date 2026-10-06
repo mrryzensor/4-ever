@@ -189,6 +189,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   rsvpButtonText: text('rsvp_button_text').default('Confirmar asistencia'),
   rsvpButtonStyle: text('rsvp_button_style').default('auto'),
   rsvpCompanionToggleText: text('rsvp_companion_toggle_text').default('¿Llevas invitados?'),
+  rsvpMaxCompanions: integer('rsvp_max_companions').default(5),
+  rsvpOptionalFields: text('rsvp_optional_fields').default('[{"id":"dietaryRestrictions","label":"Restricciones alimentarias / alergias","placeholder":"Ej. vegetariano, celíaco, alergia...","type":"text"},{"id":"suggestedSong","label":"Canción para la fiesta (DJ)","placeholder":"Ej. Vivir Mi Vida - Marc Anthony","type":"text"},{"id":"message","label":"Mensaje o dedicatoria para los anfitriones","placeholder":"Escribe unas palabras de felicitación o buenos deseos...","type":"textarea"},{"id":"phone","label":"Teléfono / WhatsApp","placeholder":"Ej. +51 987 654 321","type":"tel"},{"id":"email","label":"Correo electrónico","placeholder":"correo@ejemplo.com","type":"email"}]'),
   rsvpAllowRegistration: boolean('rsvp_allow_registration').default(true),
   rsvpRegistrationCutoffMode: text('rsvp_registration_cutoff_mode').default('event'),
   rsvpRegistrationCutoffAt: text('rsvp_registration_cutoff_at').default(''),
@@ -233,6 +235,7 @@ export const guests = pgTable('guests', {
   companionNames: text('companion_names').default('[]'), // JSON array of accompanying guests; excludes fullName
   suggestedSong: text('suggested_song').default(''),
   message: text('message').default(''),
+  customRsvpDetails: text('custom_rsvp_details').default('{}'),
   confirmedAt: timestamp('confirmed_at'),
   viewedAt: timestamp('viewed_at'),
   createdAt: timestamp('created_at').defaultNow(),

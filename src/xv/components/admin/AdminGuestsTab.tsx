@@ -19,6 +19,7 @@ import {
 import { Guest, GuestStats, WeddingSettings } from '../../../types.ts';
 import { toast } from '../../../lib/toast.ts';
 import { AdminGuestModal, ExtendedGuestFormData } from './AdminGuestModal.tsx';
+import { parseRsvpOptionalFields } from '../../../lib/rsvpOptionalFields.ts';
 
 interface AdminGuestsTabProps {
   settings: WeddingSettings;
@@ -49,6 +50,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
   onDeleteGuest,
   onGuestsImported,
 }) => {
+  const optionalFields = parseRsvpOptionalFields(settings.rsvpOptionalFields);
+
   // Add / Edit Modal State
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -67,6 +70,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
     suggestedSong: '',
     message: '',
     companionNames: '[]',
+    customRsvpDetails: '{}',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -94,6 +98,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       suggestedSong: '',
       message: '',
       companionNames: '[]',
+      customRsvpDetails: '{}',
     });
   };
 
@@ -119,6 +124,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       suggestedSong: g.suggestedSong || '',
       message: g.message || '',
       companionNames: g.companionNames || '[]',
+      customRsvpDetails: g.customRsvpDetails || '{}',
     });
     setShowGuestModal(true);
   };
@@ -803,6 +809,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
         isOpen={showGuestModal}
         editingGuest={editingGuest}
         formData={guestFormData}
+        optionalFields={optionalFields}
         onChangeFormData={(updated) => setGuestFormData((prev) => ({ ...prev, ...updated }))}
         onClose={() => {
           setShowGuestModal(false);
@@ -814,4 +821,3 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
     </div>
   );
 };
-

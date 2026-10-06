@@ -17,7 +17,7 @@
 
 .public-invitation [data-global-numerals],
 .public-invitation-typography [data-global-numerals] {
-  font-family: var(--invitation-font-numbers, inherit) !important;
+  font-family: var(--invitation-numeral-font, var(--invitation-font-numbers, inherit)) !important;
   font-variant-numeric: lining-nums tabular-nums;
 }
 

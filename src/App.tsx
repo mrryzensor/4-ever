@@ -74,6 +74,7 @@ import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { getLandingSectionOrder } from './lib/sectionOrder.ts';
 import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
 import { resolveNumberFontFamily } from './lib/numberFonts.ts';
+import { NumberFontContext } from './lib/NumberFontContext.ts';
 import { resolveInvitationTheme } from './lib/invitationTheme.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 
@@ -1284,14 +1285,15 @@ export default function App() {
     settingsEventCategory === 'xv' ? XV_CARD_THEMES : CARD_THEMES,
     settingsEventCategory === 'xv' ? 'romantic-floral' : 'classic-gold',
   );
+  const globalNumberFontFamily = resolveNumberFontFamily(
+    settings.typographyNumberFont,
+    settings,
+    getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+  );
   const invitationFontStyle = {
     '--invitation-font-body': getThemeFontFamily(activeTheme.fontBody, 'Georgia, serif'),
     '--invitation-font-display': getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
-    '--invitation-font-numbers': resolveNumberFontFamily(
-      settings.typographyNumberFont,
-      settings,
-      getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
-    ),
+    '--invitation-font-numbers': globalNumberFontFamily,
     '--invitation-primary-color': activeTheme.primaryColorHex,
     '--invitation-accent-color': activeTheme.accentColorHex,
     '--invitation-secondary-bg': activeTheme.secondaryBgHex,
@@ -1396,10 +1398,11 @@ export default function App() {
   };
 
   return (
-    <div
-      className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
-      style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
-    >
+    <NumberFontContext.Provider value={globalNumberFontFamily}>
+      <div
+        className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
+        style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
+      >
       {/* Interactive Demo Style Selector Bar in Demo Mode */}
       {isDemoMode && (
         settingsEventCategory === 'xv' ? (
@@ -1558,6 +1561,7 @@ export default function App() {
 
       {/* Global Toast Notifications */}
       <ToastContainer />
-    </div>
+      </div>
+    </NumberFontContext.Provider>
   );
 }
