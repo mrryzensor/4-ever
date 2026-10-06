@@ -86,8 +86,8 @@ export const UserEditModal: React.FC<UserEditModalProps> = ({
         email: email.trim().toLowerCase(),
         role,
         plan,
-        agencyName: role === 'wedding_planner' ? agencyName.trim() : undefined,
-        phone: phone.trim() || undefined,
+        agencyName: role === 'wedding_planner' ? agencyName.trim() : '',
+        phone: phone.trim(),
       };
 
       if (password.trim()) {

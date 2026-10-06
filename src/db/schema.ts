@@ -11,6 +11,7 @@ export const users = pgTable('users', {
   role: text('role').default('couple'), // 'ceo', 'wedding_planner', 'couple', 'admin'
   plan: text('plan').default('free'), // 'free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'
   agencyName: text('agency_name'),
+  phone: text('phone'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

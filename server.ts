@@ -921,6 +921,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Rol no válido' });
       }
       const updated = await updateUserRoleByCeo(uid, role);
+      if (!updated) return res.status(404).json({ error: 'No existe un usuario con ese UID en la base de datos.' });
       res.json({ success: true, user: updated });
     } catch (error: any) {
       console.error('Failed to update user role by CEO:', error);
@@ -937,6 +938,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Plan no válido' });
       }
       const updated = await updateUserPlanByCeo(uid, plan);
+      if (!updated) return res.status(404).json({ error: 'No existe un usuario con ese UID en la base de datos.' });
       res.json({ success: true, user: updated });
     } catch (error: any) {
       console.error('Failed to update user plan by CEO:', error);
@@ -951,6 +953,7 @@ async function startServer() {
         return res.status(400).json({ error: 'UID de usuario es requerido' });
       }
       const updated = await updateUserByCeo(uid, data);
+      if (!updated) return res.status(404).json({ error: 'No existe un usuario con ese UID en la base de datos.' });
       res.json({ success: true, user: updated });
     } catch (error: any) {
       console.error('Failed to update user by CEO:', error);
@@ -992,7 +995,17 @@ async function startServer() {
       if (!Array.isArray(uids) || uids.length === 0 || !action) {
         return res.status(400).json({ error: 'Parámetros uids y action son requeridos' });
       }
+      if (!['plan', 'role', 'delete'].includes(action)) {
+        return res.status(400).json({ error: 'Acción de actualización no válida.' });
+      }
+      if (action === 'plan' && !['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited', 'registered'].includes(value)) {
+        return res.status(400).json({ error: 'Plan no válido.' });
+      }
+      if (action === 'role' && !['ceo', 'wedding_planner', 'couple', 'admin'].includes(value)) {
+        return res.status(400).json({ error: 'Rol no válido.' });
+      }
       const result = await bulkUpdateUsersByCeo(uids, action, value);
+      if (result.count === 0) return res.status(404).json({ error: 'No se encontró ningún usuario para actualizar.' });
       res.json({ success: true, ...result });
     } catch (error: any) {
       console.error('Failed to bulk update users by CEO:', error);
@@ -1004,6 +1017,7 @@ async function startServer() {
     try {
       const { uid } = req.params;
       const result = await deleteUserByCeo(uid);
+      if (!result.deleted) return res.status(404).json({ error: 'No existe un usuario con ese UID en la base de datos.' });
       res.json(result);
     } catch (error: any) {
       console.error('Failed to delete user by CEO:', error);

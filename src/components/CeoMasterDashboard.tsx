@@ -198,13 +198,15 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role }),
       });
-      if (res.ok) {
-        toast.success(`Rol de usuario actualizado a "${role}".`, 'Rol Actualizado');
-        fetchCeoData();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Error al actualizar rol');
       }
+      toast.success(`Rol de usuario actualizado a "${role}".`, 'Rol Actualizado');
+      fetchCeoData();
     } catch (err) {
       console.error('Error updating role:', err);
-      toast.error('Error al actualizar rol');
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar rol');
     }
   };
 
@@ -215,13 +217,15 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       });
-      if (res.ok) {
-        toast.success(`Plan actualizado exitosamente.`, 'Plan Actualizado');
-        fetchCeoData();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Error al actualizar plan');
       }
+      toast.success(`Plan actualizado exitosamente.`, 'Plan Actualizado');
+      fetchCeoData();
     } catch (err) {
       console.error('Error updating plan:', err);
-      toast.error('Error al actualizar plan');
+      toast.error(err instanceof Error ? err.message : 'Error al actualizar plan');
     }
   };
 

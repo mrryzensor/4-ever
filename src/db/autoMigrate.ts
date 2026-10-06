@@ -38,11 +38,13 @@ export async function autoMigrateDatabase() {
           role TEXT DEFAULT 'couple',
           plan TEXT DEFAULT 'free',
           agency_name TEXT,
+          phone TEXT,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
         ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS agency_name TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 
         -- 2. Wedding Settings Table
         CREATE TABLE IF NOT EXISTS wedding_settings (

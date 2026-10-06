@@ -1291,23 +1291,39 @@ export async function getAllWeddingsForCeo() {
 }
 
 export async function updateUserRoleByCeo(uid: string, role: string) {
-  const user = memoryState.users.find((u) => u.uid === uid);
-  if (user) {
-    user.role = role;
-    user.updatedAt = new Date();
-    return user;
+  const updatedAt = new Date();
+  if (hasPostgresConfig()) {
+    const [updated] = await db.update(users)
+      .set({ role, updatedAt })
+      .where(eq(users.uid, uid))
+      .returning();
+    if (updated) Object.assign(memoryState.users.find((user) => user.uid === uid) || {}, updated);
+    return updated || null;
   }
-  return null;
+
+  const user = memoryState.users.find((entry) => entry.uid === uid);
+  if (!user) return null;
+  user.role = role;
+  user.updatedAt = updatedAt;
+  return user;
 }
 
 export async function updateUserPlanByCeo(uid: string, plan: string) {
-  const user = memoryState.users.find((u) => u.uid === uid);
-  if (user) {
-    user.plan = plan;
-    user.updatedAt = new Date();
-    return user;
+  const updatedAt = new Date();
+  if (hasPostgresConfig()) {
+    const [updated] = await db.update(users)
+      .set({ plan, updatedAt })
+      .where(eq(users.uid, uid))
+      .returning();
+    if (updated) Object.assign(memoryState.users.find((user) => user.uid === uid) || {}, updated);
+    return updated || null;
   }
-  return null;
+
+  const user = memoryState.users.find((entry) => entry.uid === uid);
+  if (!user) return null;
+  user.plan = plan;
+  user.updatedAt = updatedAt;
+  return user;
 }
 
 export async function updateUserByCeo(
@@ -1322,19 +1338,28 @@ export async function updateUserByCeo(
     password?: string;
   }
 ) {
-  let user = memoryState.users.find((u) => u.uid === uid);
-  if (user) {
-    if (data.name !== undefined) user.name = data.name.trim();
-    if (data.email !== undefined) user.email = data.email.trim().toLowerCase();
-    if (data.role !== undefined) user.role = data.role;
-    if (data.plan !== undefined) user.plan = data.plan;
-    if (data.agencyName !== undefined) user.agencyName = data.agencyName;
-    if (data.phone !== undefined) user.phone = data.phone;
-    if (data.password !== undefined && data.password.trim()) user.password = data.password.trim();
-    user.updatedAt = new Date();
-    return user;
+  const updates: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
+  if (data.name !== undefined) updates.name = data.name.trim();
+  if (data.email !== undefined) updates.email = data.email.trim().toLowerCase();
+  if (data.role !== undefined) updates.role = data.role;
+  if (data.plan !== undefined) updates.plan = data.plan;
+  if (data.agencyName !== undefined) updates.agencyName = data.agencyName.trim() || null;
+  if (data.phone !== undefined) updates.phone = data.phone.trim() || null;
+  if (data.password !== undefined && data.password.trim()) updates.password = data.password.trim();
+
+  if (hasPostgresConfig()) {
+    const [updated] = await db.update(users)
+      .set(updates)
+      .where(eq(users.uid, uid))
+      .returning();
+    if (updated) Object.assign(memoryState.users.find((user) => user.uid === uid) || {}, updated);
+    return updated || null;
   }
-  return null;
+
+  const user = memoryState.users.find((entry) => entry.uid === uid);
+  if (!user) return null;
+  Object.assign(user, updates);
+  return user;
 }
 
 export async function createUserByCeo(data: {
@@ -1347,9 +1372,15 @@ export async function createUserByCeo(data: {
   phone?: string;
 }) {
   const cleanEmail = data.email.trim().toLowerCase();
-  const existing = memoryState.users.find((u) => u.email === cleanEmail);
-  if (existing) {
-    return updateUserByCeo(existing.uid, data);
+  if (hasPostgresConfig()) {
+    const [existing] = await db.select().from(users)
+      .where(sql`lower(${users.email}) = ${cleanEmail}`)
+      .orderBy(asc(users.id))
+      .limit(1);
+    if (existing) return updateUserByCeo(existing.uid, data);
+  } else {
+    const existing = memoryState.users.find((user) => user.email?.trim().toLowerCase() === cleanEmail);
+    if (existing) return updateUserByCeo(existing.uid, data);
   }
 
   const generatedUid = 'usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x');
@@ -1361,11 +1392,26 @@ export async function createUserByCeo(data: {
     password: data.password?.trim() || 'Atelier2026!',
     role: data.role || (data.plan?.startsWith('planner_') ? 'wedding_planner' : 'couple'),
     plan: data.plan || 'atelier',
-    agencyName: data.agencyName || undefined,
-    phone: data.phone || undefined,
+    agencyName: data.agencyName?.trim() || undefined,
+    phone: data.phone?.trim() || undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+
+  if (hasPostgresConfig()) {
+    const [created] = await db.insert(users).values({
+      uid: generatedUid,
+      email: cleanEmail,
+      name: newUser.name,
+      password: newUser.password,
+      role: newUser.role,
+      plan: newUser.plan,
+      agencyName: newUser.agencyName || null,
+      phone: newUser.phone || null,
+    }).returning();
+    if (created) memoryState.users.unshift(created as any);
+    return created || null;
+  }
 
   memoryState.users.unshift(newUser);
   return newUser;
@@ -1405,9 +1451,37 @@ export async function bulkUpdateUsersByCeo(
   action: 'plan' | 'role' | 'delete',
   value?: string
 ) {
+  if (hasPostgresConfig()) {
+    if (action === 'delete') {
+      const targets = await db.select({ uid: users.uid, role: users.role, email: users.email })
+        .from(users)
+        .where(inArray(users.uid, uids));
+      const deletableUids = targets
+        .filter((user) => user.role !== 'ceo' && user.email?.trim().toLowerCase() !== 'daviex14@gmail.com')
+        .map((user) => user.uid);
+      if (deletableUids.length === 0) return { success: true, count: 0 };
+      const deleted = await db.delete(users).where(inArray(users.uid, deletableUids)).returning({ uid: users.uid });
+      memoryState.users = memoryState.users.filter((user) => !deletableUids.includes(user.uid));
+      return { success: true, count: deleted.length };
+    }
+
+    if (!value || !['plan', 'role'].includes(action)) {
+      throw new Error('Acción o valor de actualización no válido.');
+    }
+    const updated = await db.update(users)
+      .set(action === 'plan' ? { plan: value, updatedAt: new Date() } : { role: value, updatedAt: new Date() })
+      .where(inArray(users.uid, uids))
+      .returning();
+    for (const user of updated) Object.assign(memoryState.users.find((entry) => entry.uid === user.uid) || {}, user);
+    return { success: true, count: updated.length };
+  }
+
   if (action === 'delete') {
-    memoryState.users = memoryState.users.filter((u) => !uids.includes(u.uid) || u.role === 'ceo');
-    return { success: true, count: uids.length };
+    const toDelete = memoryState.users
+      .filter((user) => uids.includes(user.uid) && user.role !== 'ceo' && user.email?.trim().toLowerCase() !== 'daviex14@gmail.com')
+      .map((user) => user.uid);
+    memoryState.users = memoryState.users.filter((user) => !toDelete.includes(user.uid));
+    return { success: true, count: toDelete.length };
   }
 
   let updatedCount = 0;
@@ -1428,12 +1502,19 @@ export async function bulkUpdateUsersByCeo(
 }
 
 export async function deleteUserByCeo(uid: string) {
-  const user = memoryState.users.find((u) => u.uid === uid);
-  if (user?.role === 'ceo' || user?.email === 'daviex14@gmail.com') {
+  const user = hasPostgresConfig()
+    ? (await db.select().from(users).where(eq(users.uid, uid)).limit(1))[0]
+    : memoryState.users.find((entry) => entry.uid === uid);
+  if (user?.role === 'ceo' || user?.email?.trim().toLowerCase() === 'daviex14@gmail.com') {
     throw new Error('No es posible eliminar la cuenta principal de CEO.');
   }
+  if (hasPostgresConfig()) {
+    const [deleted] = await db.delete(users).where(eq(users.uid, uid)).returning({ uid: users.uid });
+    memoryState.users = memoryState.users.filter((entry) => entry.uid !== uid);
+    return { success: true, deleted: Boolean(deleted) };
+  }
   memoryState.users = memoryState.users.filter((u) => u.uid !== uid);
-  return { success: true };
+  return { success: true, deleted: Boolean(user) };
 }
 
 export async function getWeddingUploadAssets() {
