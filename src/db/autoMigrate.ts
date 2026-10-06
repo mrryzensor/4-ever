@@ -271,6 +271,7 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_button_scale INTEGER DEFAULT 100;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_toggle_scale INTEGER DEFAULT 100;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_gallery_fullscreen_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_number_font TEXT DEFAULT 'theme';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS divider_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_card_dividers BOOLEAN DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS borderless_cards BOOLEAN DEFAULT false;

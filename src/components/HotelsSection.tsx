@@ -4,6 +4,7 @@ import { EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
 import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
+import { NumeralText } from './NumeralText.tsx';
 
 interface HotelsSectionProps {
   settings: WeddingSettings;
@@ -71,7 +72,7 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
             <p className={`mb-4 text-center text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
               {hotels.length === 1
                 ? 'Tenemos una opción de hospedaje recomendada cerca del evento.'
-                : `Tenemos ${hotels.length} opciones de hospedaje recomendadas cerca del evento.`}
+                : <>Tenemos <NumeralText>{hotels.length}</NumeralText> opciones de hospedaje recomendadas cerca del evento.</>}
             </p>
           )}
           <div className="mb-6 flex justify-center">
@@ -89,7 +90,7 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
               }}
             >
               <Building2 className="h-4 w-4" />
-              <span>{showAllHotels ? 'Ocultar hoteles' : `Ver todos los hoteles (${hotels.length})`}</span>
+              <span>{showAllHotels ? 'Ocultar hoteles' : <>Ver todos los hoteles (<NumeralText>{hotels.length}</NumeralText>)</>}</span>
               <ChevronDown className={`h-4 w-4 transition-transform ${showAllHotels ? 'rotate-180' : ''}`} />
             </button>
           </div>

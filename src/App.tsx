@@ -73,6 +73,7 @@ import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } f
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { getLandingSectionOrder } from './lib/sectionOrder.ts';
 import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
+import { resolveNumberFontFamily } from './lib/numberFonts.ts';
 import { resolveInvitationTheme } from './lib/invitationTheme.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 
@@ -1286,6 +1287,11 @@ export default function App() {
   const invitationFontStyle = {
     '--invitation-font-body': getThemeFontFamily(activeTheme.fontBody, 'Georgia, serif'),
     '--invitation-font-display': getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+    '--invitation-font-numbers': resolveNumberFontFamily(
+      settings.typographyNumberFont,
+      settings,
+      getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+    ),
     '--invitation-primary-color': activeTheme.primaryColorHex,
     '--invitation-accent-color': activeTheme.accentColorHex,
     '--invitation-secondary-bg': activeTheme.secondaryBgHex,

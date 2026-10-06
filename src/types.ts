@@ -187,6 +187,7 @@ export interface WeddingSettings {
   countdownStyle?: string; // 'auto' | 'classic-gold' | 'romantic-floral' | 'watercolor-garden' | etc.
   countdownLayout?: 'circle' | 'editorial' | 'tiles' | 'banner' | 'ribbon' | 'spotlight' | 'timeline' | 'flip' | 'stacked' | 'arch';
   countdownTitle?: string; // 'Faltan' | 'Falta' | 'Sólo faltan' | 'Mis XV Años' | etc.
+  typographyNumberFont?: string; // 'theme' o tipografía de cifras para toda la invitación
   countdownPlacement?: 'transition' | 'after-hero';
   showCountdownGuestsBadge?: boolean; // Mostrar placa de invitados y acompañantes bajo el contador
   // Modular Style Mix & Match Settings (Modo Avanzado / Atelier)

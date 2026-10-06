@@ -48,6 +48,7 @@ import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { AnimatedChampagneGlasses, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { toast } from '../../lib/toast.ts';
 import { RsvpCompanionToggle } from '../../components/RsvpCompanionToggle.tsx';
+import { NumeralText } from '../../components/NumeralText.tsx';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../../lib/guestCompanions.ts';
 import { getRsvpClosedMessage, isRsvpActionAllowed } from '../../lib/rsvpAvailability.ts';
 import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
@@ -421,10 +422,10 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
               <div className={`p-5 rounded-2xl border max-w-md mx-auto mb-8 space-y-1 ${isDark ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
                 <p data-typography-role="heading" className={`text-base sm:text-lg font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>{settings.coupleNames}</p>
-                <p data-typography-role="detail" className={`text-sm sm:text-base ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>{settings.eventDate} • {settings.receptionVenue}</p>
+                <p data-typography-role="detail" className={`text-sm sm:text-base ${isDark ? 'text-stone-400' : 'text-stone-600'}`}><NumeralText>{settings.eventDate}</NumeralText> • <NumeralText>{settings.receptionVenue}</NumeralText></p>
                 {displayedStatus === 'confirmed' && (
                   <p data-typography-role="body" className={`font-serif text-sm sm:text-base font-semibold pt-1 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                    Pases confirmados: {savedResponseGuest?.confirmedPasses ?? (status === 'confirmed' ? companionCount + 1 : 0)} persona(s)
+                    Pases confirmados: <NumeralText>{savedResponseGuest?.confirmedPasses ?? (status === 'confirmed' ? companionCount + 1 : 0)}</NumeralText> persona(s)
                   </p>
                 )}
               </div>
@@ -545,7 +546,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                               {s.fullName}
                             </p>
                             <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
-                              {s.groupName || 'Invitado'} • Pases reservados: <strong>{s.allocatedPasses} personas</strong>
+                              {s.groupName || 'Invitado'} • Pases reservados: <strong><NumeralText>{s.allocatedPasses}</NumeralText> personas</strong>
                             </p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 ${isDark ? 'bg-amber-900/40 text-amber-300' : 'bg-amber-100 text-amber-900'}`}>
@@ -566,7 +567,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       </span>
                     </div>
                     <span className={`font-mono font-bold ${isDark ? 'text-amber-300' : 'text-amber-900'}`}>
-                      {guest.allocatedPasses} pases asignados
+                      <NumeralText>{guest.allocatedPasses}</NumeralText> pases asignados
                     </span>
                   </div>
                 )}
@@ -643,7 +644,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                       </span>
                       <span data-typography-role="body" className={`text-sm ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
                         {guest?.allocatedPasses
-                          ? `Puedes llevar hasta ${maxSelectableCompanions} ${maxSelectableCompanions === 1 ? 'persona más' : 'personas más'} (además de ti).`
+                          ? <NumeralText>{`Puedes llevar hasta ${maxSelectableCompanions} ${maxSelectableCompanions === 1 ? 'persona más' : 'personas más'} (además de ti).`}</NumeralText>
                           : 'Indica cuántas personas más te acompañarán.'}
                       </span>
                     </div>
@@ -675,7 +676,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                                   : isDark ? 'text-stone-400 hover:bg-stone-800' : 'text-stone-600 hover:bg-stone-100'
                               }`}
                             >
-                              {num}
+                              <NumeralText>{num}</NumeralText>
                             </button>
                           );
                         })}

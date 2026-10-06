@@ -98,6 +98,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   countdownStyle: 'auto',
   countdownLayout: 'circle',
   countdownTitle: 'Faltan',
+  typographyNumberFont: 'theme',
   countdownPlacement: 'transition',
   showCountdownGuestsBadge: true,
   colorPaletteStyle: 'auto',

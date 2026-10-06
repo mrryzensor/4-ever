@@ -15,6 +15,7 @@ import { WeddingSettings, ItineraryItem } from '../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
+import { NumeralText } from './NumeralText.tsx';
 
 interface ItinerarySectionProps {
   settings: WeddingSettings;
@@ -106,17 +107,17 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                 }`}
               >
                 <span className="font-mono font-bold text-sm sm:text-base" style={{ color: itineraryAccentColor }}>
-                  {item.time} hrs
+                  <NumeralText>{item.time}</NumeralText> hrs
                 </span>
                 <span className="text-stone-400 font-sans">•</span>
-                <span className="tracking-wide">{item.title}</span>
+                <span className="tracking-wide"><NumeralText>{item.title}</NumeralText></span>
               </span>
             ))}
             {hasMore && (
               <span data-typography-role="badge" className={`text-xs sm:text-sm font-serif font-medium px-4 py-2 rounded-full border border-dashed ${
                 isDark ? 'border-[#5A5A40] text-stone-300 bg-stone-900/40' : 'border-[#E5E2D0] text-stone-600 bg-[#FAF9F0]/80'
               }`}>
-                +{itineraryList.length - 3} momentos más
+                +<NumeralText>{itineraryList.length - 3}</NumeralText> momentos más
               </span>
             )}
           </div>
@@ -214,18 +215,18 @@ export const ItinerarySection: React.FC<ItinerarySectionProps> = ({ settings }) 
                 backgroundColor: `color-mix(in srgb, ${itineraryAccentColor} 14%, transparent)`,
                 borderColor: `color-mix(in srgb, ${itineraryAccentColor} 42%, transparent)`,
               }} className="text-xs font-mono font-bold px-3 py-1 rounded-full border">
-                          {item.time} hrs
+                          <NumeralText>{item.time}</NumeralText> hrs
                         </span>
                       </div>
                       <h4 data-typography-role="heading" className={`text-lg font-serif font-bold mt-1 ${
                         isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
                       }`}>
-                        {item.title}
+                        <NumeralText>{item.title}</NumeralText>
                       </h4>
                       <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
                         isDark ? 'text-stone-300' : 'text-stone-600'
                       }`}>
-                        {item.desc}
+                        <NumeralText>{item.desc}</NumeralText>
                       </p>
                     </div>
                   </div>

@@ -7,6 +7,7 @@ import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 import { getContrastTextColor } from '../../lib/colorUtils.ts';
 import { toast } from '../../lib/toast.ts';
+import { NumeralText } from '../../components/NumeralText.tsx';
 
 interface GuestbookSectionProps {
   weddingId?: number;
@@ -120,7 +121,7 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
               isDark ? 'bg-[#282B25] border-[#5A5A40]/80 text-stone-200' : 'bg-white/90 border-[#E5E2D0] text-stone-700'
             }`}>
               {wishes.length > 0
-                ? `✨ ${wishes.length} ${wishes.length === 1 ? 'mensaje de cariño publicado' : 'mensajes de cariño publicados'} de familiares y amigos`
+                ? <>✨ <NumeralText>{wishes.length}</NumeralText> {wishes.length === 1 ? 'mensaje de cariño publicado' : 'mensajes de cariño publicados'} de familiares y amigos</>
                 : '✨ Sé el primero en dejar una dedicatoria para la quinceañera'}
             </span>
           </div>
@@ -297,13 +298,13 @@ export const GuestbookSection: React.FC<GuestbookSectionProps> = ({
                   </div>
 
                   <p className={`text-xs leading-relaxed italic font-serif ${activeTheme.textSecondaryClass}`}>
-                    "{item.message}"
+                    "<NumeralText>{item.message}</NumeralText>"
                   </p>
 
                   <div className={`mt-3 pt-2 border-t flex items-center justify-between text-[10px] ${
                     isDark ? 'border-[#5A5A40]/40 text-stone-400' : 'border-stone-100 text-stone-400'
                   }`}>
-                    <span>{new Date(item.createdAt).toLocaleDateString('es-ES')}</span>
+                    <span><NumeralText>{new Date(item.createdAt).toLocaleDateString('es-ES')}</NumeralText></span>
                     <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500 shrink-0" />
                   </div>
                 </motion.div>

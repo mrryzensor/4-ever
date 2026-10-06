@@ -29,9 +29,11 @@ import { AnimatedCameraLens, StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 import { getThemeFontFamily } from '../../lib/rsvpButtonStyle.ts';
+import { resolveNumberFontFamily } from '../../lib/numberFonts.ts';
 import { optimizeImageClient } from '../../lib/mediaOptimizer.ts';
 import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../../lib/galleryPhotoTitles.ts';
 import { useDriveFolderPhotos } from '../../components/DriveFolderPhotos.tsx';
+import { NumeralText } from '../../components/NumeralText.tsx';
 
 type CarouselPhoto = GalleryPhoto & { driveOpenUrl?: string; driveFileId?: string; driveInteractionToken?: string; responsiveUrls?: Record<640 | 960 | 1440 | 1920, string> };
 
@@ -658,6 +660,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, [weddingId, authorInputName, guestName, guestCode, uploadCaption]);
 
   const activeTheme = resolveInvitationTheme(settings ? { ...settings, cardStyle: settings.cardStyle || cardStyle } : { cardStyle }, CARD_THEMES, 'romantic-floral');
+  const numberFontFamily = settings
+    ? resolveNumberFontFamily(settings.typographyNumberFont, settings, getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'))
+    : getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif');
   const isDark = activeTheme.isDark;
 
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -904,7 +909,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               <MessageCircle className="w-3.5 h-3.5 text-amber-300" />
                               <span>
                                 {(getCommentsForPhoto(currentCarouselPhoto).length || 0) > 0
-                                  ? `${getCommentsForPhoto(currentCarouselPhoto).length} ${galleryText.commentsCount}`
+                                  ? <NumeralText>{`${getCommentsForPhoto(currentCarouselPhoto).length} ${galleryText.commentsCount}`}</NumeralText>
                                   : galleryText.commentsButton}
                               </span>
                             </button>
@@ -993,7 +998,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-mono text-stone-300 flex items-center gap-1.5 pointer-events-none">
                     <span className="text-amber-300 font-bold">{carouselIndex + 1}</span>
                     <span className="text-stone-500">/</span>
-                    <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
+                    <span><NumeralText>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</NumeralText></span>
                   </div>
 
                   {carouselPhotos.length > 1 && (
@@ -1222,6 +1227,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                   '--invitation-type-gallery-fullscreen': `${Math.min(200, Math.max(80, settings?.typographyGalleryFullscreenScale ?? 100)) / 100}`,
                   '--invitation-font-body': getThemeFontFamily(activeTheme.fontBody, 'Georgia, serif'),
                   '--invitation-font-display': getThemeFontFamily(activeTheme.fontDisplay, 'Georgia, serif'),
+                  '--invitation-font-numbers': numberFontFamily,
                   '--invitation-primary-color': activeTheme.primaryColorHex,
                   '--invitation-accent-color': activeTheme.accentColorHex,
                 } as React.CSSProperties}
@@ -1267,7 +1273,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                     <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-40 bg-black/60 lg:backdrop-blur-md px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/10 text-xs font-mono font-medium text-stone-300 flex items-center gap-2 shadow-lg">
                       <span className="text-amber-300 font-bold">{(activePhotoIndex ?? 0) + 1}</span>
                       <span className="text-stone-500">/</span>
-                      <span>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</span>
+                      <span><NumeralText>{driveGallery.hasMore ? `${carouselPhotos.length}+` : carouselPhotos.length}</NumeralText></span>
                     </div>
 
                     {/* Left Carousel Navigation Button */}
@@ -1332,11 +1338,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                             )}
                             {activePhoto.createdAt && (
                               <span className="text-stone-400 font-mono text-[11px] sm:text-xs">
-                                {new Date(activePhoto.createdAt).toLocaleDateString(undefined, {
+                                <NumeralText>{new Date(activePhoto.createdAt).toLocaleDateString(undefined, {
                                   year: 'numeric',
                                   month: 'long',
                                   day: 'numeric',
-                                })}
+                                })}</NumeralText>
                               </span>
                             )}
                           </div>
@@ -1382,7 +1388,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         title={mobileCommentsOpen ? 'Cerrar comentarios' : 'Ver comentarios'}
                       >
                         <MessageCircle className="w-5 h-5 text-amber-400" />
-                        <span className="text-[10px] font-bold mt-0.5 leading-none">{comments.length}</span>
+                        <span className="text-[10px] font-bold mt-0.5 leading-none"><NumeralText>{comments.length}</NumeralText></span>
                       </button>
                     </div>
 
@@ -1414,7 +1420,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           >
                             <MessageCircle className="w-3 h-3 text-amber-400 shrink-0" />
                             <span className="font-semibold text-amber-200 truncate shrink-0">{comments[comments.length - 1].guestName}:</span>
-                            <span className="truncate text-stone-300 italic">"{comments[comments.length - 1].message}"</span>
+                            <span className="truncate text-stone-300 italic">"<NumeralText>{comments[comments.length - 1].message}</NumeralText>"</span>
                           </div>
                         )}
 
@@ -1429,10 +1435,10 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         >
                           <span className="flex items-center gap-2">
                             <MessageCircle className="w-3.5 h-3.5 text-amber-400" />
-                            <span>{comments.length === 0 ? galleryText.commentsEmpty : formatCommentsPrompt(comments.length)}</span>
+                            <span><NumeralText>{comments.length === 0 ? galleryText.commentsEmpty : formatCommentsPrompt(comments.length)}</NumeralText></span>
                           </span>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/15 text-amber-300">
-                            {comments.length}
+                            <NumeralText>{comments.length}</NumeralText>
                           </span>
                         </button>
                       </div>
@@ -1492,7 +1498,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                 <MessageCircle className="w-4 h-4 text-amber-400" />
                                 <h4 className="text-sm font-semibold text-white">{galleryText.commentsTitle}</h4>
                                 <span className="text-xs font-mono font-bold text-amber-300 bg-white/10 px-2 py-0.5 rounded-full">
-                                  {comments.length}
+                                  <NumeralText>{comments.length}</NumeralText>
                                 </span>
                               </div>
                               <button
@@ -1536,7 +1542,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     </div>
                                     {c.createdAt && (
                                       <span className="text-[10px] text-stone-400 font-mono shrink-0">
-                                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <NumeralText>{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</NumeralText>
                                       </span>
                                     )}
                                   </div>
@@ -1615,7 +1621,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           <span>{galleryText.commentsTitle}</span>
                         </div>
                         <span className="text-xs font-mono font-bold text-amber-300 bg-stone-800/80 px-2.5 py-0.5 rounded-full">
-                          {comments.length}
+                          <NumeralText>{comments.length}</NumeralText>
                         </span>
                       </div>
 
@@ -1647,7 +1653,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               </div>
                               {c.createdAt && (
                                 <span className="text-[11px] text-stone-400 font-mono shrink-0">
-                                  {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  <NumeralText>{new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</NumeralText>
                                 </span>
                               )}
                             </div>

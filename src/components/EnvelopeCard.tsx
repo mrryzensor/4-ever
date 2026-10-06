@@ -69,6 +69,7 @@ import { ManFashionMockup, WomanFashionMockup } from './DressCodeSection.tsx';
 import { BankAccountDetails } from './BankAccountDetails.tsx';
 import { HeroEmblem } from './HeroEmblem.tsx';
 import { CardGroupDecorations } from './CardGroupDecorations.tsx';
+import { NumeralText } from './NumeralText.tsx';
 
 const WOMAN_OUTFIT_OPTIONS = [
   { id: 'long-gown', label: 'Gala / Vestido Largo' },
@@ -592,7 +593,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex, settings.heroEmblemColor, settings.heroEmblemGlow, settings.heroEmblemSparkle, settings.heroEmblemScale)}
               </motion.div>
             )}
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}><NumeralText>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</NumeralText></motion.p>
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
             <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
@@ -606,11 +607,11 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               >
                 <Users className="h-4 w-4 shrink-0" style={{ color: theme.accentColorHex }} aria-hidden="true" />
                 <span className="max-w-full break-words font-semibold">{guest.fullName}</span>
-                <span className="text-white/80">· {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)} {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
+                <span className="text-white/80">· <NumeralText>{Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)}</NumeralText> {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
               </motion.div>
             )}
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="w-full max-w-2xl mx-auto mt-2">
-              <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'}</p>
+              <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}><NumeralText>{settings.heroQuote || 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'}</NumeralText></p>
 
               {(settings.heroVerse ?? '1 Corintios 13:7').trim() && (
                 <p className={`mt-2 w-full text-xs sm:text-sm font-sans font-semibold uppercase tracking-[0.2em] text-amber-100 drop-shadow-md ${settings.heroVersePosition === 'left' ? 'text-left' : settings.heroVersePosition === 'right' ? 'text-right' : 'text-center'}`}>
@@ -698,12 +699,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             <div className={`inline-flex items-center gap-2 px-5 py-2 rounded-full border mb-4 shadow-2xs ${theme.accentClass}`}>
               <Sparkles className="w-3.5 h-3.5" />
               <span data-typography-role="badge" className="text-xs uppercase tracking-[0.25em] font-semibold font-serif">
-                Boda de {settings.coupleNames || 'Sofía & Alejandro'}
+                Boda de <NumeralText>{settings.coupleNames || 'Sofía & Alejandro'}</NumeralText>
               </span>
             </div>
 
             <h2 style={{ fontFamily: themeDisplayFontFamily }} className={`text-2xl sm:text-4xl md:text-5xl italic leading-tight max-w-4xl mx-auto font-normal ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-              "{settings.welcomeMessage || '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor'}"
+              "<NumeralText>{settings.welcomeMessage || '¡Nos casamos! Nos hace inmensa ilusión celebrar nuestro amor'}</NumeralText>"
             </h2>
             
             <StyleSpecificDivider
@@ -713,7 +714,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             />
             
             <p data-typography-role="subtitle" className={`text-base font-serif max-w-2xl mx-auto mt-3 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
-              {settings.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de manera interactiva.'}
+              <NumeralText>{settings.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo. Toca los botones de cada tarjeta para ver la información completa de manera interactiva.'}</NumeralText>
             </p>
           </div>
 
@@ -745,12 +746,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   </div>
                   {settings.receptionSameAsCeremony ? (
                     <div className="flex flex-col items-end gap-1">
-                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Ceremonia · {settings.ceremonyTime || '17:00'} hrs</span>
-                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Recepción · {settings.receptionTime || '19:30'} hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Ceremonia · <NumeralText>{settings.ceremonyTime || '17:00'}</NumeralText> hrs</span>
+                      <span data-typography-role="badge" className={`rounded-full border px-2.5 py-1 text-xs font-mono font-bold ${theme.accentClass}`}>Recepción · <NumeralText>{settings.receptionTime || '19:30'}</NumeralText> hrs</span>
                     </div>
                   ) : (
                     <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
-                      {settings.ceremonyTime || '17:00'} hrs
+                      <NumeralText>{settings.ceremonyTime || '17:00'}</NumeralText> hrs
                     </span>
                   )}
                 </div>
@@ -761,10 +762,10 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 <h3 className={`text-2xl sm:text-3xl font-semibold mb-2 ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
                   {settings.receptionSameAsCeremony ? 'Ceremonia y Recepción' : 'Ceremonia Religiosa'}
                 </h3>
-                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.ceremonyVenue || 'Parroquia Principal'}</p>
+                <p className={`text-base sm:text-lg font-medium ${isDark ? 'text-white' : 'text-stone-900'}`}><NumeralText>{settings.ceremonyVenue || 'Parroquia Principal'}</NumeralText></p>
                 <p className={`text-sm mt-2 flex items-start gap-2 leading-relaxed ${isDark ? 'text-stone-200' : 'text-stone-700'}`}>
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" style={{ color: theme.accentColorHex }} />
-                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]"><NumeralText>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</NumeralText></span>
                 </p>
               </div>
 
@@ -866,7 +867,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                     <AnimatedChampagneGlasses className="w-9 h-9" color={theme.accentColorHex} />
                   </div>
                   <span data-typography-role="badge" className={`text-xs sm:text-sm font-mono font-bold px-3.5 py-1.5 rounded-full border ${theme.accentClass}`}>
-                    {settings.receptionTime || '19:30'} hrs
+                    <NumeralText>{settings.receptionTime || '19:30'}</NumeralText> hrs
                   </span>
                 </div>
 
@@ -1016,7 +1017,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       <Clock className="w-6 h-6 shrink-0" />
                     </div>
                     <span data-typography-role="badge" className={`text-xs uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${theme.accentClass}`}>
-                      {itineraryList.length} Momentos Clave
+                      <NumeralText>{itineraryList.length}</NumeralText> Momentos Clave
                     </span>
                   </div>
 
@@ -1036,13 +1037,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                           isDark ? 'bg-stone-800/90 border-stone-600 text-stone-100' : 'bg-white border-stone-200 text-stone-800'
                         }`}
                       >
-                        <span className="font-mono font-bold" style={{ color: theme.itineraryAccentColorHex }}>{item.time}</span>
-                        <span>{item.title}</span>
+                        <span className="font-mono font-bold" style={{ color: theme.itineraryAccentColorHex }}><NumeralText>{item.time}</NumeralText></span>
+                        <span><NumeralText>{item.title}</NumeralText></span>
                       </span>
                     ))}
                     {itineraryList.length > 3 && (
                       <span data-typography-role="badge" className={`text-xs font-serif italic self-center ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>
-                        +{itineraryList.length - 3} más
+                        +<NumeralText>{itineraryList.length - 3}</NumeralText> más
                       </span>
                     )}
                   </div>
@@ -1121,19 +1122,19 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                               }`}>
                                 <div className="flex items-center justify-between gap-2 mb-1.5">
                                   <span data-typography-role="heading" className={`font-serif font-bold text-base ${isDark ? 'text-white' : 'text-stone-900'}`}>
-                                    {item.title}
+                                    <NumeralText>{item.title}</NumeralText>
                                   </span>
                                   <span data-typography-role="badge" style={{
                                     color: theme.itineraryAccentColorHex,
                                     backgroundColor: `color-mix(in srgb, ${theme.itineraryAccentColorHex} 14%, transparent)`,
                                     borderColor: `color-mix(in srgb, ${theme.itineraryAccentColorHex} 42%, transparent)`,
                                   }} className="font-mono text-xs font-bold px-3 py-1 rounded-full border">
-                                    {item.time} hrs
+                                    <NumeralText>{item.time}</NumeralText> hrs
                                   </span>
                                 </div>
                                 {item.desc && (
                                   <p className={`text-xs sm:text-sm leading-relaxed font-serif ${isDark ? 'text-stone-200' : 'text-stone-600'}`}>
-                                    {item.desc}
+                                    <NumeralText>{item.desc}</NumeralText>
                                   </p>
                                 )}
                               </div>
@@ -1263,7 +1264,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                             <div className={`flex items-center justify-between gap-2 p-2 rounded-xl ${isDark ? 'bg-stone-800 border border-stone-700' : 'bg-stone-100'}`}>
                               <div className="min-w-0">
                                 <span className={`text-[10px] block uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>No. de Cuenta:</span>
-                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankAccountNumber}</span>
+                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}><NumeralText>{settings.bankAccountNumber}</NumeralText></span>
                               </div>
                               <button
                                 type="button"
@@ -1278,7 +1279,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                             <div className={`flex items-center justify-between gap-2 p-2 rounded-xl ${isDark ? 'bg-stone-800 border border-stone-700' : 'bg-stone-100'}`}>
                               <div className="min-w-0">
                                 <span className={`text-[10px] block uppercase ${isDark ? 'text-stone-300' : 'text-stone-400'}`}>CLABE / CCI:</span>
-                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}>{settings.bankClabe}</span>
+                                <span className={`font-mono font-bold text-xs ${isDark ? 'text-white' : 'text-stone-900'}`}><NumeralText>{settings.bankClabe}</NumeralText></span>
                               </div>
                               <button
                                 type="button"

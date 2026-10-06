@@ -3,6 +3,8 @@ import { motion } from 'motion/react';
 import { Heart, Check, Clock3 } from 'lucide-react';
 import { CardStyleId, Guest, WeddingSettings } from '../../types.ts';
 import { CARD_THEMES } from '../../lib/themes.ts';
+import { resolveNumberFontFamily } from '../../lib/numberFonts.ts';
+import { NumeralText } from '../NumeralText.tsx';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 
 interface AnimatedCountdownProps {
@@ -1166,6 +1168,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   );
   const resolvedTheme = CARD_THEMES[activeStyleId] || CARD_THEMES['classic-gold'];
   const isDark = activeStyleId === 'dark-luxury' || activeStyleId === 'royal-navy' || activeStyleId === 'emerald-botanical';
+  const numberFontFamily = resolveNumberFontFamily(settings.typographyNumberFont, settings);
+  const numberFontStyle = { fontFamily: numberFontFamily };
 
   // Sincronized Real-Time Countdown Engine
   const [timeLeft, setTimeLeft] = useState({
@@ -1275,7 +1279,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             className={`font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
-            style={unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : undefined}
+            data-global-numerals=""
+            style={{ ...numberFontStyle, ...(unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : {}) }}
           >
             {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
           </motion.span>
@@ -1292,12 +1297,12 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
         dateTime={settings.eventDate || undefined}
         className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
       >
-        {formattedEventDate}
+        <NumeralText>{formattedEventDate}</NumeralText>
       </time>
       {formattedEventTime && (
         <span data-typography-role="detail" className={`mt-1 inline-flex items-center gap-1.5 font-sans text-sm tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
           <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
-          {formattedEventTime}
+          <NumeralText>{formattedEventTime}</NumeralText>
         </span>
       )}
       <span
@@ -1325,7 +1330,10 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   );
 
   return (
-    <div className={`relative flex w-full flex-col items-center justify-center select-none ${className}`}>
+    <div
+      className={`relative flex w-full flex-col items-center justify-center select-none ${className}`}
+      style={{ '--invitation-font-numbers': numberFontFamily } as React.CSSProperties}
+    >
       {compact ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -1338,7 +1346,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           {formattedEventTime && (
             <div className="mb-2 flex items-center justify-center gap-1.5 font-sans text-xs text-white/80">
               <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
-              {formattedEventTime}
+                <NumeralText>{formattedEventTime}</NumeralText>
             </div>
           )}
           {renderTimeUnits('hero')}
@@ -1416,6 +1424,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                 initial={{ opacity: 0.7, y: -3 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`font-serif text-7xl font-bold leading-none tabular-nums sm:text-8xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                data-global-numerals=""
+                style={numberFontStyle}
               >
                 {timeLeft.days}
               </motion.span>
@@ -1429,6 +1439,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                     initial={{ opacity: 0.7, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`font-serif text-3xl font-bold leading-none tabular-nums sm:text-5xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                    data-global-numerals=""
+                    style={numberFontStyle}
                   >
                     {String(unit.value).padStart(2, '0')}
                   </motion.span>
@@ -1458,6 +1470,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                   initial={{ opacity: 0.7, y: -2 }}
                   animate={{ opacity: 1, y: 0 }}
                   className={`mt-3 font-serif text-2xl font-bold leading-none tabular-nums sm:text-4xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                  data-global-numerals=""
+                  style={numberFontStyle}
                 >
                   {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
                 </motion.span>
@@ -1485,7 +1499,9 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                   animate={{ rotateX: 0, opacity: 1 }}
                   transition={{ duration: 0.35 }}
                   className={`relative flex min-h-20 items-center justify-center font-serif text-4xl font-bold leading-none tabular-nums sm:min-h-28 sm:text-6xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                  data-global-numerals=""
                   style={{
+                    ...numberFontStyle,
                     background: isDark
                       ? 'linear-gradient(to bottom, rgba(255,255,255,.1) 0 49.5%, rgba(0,0,0,.18) 50% 100%)'
                       : 'linear-gradient(to bottom, rgba(255,255,255,.96) 0 49.5%, rgba(231,229,220,.48) 50% 100%)',
@@ -1522,6 +1538,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.25 }}
                   className={`min-w-[3ch] text-center font-serif text-4xl font-bold leading-none tabular-nums sm:text-5xl ${isDark ? 'text-white' : 'text-stone-900'}`}
+                  data-global-numerals=""
+                  style={numberFontStyle}
                 >
                   {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
                 </motion.span>
@@ -1573,7 +1591,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold font-serif text-xs sm:text-sm shadow-md"
             style={{ backgroundColor: resolvedTheme.accentColorHex }}
           >
-            {passesCount}
+            <NumeralText>{passesCount}</NumeralText>
           </div>
 
           {/* Text Title */}
@@ -1588,7 +1606,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           {/* Subtitle with Companions Count */}
           {companionsCount > 0 && (
             <span className="text-[11px] sm:text-xs text-stone-500 font-serif italic">
-              ({companionsCount} {companionsCount === 1 ? 'acompañante' : 'acompañantes'})
+              (<NumeralText>{companionsCount}</NumeralText> {companionsCount === 1 ? 'acompañante' : 'acompañantes'})
             </span>
           )}
 

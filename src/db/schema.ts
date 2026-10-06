@@ -121,6 +121,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   typographyButtonScale: integer('typography_button_scale').default(100),
   typographyToggleScale: integer('typography_toggle_scale').default(100),
   typographyGalleryFullscreenScale: integer('typography_gallery_fullscreen_scale').default(100),
+  typographyNumberFont: text('typography_number_font').default('theme'),
   dividerStyle: text('divider_style').default('auto'),
   showCardDividers: boolean('show_card_dividers').default(false),
   borderlessCards: boolean('borderless_cards').default(false),

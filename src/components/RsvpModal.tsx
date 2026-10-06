@@ -17,6 +17,7 @@ import {
 import { Guest, WeddingSettings } from '../types.ts';
 import { toast } from '../lib/toast.ts';
 import { RsvpCompanionToggle } from './RsvpCompanionToggle.tsx';
+import { NumeralText } from './NumeralText.tsx';
 
 interface RsvpModalProps {
   isOpen: boolean;
@@ -296,7 +297,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
 
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 max-w-sm mx-auto text-xs text-amber-900 mb-6">
               <p className="font-semibold">{settings.coupleNames}</p>
-              <p className="mt-0.5">{settings.eventDate} • {settings.receptionVenue}</p>
+              <p className="mt-0.5"><NumeralText>{settings.eventDate}</NumeralText> • <NumeralText>{settings.receptionVenue}</NumeralText></p>
             </div>
 
             <button
@@ -565,7 +566,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                 {guest.fullName}
               </h3>
               <p className="text-xs text-stone-500">
-                Pases asignados: <strong className="text-stone-800">{guest.allocatedPasses} personas</strong> • Código: <span className="font-mono">{guest.accessCode}</span>
+                Pases asignados: <strong className="text-stone-800"><NumeralText>{guest.allocatedPasses}</NumeralText> personas</strong> • Código: <span className="font-mono"><NumeralText>{guest.accessCode}</NumeralText></span>
               </p>
             </div>
 
@@ -613,7 +614,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                 <div>
                   <label className="text-xs font-semibold text-stone-700 block mb-1.5 flex items-center justify-between">
                     <span>Número de asistentes (incluyéndote):</span>
-                    <span className="text-amber-800 font-bold">{confirmedPasses} de {guest.allocatedPasses}</span>
+                    <span className="text-amber-800 font-bold"><NumeralText>{confirmedPasses} de {guest.allocatedPasses}</NumeralText></span>
                   </label>
                   <div className="flex gap-2">
                     {Array.from({ length: Math.max(guest.allocatedPasses - 1, 0) }, (_, i) => i + 2).map((num) => (
@@ -627,7 +628,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
                             : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
                         }`}
                       >
-                        {num}
+                        <NumeralText>{num}</NumeralText>
                       </button>
                     ))}
                   </div>

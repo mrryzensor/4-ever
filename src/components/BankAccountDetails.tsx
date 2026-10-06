@@ -3,6 +3,7 @@ import { Copy, Check } from 'lucide-react';
 import type { BankAccountConfig, BankAccountDisplayField } from '../types.ts';
 import { BANK_COUNTRIES, hasBankAccountData } from '../lib/bankAccounts.ts';
 import { DEFAULT_GIFT_REGISTRY_COPY, type GiftRegistryCopy } from '../lib/giftRegistryCopy.ts';
+import { NumeralText } from './NumeralText.tsx';
 
 interface BankAccountDetailsProps {
   accounts: BankAccountConfig[];
@@ -89,12 +90,12 @@ export const BankAccountDetails: React.FC<BankAccountDetailsProps> = ({ accounts
                         {isFeatured ? (
                           <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                             <span data-typography-role="detail" className={`text-xs font-bold ${mutedClass}`}>{label}:</span>
-                            <span data-typography-role="body" className={`break-all text-base font-semibold ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                            <span data-typography-role="body" className={`break-all text-base font-semibold ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}><NumeralText>{value}</NumeralText></span>
                           </div>
                         ) : (
                           <>
                             <span data-typography-role="detail" className={`block text-xs uppercase tracking-wide ${mutedClass}`}>{label}</span>
-                            <span data-typography-role="body" className={`break-all text-sm ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}>{value}</span>
+                            <span data-typography-role="body" className={`break-all text-sm ${field === 'concept' ? '' : 'font-mono'} ${valueClass}`}><NumeralText>{value}</NumeralText></span>
                           </>
                         )}
                       </div>

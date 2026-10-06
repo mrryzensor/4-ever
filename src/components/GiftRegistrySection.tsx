@@ -19,6 +19,7 @@ import { getBankAccountBadgeText, getBankAccounts } from '../lib/bankAccounts.ts
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../lib/giftRegistryCopy.ts';
 import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 import { BankAccountDetails } from './BankAccountDetails.tsx';
+import { NumeralText } from './NumeralText.tsx';
 
 interface GiftRegistrySectionProps {
   settings: WeddingSettings;
@@ -245,7 +246,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                       <span className={`font-mono font-bold text-xs sm:text-sm tracking-wider ${
                         isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
                       }`}>
-                        {settings.bankCci || settings.bankClabe}
+                        <NumeralText>{settings.bankCci || settings.bankClabe}</NumeralText>
                       </span>
                       <button
                         type="button"
@@ -276,7 +277,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         Yape / Plin (Celular):
                       </span>
                       <span className={`font-mono font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
-                        {settings.bankYapePhone}
+                        <NumeralText>{settings.bankYapePhone}</NumeralText>
                       </span>
                     </div>
                     <button
@@ -307,7 +308,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         Número de Cuenta:
                       </span>
                       <span className={`font-mono font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
-                        {settings.bankAccountNumber}
+                        <NumeralText>{settings.bankAccountNumber}</NumeralText>
                       </span>
                     </div>
                     <button
@@ -329,7 +330,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
 
                 {settings.bankConcept && (
                   <p className={`text-[11px] font-mono ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
-                    <strong>Concepto sugerido:</strong> {settings.bankConcept}
+                    <strong>Concepto sugerido:</strong> <NumeralText>{settings.bankConcept}</NumeralText>
                   </p>
                 )}
               </div>
@@ -452,7 +453,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         <span className={`font-mono font-bold text-xs sm:text-sm ${
                           isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
                         }`}>
-                          {item.clabe}
+                          <NumeralText>{item.clabe}</NumeralText>
                         </span>
                         <button
                           type="button"
@@ -483,7 +484,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                           {giftCopy.accountNumberLabel}:
                         </span>
                         <span className={`font-mono font-bold ${isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'}`}>
-                          {item.accountNumber}
+                          <NumeralText>{item.accountNumber}</NumeralText>
                         </span>
                       </div>
                       <button
@@ -526,7 +527,7 @@ export const GiftRegistrySection: React.FC<GiftRegistrySectionProps> = ({ settin
                         <span className={`font-mono font-bold text-sm ${
                           isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
                         }`}>
-                          {item.eventNumber}
+                          <NumeralText>{item.eventNumber}</NumeralText>
                         </span>
                       </div>
                       <button

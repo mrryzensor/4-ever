@@ -16,6 +16,7 @@ import { WeddingSettings } from '../../types.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { XV_CARD_THEMES as CARD_THEMES } from '../themes.ts';
 import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
+import { NumeralText } from '../../components/NumeralText.tsx';
 
 interface LocationsSectionProps {
   settings: WeddingSettings;
@@ -146,10 +147,10 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
               </div>
               <div className="min-w-0">
                 <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
-                  Ceremonia • {settings.ceremonyTime || '17:00'} hrs
+                  Ceremonia • <NumeralText>{settings.ceremonyTime || '17:00'}</NumeralText> hrs
                 </span>
                 <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
-                  {settings.ceremonyVenue || 'Parroquia Principal'}
+                  <NumeralText>{settings.ceremonyVenue || 'Parroquia Principal'}</NumeralText>
                 </p>
               </div>
             </div>
@@ -164,10 +165,10 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
               </div>
               <div className="min-w-0">
                 <span className={`text-xs uppercase tracking-wider font-bold block ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`}>
-                  Recepción • {settings.receptionTime || '19:30'} hrs
+                  Recepción • <NumeralText>{settings.receptionTime || '19:30'}</NumeralText> hrs
                 </span>
                 <p className={`text-sm sm:text-base font-serif font-bold truncate mt-0.5 ${isDark ? 'text-stone-100' : 'text-stone-800'}`}>
-                  {settings.receptionVenue || 'Hacienda / Salón'}
+                  <NumeralText>{settings.receptionVenue || 'Hacienda / Salón'}</NumeralText>
                 </p>
               </div>
             </div>
@@ -225,21 +226,21 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
               }`}>
                 <Clock className="w-3.5 h-3.5" />
-                <span>{settings.ceremonyTime || '17:00'} hrs</span>
+                <span><NumeralText>{settings.ceremonyTime || '17:00'}</NumeralText> hrs</span>
               </div>
             </div>
 
             <h3 className={`text-2xl font-serif font-bold mb-2 ${
               isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
             }`}>
-              {settings.ceremonyVenue || 'Parroquia San Francisco de Asís'}
+              <NumeralText>{settings.ceremonyVenue || 'Parroquia San Francisco de Asís'}</NumeralText>
             </h3>
 
             <div className={`flex items-start gap-2 text-xs sm:text-sm mb-6 ${
               isDark ? 'text-stone-300' : 'text-stone-600'
             }`}>
               <MapPin className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
-              <span>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</span>
+              <span><NumeralText>{settings.ceremonyAddress || 'Dirección de la ceremonia'}</NumeralText></span>
             </div>
 
             {/* Embedded Google Map */}
@@ -365,21 +366,21 @@ export const LocationsSection: React.FC<LocationsSectionProps> = ({ settings }) 
                 isDark ? 'text-[#C5A059]' : 'text-[#5A5A40]'
               }`}>
                 <Clock className="w-3.5 h-3.5" />
-                <span>{settings.receptionTime || '19:30'} hrs</span>
+                <span><NumeralText>{settings.receptionTime || '19:30'}</NumeralText> hrs</span>
               </div>
             </div>
 
             <h3 className={`text-2xl font-serif font-bold mb-2 ${
               isDark ? 'text-[#FDFCF0]' : 'text-[#3D3D2C]'
             }`}>
-              {settings.receptionVenue || 'Hacienda Los Arcángeles'}
+              <NumeralText>{settings.receptionVenue || 'Hacienda Los Arcángeles'}</NumeralText>
             </h3>
 
             <div className={`flex items-start gap-2 text-xs sm:text-sm mb-6 ${
               isDark ? 'text-stone-300' : 'text-stone-600'
             }`}>
               <MapPin className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? 'text-[#C5A059]' : 'text-[#7D8C7A]'}`} />
-              <span>{settings.receptionAddress || 'Dirección de la recepción'}</span>
+              <span><NumeralText>{settings.receptionAddress || 'Dirección de la recepción'}</NumeralText></span>
             </div>
 
             {/* Embedded Google Map */}

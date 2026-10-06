@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { WeddingSettings, CardStyleId } from '../../../types.ts';
 import { CARD_THEMES } from '../../../lib/themes.ts';
+import { TypographyNumberFontField } from './TypographyNumberFontField.tsx';
 import {
   StyleSpecificDivider,
   FixDateAnimatedTransitionDivider,
@@ -228,6 +229,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       customAccentColor: '',
       customBgColor: '',
       fontPairStyle: 'auto',
+      typographyNumberFont: 'theme',
       countdownStyle: 'auto',
       countdownLayout: 'circle',
       dividerStyle: 'auto',
@@ -263,6 +265,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     !!settings.customAccentColor ||
     !!settings.customBgColor ||
     (settings.fontPairStyle && settings.fontPairStyle !== 'auto') ||
+    (settings.typographyNumberFont && settings.typographyNumberFont !== 'theme') ||
     (settings.countdownStyle && settings.countdownStyle !== 'auto') ||
     (settings.countdownLayout && settings.countdownLayout !== 'circle') ||
     (settings.dividerStyle && settings.dividerStyle !== 'auto') ||
@@ -569,6 +572,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                 );
               })}
             </div>
+            <TypographyNumberFontField settings={settings} onChange={onChange} />
             <TypographyScaleControls settings={settings} onChange={onChange} accent="indigo" />
           </div>
         )}
