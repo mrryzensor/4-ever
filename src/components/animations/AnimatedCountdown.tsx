@@ -1304,12 +1304,12 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
         dateTime={settings.eventDate || undefined}
         className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
       >
-        <NumeralText scope="countdown">{formattedEventDate}</NumeralText>
+        <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventDate}</NumeralText>
       </time>
       {formattedEventTime && (
         <span data-typography-role="detail" className={`mt-1 inline-flex items-center gap-1.5 font-sans text-sm tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
           <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
-          <NumeralText scope="countdown">{formattedEventTime}</NumeralText>
+          <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventTime}</NumeralText>
         </span>
       )}
       <span
@@ -1353,7 +1353,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           {formattedEventTime && (
             <div className="mb-2 flex items-center justify-center gap-1.5 font-sans text-xs text-white/80">
               <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
-                <NumeralText scope="countdown">{formattedEventTime}</NumeralText>
+              <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventTime}</NumeralText>
             </div>
           )}
           {renderTimeUnits('hero')}
@@ -1598,7 +1598,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-bold font-serif text-xs sm:text-sm shadow-md"
             style={{ backgroundColor: resolvedTheme.accentColorHex }}
           >
-            <NumeralText scope="countdown">{passesCount}</NumeralText>
+            <NumeralText scope="countdown" fontFamily={numberFontFamily}>{passesCount}</NumeralText>
           </div>
 
           {/* Text Title */}
@@ -1613,7 +1613,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           {/* Subtitle with Companions Count */}
           {companionsCount > 0 && (
             <span className="text-[11px] sm:text-xs text-stone-500 font-serif italic">
-              (<NumeralText scope="countdown">{companionsCount}</NumeralText> {companionsCount === 1 ? 'acompañante' : 'acompañantes'})
+              (<NumeralText scope="countdown" fontFamily={numberFontFamily}>{companionsCount}</NumeralText> {companionsCount === 1 ? 'acompañante' : 'acompañantes'})
             </span>
           )}
 

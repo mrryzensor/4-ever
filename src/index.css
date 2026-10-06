@@ -26,7 +26,8 @@
 }
 
 .public-invitation [data-countdown-numerals],
-.public-invitation-typography [data-countdown-numerals] {
+.public-invitation-typography [data-countdown-numerals],
+[data-countdown-numerals] {
   font-family: var(--invitation-font-countdown-numbers, var(--invitation-font-numbers, inherit)) !important;
   font-variant-numeric: lining-nums tabular-nums;
 }
