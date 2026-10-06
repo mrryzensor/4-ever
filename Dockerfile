@@ -19,6 +19,9 @@ COPY package.json pnpm-lock.yaml ./
 ENV NODE_ENV=development
 RUN pnpm install --frozen-lockfile
 
+# Keep development dependencies installed, but compile React/Vite assets as production.
+ENV NODE_ENV=production
+
 # Copy application source code and static assets
 COPY . .
 

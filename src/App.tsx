@@ -231,8 +231,14 @@ export default function App() {
     const googleLogin = query.get('googleLogin');
     if (!googleLogin) return;
 
-    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.hash}`);
+    const clearGoogleLoginMarker = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('googleLogin');
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    };
+
     if (googleLogin !== 'success') {
+      clearGoogleLoginMarker();
       setAuthModalMode('login');
       setIsAuthModalOpen(true);
       return;
@@ -252,10 +258,12 @@ export default function App() {
         setCurrentUser(user);
         setCurrentView('dashboard');
         setIsAuthModalOpen(false);
+        clearGoogleLoginMarker();
       })
       .catch((error) => {
         if (cancelled) return;
         console.error('Could not restore Google app session:', error);
+        clearGoogleLoginMarker();
         setAuthModalMode('login');
         setIsAuthModalOpen(true);
       });
