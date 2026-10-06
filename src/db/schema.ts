@@ -21,6 +21,9 @@ export const weddingSettings = pgTable('wedding_settings', {
   eventType: text('event_type').default('bodas'), // 'bodas' | 'xv'
   userId: integer('user_id'),
   ownerUid: text('owner_uid'),
+  accessEmails: text('access_emails').array().notNull().default([]),
+  clientEmail: text('client_email'),
+  status: text('status').default('active'),
   slug: text('slug'),
   isPublished: boolean('is_published').default(true),
   coupleNames: text('couple_names').notNull().default('Sofía & Alejandro'),

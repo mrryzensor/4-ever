@@ -50,6 +50,9 @@ export async function autoMigrateDatabase() {
           event_type TEXT DEFAULT 'bodas',
           user_id INTEGER,
           owner_uid TEXT,
+          access_emails TEXT[] NOT NULL DEFAULT '{}',
+          client_email TEXT,
+          status TEXT DEFAULT 'active',
           slug TEXT,
           is_published BOOLEAN DEFAULT true,
           couple_names TEXT NOT NULL DEFAULT 'Sofía & Alejandro',
@@ -352,6 +355,9 @@ export async function autoMigrateDatabase() {
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS access_emails TEXT[] NOT NULL DEFAULT '{}';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS client_email TEXT;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
         ALTER TABLE guests ADD COLUMN IF NOT EXISTS custom_rsvp_details TEXT DEFAULT '{}';
 
         -- 4. Gallery Photos Table

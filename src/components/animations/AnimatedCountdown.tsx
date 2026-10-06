@@ -1273,7 +1273,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
   ];
   const renderTimeUnits = (layout: string) => (
-    <div className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'px-1 sm:px-2' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}>
+    <div className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'px-1 sm:px-2 lg:grid-cols-[max-content_max-content_max-content_max-content] lg:justify-between lg:gap-x-3' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}>
       {timeUnits.map((unit, index) => (
         <div
           key={unit.key}

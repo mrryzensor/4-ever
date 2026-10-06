@@ -993,6 +993,20 @@ export async function getUserProfile(uid: string) {
   return memoryState.users.find((u) => u.uid === uid) || null;
 }
 
+export async function getUserProfileByEmail(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const list = await db.select().from(users).where(sql`lower(${users.email}) = ${normalizedEmail}`).orderBy(asc(users.id));
+      if (list.length > 0) return list.find((user) => Boolean(user.password)) || list[0];
+    }
+  } catch (err) {
+    console.warn('getUserProfileByEmail fallback to memory');
+  }
+  const matches = memoryState.users.filter((u) => u.email?.trim().toLowerCase() === normalizedEmail);
+  return matches.find((user) => Boolean(user.password)) || matches[0] || null;
+}
+
 export async function updateUserPlan(uid: string, plan: string) {
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
@@ -1011,7 +1025,8 @@ export async function updateUserPlan(uid: string, plan: string) {
   return null;
 }
 
-export async function getUserWeddings(ownerUid: string) {
+export async function getUserWeddings(ownerUid: string, email = '') {
+  const normalizedEmail = email.trim().toLowerCase();
   const user = memoryState.users.find((u) => u.uid === ownerUid);
   const isCeo = user?.role === 'ceo' || user?.email === 'daviex14@gmail.com' || ownerUid === 'ceo-daviex';
 
@@ -1024,7 +1039,12 @@ export async function getUserWeddings(ownerUid: string) {
         weddingList = await db
           .select()
           .from(weddingSettings)
-          .where(or(eq(weddingSettings.ownerUid, ownerUid), eq(weddingSettings.id, 1)))
+          .where(or(
+            eq(weddingSettings.ownerUid, ownerUid),
+            eq(weddingSettings.id, 1),
+            sql`${normalizedEmail} <> '' AND ${weddingSettings.accessEmails} @> ARRAY[${normalizedEmail}]::text[]`,
+            sql`${normalizedEmail} <> '' AND lower(coalesce(${weddingSettings.clientEmail}, '')) = ${normalizedEmail}`,
+          ))
           .orderBy(desc(weddingSettings.id));
       }
 
@@ -1047,6 +1067,7 @@ export async function getUserWeddings(ownerUid: string) {
             isPublished: hydrated.isPublished ?? true,
             status: (w as any).status || 'active',
             clientEmail: (w as any).clientEmail || '',
+            accessEmails: Array.isArray((w as any).accessEmails) ? (w as any).accessEmails : [],
             totalGuests: guestList.length,
             confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
             coverPhoto: hydrated.coverPhoto,
@@ -1061,7 +1082,15 @@ export async function getUserWeddings(ownerUid: string) {
   // Memory fallback: include demo projects (1 Boda, 6 XV) so users can manage both categories
   const list = isCeo 
     ? memoryState.weddings 
-    : memoryState.weddings.filter((w) => w.ownerUid === ownerUid || w.id === DEMO_WEDDING_ID || w.id === DEMO_XV_ID);
+    : memoryState.weddings.filter((w) =>
+        w.ownerUid === ownerUid ||
+        w.id === DEMO_WEDDING_ID ||
+        w.id === DEMO_XV_ID ||
+        (normalizedEmail && (
+          ((w as any).accessEmails || []).some((item: string) => item.trim().toLowerCase() === normalizedEmail) ||
+          String((w as any).clientEmail || '').trim().toLowerCase() === normalizedEmail
+        ))
+      );
 
   return list.map((w) => {
     const hydrated = hydrateWeddingAutoFields(w as any);
@@ -1081,6 +1110,7 @@ export async function getUserWeddings(ownerUid: string) {
       isPublished: hydrated.isPublished ?? true,
       status: w.status || 'active',
       clientEmail: w.clientEmail || '',
+      accessEmails: Array.isArray((w as any).accessEmails) ? (w as any).accessEmails : [],
       totalGuests: guestList.length,
       confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
       coverPhoto: hydrated.coverPhoto,
@@ -1426,6 +1456,18 @@ export async function deleteWeddingByCeo(weddingId: number) {
 }
 
 export async function updateWeddingStatus(weddingId: number, status: string, clientEmail?: string) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const values: Record<string, unknown> = { status, updatedAt: new Date() };
+      if (clientEmail !== undefined) values.clientEmail = clientEmail;
+      const updated = await db.update(weddingSettings).set(values as any).where(eq(weddingSettings.id, weddingId)).returning();
+      if (updated.length > 0) return updated[0];
+      throw new Error('Boda no encontrada');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Boda no encontrada') throw error;
+    console.warn('updateWeddingStatus fallback to memory');
+  }
   const wedding = memoryState.weddings.find((w) => w.id === weddingId);
   if (wedding) {
     wedding.status = status;
@@ -1436,6 +1478,31 @@ export async function updateWeddingStatus(weddingId: number, status: string, cli
     return wedding;
   }
   throw new Error('Boda no encontrada');
+}
+
+export async function updateWeddingAccessEmails(weddingId: number, emails: string[]) {
+  const accessEmails = [...new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))];
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const updated = await db.update(weddingSettings).set({
+        accessEmails,
+        clientEmail: accessEmails[0] || '',
+        updatedAt: new Date(),
+      }).where(eq(weddingSettings.id, weddingId)).returning();
+      if (updated.length > 0) return updated[0];
+      throw new Error('Evento no encontrado');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Evento no encontrado') throw error;
+    console.warn('updateWeddingAccessEmails fallback to memory');
+  }
+
+  const wedding = memoryState.weddings.find((item) => item.id === weddingId);
+  if (!wedding) throw new Error('Evento no encontrado');
+  (wedding as any).accessEmails = accessEmails;
+  (wedding as any).clientEmail = accessEmails[0] || '';
+  wedding.updatedAt = new Date();
+  return wedding;
 }
 
 export async function createWedding(data: typeof weddingSettings.$inferInsert) {
@@ -1624,6 +1691,18 @@ export async function getGuestByCode(code: string, weddingId?: number) {
     return matchCode;
   });
   return found || null;
+}
+
+export async function getGuestById(id: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.select().from(guests).where(eq(guests.id, id)).limit(1);
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('getGuestById fallback to memory');
+  }
+  return memoryState.guests.find((guest) => guest.id === id) || null;
 }
 
 export async function createGuest(data: typeof guests.$inferInsert) {
@@ -2091,6 +2170,18 @@ export async function getGalleryPhotos(category?: string, weddingId: number = 1)
   return list;
 }
 
+export async function getGalleryPhotoById(id: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id)).limit(1);
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('getGalleryPhotoById fallback to memory');
+  }
+  return memoryState.gallery.find((photo) => photo.id === id) || null;
+}
+
 export async function addGalleryPhoto(data: typeof galleryPhotos.$inferInsert) {
   if (!data.weddingId) data.weddingId = 1;
   try {
@@ -2441,6 +2532,18 @@ export async function getAllVideos(weddingId: number = 1) {
     console.warn('getAllVideos fallback to memory');
   }
   return memoryState.videos.filter((v) => v.weddingId === weddingId);
+}
+
+export async function getWeddingVideoById(id: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.select().from(weddingVideos).where(eq(weddingVideos.id, id)).limit(1);
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('getWeddingVideoById fallback to memory');
+  }
+  return memoryState.videos.find((video) => video.id === id) || null;
 }
 
 export async function addWeddingVideo(data: typeof weddingVideos.$inferInsert) {

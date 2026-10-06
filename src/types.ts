@@ -338,6 +338,12 @@ export type BankAccountDisplayField =
 
 export interface WeddingSummary {
   id: number;
+  ownerUid?: string;
+  ownerEmail?: string;
+  ownerName?: string;
+  clientEmail?: string;
+  accessEmails?: string[];
+  status?: string;
   eventType?: EventType;
   coupleNames: string;
   hashtag: string;

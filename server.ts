@@ -12,11 +12,13 @@ import {
   getWeddingSettings,
   updateWeddingSettings,
   getUserProfile,
+  getUserProfileByEmail,
   updateUserPlan,
   getUserWeddings,
   createWedding,
   deleteWedding,
   getAllGuests,
+  getGuestById,
   getGuestByCode,
   createGuest,
   createGuestsBulk,
@@ -25,6 +27,7 @@ import {
   submitRsvp,
   submitOpenRsvp,
   getGalleryPhotos,
+  getGalleryPhotoById,
   addGalleryPhoto,
   updateGalleryPhotoCaption,
   likePhoto,
@@ -40,6 +43,7 @@ import {
   deleteDrivePhotoComment,
   getDrivePhotoEngagementForWedding,
   getAllVideos,
+  getWeddingVideoById,
   addWeddingVideo,
   deleteWeddingVideo,
   getWishes,
@@ -63,12 +67,13 @@ import {
   transferWeddingOwnership,
   deleteWeddingByCeo,
   updateWeddingStatus,
+  updateWeddingAccessEmails,
 } from './src/db/queries.ts';
 import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
 import { adminAuth } from './src/lib/firebase-admin.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
-import { getEventPresentation } from './src/lib/eventUtils.ts';
+import { DEMO_WEDDING_ID, getEventPresentation } from './src/lib/eventUtils.ts';
 import { parseDriveFolderUrl } from './src/lib/driveFolder.ts';
 import { parseDrivePhotoTitles } from './src/lib/galleryPhotoTitles.ts';
 
@@ -160,7 +165,9 @@ async function startServer() {
 
   const APP_AUTH_COOKIE = 'atelier_auth_session';
   const APP_AUTH_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-  const getAppSessionSecret = () => process.env.APP_SESSION_SECRET?.trim() || process.env.GEMINI_API_KEY?.trim() || '';
+  const getAppSessionSecret = () => process.env.APP_SESSION_SECRET?.trim()
+    || process.env.GEMINI_API_KEY?.trim()
+    || (process.env.NODE_ENV === 'production' ? '' : 'atelier-development-only-session-secret');
   const isProduction = process.env.NODE_ENV === 'production';
 
   const issueAppSessionCookie = (res: any, user: { uid: string; email: string; role?: string | null }) => {
@@ -217,32 +224,6 @@ async function startServer() {
     }
   };
 
-  const resolveGalleryAiUser = async (req: any) => {
-    const appSession = readAppSessionCookie(req);
-    if (appSession) {
-      const storedProfile = await getUserProfile(appSession.uid);
-      return {
-        uid: appSession.uid,
-        email: appSession.email,
-        role: storedProfile?.role || appSession.role,
-      };
-    }
-
-    const authHeader = req.headers.authorization;
-    if (!adminAuth || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return null;
-    try {
-      const firebaseUser = await adminAuth.verifyIdToken(authHeader.slice('Bearer '.length));
-      const storedProfile = await getUserProfile(firebaseUser.uid);
-      return {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email || '',
-        role: storedProfile?.role || (firebaseUser as any).role || ((firebaseUser as any).admin ? 'admin' : 'couple'),
-      };
-    } catch {
-      return null;
-    }
-  };
-
   const clearAppSessionCookie = (res: any) => res.clearCookie(APP_AUTH_COOKIE, {
     httpOnly: true,
     secure: isProduction,
@@ -251,9 +232,60 @@ async function startServer() {
   });
 
   const completeAppLogin = (res: any, user: any) => {
+    if (!getAppSessionSecret()) {
+      return res.status(503).json({ error: 'Configura APP_SESSION_SECRET en el servidor para habilitar sesiones seguras.' });
+    }
     const authSessionReady = issueAppSessionCookie(res, user);
     return res.json({ success: true, user, authSessionReady });
   };
+
+  const resolveRequestIdentity = async (req: any) => {
+    const appSession = readAppSessionCookie(req);
+    if (appSession) {
+      const storedProfile = await getUserProfile(appSession.uid);
+      return {
+        uid: appSession.uid,
+        email: appSession.email.trim().toLowerCase(),
+        role: storedProfile?.role || appSession.role,
+        emailVerified: true,
+      };
+    }
+
+    const authHeader = req.headers.authorization;
+    if (!adminAuth || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return null;
+    try {
+      const decoded = await adminAuth.verifyIdToken(authHeader.slice('Bearer '.length));
+      const emailVerified = (decoded as any).email_verified === true;
+      const email = emailVerified ? String(decoded.email || '').trim().toLowerCase() : '';
+      const storedProfile = await getUserProfile(decoded.uid);
+      return {
+        uid: decoded.uid,
+        email,
+        role: storedProfile?.role || (decoded as any).role || ((decoded as any).admin ? 'admin' : 'couple'),
+        emailVerified,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const resolveWeddingAccess = async (req: any, weddingId: number) => {
+    const identity = await resolveRequestIdentity(req);
+    if (!identity) return { identity: null, wedding: null, allowed: false, owner: false };
+    const wedding = await getWeddingSettings(weddingId);
+    if (!wedding) return { identity, wedding: null, allowed: false, owner: false };
+    const owner = identity.uid === wedding.ownerUid;
+    const isPrivileged = identity.role === 'ceo' || identity.role === 'admin';
+    const allowedEmails = [
+      ...((Array.isArray((wedding as any).accessEmails) ? (wedding as any).accessEmails : []) as string[]),
+      String((wedding as any).clientEmail || ''),
+    ].map((value) => value.trim().toLowerCase()).filter(Boolean);
+    const allowed = owner || isPrivileged || (identity.email && allowedEmails.includes(identity.email));
+    return { identity, wedding, allowed: Boolean(allowed), owner };
+  };
+
+  const rejectMissingIdentity = (res: any) => res.status(401).json({ error: 'Inicia sesión para continuar.' });
+  const rejectWeddingAccess = (res: any) => res.status(403).json({ error: 'No tienes acceso para editar este evento.' });
 
   // ----------------------------------------------------
   // AUTHENTICATION API ENDPOINTS
@@ -350,6 +382,41 @@ async function startServer() {
     }
   });
 
+  app.post('/api/auth/google', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const email = String(req.user?.email || '').trim().toLowerCase();
+      if (!req.user || !email || (req.user as any).email_verified !== true) {
+        return res.status(403).json({ error: 'Google debe confirmar el correo de esta cuenta para continuar.' });
+      }
+      if (email === CEO_EMAIL) {
+        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
+      }
+
+      // Match existing local accounts by verified email. This creates an app
+      // session for that profile without changing its stored password.
+      const existingProfile = await getUserProfileByEmail(email);
+      if (existingProfile?.role === 'ceo') {
+        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
+      }
+      const user = existingProfile || await getOrCreateUser(
+        req.user.uid,
+        email,
+        String((req.user as any).name || (req.user as any).displayName || ''),
+      );
+      return completeAppLogin(res, {
+        uid: user.uid,
+        email: user.email,
+        name: user.name || (req.user as any).name || 'Usuario Atelier',
+        role: user.role || 'couple',
+        plan: user.plan || 'atelier',
+        agencyName: user.agencyName || undefined,
+      });
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      return res.status(500).json({ error: error.message || 'No se pudo iniciar sesión con Google.' });
+    }
+  });
+
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, password, name, role, plan, agencyName } = req.body;
@@ -363,6 +430,13 @@ async function startServer() {
 
       if (cleanEmail === CEO_EMAIL) {
         return res.status(409).json({ error: 'La cuenta CEO debe iniciar sesión con sus credenciales maestras.' });
+      }
+
+      const existingAccount = await getUserProfileByEmail(cleanEmail);
+      if (existingAccount) {
+        return res.status(409).json({ error: existingAccount.password
+          ? 'Ya existe una cuenta con este correo. Ingresa con tu contraseña.'
+          : 'Este correo ya está vinculado a Google. Continúa con Google para ingresar.' });
       }
 
       const determinedRole = role === 'wedding_planner' || plan?.startsWith('planner_') ? 'wedding_planner' : 'couple';
@@ -397,15 +471,12 @@ async function startServer() {
   // 0. User Profile & Multi-tenant Workspace endpoints
   app.get('/api/user/profile', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user?.uid || (typeof req.query.uid === 'string' ? req.query.uid : 'demo-user-master');
-      const email = req.user?.email || (typeof req.query.email === 'string' ? req.query.email : 'demo@weddingatelier.com');
-      const name = req.user?.name || (typeof req.query.name === 'string' ? req.query.name : 'Organizador Atelier');
-
-      let user = await getUserProfile(uid);
-      if (!user) {
-        user = await getOrCreateUser(uid, email, name);
-      }
-      res.json(user);
+      const identity = await resolveRequestIdentity(req);
+      if (!identity) return rejectMissingIdentity(res);
+      const user = await getUserProfile(identity.uid);
+      if (!user) return res.status(404).json({ error: 'No se encontró el perfil.' });
+      const { password: _password, ...safeUser } = user as any;
+      res.json(safeUser);
     } catch (error: any) {
       console.error('Failed to get user profile:', error);
       res.status(500).json({ error: error.message || 'Error fetching user profile' });
@@ -414,11 +485,16 @@ async function startServer() {
 
   app.post('/api/user/plan', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user?.uid || req.body.uid || 'demo-user-master';
+      const identity = await resolveRequestIdentity(req);
+      if (!identity) return rejectMissingIdentity(res);
+      const uid = identity.uid;
       const plan = req.body.plan;
       const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'];
       if (!validPlans.includes(plan)) {
         return res.status(400).json({ error: 'Plan inválido' });
+      }
+      if (plan === 'ceo_unlimited' && identity.role !== 'ceo' && identity.role !== 'admin') {
+        return res.status(403).json({ error: 'No tienes permiso para asignar este plan.' });
       }
 
       const updated = await updateUserPlan(uid, plan);
@@ -432,6 +508,15 @@ async function startServer() {
   // ----------------------------------------------------
   // CEO & SUPERADMIN MASTER API ENDPOINTS (GOD MODE)
   // ----------------------------------------------------
+  app.use('/api/admin/ceo', async (req: any, res: any, next: any) => {
+    const identity = await resolveRequestIdentity(req);
+    if (!identity) return rejectMissingIdentity(res);
+    if (identity.role !== 'ceo' && identity.role !== 'admin') {
+      return res.status(403).json({ error: 'No tienes permiso para administrar este espacio.' });
+    }
+    next();
+  });
+
   app.get('/api/admin/ceo/stats', async (_req, res) => {
     try {
       const stats = await getCeoGlobalStats();
@@ -616,6 +701,11 @@ async function startServer() {
       if (!weddingId || !status) {
         return res.status(400).json({ error: 'weddingId y status son requeridos' });
       }
+      const access = await resolveWeddingAccess(req, Number(weddingId));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed || (!access.owner && access.identity.role !== 'ceo' && access.identity.role !== 'admin')) {
+        return rejectWeddingAccess(res);
+      }
       const updated = await updateWeddingStatus(Number(weddingId), status, clientEmail);
       res.json({ success: true, wedding: updated });
     } catch (error: any) {
@@ -626,8 +716,9 @@ async function startServer() {
 
   app.get('/api/user/weddings', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user?.uid || (typeof req.query.uid === 'string' ? req.query.uid : 'demo-user-master');
-      const list = await getUserWeddings(uid);
+      const identity = await resolveRequestIdentity(req);
+      if (!identity) return rejectMissingIdentity(res);
+      const list = await getUserWeddings(identity.uid, identity.email);
       res.json(list);
     } catch (error: any) {
       console.error('Failed to get user weddings:', error);
@@ -637,7 +728,9 @@ async function startServer() {
 
   app.post('/api/user/weddings', optionalAuth, async (req: AuthRequest, res) => {
     try {
-      const uid = req.user?.uid || req.body.ownerUid || 'demo-user-master';
+      const identity = await resolveRequestIdentity(req);
+      if (!identity) return rejectMissingIdentity(res);
+      const uid = identity.uid;
       const { coupleNames, eventDate, eventTime, cardStyle, ceremonyVenue, receptionVenue, eventType } = req.body;
 
       if (!coupleNames || !eventDate) {
@@ -666,12 +759,40 @@ async function startServer() {
   app.delete('/api/user/weddings/:id', optionalAuth, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      const uid = req.user?.uid;
-      const result = await deleteWedding(id, uid);
+      const access = await resolveWeddingAccess(req, id);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.owner && access.identity.role !== 'ceo' && access.identity.role !== 'admin') {
+        return rejectWeddingAccess(res);
+      }
+      const result = await deleteWedding(id, access.identity.uid);
       res.json(result);
     } catch (error: any) {
       console.error('Failed to delete wedding:', error);
       res.status(500).json({ error: error.message || 'Error deleting wedding' });
+    }
+  });
+
+  app.put('/api/user/weddings/:id/access', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'ID de evento inválido.' });
+      const access = await resolveWeddingAccess(req, id);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+
+      const rawEmails = req.body?.emails;
+      if (!Array.isArray(rawEmails) || rawEmails.length > 20 || rawEmails.some((value: unknown) => typeof value !== 'string')) {
+        return res.status(400).json({ error: 'Envía una lista válida de hasta 20 correos.' });
+      }
+      const emails = [...new Set(rawEmails.map((value: string) => value.trim().toLowerCase()).filter(Boolean))];
+      const invalidEmail = emails.find((value) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+      if (invalidEmail) return res.status(400).json({ error: `El correo "${invalidEmail}" no es válido.` });
+
+      const wedding = await updateWeddingAccessEmails(id, emails);
+      return res.json({ success: true, accessEmails: wedding.accessEmails || emails });
+    } catch (error: any) {
+      console.error('Failed to update event access emails:', error);
+      return res.status(500).json({ error: error.message || 'No se pudo actualizar el acceso del evento.' });
     }
   });
 
@@ -693,7 +814,11 @@ async function startServer() {
   app.post('/api/wedding-config', async (req, res) => {
     try {
       const weddingId = req.body.id || (req.query.weddingId ? Number(req.query.weddingId) : undefined);
-      const updated = await updateWeddingSettings(req.body, weddingId);
+      const targetId = Number(weddingId || DEMO_WEDDING_ID);
+      const access = await resolveWeddingAccess(req, targetId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      const updated = await updateWeddingSettings(req.body, targetId);
       res.json(updated);
     } catch (error: any) {
       console.error('Failed to update wedding config:', error);
@@ -707,6 +832,9 @@ async function startServer() {
       const search = typeof req.query.search === 'string' ? req.query.search : undefined;
       const status = typeof req.query.status === 'string' ? req.query.status : undefined;
       const weddingId = req.query.weddingId ? Number(req.query.weddingId) : 1;
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const guestList = await getAllGuests(search, status, weddingId);
 
       // Compute statistics across all guests of this wedding
@@ -737,6 +865,9 @@ async function startServer() {
 
   app.post('/api/guests', async (req, res) => {
     try {
+      const access = await resolveWeddingAccess(req, Number(req.body?.weddingId || DEMO_WEDDING_ID));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const created = await createGuest(req.body);
       res.status(201).json(created);
     } catch (error: any) {
@@ -751,6 +882,13 @@ async function startServer() {
       if (!Array.isArray(guestList) || guestList.length === 0) {
         return res.status(400).json({ error: 'La lista de invitados es requerida y debe ser un arreglo.' });
       }
+      const weddingId = Number(req.body?.weddingId || guestList[0]?.weddingId || DEMO_WEDDING_ID);
+      if (guestList.some((guest: any) => Number(guest?.weddingId || weddingId) !== weddingId)) {
+        return res.status(400).json({ error: 'La lista contiene invitados de otro evento.' });
+      }
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const created = await createGuestsBulk(guestList);
       res.status(201).json({ success: true, count: created.length, guests: created });
     } catch (error: any) {
@@ -762,7 +900,13 @@ async function startServer() {
   app.put('/api/guests/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      const updated = await updateGuest(id, req.body);
+      const currentGuest = await getGuestById(id);
+      if (!currentGuest) return res.status(404).json({ error: 'No se encontró el invitado.' });
+      const weddingId = Number(currentGuest.weddingId);
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      const updated = await updateGuest(id, { ...req.body, weddingId } as any);
       res.json(updated);
     } catch (error: any) {
       console.error('Failed to update guest:', error);
@@ -773,6 +917,12 @@ async function startServer() {
   app.delete('/api/guests/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
+      const currentGuest = await getGuestById(id);
+      if (!currentGuest) return res.status(404).json({ error: 'No se encontró el invitado.' });
+      const weddingId = Number(currentGuest.weddingId);
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const result = await deleteGuest(id);
       res.json(result);
     } catch (error: any) {
@@ -1709,16 +1859,13 @@ async function startServer() {
   });
 
   const authorizeGalleryAiRequest = async (req: any, weddingId: number) => {
-    const identity = await resolveGalleryAiUser(req);
-    if (!identity) {
+    const access = await resolveWeddingAccess(req, weddingId);
+    if (!access.identity) {
       return { error: getAppSessionSecret() ? 'La sesión no es válida. Cierra sesión y vuelve a ingresar.' : 'Configura APP_SESSION_SECRET en el backend para habilitar la sesión segura del editor.', status: getAppSessionSecret() ? 401 : 503 };
     }
-    const eventSettings = await getWeddingSettings(weddingId);
-    if (!eventSettings) return { error: 'No se encontró el evento.', status: 404 };
-    const isCeo = identity.role === 'ceo';
-    const canManageEvent = identity.uid === eventSettings.ownerUid || isCeo || identity.role === 'admin';
-    if (!canManageEvent) return { error: 'No tienes permiso para editar las fotos de este evento.', status: 403 };
-    return { identity, eventSettings, isCeo };
+    if (!access.wedding) return { error: 'No se encontró el evento.', status: 404 };
+    if (!access.allowed) return { error: 'No tienes permiso para editar las fotos de este evento.', status: 403 };
+    return { identity: access.identity, eventSettings: access.wedding, isCeo: access.identity.role === 'ceo' };
   };
 
   app.get('/api/gallery/ai-titles/status', async (req: any, res) => {
@@ -1947,10 +2094,18 @@ async function startServer() {
   app.patch('/api/gallery/:id', async (req, res) => {
     try {
       const id = Number.parseInt(req.params.id, 10);
-      const weddingId = Number(req.body?.weddingId) || 1;
       if (!Number.isInteger(id) || id <= 0 || typeof req.body?.caption !== 'string') {
         return res.status(400).json({ error: 'Se necesita el título de la foto.' });
       }
+      const existingPhoto = await getGalleryPhotoById(id);
+      if (!existingPhoto) return res.status(404).json({ error: 'No se encontró la foto de esta galería.' });
+      const weddingId = Number(existingPhoto.weddingId);
+      if (req.body?.weddingId && Number(req.body.weddingId) !== weddingId) {
+        return res.status(400).json({ error: 'La foto no pertenece a ese evento.' });
+      }
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
 
       const caption = req.body.caption.trim().slice(0, 160);
       const photo = await updateGalleryPhotoCaption(id, weddingId, caption);
@@ -1981,6 +2136,11 @@ async function startServer() {
   app.delete('/api/gallery/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
+      const existingPhoto = await getGalleryPhotoById(id);
+      if (!existingPhoto) return res.status(404).json({ error: 'No se encontró la foto.' });
+      const access = await resolveWeddingAccess(req, Number(existingPhoto.weddingId));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const result = await deleteGalleryPhoto(id);
       res.json(result);
     } catch (error: any) {
@@ -2063,6 +2223,10 @@ async function startServer() {
       if (!videoUrl || !title) {
         return res.status(400).json({ error: 'URL y título son requeridos' });
       }
+      const resolvedWeddingId = Number(weddingId || DEMO_WEDDING_ID);
+      const access = await resolveWeddingAccess(req, resolvedWeddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
 
       // Auto detect platform and embedId
       let platform = 'direct';
@@ -2085,7 +2249,7 @@ async function startServer() {
       }
 
       const created = await addWeddingVideo({
-        weddingId: weddingId || 1,
+        weddingId: resolvedWeddingId,
         title,
         platform,
         videoUrl,
@@ -2103,6 +2267,11 @@ async function startServer() {
   app.delete('/api/videos/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
+      const existingVideo = await getWeddingVideoById(id);
+      if (!existingVideo) return res.status(404).json({ error: 'No se encontró el video.' });
+      const access = await resolveWeddingAccess(req, Number(existingVideo.weddingId));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       const result = await deleteWeddingVideo(id);
       res.json(result);
     } catch (error: any) {
@@ -2266,8 +2435,16 @@ async function startServer() {
       if (!req.user) {
         return res.status(401).json({ error: 'No autenticado' });
       }
-      const user = await getOrCreateUser(req.user.uid, req.user.email || '', req.user.name);
-      res.json(user);
+      const emailVerified = (req.user as any).email_verified === true;
+      const normalizedEmail = emailVerified ? String(req.user.email || '').trim().toLowerCase() : '';
+      const existing = normalizedEmail ? await getUserProfileByEmail(normalizedEmail) : null;
+      if (emailVerified && (normalizedEmail === CEO_EMAIL || existing?.role === 'ceo')) {
+        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
+      }
+      const user = existing || await getOrCreateUser(req.user.uid, normalizedEmail, req.user.name);
+      if (emailVerified) issueAppSessionCookie(res, user);
+      const { password: _password, ...safeUser } = user as any;
+      res.json(safeUser);
     } catch (error: any) {
       console.error('Auth sync error:', error);
       res.status(500).json({ error: error.message || 'Error sincronizando usuario' });

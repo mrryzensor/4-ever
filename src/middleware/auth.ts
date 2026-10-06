@@ -18,10 +18,11 @@ export const requireAuth = async (
 
   const token = authHeader.split('Bearer ')[1];
   try {
-    if (adminAuth) {
-      const decodedToken = await adminAuth.verifyIdToken(token);
-      req.user = decodedToken;
+    if (!adminAuth) {
+      return res.status(503).json({ error: 'La autenticación de Google aún no está configurada en el servidor.' });
     }
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    req.user = decodedToken;
     next();
   } catch (error) {
     console.error('Error verifying Firebase ID token:', error);

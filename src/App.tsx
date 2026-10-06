@@ -851,11 +851,10 @@ export default function App() {
       return;
     }
 
-    // If on landing, redirect to user dashboard
-    if (currentView === 'landing') {
-      setCurrentView('dashboard');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // A successful sign-in should always open the account's own event list,
+    // including when the auth dialog was opened from an invitation preview.
+    setCurrentView('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLogout = () => {

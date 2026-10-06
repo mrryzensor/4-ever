@@ -191,21 +191,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     if (!selectedWeddingForClient) return;
 
     try {
-      const res = await fetch('/api/wedding/status', {
-        method: 'POST',
+      const emails = [...new Set(clientEmailInput
+        .split(/[\n,;]+/)
+        .map((value) => value.trim().toLowerCase())
+        .filter(Boolean))];
+      const res = await fetch(`/api/user/weddings/${selectedWeddingForClient.id}/access`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          weddingId: selectedWeddingForClient.id,
-          status: (selectedWeddingForClient as any).status || 'active',
-          clientEmail: clientEmailInput.trim(),
-        }),
+        body: JSON.stringify({ emails }),
       });
 
       if (res.ok) {
         setIsAssignClientModalOpen(false);
-        setAssignSuccessMessage(`Acceso asignado a ${clientEmailInput}`);
+        setAssignSuccessMessage(emails.length ? `Acceso compartido con ${emails.length} correo${emails.length === 1 ? '' : 's'}` : 'Se quitaron los accesos adicionales');
         setTimeout(() => setAssignSuccessMessage(null), 3000);
         fetchWeddings();
+      } else {
+        const error = await res.json().catch(() => ({}));
+        toast.error(error.error || 'No se pudo actualizar el acceso del evento', 'Error');
       }
     } catch (err) {
       console.error('Error assigning client email:', err);
@@ -504,20 +507,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1">
-                      {isWeddingPlanner && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedWeddingForClient(w);
-                            setClientEmailInput((w as any).clientEmail || '');
-                            setIsAssignClientModalOpen(true);
-                          }}
-                          className="p-1.5 text-stone-400 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
-                          title="Asignar acceso a Cliente / Anfitrión"
-                        >
-                          <UserPlus className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWeddingForClient(w);
+                          const emails = Array.isArray(w.accessEmails) && w.accessEmails.length
+                            ? w.accessEmails
+                            : (w.clientEmail ? [w.clientEmail] : []);
+                          setClientEmailInput(emails.join('\n'));
+                          setIsAssignClientModalOpen(true);
+                        }}
+                        className="p-1.5 text-stone-400 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+                        title="Compartir acceso al evento"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </button>
 
                       {w.id !== 1 && w.id !== 5 && (
                         <button
@@ -791,7 +795,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-bold text-stone-900">
-                    Asignar Cliente / Anfitrión
+                    Compartir acceso al evento
                   </h3>
                   <p className="text-xs text-stone-500">
                     Evento: {selectedWeddingForClient.coupleNames}
@@ -802,18 +806,17 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <form onSubmit={handleSaveClientAssignment} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Correo Electrónico del Cliente / Anfitrión:
+                    Correos con acceso de edición:
                   </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="cliente@ejemplo.com"
+                  <textarea
+                    rows={4}
+                    placeholder={'novia@correo.com\nnovio@correo.com'}
                     value={clientEmailInput}
                     onChange={(e) => setClientEmailInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none resize-y"
                   />
                   <p className="text-[11px] text-stone-500 mt-1.5">
-                    Permite que el anfitrión o cliente inicie sesión con este correo para consultar su lista de confirmaciones RSVP y pases en tiempo real.
+                    Agrega uno o varios correos, separados por líneas o comas. Cada persona podrá entrar con Google o con su cuenta de correo y contraseña; el correo debe coincidir con el de su inicio de sesión.
                   </p>
                 </div>
 
@@ -829,7 +832,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     type="submit"
                     className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-xl cursor-pointer"
                   >
-                    Guardar Asignación
+                    Guardar Accesos
                   </button>
                 </div>
               </form>

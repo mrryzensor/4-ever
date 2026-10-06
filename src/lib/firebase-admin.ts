@@ -1,4 +1,4 @@
-import { initializeApp, getApps, App } from 'firebase-admin/app';
+import { applicationDefault, cert, initializeApp, getApps, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import fs from 'fs';
 import path from 'path';
@@ -18,7 +18,12 @@ try {
   }
 
   if (!getApps().length) {
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
+    const credential = serviceAccountJson
+      ? cert(JSON.parse(serviceAccountJson))
+      : applicationDefault();
     app = initializeApp({
+      credential,
       projectId,
     });
   } else {
@@ -30,4 +35,3 @@ try {
 }
 
 export const adminAuth = auth;
-

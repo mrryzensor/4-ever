@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { PlanId, UserProfile, UserRole } from '../types.ts';
 import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleAuthProvider } from '../lib/firebase.ts';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -72,6 +74,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onSuccess(profile);
     }
     onClose();
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      googleAuthProvider.setCustomParameters({ prompt: 'select_account' });
+      const credential = await signInWithPopup(auth, googleAuthProvider);
+      const idToken = await credential.user.getIdToken();
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        credentials: 'same-origin',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.user) {
+        throw new Error(data.error || 'No se pudo validar tu cuenta de Google.');
+      }
+
+      const profile: UserProfile = data.user;
+      localStorage.setItem('wedding_user', JSON.stringify(profile));
+      localStorage.setItem('atelier_user_session', JSON.stringify(profile));
+      notifySuccess(profile, false);
+    } catch (err: any) {
+      console.error('Google auth error:', err);
+      if (err?.code === 'auth/popup-closed-by-user') {
+        setError('Se cerró la ventana de Google antes de completar el acceso.');
+      } else if (err?.code === 'auth/unauthorized-domain') {
+        setError('Este dominio todavía no está autorizado en Firebase Authentication.');
+      } else {
+        setError(err?.message || 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -508,6 +545,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
+                  </button>
+
+                  <div className="flex items-center gap-3 py-1 text-[11px] text-stone-400" aria-hidden="true">
+                    <span className="h-px flex-1 bg-stone-200" />
+                    <span>o continúa con</span>
+                    <span className="h-px flex-1 bg-stone-200" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className="w-full py-3 px-6 bg-white hover:bg-stone-50 text-stone-800 border border-stone-300 font-sans font-semibold text-xs sm:text-sm rounded-full transition-colors flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full border border-stone-300 text-sm font-bold text-[#4285F4]">G</span>
+                    <span>{loading ? 'Conectando con Google…' : 'Continuar con Google'}</span>
                   </button>
                 </form>
               </div>
