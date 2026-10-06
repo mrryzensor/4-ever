@@ -72,7 +72,7 @@ import {
 } from './src/db/queries.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
-import { DEMO_WEDDING_ID, getEventPresentation } from './src/lib/eventUtils.ts';
+import { DEMO_WEDDING_ID, getEventPresentation, isDemoWeddingRecord } from './src/lib/eventUtils.ts';
 import { parseDriveFolderUrl } from './src/lib/driveFolder.ts';
 import { parseDrivePhotoTitles } from './src/lib/galleryPhotoTitles.ts';
 
@@ -346,17 +346,21 @@ async function startServer() {
 
   const resolveWeddingAccess = async (req: any, weddingId: number) => {
     const identity = await resolveRequestIdentity(req);
-    if (!identity) return { identity: null, wedding: null, allowed: false, owner: false };
+    if (!identity) return { identity: null, wedding: null, allowed: false, owner: false, isDemo: false, isCeo: false };
     const wedding = await getWeddingSettings(weddingId);
-    if (!wedding) return { identity, wedding: null, allowed: false, owner: false };
+    const isCeo = identity.role === 'ceo' || identity.email === CEO_EMAIL;
+    if (!wedding) return { identity, wedding: null, allowed: false, owner: false, isDemo: false, isCeo };
+    const isDemo = isDemoWeddingRecord(wedding);
     const owner = identity.uid === wedding.ownerUid;
     const isPrivileged = identity.role === 'ceo' || identity.role === 'admin';
+    const accessEmails = (Array.isArray((wedding as any).accessEmails) ? (wedding as any).accessEmails : []) as string[];
     const allowedEmails = [
-      ...((Array.isArray((wedding as any).accessEmails) ? (wedding as any).accessEmails : []) as string[]),
-      String((wedding as any).clientEmail || ''),
+      ...accessEmails,
+      ...(!isDemo ? [String((wedding as any).clientEmail || '')] : []),
     ].map((value) => value.trim().toLowerCase()).filter(Boolean);
-    const allowed = owner || isPrivileged || (identity.email && allowedEmails.includes(identity.email));
-    return { identity, wedding, allowed: Boolean(allowed), owner };
+    const assigned = Boolean(identity.email && allowedEmails.includes(identity.email));
+    const allowed = isDemo ? isCeo || assigned : owner || isPrivileged || assigned;
+    return { identity, wedding, allowed: Boolean(allowed), owner, isDemo, isCeo };
   };
 
   const rejectMissingIdentity = (res: any) => res.status(401).json({ error: 'Inicia sesión para continuar.' });
@@ -541,6 +545,7 @@ async function startServer() {
         `google-${googleProfile.sub}`,
         email,
         String(googleProfile.name || googleProfile.given_name || 'Usuario Atelier'),
+        'registered',
       );
       const appUser = {
         uid: user.uid,
@@ -653,11 +658,16 @@ async function startServer() {
       if (!identity) return rejectMissingIdentity(res);
       const uid = identity.uid;
       const plan = req.body.plan;
+      const currentProfile = await getUserProfile(uid);
       const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'];
       if (!validPlans.includes(plan)) {
         return res.status(400).json({ error: 'Plan inválido' });
       }
-      if (plan === 'ceo_unlimited' && identity.role !== 'ceo' && identity.role !== 'admin') {
+      const isCeo = identity.role === 'ceo' || identity.email === CEO_EMAIL;
+      if (plan !== 'free' && plan !== currentProfile?.plan && !isCeo) {
+        return res.status(403).json({ error: 'Los planes de pago deben ser activados por el CEO después de confirmar la compra.' });
+      }
+      if (plan === 'ceo_unlimited' && !isCeo) {
         return res.status(403).json({ error: 'No tienes permiso para asignar este plan.' });
       }
 
@@ -730,7 +740,7 @@ async function startServer() {
     try {
       const { uid } = req.params;
       const { plan } = req.body;
-      const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'];
+      const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited', 'registered'];
       if (!validPlans.includes(plan)) {
         return res.status(400).json({ error: 'Plan no válido' });
       }
@@ -882,7 +892,7 @@ async function startServer() {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
-      const list = await getUserWeddings(identity.uid, identity.email);
+      const list = await getUserWeddings(identity.uid, identity.email, identity.role === 'ceo' || identity.email === CEO_EMAIL);
       res.json(list);
     } catch (error: any) {
       console.error('Failed to get user weddings:', error);
@@ -894,6 +904,12 @@ async function startServer() {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
+      const profile = await getUserProfile(identity.uid);
+      const isPrivileged = identity.role === 'ceo' || identity.role === 'admin' || identity.email === CEO_EMAIL;
+      const hasActivePlan = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'].includes(String(profile?.plan || ''));
+      if (!isPrivileged && !hasActivePlan) {
+        return res.status(403).json({ error: 'Tu cuenta está registrada, pero aún no tiene un plan activo para crear eventos. Elige un plan para continuar.' });
+      }
       const uid = identity.uid;
       const { coupleNames, eventDate, eventTime, cardStyle, ceremonyVenue, receptionVenue, eventType } = req.body;
 
@@ -943,6 +959,7 @@ async function startServer() {
       const access = await resolveWeddingAccess(req, id);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
+      if (access.isDemo && !access.isCeo) return rejectWeddingAccess(res);
 
       const rawEmails = req.body?.emails;
       if (!Array.isArray(rawEmails) || rawEmails.length > 20 || rawEmails.some((value: unknown) => typeof value !== 'string')) {

@@ -17,8 +17,10 @@ import {
   generateEventHashtag,
   resolveEventType,
   DEMO_WEDDING_ID,
+  DEMO_WEDDING_SLUG,
   DEMO_XV_ID,
   DEMO_XV_SLUG,
+  isDemoWeddingRecord,
 } from '../lib/eventUtils.ts';
 import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
@@ -977,8 +979,8 @@ export async function verifyDatabaseUserCredentials(email: string, password: str
   return null;
 }
 
-export async function getOrCreateUser(uid: string, email: string, name?: string) {
-  return registerOrUpdateUser({ uid, email, name });
+export async function getOrCreateUser(uid: string, email: string, name?: string, plan = 'free') {
+  return registerOrUpdateUser({ uid, email, name, role: 'couple', plan });
 }
 
 export async function getUserProfile(uid: string) {
@@ -1025,10 +1027,10 @@ export async function updateUserPlan(uid: string, plan: string) {
   return null;
 }
 
-export async function getUserWeddings(ownerUid: string, email = '') {
+export async function getUserWeddings(ownerUid: string, email = '', isCeoUser = false) {
   const normalizedEmail = email.trim().toLowerCase();
   const user = memoryState.users.find((u) => u.uid === ownerUid);
-  const isCeo = user?.role === 'ceo' || user?.email === 'daviex14@gmail.com' || ownerUid === 'ceo-daviex';
+  const isCeo = isCeoUser || user?.role === 'ceo' || user?.email === 'daviex14@gmail.com' || ownerUid === 'ceo-daviex';
 
   try {
     if (sqlEnabled || process.env.SQL_HOST) {
@@ -1036,14 +1038,14 @@ export async function getUserWeddings(ownerUid: string, email = '') {
       if (isCeo) {
         weddingList = await db.select().from(weddingSettings).orderBy(desc(weddingSettings.id));
       } else {
+        const isNotDemo = sql`${weddingSettings.id} NOT IN (${DEMO_WEDDING_ID}, ${DEMO_XV_ID}) AND lower(coalesce(${weddingSettings.slug}, '')) NOT IN (${DEMO_WEDDING_SLUG}, ${DEMO_XV_SLUG})`;
         weddingList = await db
           .select()
           .from(weddingSettings)
           .where(or(
-            eq(weddingSettings.ownerUid, ownerUid),
-            eq(weddingSettings.id, 1),
+            and(isNotDemo, eq(weddingSettings.ownerUid, ownerUid)),
             sql`${normalizedEmail} <> '' AND ${weddingSettings.accessEmails} @> ARRAY[${normalizedEmail}]::text[]`,
-            sql`${normalizedEmail} <> '' AND lower(coalesce(${weddingSettings.clientEmail}, '')) = ${normalizedEmail}`,
+            sql`${isNotDemo} AND ${normalizedEmail} <> '' AND lower(coalesce(${weddingSettings.clientEmail}, '')) = ${normalizedEmail}`,
           ))
           .orderBy(desc(weddingSettings.id));
       }
@@ -1079,16 +1081,15 @@ export async function getUserWeddings(ownerUid: string, email = '') {
     console.warn('getUserWeddings fallback to memory');
   }
 
-  // Memory fallback: include demo projects (1 Boda, 6 XV) so users can manage both categories
+  // Never include built-in demos unless the CEO explicitly assigned the user's email.
   const list = isCeo 
     ? memoryState.weddings 
     : memoryState.weddings.filter((w) =>
-        w.ownerUid === ownerUid ||
-        w.id === DEMO_WEDDING_ID ||
-        w.id === DEMO_XV_ID ||
-        (normalizedEmail && (
-          ((w as any).accessEmails || []).some((item: string) => item.trim().toLowerCase() === normalizedEmail) ||
-          String((w as any).clientEmail || '').trim().toLowerCase() === normalizedEmail
+        (normalizedEmail && Array.isArray((w as any).accessEmails) &&
+          (w as any).accessEmails.some((item: string) => item.trim().toLowerCase() === normalizedEmail)) ||
+        (!isDemoWeddingRecord(w) && (
+          w.ownerUid === ownerUid ||
+          (normalizedEmail && String((w as any).clientEmail || '').trim().toLowerCase() === normalizedEmail)
         ))
       );
 

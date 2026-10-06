@@ -10,6 +10,14 @@ export const DEMO_XV_ID = 6;
 export const DEMO_WEDDING_SLUG = 'boda-sofia-alejandro';
 export const DEMO_XV_SLUG = 'xv-valeria-montserrat';
 
+/** Built-in templates have edit access managed by the CEO. */
+export function isDemoWeddingRecord(wedding: { id?: unknown; slug?: unknown } | null | undefined) {
+  if (!wedding) return false;
+  const id = Number(wedding.id);
+  const slug = String(wedding.slug || '').trim().toLowerCase();
+  return id === DEMO_WEDDING_ID || id === DEMO_XV_ID || slug === DEMO_WEDDING_SLUG || slug === DEMO_XV_SLUG;
+}
+
 const stripAccents = (value: string) =>
   value
     .normalize('NFD')

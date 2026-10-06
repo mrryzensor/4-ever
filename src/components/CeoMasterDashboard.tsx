@@ -1156,6 +1156,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     className="text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-1.5 text-stone-200 focus:outline-none focus:border-amber-500"
                   >
                     <option value="all">Todos los Planes</option>
+                    <option value="registered">Sin plan activo</option>
                     <option value="free">Esencial ($0)</option>
                     <option value="atelier">Atelier Romance ($29)</option>
                     <option value="elite">Élite Gran Boda ($59)</option>
@@ -1214,6 +1215,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                       onChange={(e) => setBulkTargetPlan(e.target.value as PlanId)}
                       className="text-xs bg-transparent border-none text-stone-200 focus:outline-none font-medium"
                     >
+                      <option value="registered">Sin plan activo</option>
                       <option value="free">Esencial ($0)</option>
                       <option value="atelier">Atelier Romance ($29)</option>
                       <option value="elite">Élite Gran Boda ($59)</option>
@@ -1457,6 +1459,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                                   onChange={(e) => handleUpdateUserPlan(u.uid, e.target.value as PlanId)}
                                   className="text-xs bg-stone-950 border border-stone-700 rounded-lg px-2.5 py-1 text-amber-300 focus:outline-none focus:border-amber-500 font-medium"
                                 >
+                                  <option value="registered">Sin plan activo</option>
                                   <option value="free">Esencial ($0)</option>
                                   <option value="atelier">Atelier ($29)</option>
                                   <option value="elite">Élite ($59)</option>
@@ -1602,6 +1605,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                             onChange={(e) => handleUpdateUserPlan(u.uid, e.target.value as PlanId)}
                             className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
                           >
+                            <option value="registered">Sin plan activo</option>
                             <option value="free">Plan Esencial ($0 USD)</option>
                             <option value="atelier">Plan Atelier Romance ($29 USD)</option>
                             <option value="elite">Plan Élite Gran Boda ($59 USD)</option>

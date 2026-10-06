@@ -932,6 +932,9 @@ export default function App() {
         setCurrentUser(newUser);
         localStorage.setItem('atelier_user_session', JSON.stringify(newUser));
         toast.success(`¡Tu suscripción ha sido actualizada al ${SUBSCRIPTION_PLANS.find(p => p.id === newPlan)?.name}!`, 'Plan Actualizado');
+      } else {
+        const error = await res.json().catch(() => ({}));
+        toast.error(error.error || 'No se pudo activar el plan seleccionado.', 'Plan no activado');
       }
     } catch (err) {
       console.error('Error updating plan:', err);

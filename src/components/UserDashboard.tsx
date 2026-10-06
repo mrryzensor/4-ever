@@ -32,7 +32,7 @@ import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../ty
 import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../lib/toast.ts';
-import { resolveEventType } from '../lib/eventUtils.ts';
+import { isDemoWeddingRecord, resolveEventType } from '../lib/eventUtils.ts';
 
 interface UserDashboardProps {
   user: UserProfile;
@@ -144,7 +144,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const handleDeleteWedding = (wedding: WeddingSummary, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (wedding.id === 1 || wedding.slug === 'xv-valeria-montserrat') {
+    if (isDemoWeddingRecord(wedding)) {
       toast.warning('Los proyectos de demostración no pueden ser eliminados.');
       return;
     }
@@ -215,7 +215,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
   };
 
-  const currentPlan = SUBSCRIPTION_PLANS.find((p) => p.id === user.plan) || SUBSCRIPTION_PLANS[0];
+  const currentPlan = SUBSCRIPTION_PLANS.find((p) => p.id === user.plan);
+  const hasActivePlan = isCeo || Boolean(currentPlan);
 
   const bodasCount = weddings.filter(
     (w) => resolveEventType(w.eventType, w.slug) !== 'xv'
@@ -277,7 +278,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             {/* Plan Badge */}
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200/70 text-xs font-semibold text-amber-900">
               <Crown className="w-3.5 h-3.5 text-amber-700" />
-              <span>{currentPlan.name}</span>
+              <span>{currentPlan?.name || 'Sin plan activo'}</span>
               <button
                 onClick={() => setIsUpgradeModalOpen(true)}
                 className="ml-1 text-[11px] underline hover:text-amber-700 font-bold cursor-pointer"
@@ -322,9 +323,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900 tracking-tight">
                 {isWeddingPlanner ? 'Gestión Centralizada de Eventos' : 'Mis Proyectos & Eventos'}
               </h1>
-              {isWeddingPlanner && (
+              {isWeddingPlanner && currentPlan && (
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] uppercase tracking-wider border border-amber-300">
-                  {currentPlan.maxWeddings === 'unlimited' ? 'Eventos Ilimitados' : `${currentPlan.maxWeddings} Eventos`}
+                  {currentPlan?.maxWeddings === 'unlimited' ? 'Eventos Ilimitados' : `${currentPlan?.maxWeddings || 1} Eventos`}
                 </span>
               )}
             </div>
@@ -338,11 +339,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           <div className="flex items-center gap-3">
             <button
               id="btn-open-create-wedding-modal"
-              onClick={() => setIsCreatingWedding(true)}
+              onClick={() => hasActivePlan ? setIsCreatingWedding(true) : setIsUpgradeModalOpen(true)}
               className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>{isWeddingPlanner ? 'Nuevo Evento de Cliente' : 'Crear Nuevo Evento'}</span>
+              <span>{!hasActivePlan ? 'Elegir un plan para crear' : isWeddingPlanner ? 'Nuevo Evento de Cliente' : 'Crear Nuevo Evento'}</span>
             </button>
           </div>
         </div>
@@ -356,17 +357,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
             <div>
               <div className="text-sm font-bold text-stone-900 flex items-center gap-2 flex-wrap">
                 <span>Tu plan actual:</span>
-                <span className="text-amber-900 font-extrabold">{currentPlan.name}</span>
-                <span className="text-xs px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold border border-amber-200">
+                <span className="text-amber-900 font-extrabold">{currentPlan?.name || 'Sin plan activo'}</span>
+                {currentPlan && <span className="text-xs px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold border border-amber-200">
                   {currentPlan.price} {currentPlan.billingPeriod}
-                </span>
+                </span>}
               </div>
               <p className="text-xs text-stone-600 mt-1 leading-relaxed max-w-2xl">
                 {isCeo
                   ? 'Como CEO tienes control total sobre todos los eventos, usuarios y analíticas de la plataforma sin límites.'
                   : isWeddingPlanner
-                  ? `Tienes capacidad para ${currentPlan.maxWeddings === 'unlimited' ? 'eventos ilimitados' : `${currentPlan.maxWeddings} eventos simultáneos`} con invitaciones y pases WhatsApp ilimitados para bodas, XV años y celebraciones.`
-                  : 'Diseño artesanal, confirmación RSVP en tiempo real y sobre interactivo digital para todos tus eventos.'}
+                  ? `Tienes capacidad para ${currentPlan?.maxWeddings === 'unlimited' ? 'eventos ilimitados' : `${currentPlan?.maxWeddings || 1} eventos simultáneos`} con invitaciones y pases WhatsApp ilimitados para bodas, XV años y celebraciones.`
+                  : hasActivePlan
+                  ? 'Diseño artesanal, confirmación RSVP en tiempo real y sobre interactivo digital para todos tus eventos.'
+                  : 'Tu cuenta quedó registrada. Elige un plan para crear tu propio evento; los eventos compartidos aparecerán aquí automáticamente.'}
               </p>
             </div>
           </div>
@@ -453,17 +456,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <Sparkles className="w-6 h-6 text-amber-700" />
             </div>
             <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
-              No se encontraron eventos
+              {weddings.length === 0 ? 'Aún no tienes eventos' : 'No se encontraron eventos'}
             </h3>
             <p className="text-xs text-stone-600 mb-6">
-              Comienza creando una nueva invitación interactiva para tu boda, fiesta de quince años o evento especial.
+              {weddings.length === 0 && !hasActivePlan
+                ? 'Tu cuenta quedó registrada. Elige un plan para crear tu propio evento; si te comparten uno, aparecerá aquí.'
+                : 'Comienza creando una nueva invitación interactiva para tu boda, fiesta de quince años o evento especial.'}
             </p>
             <button
-              onClick={() => setIsCreatingWedding(true)}
+              onClick={() => hasActivePlan ? setIsCreatingWedding(true) : setIsUpgradeModalOpen(true)}
               className="px-5 py-2.5 bg-stone-900 text-white text-xs font-semibold rounded-xl shadow hover:bg-stone-800 transition-colors inline-flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>Crear Evento</span>
+              <span>{hasActivePlan ? 'Crear Evento' : 'Elegir un plan'}</span>
             </button>
           </div>
         ) : (
@@ -507,13 +512,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1">
-                      <button
+                      {(!isDemoWeddingRecord(w) || isCeo) && <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedWeddingForClient(w);
                           const emails = Array.isArray(w.accessEmails) && w.accessEmails.length
                             ? w.accessEmails
-                            : (w.clientEmail ? [w.clientEmail] : []);
+                            : (!isDemoWeddingRecord(w) && w.clientEmail ? [w.clientEmail] : []);
                           setClientEmailInput(emails.join('\n'));
                           setIsAssignClientModalOpen(true);
                         }}
@@ -521,9 +526,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                         title="Compartir acceso al evento"
                       >
                         <UserPlus className="w-4 h-4" />
-                      </button>
+                      </button>}
 
-                      {w.id !== 1 && w.id !== 5 && (
+                      {!isDemoWeddingRecord(w) && (
                         <button
                           onClick={(e) => handleDeleteWedding(w, e)}
                           className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
@@ -868,6 +873,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <p className="text-xs sm:text-sm text-stone-600 mt-2">
                   Planes individuales por evento o membresías profesionales para Event Planners, Wedding Planners y Productores de eventos.
                 </p>
+                {!isCeo && <p className="text-[11px] text-stone-500 mt-2">
+                  El plan gratuito se activa desde aquí. Los planes de pago se habilitan cuando el CEO confirma la compra.
+                </p>}
 
                 {/* Plan Category Switcher */}
                 <div className="inline-flex bg-stone-100 p-1 rounded-2xl mt-5 border border-stone-200">
@@ -898,6 +906,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {SUBSCRIPTION_PLANS.filter((p) => p.category === upgradeCategory && p.id !== 'ceo_unlimited').map((plan) => {
                   const isCurrent = user.plan === plan.id;
+                  const requiresCeoActivation = !isCeo && plan.id !== 'free';
                   const isPopular = plan.popular;
 
                   return (
@@ -946,20 +955,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       </div>
 
                       <button
-                        disabled={isCurrent}
+                        disabled={isCurrent || requiresCeoActivation}
                         onClick={() => {
                           onUpdatePlan(plan.id);
                           setIsUpgradeModalOpen(false);
                         }}
                         className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                          isCurrent
+                          isCurrent || requiresCeoActivation
                             ? 'bg-stone-200 text-stone-500 cursor-default'
                             : isPopular
                             ? 'bg-amber-400 hover:bg-amber-300 text-stone-950 shadow-md'
                             : 'bg-stone-900 hover:bg-stone-800 text-white'
                         }`}
                       >
-                        {isCurrent ? 'Plan Actual' : `Activar ${plan.name}`}
+                        {isCurrent ? 'Plan Actual' : requiresCeoActivation ? 'Requiere activación del CEO' : `Activar ${plan.name}`}
                       </button>
                     </div>
                   );

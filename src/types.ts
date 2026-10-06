@@ -22,7 +22,8 @@ export type PlanId =
   | 'elite' 
   | 'planner_starter' 
   | 'planner_pro' 
-  | 'ceo_unlimited';
+  | 'ceo_unlimited'
+  | 'registered';
 
 export type UserRole = 'ceo' | 'wedding_planner' | 'couple' | 'admin';
 
