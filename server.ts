@@ -136,6 +136,14 @@ async function startServer() {
   // Serve persistent uploads directory
   app.use('/uploads', express.static(uploadsDir));
 
+  // Serve the public privacy policy as a standalone page for visitors and OAuth review.
+  app.get(['/privacy', '/privacy/'], (_req, res) => {
+    const privacyPage = process.env.NODE_ENV === 'production'
+      ? path.join(process.cwd(), 'dist', 'privacy.html')
+      : path.join(process.cwd(), 'public', 'privacy.html');
+    return res.sendFile(privacyPage);
+  });
+
   // Run seed data check lazily
   seedInitialData().catch((err) => {
     console.error('Seed error:', err);

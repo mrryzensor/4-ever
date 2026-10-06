@@ -535,6 +535,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     </svg>
                     <span>{loading ? 'Conectando con Google…' : 'Continuar con Google'}</span>
                   </button>
+                  <p id="auth-privacy-notice" className="text-center text-[11px] leading-relaxed text-stone-500">
+                    Al continuar, consulta nuestra{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
+                      Política de privacidad
+                    </a>
+                    .
+                  </p>
                 </form>
               </div>
 
@@ -542,7 +549,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="pt-6 mt-6 border-t border-stone-200/80 flex items-center justify-between text-xs text-stone-500">
                 <div className="flex items-center gap-1.5 text-stone-500">
                   <ShieldCheck className="w-4 h-4 text-[#5A5A40]" />
-                  <span>Acceso seguro cifrado de extremo a extremo.</span>
+                  <span>Acceso protegido a tu cuenta.</span>
                 </div>
                 <span className="font-mono text-[11px] text-stone-400">Atelier ID Auth</span>
               </div>

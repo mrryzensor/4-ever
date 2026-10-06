@@ -441,6 +441,7 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
             <button type="button" onClick={() => onSelectEventType('bodas')} className="hover:text-white transition-colors cursor-pointer">Bodas</button>
             <button type="button" onClick={() => onSelectEventType('xv')} className="hover:text-white transition-colors cursor-pointer">XV Años</button>
             <button type="button" onClick={() => onOpenAuth('login')} className="hover:text-white transition-colors cursor-pointer">Ingresar</button>
+            <a href="/privacy" className="hover:text-white transition-colors">Privacidad</a>
           </div>
         </div>
       </footer>
