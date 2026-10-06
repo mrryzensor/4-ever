@@ -1263,8 +1263,10 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   const formattedEventTime = useMemo(() => {
     const match = /^(\d{1,2}):(\d{2})$/.exec(settings.eventTime?.trim() || '');
     if (!match) return settings.eventTime?.trim() || '';
-    const time = new Date(2000, 0, 1, Number(match[1]), Number(match[2]));
-    return new Intl.DateTimeFormat('es-PE', { hour: 'numeric', minute: '2-digit' }).format(time);
+    const hour24 = Number(match[1]);
+    const hour12 = hour24 % 12 || 12;
+    const period = hour24 < 12 ? 'a.m.' : 'p.m.';
+    return `${String(hour12).padStart(2, '0')}:${match[2]} ${period}`;
   }, [settings.eventTime]);
   const timeUnits = [
     { key: 'days', value: timeLeft.days, label: 'días' },
@@ -1275,8 +1277,8 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
   const maxTimeUnitDigitCount = Math.max(...timeUnits.map(({ key, value }) => (
     key === 'days' ? String(value) : String(value).padStart(2, '0')
   ).length));
-  const circleNumberFontSize = `clamp(0.25rem, ${25 / maxTimeUnitDigitCount}cqw, 3rem)`;
-  const heroNumberFontSize = `clamp(0.5rem, ${18 / maxTimeUnitDigitCount}cqw, 1.875rem)`;
+  const circleNumberFontSize = `clamp(0.25rem, ${27 / maxTimeUnitDigitCount}cqw, 3rem)`;
+  const heroNumberFontSize = `clamp(0.5rem, ${20 / maxTimeUnitDigitCount}cqw, 1.875rem)`;
   const renderTimeUnits = (layout: string) => (
     <div
       className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'gap-x-1.5 px-1 sm:gap-x-2 sm:px-2 lg:gap-x-3' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}
