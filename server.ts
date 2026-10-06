@@ -144,6 +144,13 @@ async function startServer() {
     return res.sendFile(privacyPage);
   });
 
+  app.get(['/terms', '/terms/'], (_req, res) => {
+    const termsPage = process.env.NODE_ENV === 'production'
+      ? path.join(process.cwd(), 'dist', 'terms.html')
+      : path.join(process.cwd(), 'public', 'terms.html');
+    return res.sendFile(termsPage);
+  });
+
   // Run seed data check lazily
   seedInitialData().catch((err) => {
     console.error('Seed error:', err);

@@ -536,7 +536,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <span>{loading ? 'Conectando con Google…' : 'Continuar con Google'}</span>
                   </button>
                   <p id="auth-privacy-notice" className="text-center text-[11px] leading-relaxed text-stone-500">
-                    Al continuar, consulta nuestra{' '}
+                    Antes de continuar, lee nuestras{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
+                      Condiciones del servicio
+                    </a>
+                    {' '}y la{' '}
                     <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
                       Política de privacidad
                     </a>
