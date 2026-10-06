@@ -2811,7 +2811,10 @@ async function startServer() {
     // so makes stale asset URLs return 200 text/html, which browsers reject as a
     // module script and leaves the entire app blank.
     app.use('/assets', (_req, res) => {
-      res.status(404).type('text/plain').send('Static asset not found');
+      res.status(404)
+        .set('Cache-Control', 'no-store, max-age=0')
+        .type('text/plain')
+        .send('Static asset not found');
     });
 
     app.get('*', async (req, res) => {
