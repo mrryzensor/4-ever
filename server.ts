@@ -2796,13 +2796,37 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath, { index: false }));
+    app.use(express.static(distPath, {
+      index: false,
+      setHeaders: (res, filePath) => {
+        const relativePath = path.relative(distPath, filePath);
+        if (relativePath.startsWith(`assets${path.sep}`)) {
+          // Vite asset names are content-hashed, so they are safe to cache long-term.
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      },
+    }));
+
+    // Don't turn missing JavaScript/CSS assets into the SPA HTML fallback. Doing
+    // so makes stale asset URLs return 200 text/html, which browsers reject as a
+    // module script and leaves the entire app blank.
+    app.use('/assets', (_req, res) => {
+      res.status(404).type('text/plain').send('Static asset not found');
+    });
+
     app.get('*', async (req, res) => {
       try {
         const template = fs.readFileSync(path.join(distPath, 'index.html'), 'utf-8');
         const html = await injectSocialMeta(template, req);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
+        res.status(200).set({
+          'Content-Type': 'text/html',
+          // This document contains dynamic metadata and Vite's current asset
+          // hashes. Revalidate it after deployments so clients don't retain old
+          // bundle URLs that no longer exist.
+          'Cache-Control': 'no-store, max-age=0',
+        }).end(html);
       } catch (e) {
+        res.setHeader('Cache-Control', 'no-store, max-age=0');
         res.sendFile(path.join(distPath, 'index.html'));
       }
     });
