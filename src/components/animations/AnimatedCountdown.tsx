@@ -1176,7 +1176,10 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     settings,
     themeNumberFontFallback,
   );
-  const numberFontStyle = { fontFamily: numberFontFamily };
+  const numberFontStyle = {
+    fontFamily: numberFontFamily,
+    '--countdown-number-font': numberFontFamily,
+  } as React.CSSProperties;
 
   // Sincronized Real-Time Countdown Engine
   const [timeLeft, setTimeLeft] = useState({
