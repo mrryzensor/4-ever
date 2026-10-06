@@ -1072,6 +1072,7 @@ export async function getUserWeddings(ownerUid: string, email = '', isCeoUser = 
             accessEmails: Array.isArray((w as any).accessEmails) ? (w as any).accessEmails : [],
             totalGuests: guestList.length,
             confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
+            confirmedPasses: guestList.reduce((total, g) => total + (g.status === 'confirmed' ? Number(g.confirmedPasses) || 0 : 0), 0),
             coverPhoto: hydrated.coverPhoto,
           };
         })
@@ -1114,6 +1115,7 @@ export async function getUserWeddings(ownerUid: string, email = '', isCeoUser = 
       accessEmails: Array.isArray((w as any).accessEmails) ? (w as any).accessEmails : [],
       totalGuests: guestList.length,
       confirmedGuests: guestList.filter((g) => g.status === 'confirmed').length,
+      confirmedPasses: guestList.reduce((total, g) => total + (g.status === 'confirmed' ? Number(g.confirmedPasses) || 0 : 0), 0),
       coverPhoto: hydrated.coverPhoto,
     };
   });
@@ -1432,6 +1434,63 @@ export async function deleteUserByCeo(uid: string) {
   }
   memoryState.users = memoryState.users.filter((u) => u.uid !== uid);
   return { success: true };
+}
+
+export async function getWeddingUploadAssets() {
+  const assets: Array<{ weddingId: number; url: string }> = [];
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const weddings = await db.select({
+        id: weddingSettings.id,
+        coverPhoto: weddingSettings.coverPhoto,
+        heroPhotos: weddingSettings.heroPhotos,
+      }).from(weddingSettings);
+      const photos = await db.select({
+        weddingId: galleryPhotos.weddingId,
+        url: galleryPhotos.url,
+        thumbnailUrl: galleryPhotos.thumbnailUrl,
+      }).from(galleryPhotos);
+      for (const wedding of weddings) {
+        const weddingId = Number(wedding.id);
+        const add = (url: unknown) => {
+          if (typeof url === 'string' && url.startsWith('/uploads/')) assets.push({ weddingId, url });
+        };
+        add(wedding.coverPhoto);
+        try {
+          const heroPhotos = JSON.parse(String(wedding.heroPhotos || '[]'));
+          if (Array.isArray(heroPhotos)) heroPhotos.forEach(add);
+        } catch { /* Ignore invalid legacy hero-photo JSON. */ }
+      }
+      for (const photo of photos) {
+        const weddingId = Number(photo.weddingId);
+        if (!weddingId) continue;
+        if (typeof photo.url === 'string' && photo.url.startsWith('/uploads/')) assets.push({ weddingId, url: photo.url });
+        if (typeof photo.thumbnailUrl === 'string' && photo.thumbnailUrl.startsWith('/uploads/')) assets.push({ weddingId, url: photo.thumbnailUrl });
+      }
+      return assets;
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'production') throw error;
+    console.warn('Could not index event upload assets:', error);
+  }
+  for (const wedding of memoryState.weddings) {
+    const weddingId = Number(wedding.id);
+    const add = (url: unknown) => {
+      if (typeof url === 'string' && url.startsWith('/uploads/')) assets.push({ weddingId, url });
+    };
+    add(wedding.coverPhoto);
+    try {
+      const heroPhotos = JSON.parse(String(wedding.heroPhotos || '[]'));
+      if (Array.isArray(heroPhotos)) heroPhotos.forEach(add);
+    } catch { /* Ignore invalid legacy hero-photo JSON. */ }
+  }
+  for (const photo of memoryState.gallery) {
+    const weddingId = Number(photo.weddingId);
+    if (!weddingId) continue;
+    if (typeof photo.url === 'string' && photo.url.startsWith('/uploads/')) assets.push({ weddingId, url: photo.url });
+    if (typeof photo.thumbnailUrl === 'string' && photo.thumbnailUrl.startsWith('/uploads/')) assets.push({ weddingId, url: photo.thumbnailUrl });
+  }
+  return assets;
 }
 
 export async function transferWeddingOwnership(weddingId: number, newOwnerUid: string) {

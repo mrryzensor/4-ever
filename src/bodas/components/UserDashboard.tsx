@@ -32,6 +32,7 @@ import { UserProfile, WeddingSummary, PlanId, CardStyle } from '../../types.ts';
 import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
+import { buildInvitationShareMessage, sendInvitationMessage } from '../../lib/invitationSharing.ts';
 
 interface UserDashboardProps {
   user: UserProfile;
@@ -168,13 +169,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
   };
 
-  const handleCopyLink = (slug: string, weddingId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const url = slug ? `${window.location.origin}/${slug}` : `${window.location.origin}/?w=${weddingId}`;
-    navigator.clipboard.writeText(url);
-    setCopiedSlug(slug || String(weddingId));
-    toast.success('Enlace de invitación copiado al portapapeles', 'Enlace Copiado');
-    setTimeout(() => setCopiedSlug(null), 3000);
+  const handleShareInvitation = async (wedding: WeddingSummary, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCopiedSlug(null);
+    const message = buildInvitationShareMessage(wedding, window.location.origin);
+    const result = await sendInvitationMessage(message, 'Invitación de ' + wedding.coupleNames);
+    if (result === 'copied') {
+      const shareKey = wedding.slug || String(wedding.id);
+      setCopiedSlug(shareKey);
+      toast.success('Mensaje con enlace copiado. Ya puedes pegarlo en tu aplicación de mensajería.', 'Listo para compartir');
+      setTimeout(() => setCopiedSlug(null), 3000);
+    } else if (result === 'failed') {
+      toast.error('No se pudo abrir el menú para compartir.', 'Error al compartir');
+    }
   };
 
   const handleSaveClientAssignment = async (e: React.FormEvent) => {
@@ -512,11 +519,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   </button>
 
                   <button
-                    onClick={(e) => handleCopyLink(w.slug, w.id, e)}
+                    onClick={(e) => handleShareInvitation(w, e)}
+                    disabled={Boolean(w.locked)}
                     className="p-2 bg-white hover:bg-stone-100 text-stone-600 rounded-xl border border-stone-200 transition-colors shrink-0"
-                    title="Copiar enlace para compartir"
+                    title={w.locked ? 'Este evento ya no está disponible para compartir' : 'Compartir invitación'}
                   >
-                    {copiedSlug === w.slug ? (
+                    {copiedSlug === (w.slug || String(w.id)) ? (
                       <Check className="w-4 h-4 text-emerald-600" />
                     ) : (
                       <Share2 className="w-4 h-4" />

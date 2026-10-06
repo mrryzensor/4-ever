@@ -87,12 +87,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           <button
             onClick={onCopyInvitationLink}
             className="p-2 sm:px-3 sm:py-1.5 rounded-full bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] text-[#5A5A40] text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-            title="Copiar enlace de la invitación"
+            title="Compartir invitación"
           >
             {copiedLink ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="hidden sm:inline text-emerald-700">¡Copiado!</span>
+                <span className="hidden sm:inline text-emerald-700">¡Mensaje copiado!</span>
               </>
             ) : (
               <>

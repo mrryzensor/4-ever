@@ -52,6 +52,8 @@ const parseHeroPhotos = (settings: WeddingSettings): string[] => {
   return settings.coverPhoto ? [settings.coverPhoto] : [];
 };
 
+const isDrivePhotoUrl = (url: string) => url.startsWith('/api/drive-folders/') && /\/photos\/[^/]+\/thumbnail/.test(url);
+
 export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   settings,
   onChange,
@@ -72,6 +74,9 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   const [pendingDrivePhotoTitleIds, setPendingDrivePhotoTitleIds] = useState<Set<string>>(() => new Set());
 
   const selectionMode = settings.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
+  const maxDrivePhotos = settings.planAccess?.maxDrivePhotos ?? 'unlimited';
+  const usesDrivePhotoLimit = typeof maxDrivePhotos === 'number';
+  const effectiveSelectionMode = usesDrivePhotoLimit ? 'selected' : selectionMode;
   const galleryPhotoIds = useMemo(() => new Set(parsePhotoIds(settings.galleryDrivePhotoIds)), [settings.galleryDrivePhotoIds]);
   const galleryPhotoTitles = drivePhotoTitleDrafts;
   const heroPhotoUrls = useMemo(() => new Set(parseHeroPhotos(settings)), [settings.heroPhotos, settings.coverPhoto]);
@@ -119,12 +124,21 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   };
 
   const isPhotoSelected = (photo: DriveGalleryPhoto) => destination === 'gallery'
-    ? selectionMode === 'all' ? !galleryPhotoIds.has(photo.id) : galleryPhotoIds.has(photo.id)
+    ? effectiveSelectionMode === 'all' ? !galleryPhotoIds.has(photo.id) : galleryPhotoIds.has(photo.id)
     : heroPhotoUrls.has(photo.fullUrl || photo.thumbnailUrl);
 
+  const heroDriveIds = new Set([...heroPhotoUrls].map((url) => url.match(/\/photos\/([^/]+)\/thumbnail/)?.[1]).filter((id): id is string => Boolean(id)));
+  const selectedGalleryDriveIds = effectiveSelectionMode === 'selected'
+    ? galleryPhotoIds
+    : new Set(photos.filter((photo) => !galleryPhotoIds.has(photo.id)).map((photo) => photo.id));
+  const totalSelectedDriveCount = new Set([...heroDriveIds, ...selectedGalleryDriveIds]).size;
+  const selectionLimitReached = usesDrivePhotoLimit && totalSelectedDriveCount >= maxDrivePhotos;
+
   const toggleGalleryPhoto = (photoId: string) => {
+    const alreadySelected = effectiveSelectionMode === 'all' ? !galleryPhotoIds.has(photoId) : galleryPhotoIds.has(photoId);
+    if (!alreadySelected && usesDrivePhotoLimit && totalSelectedDriveCount >= maxDrivePhotos) return;
     const nextIds = new Set(galleryPhotoIds);
-    if (selectionMode === 'all') {
+    if (effectiveSelectionMode === 'all') {
       if (nextIds.has(photoId)) nextIds.delete(photoId);
       else nextIds.add(photoId);
     } else if (nextIds.has(photoId)) {
@@ -133,23 +147,31 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
       nextIds.add(photoId);
     }
     onChange({
-      galleryDrivePhotoSelectionMode: selectionMode,
+      galleryDrivePhotoSelectionMode: effectiveSelectionMode,
       galleryDrivePhotoIds: JSON.stringify([...nextIds]),
     });
   };
 
   const toggleHeroPhoto = (photo: DriveGalleryPhoto) => {
     const current = parseHeroPhotos(settings);
+    const editableCurrent = usesDrivePhotoLimit ? current.filter(isDrivePhotoUrl) : current;
     const imageUrl = photo.fullUrl || photo.thumbnailUrl;
-    const exists = current.includes(imageUrl);
-    if (exists && current.length <= 1) return;
+    const exists = editableCurrent.includes(imageUrl);
+    if (!exists && usesDrivePhotoLimit && totalSelectedDriveCount >= maxDrivePhotos) return;
+    if (exists && editableCurrent.length <= 1 && !usesDrivePhotoLimit) return;
     const updated = exists
-      ? current.filter((url) => url !== imageUrl)
-      : [...current, imageUrl];
-    const nextCover = settings.coverPhoto === imageUrl
+      ? editableCurrent.filter((url) => url !== imageUrl)
+      : [...editableCurrent, imageUrl];
+    const currentCover = usesDrivePhotoLimit && !isDrivePhotoUrl(String(settings.coverPhoto || ''))
+      ? ''
+      : String(settings.coverPhoto || '');
+    const nextCover = currentCover === imageUrl
       ? (updated[0] || '')
-      : (settings.coverPhoto || updated[0] || '');
-    onChange({ heroPhotos: JSON.stringify(updated), ...(nextCover ? { coverPhoto: nextCover } : {}) });
+      : (currentCover || updated[0] || '');
+    onChange({
+      heroPhotos: JSON.stringify(updated),
+      ...(usesDrivePhotoLimit ? { coverPhoto: nextCover } : nextCover ? { coverPhoto: nextCover } : {}),
+    });
   };
 
   const handleDrivePhotoTitleChange = (photoId: string, title: string) => {
@@ -168,6 +190,7 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   };
 
   const setVisibleGalleryPhotos = (select: boolean) => {
+    if (usesDrivePhotoLimit && select) return;
     const nextIds = new Set(galleryPhotoIds);
     for (const photo of photos) {
       if (selectionMode === 'all') {
@@ -183,7 +206,7 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
   };
 
   const activeGalleryCount = selectionMode === 'all'
-    ? (galleryPhotoIds.size ? `Todas, menos ${galleryPhotoIds.size}` : 'Todas las fotos')
+    ? (usesDrivePhotoLimit ? `${galleryPhotoIds.size} seleccionadas` : galleryPhotoIds.size ? `Todas, menos ${galleryPhotoIds.size}` : 'Todas las fotos')
     : `${galleryPhotoIds.size} seleccionadas`;
   const activeHeroCount = `${heroPhotoUrls.size} en portada`;
 
@@ -213,11 +236,11 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {destination === 'gallery' ? <>
+            {destination === 'gallery' && !usesDrivePhotoLimit ? <>
               <button type="button" onClick={() => onChange({ galleryDrivePhotoSelectionMode: 'all', galleryDrivePhotoIds: '[]' })} className="rounded-lg border border-[#E5E2D0] bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50">Marcar todas del álbum</button>
               <button type="button" onClick={() => onChange({ galleryDrivePhotoSelectionMode: 'selected', galleryDrivePhotoIds: '[]' })} className="rounded-lg border border-[#E5E2D0] bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 hover:bg-stone-50">Desmarcar todas</button>
               {photos.length > 0 && <button type="button" onClick={() => setVisibleGalleryPhotos(!photos.every((photo) => isPhotoSelected(photo)))} className="rounded-lg border border-[#E5E2D0] bg-white px-3 py-1.5 text-xs text-stone-600 hover:bg-stone-50">{photos.every((photo) => isPhotoSelected(photo)) ? 'Desmarcar esta carpeta' : 'Marcar esta carpeta'}</button>}
-            </> : <p className="self-center text-xs text-stone-500">Las fotos marcadas se agregan al pase automático de portada.</p>}
+            </> : <p className="self-center text-xs text-stone-500">{usesDrivePhotoLimit ? `Selecciona hasta ${maxDrivePhotos} fotos entre la galería y el hero (${Math.min(totalSelectedDriveCount, maxDrivePhotos)} elegidas).` : 'Las fotos marcadas se agregan al pase automático de portada.'}</p>}
           </div>
         </div>
 
@@ -255,7 +278,7 @@ export const DrivePhotoPicker: React.FC<DrivePhotoPickerProps> = ({
                     const fallbackTitle = getDrivePhotoFallbackTitle(photo.name);
                     const photoTitle = galleryPhotoTitles[photo.id] ?? fallbackTitle;
                     return <div key={photo.id} className="min-w-0 space-y-1.5">
-                      <button type="button" onClick={() => destination === 'gallery' ? toggleGalleryPhoto(photo.id) : toggleHeroPhoto(photo)} className={`group relative aspect-square w-full overflow-hidden rounded-xl border-2 text-left transition ${selected ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/15' : 'border-transparent hover:border-stone-300'}`} aria-pressed={selected} title={photoTitle}>
+                      <button type="button" onClick={() => destination === 'gallery' ? toggleGalleryPhoto(photo.id) : toggleHeroPhoto(photo)} disabled={!selected && selectionLimitReached} className={`group relative aspect-square w-full overflow-hidden rounded-xl border-2 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${selected ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/15' : 'border-transparent hover:border-stone-300'}`} aria-pressed={selected} title={photoTitle}>
                         <img src={photo.thumbnailUrl} alt={photoTitle} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                         <span className={`absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md shadow ${selected ? 'bg-[#5A5A40] text-white' : 'bg-white/90 text-stone-500'}`}><Check className="h-4 w-4" /></span>
                         <span className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-6 text-[10px] text-white">{photoTitle}</span>

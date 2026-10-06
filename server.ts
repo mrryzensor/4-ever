@@ -9,6 +9,7 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { createServer as createViteServer } from 'vite';
 import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
+import { SUBSCRIPTION_PLANS } from './src/data/plans.ts';
 import {
   getWeddingSettings,
   updateWeddingSettings,
@@ -19,6 +20,7 @@ import {
   createWedding,
   deleteWedding,
   getAllGuests,
+  getWeddingUploadAssets,
   getGuestById,
   getGuestByCode,
   createGuest,
@@ -107,7 +109,9 @@ const storage = multer.diskStorage({
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname).toLowerCase() || '.dat';
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    const weddingId = Number((_req as any).body?.weddingId);
+    const eventPrefix = Number.isSafeInteger(weddingId) && weddingId > 0 ? `w${weddingId}-` : '';
+    cb(null, `${eventPrefix}${file.fieldname}-${uniqueSuffix}${ext}`);
   },
 });
 
@@ -132,9 +136,6 @@ async function startServer() {
   // Body parsers
   app.use(express.json({ limit: '20mb' }));
   app.use(express.urlencoded({ extended: true, limit: '20mb' }));
-
-  // Serve persistent uploads directory
-  app.use('/uploads', express.static(uploadsDir));
 
   // Serve the public privacy policy as a standalone page for visitors and OAuth review.
   app.get(['/privacy', '/privacy/'], (_req, res) => {
@@ -350,21 +351,212 @@ async function startServer() {
     const wedding = await getWeddingSettings(weddingId);
     const isCeo = identity.role === 'ceo' || identity.email === CEO_EMAIL;
     if (!wedding) return { identity, wedding: null, allowed: false, owner: false, isDemo: false, isCeo };
+    const planAccess = await eventPlanAccess(wedding, isCeo);
     const isDemo = isDemoWeddingRecord(wedding);
     const owner = identity.uid === wedding.ownerUid;
     const isPrivileged = identity.role === 'ceo' || identity.role === 'admin';
     const accessEmails = (Array.isArray((wedding as any).accessEmails) ? (wedding as any).accessEmails : []) as string[];
-    const allowedEmails = [
+    const rawAllowedEmails = [
       ...accessEmails,
       ...(!isDemo ? [String((wedding as any).clientEmail || '')] : []),
     ].map((value) => value.trim().toLowerCase()).filter(Boolean);
+    const uniqueAllowedEmails = [...new Set(rawAllowedEmails)];
+    const allowedEmails = planAccess.maxEditors === 'unlimited'
+      ? uniqueAllowedEmails
+      : uniqueAllowedEmails.slice(0, Math.max(0, planAccess.maxEditors - 1));
     const assigned = Boolean(identity.email && allowedEmails.includes(identity.email));
-    const allowed = isDemo ? isCeo || assigned : owner || isPrivileged || assigned;
-    return { identity, wedding, allowed: Boolean(allowed), owner, isDemo, isCeo };
+    const allowed = (isDemo ? isCeo || assigned : owner || isPrivileged || assigned) && planAccess.canEdit;
+    return { identity, wedding, allowed: Boolean(allowed), owner, isDemo, isCeo, planAccess };
   };
 
   const rejectMissingIdentity = (res: any) => res.status(401).json({ error: 'Inicia sesión para continuar.' });
   const rejectWeddingAccess = (res: any) => res.status(403).json({ error: 'No tienes acceso para editar este evento.' });
+  const eventMutationQueues = new Map<number, Promise<void>>();
+  const withEventMutationLock = async <T>(weddingId: number, action: () => Promise<T>): Promise<T> => {
+    const previous = eventMutationQueues.get(weddingId) || Promise.resolve();
+    let release = () => {};
+    const current = new Promise<void>((resolve) => { release = resolve; });
+    const queued = previous.then(() => current);
+    eventMutationQueues.set(weddingId, queued);
+    await previous;
+    try {
+      return await action();
+    } finally {
+      release();
+      if (eventMutationQueues.get(weddingId) === queued) eventMutationQueues.delete(weddingId);
+    }
+  };
+
+  const planDetailsFor = (planId: string) => SUBSCRIPTION_PLANS.find((plan) => plan.id === planId)
+    || SUBSCRIPTION_PLANS.find((plan) => plan.id === 'free')!;
+  const uploadedHeroPhotoCount = (wedding: any) => {
+    const urls = new Set<string>();
+    const addIfUploaded = (value: unknown) => {
+      if (typeof value === 'string' && (value.startsWith('/uploads/') || value.startsWith('data:'))) urls.add(value);
+    };
+    addIfUploaded(wedding?.coverPhoto);
+    try {
+      const heroPhotos = JSON.parse(String(wedding?.heroPhotos || '[]'));
+      if (Array.isArray(heroPhotos)) heroPhotos.forEach(addIfUploaded);
+    } catch { /* Ignore invalid legacy hero photo lists. */ }
+    return urls.size;
+  };
+  const eventPlanAccess = async (wedding: any, isCeo = false, includeUsage = false) => {
+    const demoEvent = isDemoWeddingRecord(wedding);
+    const owner = wedding?.ownerUid ? await getUserProfile(String(wedding.ownerUid)) : null;
+    const isUnrestrictedEvent = isCeo || demoEvent || owner?.role === 'ceo';
+    const planId = isUnrestrictedEvent ? 'ceo_unlimited' : String(owner?.plan || 'free');
+    const plan = planDetailsFor(planId);
+    const limits = plan.limits;
+    const dateOnly = (value: unknown) => {
+      if (value instanceof Date) return value.toISOString().slice(0, 10);
+      const match = String(value || '').match(/^(\d{4}-\d{2}-\d{2})/);
+      return match?.[1] || '';
+    };
+    const limaToday = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
+    const eventDate = dateOnly(wedding?.eventDate);
+    const rsvpDeadline = dateOnly(wedding?.rsvpDeadline) || eventDate;
+    const addYears = (date: string, years: number) => {
+      if (!date || !years) return date;
+      const [year, month, day] = date.split('-').map(Number);
+      const targetYear = year + years;
+      const targetDay = Math.min(day, new Date(Date.UTC(targetYear, month, 0)).getUTCDate());
+      return `${targetYear}-${String(month).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+    };
+    let lockedReason: 'rsvp-deadline' | 'event-ended' | 'retention-expired' | undefined;
+    if (!demoEvent && limits.retentionYears !== 'unlimited') {
+      if (limits.retentionYears === 0) {
+        const cutoff = !eventDate ? '' : (rsvpDeadline && rsvpDeadline < eventDate ? rsvpDeadline : eventDate);
+        if (cutoff && limaToday > cutoff) lockedReason = rsvpDeadline && rsvpDeadline <= eventDate ? 'rsvp-deadline' : 'event-ended';
+      } else if (eventDate) {
+        const expiresOn = addYears(eventDate, limits.retentionYears);
+        if (limaToday > expiresOn) lockedReason = 'retention-expired';
+      }
+    }
+    const locked = Boolean(lockedReason);
+    const canEdit = !locked && (limits.retentionYears === 'unlimited' || limits.retentionYears === 0 || !eventDate || limaToday < eventDate);
+    const confirmed = includeUsage ? await getAllGuests(undefined, undefined, Number(wedding?.id) || 1) : [];
+    const confirmedPasses = confirmed.reduce((total, guest) => total + (guest.status === 'confirmed' ? Number(guest.confirmedPasses) || 0 : 0), 0);
+    const uploadedPhotos = includeUsage ? await getGalleryPhotos(undefined, Number(wedding?.id) || 1) : [];
+    const uploadedPhotoCount = uploadedPhotos.length + uploadedHeroPhotoCount(wedding);
+    const canConfirm = limits.maxConfirmations === 'unlimited' || confirmedPasses < limits.maxConfirmations;
+    const messages = {
+      'rsvp-deadline': 'El periodo incluido en tu plan gratuito terminó al pasar la fecha límite de confirmación. Mejora tu suscripción para recuperar el acceso al evento.',
+      'event-ended': 'El evento de tu plan gratuito ya finalizó. Mejora tu suscripción para recuperar el acceso.',
+      'retention-expired': 'Terminó el periodo de acceso incluido en tu plan. Mejora tu suscripción para recuperar el evento.',
+    } as const;
+    return {
+      plan: plan.id,
+      maxConfirmations: limits.maxConfirmations,
+      confirmedPasses,
+      uploadedPhotoCount,
+      maxEditors: limits.maxEditors,
+      maxUploadedPhotos: limits.maxUploadedPhotos,
+      maxDrivePhotos: limits.maxDrivePhotos,
+      maxWeddings: plan.maxWeddings,
+      advancedEditor: limits.advancedEditor,
+      drivePhotoSelection: limits.drivePhotoSelection,
+      canEdit,
+      canView: !locked,
+      readOnly: !locked && !canEdit,
+      locked,
+      lockedReason,
+      confirmationLimitReached: !canConfirm,
+      canConfirm,
+      upgradeMessage: lockedReason ? messages[lockedReason] : undefined,
+      upgradeCta: 'Mejorar suscripción',
+    };
+  };
+  let uploadedPhotoOwnerCache: { expiresAt: number; byUrl: Map<string, Set<number>> } | null = null;
+  const getUploadedPhotoOwnerMap = async () => {
+    if (uploadedPhotoOwnerCache && uploadedPhotoOwnerCache.expiresAt > Date.now()) return uploadedPhotoOwnerCache.byUrl;
+    const byUrl = new Map<string, Set<number>>();
+    for (const asset of await getWeddingUploadAssets()) {
+      const eventIds = byUrl.get(asset.url) || new Set<number>();
+      eventIds.add(asset.weddingId);
+      byUrl.set(asset.url, eventIds);
+    }
+    uploadedPhotoOwnerCache = { expiresAt: Date.now() + 60_000, byUrl };
+    return byUrl;
+  };
+
+  // Upload URLs are referenced directly by invitations, so protect those too
+  // after a plan's viewing window expires. New uploads encode their event ID;
+  // older file URLs are matched against saved hero and gallery records.
+  app.use('/uploads', async (req, res, next) => {
+    try {
+      let assetUrl = `${req.baseUrl}${req.path}`;
+      try { assetUrl = decodeURIComponent(assetUrl); } catch { /* Keep the encoded URL for static handling. */ }
+      const filename = assetUrl.slice('/uploads/'.length);
+      const scopedWeddingId = /^w(\d+)-/.exec(filename)?.[1];
+      const eventIds = new Set<number>();
+      if (scopedWeddingId) eventIds.add(Number(scopedWeddingId));
+      const mappedEventIds = (await getUploadedPhotoOwnerMap()).get(assetUrl);
+      mappedEventIds?.forEach((id) => eventIds.add(id));
+      if (eventIds.size > 0) {
+        const access = await Promise.all([...eventIds].map(async (weddingId) => {
+          const wedding = await getWeddingSettings(weddingId);
+          return wedding ? eventPlanAccess(wedding) : null;
+        }));
+        if (access.length > 0 && access.every((item) => !item || item.locked)) {
+          return res.status(403).send('El periodo de acceso a esta invitación terminó.');
+        }
+      }
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  });
+  app.use('/uploads', express.static(uploadsDir));
+
+  const enforceRsvpPlanLimit = async (
+    weddingId: number,
+    status: string,
+    requestedPasses: number,
+    guest?: any,
+    isEdit = false,
+  ) => {
+    const wedding = await getWeddingSettings(weddingId);
+    if (!wedding) throw new RsvpAvailabilityError('register', 'No se encontró este evento.');
+    const planAccess = await eventPlanAccess(wedding, false, true);
+    if (!planAccess.canView || planAccess.readOnly) {
+      throw new RsvpAvailabilityError('register', planAccess.upgradeMessage || 'El evento ya está en modo de visualización y no acepta cambios.');
+    }
+    if (status !== 'confirmed' || planAccess.maxConfirmations === 'unlimited') return;
+    const existingPasses = guest?.status === 'confirmed' ? Number(guest.confirmedPasses) || 0 : 0;
+    const totalAfterResponse = planAccess.confirmedPasses - existingPasses + Math.max(1, Math.trunc(requestedPasses || 1));
+    if (totalAfterResponse > planAccess.maxConfirmations) {
+      const action: 'register' | 'edit' = isEdit ? 'edit' : 'register';
+      throw new RsvpAvailabilityError(action, `Este evento alcanzó el máximo de ${planAccess.maxConfirmations} confirmaciones incluidas en el plan. Los anfitriones pueden mejorar su suscripción para aceptar más respuestas.`);
+    }
+  };
+
+  // Any public event API carrying an event ID shares the same hard expiration
+  // gate as the invitation config, so old gallery/Drive/API links cannot keep
+  // exposing an event after its subscription window ends.
+  app.use('/api', async (req, res, next) => {
+    try {
+      const pathname = req.path.toLowerCase();
+      if (
+        pathname.startsWith('/auth/') || pathname.startsWith('/user/') || pathname.startsWith('/admin/') ||
+        pathname === '/plans' || pathname === '/health' || pathname === '/upload'
+      ) return next();
+      const rawId = req.query.weddingId ?? req.body?.weddingId ?? req.body?.id;
+      const weddingId = Number(rawId);
+      let wedding: any = null;
+      if (Number.isSafeInteger(weddingId) && weddingId > 0) wedding = await getWeddingSettings(weddingId);
+      else if (pathname === '/wedding-config' && typeof req.query.slug === 'string') wedding = await getWeddingSettings(req.query.slug);
+      if (!wedding) return next();
+      const identity = await resolveRequestIdentity(req);
+      const planAccess = await eventPlanAccess(wedding, identity?.role === 'ceo' || identity?.email === CEO_EMAIL);
+      if (planAccess.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  });
 
   // ----------------------------------------------------
   // AUTHENTICATION API ENDPOINTS
@@ -892,8 +1084,41 @@ async function startServer() {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
-      const list = await getUserWeddings(identity.uid, identity.email, identity.role === 'ceo' || identity.email === CEO_EMAIL);
-      res.json(list);
+      const isCeo = identity.role === 'ceo' || identity.email === CEO_EMAIL;
+      const list = await getUserWeddings(identity.uid, identity.email, isCeo);
+      const withPlanAccess = await Promise.all(list.map(async (item: any) => {
+        const wedding = await getWeddingSettings(Number(item.id));
+        const planAccess = wedding ? await eventPlanAccess(wedding, isCeo, true) : null;
+        if (planAccess?.locked) {
+          return {
+            id: item.id,
+            ownerUid: item.ownerUid,
+            ownerEmail: item.ownerEmail,
+            ownerName: item.ownerName,
+            eventType: item.eventType,
+            coupleNames: item.coupleNames,
+            eventDate: item.eventDate,
+            slug: item.slug,
+            cardStyle: item.cardStyle,
+            isPublished: false,
+            totalGuests: 0,
+            confirmedGuests: 0,
+            confirmedPasses: 0,
+            status: item.status,
+            locked: true,
+            lockedReason: planAccess.lockedReason,
+            upgradeMessage: planAccess.upgradeMessage,
+          };
+        }
+        return {
+          ...item,
+          eventTime: wedding?.eventTime,
+          shareMessageTemplate: wedding?.shareMessageTemplate,
+          confirmedPasses: planAccess?.confirmedPasses || 0,
+          planAccess,
+        };
+      }));
+      res.json(withPlanAccess);
     } catch (error: any) {
       console.error('Failed to get user weddings:', error);
       res.status(500).json({ error: error.message || 'Error fetching weddings' });
@@ -906,9 +1131,24 @@ async function startServer() {
       if (!identity) return rejectMissingIdentity(res);
       const profile = await getUserProfile(identity.uid);
       const isPrivileged = identity.role === 'ceo' || identity.role === 'admin' || identity.email === CEO_EMAIL;
-      const hasActivePlan = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'].includes(String(profile?.plan || ''));
+      const activePlanId = String(profile?.plan || '');
+      const hasActivePlan = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'].includes(activePlanId);
       if (!isPrivileged && !hasActivePlan) {
         return res.status(403).json({ error: 'Tu cuenta está registrada, pero aún no tiene un plan activo para crear eventos. Elige un plan para continuar.' });
+      }
+      const accountPlan = planDetailsFor(isPrivileged ? 'ceo_unlimited' : activePlanId);
+      if (!isPrivileged && accountPlan.maxWeddings !== 'unlimited') {
+        const ownedEvents = await getUserWeddings(identity.uid, identity.email, false);
+        const countableEvents = ownedEvents.filter((item: any) => item.ownerUid === identity.uid && (
+          accountPlan.category !== 'planner' || !['completed', 'archived', 'deleted'].includes(String(item.status || '').toLowerCase())
+        ));
+        if (countableEvents.length >= accountPlan.maxWeddings) {
+          return res.status(403).json({
+            error: `Tu plan permite hasta ${accountPlan.maxWeddings} evento${accountPlan.maxWeddings === 1 ? '' : 's'} activo${accountPlan.maxWeddings === 1 ? '' : 's'}. Mejora tu suscripción para crear otro.`,
+            upgradeRequired: true,
+            upgradeCta: 'Mejorar suscripción',
+          });
+        }
       }
       const uid = identity.uid;
       const { coupleNames, eventDate, eventTime, cardStyle, ceremonyVenue, receptionVenue, eventType } = req.body;
@@ -941,6 +1181,7 @@ async function startServer() {
       const id = parseInt(req.params.id, 10);
       const access = await resolveWeddingAccess(req, id);
       if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
       if (!access.owner && access.identity.role !== 'ceo' && access.identity.role !== 'admin') {
         return rejectWeddingAccess(res);
       }
@@ -968,6 +1209,18 @@ async function startServer() {
       const emails = [...new Set(rawEmails.map((value: string) => value.trim().toLowerCase()).filter(Boolean))];
       const invalidEmail = emails.find((value) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
       if (invalidEmail) return res.status(400).json({ error: `El correo "${invalidEmail}" no es válido.` });
+      if (!access.owner && !access.isCeo && access.identity.role !== 'admin') return rejectWeddingAccess(res);
+      const maxEditors = access.planAccess?.maxEditors ?? 1;
+      const additionalEditorLimit = maxEditors === 'unlimited' ? 'unlimited' : Math.max(0, maxEditors - 1);
+      if (additionalEditorLimit !== 'unlimited' && emails.length > additionalEditorLimit) {
+        return res.status(403).json({
+          error: additionalEditorLimit === 0
+            ? 'El plan gratuito sólo permite editar al correo propietario del evento. Mejora tu suscripción para añadir colaboradores.'
+            : `Este plan permite hasta ${maxEditors} personas con acceso de edición, contando al propietario. Mejora tu suscripción para añadir más.`,
+          upgradeRequired: true,
+          upgradeCta: 'Mejorar suscripción',
+        });
+      }
 
       const wedding = await updateWeddingAccessEmails(id, emails);
       return res.json({ success: true, accessEmails: wedding.accessEmails || emails });
@@ -985,7 +1238,28 @@ async function startServer() {
       if (identifier && !config) {
         return res.status(404).json({ error: 'Evento no encontrado' });
       }
-      res.json(config);
+      if (!config) return res.json(config);
+      const planAccess = await eventPlanAccess(config, false, true);
+      if (planAccess.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
+      const publicConfig: any = { ...config, planAccess };
+      if (planAccess.maxUploadedPhotos === 0) {
+        if (String(publicConfig.coverPhoto || '').startsWith('/uploads/') || String(publicConfig.coverPhoto || '').startsWith('data:')) publicConfig.coverPhoto = '';
+        try {
+          const heroPhotos = JSON.parse(String(publicConfig.heroPhotos || '[]'));
+          if (Array.isArray(heroPhotos)) publicConfig.heroPhotos = JSON.stringify(heroPhotos.filter((url) => typeof url === 'string' && !url.startsWith('/uploads/') && !url.startsWith('data:')));
+        } catch { publicConfig.heroPhotos = '[]'; }
+        if (planAccess.maxDrivePhotos !== 'unlimited') {
+          try {
+            const selectedDriveIds = JSON.parse(String(publicConfig.galleryDrivePhotoIds || '[]'));
+            publicConfig.galleryDrivePhotoIds = JSON.stringify(Array.isArray(selectedDriveIds) ? selectedDriveIds.slice(0, planAccess.maxDrivePhotos) : []);
+            publicConfig.galleryDrivePhotoSelectionMode = 'selected';
+          } catch {
+            publicConfig.galleryDrivePhotoIds = '[]';
+            publicConfig.galleryDrivePhotoSelectionMode = 'selected';
+          }
+        }
+      }
+      return res.json(publicConfig);
     } catch (error: any) {
       console.error('Failed to get wedding config:', error);
       res.status(500).json({ error: error.message || 'Error fetching config' });
@@ -999,8 +1273,89 @@ async function startServer() {
       const access = await resolveWeddingAccess(req, targetId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
-      const updated = await updateWeddingSettings(req.body, targetId);
-      res.json(updated);
+      const settingsToUpdate = { ...req.body };
+      if (settingsToUpdate.shareMessageTemplate !== undefined) {
+        if (typeof settingsToUpdate.shareMessageTemplate !== 'string') {
+          return res.status(400).json({ error: 'El mensaje para compartir debe ser texto.' });
+        }
+        settingsToUpdate.shareMessageTemplate = settingsToUpdate.shareMessageTemplate.slice(0, 2000);
+      }
+      if (access.planAccess && !access.planAccess.advancedEditor) {
+        const basicFields = new Set([
+          'coupleNames', 'eventDate', 'eventTime', 'ceremonyVenue', 'ceremonyAddress', 'ceremonyMapsUrl',
+          'ceremonyTime', 'receptionVenue', 'receptionAddress', 'receptionSameAsCeremony', 'receptionMapsUrl',
+          'receptionTime', 'dressCode', 'dressCodeDescription', 'contactPhone', 'contactEmail', 'rsvpDeadline',
+          'rsvpAllowRegistration', 'rsvpAllowEdit', 'rsvpMaxCompanions', 'rsvpOpenRegistrationEnabled',
+          'rsvpOpenRegistrationButtonText', 'rsvpOpenRegistrationTitle', 'rsvpOpenRegistrationDescription',
+          'rsvpRegistrationCutoffMode', 'rsvpRegistrationCutoffAt', 'rsvpEditCutoffMode', 'rsvpEditCutoffAt',
+          'rsvpCutoffTimeZone', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpCompanionToggleText',
+          'shareMessageTemplate',
+          'galleryExternalAlbumUrl', 'galleryExternalAlbumTitle', 'galleryExternalAlbumType',
+          'galleryDrivePhotoSelectionMode', 'galleryDrivePhotoIds', 'galleryDrivePhotoTitles',
+          'heroPhotos', 'coverPhoto',
+        ]);
+        const filtered = Object.fromEntries(Object.entries(settingsToUpdate).filter(([key]) => basicFields.has(key)));
+        const maxDrivePhotos = access.planAccess.maxDrivePhotos;
+        if (typeof maxDrivePhotos === 'number') {
+          try {
+            const isDrivePhotoUrl = (value: unknown) => typeof value === 'string'
+              && value.startsWith('/api/drive-folders/')
+              && /\/photos\/[^/]+\/thumbnail/.test(value);
+            const parsedIds = JSON.parse(String(filtered.galleryDrivePhotoIds ?? access.wedding.galleryDrivePhotoIds ?? '[]'));
+            const heroPhotoValue = filtered.heroPhotos ?? access.wedding.heroPhotos ?? '[]';
+            const heroPhotos = JSON.parse(String(heroPhotoValue));
+            const selectionMode = String(filtered.galleryDrivePhotoSelectionMode ?? access.wedding.galleryDrivePhotoSelectionMode ?? 'all');
+            const galleryIds = Array.isArray(parsedIds) && selectionMode === 'selected' ? parsedIds : [];
+            const heroPhotosChanged = Object.prototype.hasOwnProperty.call(settingsToUpdate, 'heroPhotos')
+              && String(settingsToUpdate.heroPhotos) !== String(access.wedding.heroPhotos || '[]');
+            if (heroPhotosChanged && Array.isArray(heroPhotos) && heroPhotos.some((url) => !isDrivePhotoUrl(url))) {
+              return res.status(403).json({ error: 'El plan gratuito sólo permite fotos de la carpeta compartida de Google Drive.', upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+            }
+            if (Object.prototype.hasOwnProperty.call(settingsToUpdate, 'coverPhoto')
+              && String(settingsToUpdate.coverPhoto || '') !== String(access.wedding.coverPhoto || '')
+              && String(settingsToUpdate.coverPhoto || '')
+              && !isDrivePhotoUrl(settingsToUpdate.coverPhoto)) {
+              return res.status(403).json({ error: 'El plan gratuito sólo permite elegir fotos de la carpeta compartida de Google Drive.', upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+            }
+            const heroIds = Array.isArray(heroPhotos)
+              ? heroPhotos.map((url) => typeof url === 'string' ? url.match(/\/photos\/([^/]+)\/thumbnail/)?.[1] : null).filter((id): id is string => Boolean(id))
+              : [];
+            const coverDriveId = isDrivePhotoUrl(filtered.coverPhoto ?? access.wedding.coverPhoto)
+              ? String(filtered.coverPhoto ?? access.wedding.coverPhoto).match(/\/photos\/([^/]+)\/thumbnail/)?.[1]
+              : null;
+            const selectedCount = new Set([...galleryIds, ...heroIds, ...(coverDriveId ? [coverDriveId] : [])]).size;
+            if (selectedCount > maxDrivePhotos) return res.status(403).json({ error: `El plan gratuito permite elegir hasta ${maxDrivePhotos} fotos de Google Drive entre el hero y la galería.`, upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+            filtered.galleryDrivePhotoIds = JSON.stringify(galleryIds.slice(0, maxDrivePhotos));
+            filtered.galleryDrivePhotoSelectionMode = 'selected';
+            if (Array.isArray(heroPhotos)) filtered.heroPhotos = JSON.stringify(heroPhotos);
+          } catch {
+            return res.status(400).json({ error: 'La selección de fotos de Drive no es válida.' });
+          }
+        }
+        const updated = await updateWeddingSettings(filtered, targetId);
+        uploadedPhotoOwnerCache = null;
+        const updatedPlanAccess = await eventPlanAccess(updated, access.isCeo, true);
+        return res.json({ ...updated, planAccess: updatedPlanAccess });
+      }
+      if (access.planAccess && typeof access.planAccess.maxUploadedPhotos === 'number') {
+        const existingPhotos = await getGalleryPhotos(undefined, targetId);
+        const proposedHeroAssets = uploadedHeroPhotoCount({
+          ...access.wedding,
+          coverPhoto: settingsToUpdate.coverPhoto ?? access.wedding.coverPhoto,
+          heroPhotos: settingsToUpdate.heroPhotos ?? access.wedding.heroPhotos,
+        });
+        if (existingPhotos.length + proposedHeroAssets > access.planAccess.maxUploadedPhotos) {
+          return res.status(403).json({
+            error: `Este plan permite hasta ${access.planAccess.maxUploadedPhotos} fotos subidas entre la portada y la galería. Mejora tu suscripción para añadir más.`,
+            upgradeRequired: true,
+            upgradeCta: 'Mejorar suscripción',
+          });
+        }
+      }
+      const updated = await updateWeddingSettings(settingsToUpdate, targetId);
+      uploadedPhotoOwnerCache = null;
+      const updatedPlanAccess = await eventPlanAccess(updated, access.isCeo, true);
+      res.json({ ...updated, planAccess: updatedPlanAccess });
     } catch (error: any) {
       console.error('Failed to update wedding config:', error);
       res.status(500).json({ error: error.message || 'Error updating config' });
@@ -1046,14 +1401,19 @@ async function startServer() {
 
   app.post('/api/guests', async (req, res) => {
     try {
-      const access = await resolveWeddingAccess(req, Number(req.body?.weddingId || DEMO_WEDDING_ID));
+      const weddingId = Number(req.body?.weddingId || DEMO_WEDDING_ID);
+      const access = await resolveWeddingAccess(req, weddingId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
-      const created = await createGuest(req.body);
+      const created = await withEventMutationLock(weddingId, async () => {
+        await enforceRsvpPlanLimit(weddingId, String(req.body?.status || 'pending'), Number(req.body?.confirmedPasses) || 1);
+        return createGuest(req.body);
+      });
       res.status(201).json(created);
     } catch (error: any) {
       console.error('Failed to create guest:', error);
-      res.status(500).json({ error: error.message || 'Error creating guest' });
+      const upgradeRequired = String(error?.message || '').includes('máximo de');
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error creating guest', ...(upgradeRequired ? { upgradeRequired: true, upgradeCta: 'Mejorar suscripción' } : {}) });
     }
   });
 
@@ -1070,11 +1430,28 @@ async function startServer() {
       const access = await resolveWeddingAccess(req, weddingId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
-      const created = await createGuestsBulk(guestList);
+      const created = await withEventMutationLock(weddingId, async () => {
+        const wedding = await getWeddingSettings(weddingId);
+        if (!wedding) throw new RsvpAvailabilityError('register', 'No se encontró este evento.');
+        const planAccess = await eventPlanAccess(wedding, false, true);
+        if (!planAccess.canView || planAccess.readOnly) {
+          throw new RsvpAvailabilityError('register', planAccess.upgradeMessage || 'El evento ya está en modo de visualización y no acepta cambios.');
+        }
+        if (planAccess.maxConfirmations !== 'unlimited') {
+          const requestedPasses = guestList.reduce((total: number, guest: any) => (
+            total + (String(guest?.status || 'pending') === 'confirmed' ? Math.max(1, Math.trunc(Number(guest?.confirmedPasses) || 1)) : 0)
+          ), 0);
+          if (planAccess.confirmedPasses + requestedPasses > planAccess.maxConfirmations) {
+            throw new RsvpAvailabilityError('register', `La importación supera el máximo de ${planAccess.maxConfirmations} confirmaciones incluidas en este plan. Mejora la suscripción para aceptar más respuestas.`);
+          }
+        }
+        return createGuestsBulk(guestList);
+      });
       res.status(201).json({ success: true, count: created.length, guests: created });
     } catch (error: any) {
       console.error('Failed to bulk create guests:', error);
-      res.status(500).json({ error: error.message || 'Error importando invitados' });
+      const upgradeRequired = String(error?.message || '').includes('máximo de') || String(error?.message || '').includes('supera el máximo');
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error importando invitados', ...(upgradeRequired ? { upgradeRequired: true, upgradeCta: 'Mejorar suscripción' } : {}) });
     }
   });
 
@@ -1087,11 +1464,21 @@ async function startServer() {
       const access = await resolveWeddingAccess(req, weddingId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
-      const updated = await updateGuest(id, { ...req.body, weddingId } as any);
+      const updated = await withEventMutationLock(weddingId, async () => {
+        await enforceRsvpPlanLimit(
+          weddingId,
+          String(req.body?.status ?? currentGuest.status ?? 'pending'),
+          Number(req.body?.confirmedPasses ?? currentGuest.confirmedPasses) || 1,
+          currentGuest,
+          true,
+        );
+        return updateGuest(id, { ...req.body, weddingId } as any);
+      });
       res.json(updated);
     } catch (error: any) {
       console.error('Failed to update guest:', error);
-      res.status(500).json({ error: error.message || 'Error updating guest' });
+      const upgradeRequired = String(error?.message || '').includes('máximo de');
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error updating guest', ...(upgradeRequired ? { upgradeRequired: true, upgradeCta: 'Mejorar suscripción' } : {}) });
     }
   });
 
@@ -1134,6 +1521,9 @@ async function startServer() {
       if (!guest) {
         return res.status(404).json({ error: 'No encontramos ninguna invitación con esos datos. Por favor verifica tu código o nombre.' });
       }
+      const wedding = await getWeddingSettings(Number(guest.weddingId || weddingId || 1));
+      const planAccess = wedding ? await eventPlanAccess(wedding) : null;
+      if (planAccess?.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
 
       res.json(guest);
     } catch (error: any) {
@@ -1149,6 +1539,9 @@ async function startServer() {
       if (!q) {
         return res.json([]);
       }
+      const wedding = await getWeddingSettings(weddingId);
+      const planAccess = wedding ? await eventPlanAccess(wedding) : null;
+      if (planAccess?.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
       const matches = await getAllGuests(q, undefined, weddingId);
       const suggestions = matches.slice(0, 8).map((g) => ({
         id: g.id,
@@ -1177,11 +1570,18 @@ async function startServer() {
       if (!accessCode) {
         return res.status(400).json({ error: 'Falta el código de acceso' });
       }
-      const updatedGuest = await submitRsvp(accessCode, payload);
+      const guestSnapshot = await getGuestByCode(String(accessCode), payload.weddingId);
+      const weddingId = Number(guestSnapshot?.weddingId || payload.weddingId || 1);
+      const updatedGuest = await withEventMutationLock(weddingId, async () => {
+        const existingGuest = await getGuestByCode(String(accessCode), weddingId);
+        await enforceRsvpPlanLimit(weddingId, String(payload.status || ''), Number(payload.confirmedPasses) || 1, existingGuest, Boolean(payload.editExisting));
+        return submitRsvp(accessCode, payload);
+      });
       res.json({ success: true, guest: updatedGuest });
     } catch (error: any) {
       console.error('Error confirming RSVP:', error);
-      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error confirmando asistencia' });
+      const upgradeRequired = String(error?.message || '').includes('máximo de') || String(error?.message || '').includes('mejorar tu suscripción');
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error confirmando asistencia', ...(upgradeRequired ? { upgradeRequired: true, upgradeCta: 'Mejorar suscripción' } : {}) });
     }
   });
 
@@ -1191,25 +1591,30 @@ async function startServer() {
       if (!fullName || !fullName.trim()) {
         return res.status(400).json({ error: 'El nombre completo es requerido para registrarse.' });
       }
-      const createdGuest = await submitOpenRsvp({
-        weddingId: Number(weddingId) || 1,
-        fullName,
-        status: status || 'confirmed',
-        confirmedPasses: Number(confirmedPasses) || 1,
-        attendingCeremony: attendingCeremony ?? true,
-        attendingReception: attendingReception ?? true,
-        dietaryRestrictions,
-        companionNames,
-        suggestedSong,
-        message,
-        phone,
-        email,
-        customRsvpDetails,
+      const targetWeddingId = Number(weddingId) || 1;
+      const createdGuest = await withEventMutationLock(targetWeddingId, async () => {
+        await enforceRsvpPlanLimit(targetWeddingId, String(status || 'confirmed'), Number(confirmedPasses) || 1);
+        return submitOpenRsvp({
+          weddingId: targetWeddingId,
+          fullName,
+          status: status || 'confirmed',
+          confirmedPasses: Number(confirmedPasses) || 1,
+          attendingCeremony: attendingCeremony ?? true,
+          attendingReception: attendingReception ?? true,
+          dietaryRestrictions,
+          companionNames,
+          suggestedSong,
+          message,
+          phone,
+          email,
+          customRsvpDetails,
+        });
       });
       res.status(201).json({ success: true, guest: createdGuest });
     } catch (error: any) {
       console.error('Error registering open RSVP:', error);
-      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error al registrar asistencia' });
+      const upgradeRequired = String(error?.message || '').includes('máximo de') || String(error?.message || '').includes('mejorar tu suscripción');
+      res.status(error instanceof RsvpAvailabilityError ? 403 : 500).json({ error: error.message || 'Error al registrar asistencia', ...(upgradeRequired ? { upgradeRequired: true, upgradeCta: 'Mejorar suscripción' } : {}) });
     }
   };
 
@@ -2016,6 +2421,10 @@ async function startServer() {
     try {
       const category = typeof req.query.category === 'string' ? req.query.category : undefined;
       const weddingId = req.query.weddingId ? Number(req.query.weddingId) : 1;
+      const wedding = await getWeddingSettings(weddingId);
+      const planAccess = wedding ? await eventPlanAccess(wedding) : null;
+      if (planAccess?.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
+      if (planAccess?.maxUploadedPhotos === 0) return res.json([]);
       const photos = await getGalleryPhotos(category, weddingId);
       res.json(photos);
     } catch (error: any) {
@@ -2026,7 +2435,30 @@ async function startServer() {
 
   app.post('/api/gallery', async (req, res) => {
     try {
-      const photo = await addGalleryPhoto(req.body);
+      const weddingId = Number(req.body?.weddingId) || 1;
+      let quotaError = '';
+      const photo = await withEventMutationLock(weddingId, async () => {
+        const wedding = await getWeddingSettings(weddingId);
+        if (!wedding) {
+          quotaError = 'No se encontró este evento.';
+          return null;
+        }
+        const planAccess = await eventPlanAccess(wedding);
+        const photoLimit = planAccess.maxUploadedPhotos;
+        if (photoLimit === 0) {
+          quotaError = 'El plan gratuito no permite subir fotos. Usa una carpeta compartida de Google Drive y selecciona hasta 5 fotos, o mejora tu suscripción.';
+          return null;
+        }
+        const existingPhotos = await getGalleryPhotos(undefined, weddingId);
+        if (typeof photoLimit === 'number' && existingPhotos.length + uploadedHeroPhotoCount(wedding) >= photoLimit) {
+          quotaError = `Este plan permite hasta ${photoLimit} fotos subidas entre la portada y la galería. Mejora tu suscripción para añadir más.`;
+          return null;
+        }
+        return addGalleryPhoto(req.body);
+      });
+      if (quotaError) return res.status(quotaError.includes('No se encontró') ? 404 : 403).json({ error: quotaError, upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+      if (!photo) return res.status(500).json({ error: 'No se pudo guardar la foto.' });
+      uploadedPhotoOwnerCache = null;
       res.status(201).json(photo);
     } catch (error: any) {
       console.error('Failed to add gallery photo:', error);
@@ -2323,6 +2755,7 @@ async function startServer() {
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
       const result = await deleteGalleryPhoto(id);
+      uploadedPhotoOwnerCache = null;
       res.json(result);
     } catch (error: any) {
       console.error('Failed to delete photo:', error);
@@ -2484,10 +2917,35 @@ async function startServer() {
   });
 
   // 7. File Upload Endpoint (Volume Storage for Audio, Images, etc.)
-  app.post('/api/upload', upload.single('file'), (req, res) => {
+  app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No se subió ningún archivo' });
+      }
+
+      if (req.file.mimetype.startsWith('image/')) {
+        const weddingId = Number(req.body?.weddingId);
+        if (!Number.isSafeInteger(weddingId) || weddingId < 1) {
+          fs.unlink(req.file.path, () => {});
+          return res.status(400).json({ error: 'Falta identificar el evento para autorizar la carga de esta foto.' });
+        }
+        const wedding = await getWeddingSettings(weddingId);
+        if (!wedding) {
+          fs.unlink(req.file.path, () => {});
+          return res.status(404).json({ error: 'No se encontró este evento.' });
+        }
+        const planAccess = await eventPlanAccess(wedding);
+        const photoLimit = planAccess.maxUploadedPhotos;
+        if (!planAccess.canView || planAccess.readOnly || photoLimit === 0) {
+          fs.unlink(req.file.path, () => {});
+          return res.status(403).json({ error: planAccess.upgradeMessage || 'El plan gratuito no permite cargar fotos. Usa una carpeta compartida de Google Drive o mejora tu suscripción.', upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+        }
+        const existingPhotos = await getGalleryPhotos(undefined, weddingId);
+        const uploadedHeroCount = uploadedHeroPhotoCount(wedding);
+        if (typeof photoLimit === 'number' && existingPhotos.length + uploadedHeroCount >= photoLimit) {
+          fs.unlink(req.file.path, () => {});
+          return res.status(403).json({ error: `Este plan permite hasta ${photoLimit} fotos subidas entre la portada y la galería.`, upgradeRequired: true, upgradeCta: 'Mejorar suscripción' });
+        }
       }
 
       const fileUrl = `/uploads/${req.file.filename}`;

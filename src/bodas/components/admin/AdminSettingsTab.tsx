@@ -27,6 +27,7 @@ import { AdminDressCodeSettings } from './settings/AdminDressCodeSettings.tsx';
 import { AdminGiftRegistrySettings } from './settings/AdminGiftRegistrySettings.tsx';
 import { AudioSettingsPanel } from '../../../components/admin/settings/AudioSettingsPanel.tsx';
 import { SimpleModeInline } from './SimpleModeInline.tsx';
+import { ShareMessageSettings } from '../../../components/admin/settings/ShareMessageSettings.tsx';
 import { VideoSection } from '../VideoSection.tsx';
 import { AdminSimpleCoverageSettings } from '../../../components/admin/settings/AdminSimpleCoverageSettings.tsx';
 import { AdvancedModeOrganizer } from '../../../components/admin/AdvancedModeOrganizer.tsx';
@@ -68,6 +69,11 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
     breakpoint.addEventListener('change', updateLayout);
     return () => breakpoint.removeEventListener('change', updateLayout);
   }, []);
+
+  useEffect(() => {
+    if (settings.planAccess?.advancedEditor === false) setEditorMode('simple');
+  }, [settings.planAccess?.advancedEditor]);
+  const canUseAdvancedEditor = settings.planAccess?.advancedEditor !== false;
 
   const renderAdvancedGroups = () => (
     <AdvancedModeOrganizer groups={[
@@ -161,7 +167,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             >
               Simple
             </button>
-            <button
+            {canUseAdvancedEditor && <button
               type="button"
               id="btn-mode-toggle-advanced-mobile"
               onClick={() => setEditorMode('advanced')}
@@ -172,7 +178,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               }`}
             >
               Avanz.
-            </button>
+            </button>}
           </div>
 
           {/* Quick Save */}
@@ -234,7 +240,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               <span>Modo Simple</span>
             </button>
 
-            <button
+            {canUseAdvancedEditor && <button
               type="button"
               id="btn-mode-toggle-advanced"
               onClick={() => setEditorMode('advanced')}
@@ -247,7 +253,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             >
               <SlidersHorizontal className="w-3 h-3 shrink-0" />
               <span>Avanzado</span>
-            </button>
+            </button>}
           </div>
 
           {/* Desktop Layout Switcher (Edición, Simulador, Dividido) */}
@@ -329,6 +335,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   : 'max-w-4xl mx-auto space-y-8 min-w-0'
               }`}
             >
+              <ShareMessageSettings settings={settings} onChange={onChange} />
               {editorMode === 'simple' ? (
                 <SimpleModeInline
                   settings={settings}
@@ -488,6 +495,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             {/* Scrollable Form Body when Expanded */}
             {isMobileSheetOpen && (
               <div id="admin-settings-sheet-content" className="p-2.5 sm:p-5 overflow-y-auto overflow-x-hidden custom-scrollbar space-y-4 sm:space-y-6 max-h-[calc(82vh-64px)] w-full max-w-full min-w-0 box-border">
+                <ShareMessageSettings settings={settings} onChange={onChange} />
                 {editorMode === 'simple' ? (
                   <SimpleModeInline
                     settings={settings}

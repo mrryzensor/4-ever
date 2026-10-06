@@ -43,6 +43,18 @@ export interface PlanDetails {
   maxWeddings: number | 'unlimited';
   limits: {
     maxGuests: number | 'unlimited';
+    /** Confirmed people including companion passes. */
+    maxConfirmations: number | 'unlimited';
+    /** Licensed editors including the event owner. */
+    maxEditors: number | 'unlimited';
+    /** Uploaded hero and official gallery images combined. */
+    maxUploadedPhotos: number | 'unlimited';
+    /** Images selectable from a shared Google Drive folder. */
+    maxDrivePhotos: number | 'unlimited';
+    /** Availability after the event date; zero means through the earlier RSVP/event date. */
+    retentionYears: number | 'unlimited';
+    advancedEditor: boolean;
+    drivePhotoSelection: boolean;
     allowedThemes: number | 'all';
     customAudio: boolean;
     photoGallery: boolean;
@@ -266,6 +278,7 @@ export interface WeddingSettings {
   tipsList?: WeddingTipItem[] | string; // Lista de tips configurables
   showRsvpSection?: boolean; // Confirmación de asistencia
   rsvpDeadlineMessage?: string; // Supports {date} placeholder
+  shareMessageTemplate?: string; // WhatsApp / native share message with event placeholders
   rsvpButtonText?: string;
   rsvpButtonStyle?: 'auto' | 'soft' | 'outline' | 'editorial' | 'art-deco';
   rsvpCompanionToggleText?: string;
@@ -300,6 +313,29 @@ export interface WeddingSettings {
   contactPhone: string;
   contactEmail: string;
   updatedAt?: string;
+  planAccess?: WeddingPlanAccess;
+}
+
+export interface WeddingPlanAccess {
+  plan: PlanId | string;
+  maxConfirmations: number | 'unlimited';
+  confirmedPasses: number;
+  uploadedPhotoCount?: number;
+  maxEditors: number | 'unlimited';
+  maxUploadedPhotos: number | 'unlimited';
+  maxDrivePhotos: number | 'unlimited';
+  maxWeddings: number | 'unlimited';
+  advancedEditor: boolean;
+  drivePhotoSelection: boolean;
+  canEdit: boolean;
+  canView: boolean;
+  canConfirm?: boolean;
+  confirmationLimitReached?: boolean;
+  readOnly: boolean;
+  locked: boolean;
+  lockedReason?: 'rsvp-deadline' | 'event-ended' | 'retention-expired';
+  upgradeMessage?: string;
+  upgradeCta?: string;
 }
 
 export interface RsvpOptionalField {
@@ -349,11 +385,18 @@ export interface WeddingSummary {
   coupleNames: string;
   hashtag: string;
   eventDate: string;
+  eventTime?: string;
+  shareMessageTemplate?: string;
   slug: string;
   cardStyle: CardStyleId;
   isPublished: boolean;
   totalGuests: number;
   confirmedGuests: number;
+  confirmedPasses?: number;
+  locked?: boolean;
+  lockedReason?: WeddingPlanAccess['lockedReason'];
+  upgradeMessage?: string;
+  planAccess?: WeddingPlanAccess;
   coverPhoto?: string;
 }
 

@@ -9,6 +9,7 @@ import { AdminSettingsTab } from './admin/AdminSettingsTab.tsx';
 import { AdminGalleryTab } from './admin/AdminGalleryTab.tsx';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
+import { buildInvitationShareMessage, sendInvitationMessage } from '../../lib/invitationSharing.ts';
 
 interface AdminDashboardProps {
   settings: WeddingSettings;
@@ -169,13 +170,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }?text=${encodeURIComponent(text)}`;
   };
 
-  const handleCopyInvitationLink = () => {
-    const url = settings.slug 
-      ? `${window.location.origin}/${settings.slug}`
-      : `${window.location.origin}/?w=${settings.id || 1}`;
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 3000);
+  const handleCopyInvitationLink = async () => {
+    setCopiedLink(false);
+    const message = buildInvitationShareMessage(tempSettings, window.location.origin);
+    const result = await sendInvitationMessage(message, 'Invitación de ' + tempSettings.coupleNames);
+    if (result === 'copied') {
+      setCopiedLink(true);
+      toast.success('Mensaje con enlace copiado. Ya puedes pegarlo en tu aplicación de mensajería.', 'Listo para compartir');
+      setTimeout(() => setCopiedLink(false), 3000);
+    } else if (result === 'failed') {
+      toast.error('No se pudo abrir el menú para compartir.', 'Error al compartir');
+    }
   };
 
   const handleSaveAllSettings = async () => {

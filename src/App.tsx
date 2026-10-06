@@ -400,6 +400,7 @@ export default function App() {
     );
     return hasInvitationIdentifier;
   });
+  const [lockedEventMessage, setLockedEventMessage] = useState('');
   const [readyHeroResourceKey, setReadyHeroResourceKey] = useState<string | null>(null);
   const [activeGuest, setActiveGuest] = useState<Guest | null>(null);
   const [isInlineRsvpOpen, setIsInlineRsvpOpen] = useState(false);
@@ -410,6 +411,17 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHostPill, setShowHostPill] = useState(true);
   const [isViewingDemo, setIsViewingDemo] = useState<boolean>(() => checkIsDemoUrl());
+  const openSubscriptionUpgrade = () => {
+    const target = new URL(window.location.origin);
+    target.searchParams.set('upgrade', '1');
+    if (currentUser) {
+      setCurrentView('dashboard');
+    } else {
+      target.searchParams.set('auth', 'login');
+      openAuth('login');
+    }
+    window.history.pushState({}, '', target.toString());
+  };
 
   // Listen to popstate and url changes for direct login/register, /demo, /boda, /xv routing
   useEffect(() => {
@@ -729,6 +741,7 @@ export default function App() {
     const fetchWeddingConfig = async () => {
       try {
         setLoadingWedding(true);
+        setLockedEventMessage('');
         const search = window.location.search;
         let guestCode = params.get('code');
 
@@ -747,6 +760,11 @@ export default function App() {
         }
 
         const res = await fetch(url);
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          if (errorData?.planAccess?.locked) setLockedEventMessage(errorData.error || errorData.planAccess.upgradeMessage || 'El acceso a este evento terminó. Mejora tu suscripción para recuperarlo.');
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           if (data && typeof data === 'object') {
@@ -1206,9 +1224,45 @@ export default function App() {
     );
   }
 
+  if (lockedEventMessage) {
+    return (
+      <div className="min-h-screen bg-[#FDFCF0] px-5 py-12 flex items-center justify-center">
+        <section className="w-full max-w-xl rounded-3xl border border-[#E5E2D0] bg-white p-8 text-center shadow-xl sm:p-12">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-800"><Crown className="h-7 w-7" /></div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-800">Acceso al evento pausado</p>
+          <h1 className="mt-2 font-serif text-2xl font-bold text-stone-900 sm:text-3xl">Mejora tu suscripción para recuperar tu evento</h1>
+          <p className="mt-3 text-sm leading-6 text-stone-600">{lockedEventMessage}</p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <button type="button" onClick={openSubscriptionUpgrade} className="rounded-xl bg-[#5A5A40] px-6 py-3 text-sm font-bold text-white hover:bg-[#484833]">Mejorar suscripción</button>
+            <button type="button" onClick={() => { setCurrentView(currentUser ? 'dashboard' : 'portal'); setLockedEventMessage(''); }} className="rounded-xl border border-[#E5E2D0] bg-white px-6 py-3 text-sm font-semibold text-stone-700 hover:bg-[#FAF9F0]">Volver a mis eventos</button>
+          </div>
+        </section>
+        {!currentUser && <AuthModal isOpen={isAuthModalOpen} onClose={closeAuth} initialMode="login" onAuthSuccess={handleAuthSuccess} />}
+        <ToastContainer />
+      </div>
+    );
+  }
+
   // 3. ADMIN / ATELIER FULL-PAGE VIEW
   if (currentView === 'admin') {
     const isXvAdmin = settingsEventCategory === 'xv';
+
+    if (settings?.planAccess?.readOnly) {
+      return (
+        <div className="min-h-screen bg-[#FDFCF0] px-5 py-12 flex items-center justify-center">
+          <section className="w-full max-w-xl rounded-3xl border border-[#E5E2D0] bg-white p-8 text-center shadow-xl sm:p-12">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FAF9F0] text-[#5A5A40]"><Eye className="h-7 w-7" /></div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#5A5A40]">Modo de visualización</p>
+            <h1 className="mt-2 font-serif text-2xl font-bold text-stone-900 sm:text-3xl">La edición terminó el día del evento</h1>
+            <p className="mt-3 text-sm leading-6 text-stone-600">Tu plan conserva la invitación para que puedas verla, pero ya no permite modificarla. Puedes volver a abrir la invitación o regresar a tus eventos.</p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <button type="button" onClick={() => { setCurrentView('invitation'); window.history.replaceState({}, '', `/?w=${settings.id}&event=${settings.eventType || 'bodas'}`); }} className="rounded-xl bg-[#5A5A40] px-6 py-3 text-sm font-bold text-white hover:bg-[#484833]">Ver invitación</button>
+              <button type="button" onClick={() => setCurrentView('dashboard')} className="rounded-xl border border-[#E5E2D0] bg-white px-6 py-3 text-sm font-semibold text-stone-700 hover:bg-[#FAF9F0]">Volver a mis eventos</button>
+            </div>
+          </section>
+        </div>
+      );
+    }
 
     if (loadingWedding || !settings) {
       return (
@@ -1455,6 +1509,12 @@ export default function App() {
         className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
         style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
       >
+      {settings.planAccess?.confirmationLimitReached && (
+        <div role="alert" className="relative z-[100] flex flex-col items-center justify-center gap-2 bg-amber-50 px-4 py-3 text-center text-amber-950 sm:flex-row sm:gap-4">
+          <p className="text-xs font-medium">Se alcanzó el límite de {settings.planAccess.maxConfirmations} confirmaciones de este plan. Los anfitriones pueden mejorar la suscripción para recibir más.</p>
+          <button type="button" onClick={openSubscriptionUpgrade} className="shrink-0 rounded-full bg-[#5A5A40] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#484833]">Mejorar suscripción</button>
+        </div>
+      )}
       {/* Interactive Demo Style Selector Bar in Demo Mode */}
       {isDemoMode && (
         settingsEventCategory === 'xv' ? (

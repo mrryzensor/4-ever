@@ -191,6 +191,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   rsvpEditCutoffAt: '',
   rsvpCutoffTimeZone: 'America/Lima',
   rsvpDeadlineMessage: 'Por favor confirma tu asistencia antes del {date}.',
+  shareMessageTemplate: '💌 ¡Estás invitado/a!\n\n{coupleNames} te invita a celebrar este día tan especial. ✨\n📅 {eventDate}\n\nConfirma tu asistencia aquí:\n{url}\n\n¡Te esperamos! 💛',
   rsvpButtonText: 'Confirmar asistencia',
   rsvpButtonStyle: 'auto',
   rsvpCompanionToggleText: '¿Llevas invitados?',

@@ -18,7 +18,7 @@ export const NumeralText: React.FC<NumeralTextProps> = ({ children, scope = 'glo
     ? {
         fontFamily: appliedFontFamily,
         ...(scope === 'countdown'
-          ? { '--countdown-number-font': appliedFontFamily }
+          ? { '--countdown-number-font': appliedFontFamily, fontWeight: 700 }
           : { '--invitation-numeral-font': appliedFontFamily }),
       } as React.CSSProperties
     : undefined;

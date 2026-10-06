@@ -65,6 +65,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
       setHeroUploadMessage('Subiendo imagen optimizada al servidor...');
       const formData = new FormData();
+      formData.append('weddingId', String(settings.id || 1));
       formData.append('file', optimizedResult.file);
 
       const res = await fetch('/api/upload', {

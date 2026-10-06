@@ -261,7 +261,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             className={`w-full py-2 rounded-xl bg-white hover:bg-stone-50 border border-[#E5E2D0] text-[#5A5A40] text-xs font-medium flex items-center justify-center gap-2 shadow-2xs transition-all cursor-pointer ${
               isCollapsed ? 'px-2' : 'px-3'
             }`}
-            title="Copiar enlace de la invitación"
+            title="Compartir invitación"
           >
             {copiedLink ? (
               <>
@@ -271,7 +271,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             ) : (
               <>
                 <Share2 className="w-3.5 h-3.5 shrink-0" />
-                {!isCollapsed && <span className="truncate">Copiar Enlace</span>}
+                {!isCollapsed && <span className="truncate">Compartir Invitación</span>}
               </>
             )}
           </button>
@@ -408,12 +408,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {copiedLink ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-600" />
-                      <span className="text-emerald-700 font-bold">¡Enlace Copiado!</span>
+                      <span className="text-emerald-700 font-bold">¡Mensaje copiado!</span>
                     </>
                   ) : (
                     <>
                       <Share2 className="w-4 h-4" />
-                      <span>Copiar Enlace de Invitación</span>
+                      <span>Compartir invitación</span>
                     </>
                   )}
                 </button>

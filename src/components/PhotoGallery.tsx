@@ -138,6 +138,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, [settings?.galleryDrivePhotoIds]);
   const drivePhotoTitles = useMemo(() => parseDrivePhotoTitles(settings?.galleryDrivePhotoTitles), [settings?.galleryDrivePhotoTitles]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const uploadedPhotoLimit = settings?.planAccess?.maxUploadedPhotos ?? 'unlimited';
+  const localUploadedPhotoCount = photos.length + (String(settings?.coverPhoto || '').startsWith('/uploads/') ? 1 : 0);
+  const canAddOfficialPhoto = isAdmin && uploadedPhotoLimit !== 0 && (
+    uploadedPhotoLimit === 'unlimited' || Math.max(settings?.planAccess?.uploadedPhotoCount || 0, localUploadedPhotoCount) < uploadedPhotoLimit
+  );
   const [loading, setLoading] = useState(true);
   const [activePhotoIndex, setActivePhotoIndex] = useState<number | null>(null);
   const [loadedCarouselPhotoKeys, setLoadedCarouselPhotoKeys] = useState<string[]>([]);
@@ -564,6 +569,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
       setUploadMessage('Subiendo fotografía optimizada...');
       const formData = new FormData();
+      formData.append('weddingId', String(weddingId));
       formData.append('file', optimized.file);
 
       let finalUrl = '';
@@ -1070,7 +1076,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
           {/* Inline Action Indicator & Upload Photo Button */}
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            {isAdmin && (
+            {canAddOfficialPhoto && (
               <button data-typography-role="button"
                 type="button"
                 onClick={() => setShowUploadModal(true)}

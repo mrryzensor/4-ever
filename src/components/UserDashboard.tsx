@@ -32,6 +32,7 @@ import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../ty
 import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../lib/toast.ts';
+import { buildInvitationShareMessage, sendInvitationMessage } from '../lib/invitationSharing.ts';
 import { isDemoWeddingRecord, resolveEventType } from '../lib/eventUtils.ts';
 
 interface UserDashboardProps {
@@ -101,6 +102,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   useEffect(() => {
     fetchWeddings();
+  }, [user.uid]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('upgrade') === '1') {
+      setIsUpgradeModalOpen(true);
+    }
   }, [user.uid]);
 
   const handleCreateWedding = async (e: React.FormEvent) => {
@@ -173,17 +180,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     }
   };
 
-  const handleCopyLink = (slug: string, weddingId: number, eventType?: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    const isXv = resolveEventType(eventType, slug) === 'xv';
-    const resolvedCat = eventType || (isXv ? 'xv' : 'bodas');
-    const url = slug 
-      ? `${window.location.origin}/${slug}` 
-      : `${window.location.origin}/?w=${weddingId}&event=${resolvedCat}`;
-    navigator.clipboard.writeText(url);
-    setCopiedSlug(slug || String(weddingId));
-    toast.success('Enlace de invitación copiado al portapapeles', 'Enlace Copiado');
-    setTimeout(() => setCopiedSlug(null), 3000);
+  const handleShareInvitation = async (wedding: WeddingSummary, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCopiedSlug(null);
+    const message = buildInvitationShareMessage(wedding, window.location.origin);
+    const result = await sendInvitationMessage(message, 'Invitación de ' + wedding.coupleNames);
+    if (result === 'copied') {
+      const shareKey = wedding.slug || String(wedding.id);
+      setCopiedSlug(shareKey);
+      toast.success('Mensaje con enlace copiado. Ya puedes pegarlo en tu aplicación de mensajería.', 'Listo para compartir');
+      setTimeout(() => setCopiedSlug(null), 3000);
+    } else if (result === 'failed') {
+      toast.error('No se pudo abrir el menú para compartir.', 'Error al compartir');
+    }
   };
 
   const handleSaveClientAssignment = async (e: React.FormEvent) => {
@@ -217,6 +226,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
   const currentPlan = SUBSCRIPTION_PLANS.find((p) => p.id === user.plan);
   const hasActivePlan = isCeo || Boolean(currentPlan);
+  const ownedPlanEvents = weddings.filter((event) => event.ownerUid === user.uid && (
+    currentPlan?.category !== 'planner' || !['completed', 'archived', 'deleted'].includes(String(event.status || '').toLowerCase())
+  ));
+  const eventLimitReached = !isCeo && currentPlan?.maxWeddings !== 'unlimited' && ownedPlanEvents.length >= Number(currentPlan?.maxWeddings || 1);
 
   const bodasCount = weddings.filter(
     (w) => resolveEventType(w.eventType, w.slug) !== 'xv'
@@ -339,11 +352,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           <div className="flex items-center gap-3">
             <button
               id="btn-open-create-wedding-modal"
-              onClick={() => hasActivePlan ? setIsCreatingWedding(true) : setIsUpgradeModalOpen(true)}
+              onClick={() => hasActivePlan && !eventLimitReached ? setIsCreatingWedding(true) : setIsUpgradeModalOpen(true)}
               className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-stone-50 text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer hover:scale-105"
             >
               <Plus className="w-4 h-4 text-amber-400" />
-              <span>{!hasActivePlan ? 'Elegir un plan para crear' : isWeddingPlanner ? 'Nuevo Evento de Cliente' : 'Crear Nuevo Evento'}</span>
+              <span>{!hasActivePlan || eventLimitReached ? 'Mejorar plan para crear evento' : isWeddingPlanner ? 'Nuevo Evento de Cliente' : 'Crear Nuevo Evento'}</span>
             </button>
           </div>
         </div>
@@ -512,7 +525,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1">
-                      {(!isDemoWeddingRecord(w) || isCeo) && <button
+                      {(!isDemoWeddingRecord(w) || isCeo) && (isCeo || w.ownerUid === user.uid) && !w.locked && !w.planAccess?.readOnly && (w.planAccess?.maxEditors === 'unlimited' || Number(w.planAccess?.maxEditors || 1) > 1) && <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedWeddingForClient(w);
@@ -547,10 +560,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                       <span>{w.eventDate ? w.eventDate.substring(0, 10) : 'Fecha por definir'}</span>
                     </div>
 
+                    {w.locked && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-5 text-amber-950">{w.upgradeMessage || 'El periodo de acceso terminó. Mejora tu suscripción para recuperar el evento.'}</div>}
+                    {!w.locked && w.planAccess?.readOnly && <div className="rounded-xl border border-stone-200 bg-stone-50 p-3 text-[11px] leading-5 text-stone-700">El evento ya pasó a modo de visualización. Puedes seguir viendo la invitación durante el plazo incluido en tu plan.</div>}
+                    {!w.locked && w.planAccess?.confirmationLimitReached && <button type="button" onClick={() => setIsUpgradeModalOpen(true)} className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-left text-[11px] leading-5 text-amber-950 hover:bg-amber-100">Se alcanzó el máximo de confirmaciones de este plan. <strong>Mejorar suscripción</strong></button>}
+
                     <div className="flex items-center text-xs text-stone-600 gap-2">
                       <Users className="w-4 h-4 text-amber-800/80" />
                       <span>
-                        <strong>{w.confirmedGuests || 0}</strong> confirmados de{' '}
+                        <strong>{w.confirmedPasses ?? w.confirmedGuests ?? 0}</strong> confirmados de{' '}
                         <strong>{w.totalGuests || 0}</strong> invitados
                       </span>
                     </div>
@@ -572,28 +589,33 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 {/* Card Actions */}
                 <div className="p-4 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2">
-                  <button
+                  {w.locked ? (
+                    <button onClick={() => setIsUpgradeModalOpen(true)} className="flex-1 py-2 px-3 bg-amber-800 hover:bg-amber-900 text-white text-xs font-semibold rounded-xl shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                      <Crown className="w-3.5 h-3.5" /><span>Mejorar suscripción para recuperar el evento</span>
+                    </button>
+                  ) : <button
                     onClick={() => onSelectWedding(w.id, 'invitation', w.eventType)}
                     className="flex-1 py-2 px-3 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 shadow-2xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span>Ver Invitación</span>
-                  </button>
+                  </button>}
 
-                  <button
+                  {!w.locked && !w.planAccess?.readOnly && <button
                     onClick={() => onSelectWedding(w.id, 'admin', w.eventType)}
                     className="flex-1 py-2 px-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
                     <span>Atelier / Editar</span>
-                  </button>
+                  </button>}
 
                   <button
-                    onClick={(e) => handleCopyLink(w.slug, w.id, w.eventType, e)}
+                    onClick={(e) => handleShareInvitation(w, e)}
+                    disabled={Boolean(w.locked)}
                     className="p-2 bg-white hover:bg-stone-100 text-stone-600 rounded-xl border border-stone-200 transition-colors shrink-0"
-                    title="Copiar enlace para compartir"
+                    title={w.locked ? 'Este evento ya no está disponible para compartir' : 'Compartir invitación'}
                   >
-                    {copiedSlug === w.slug ? (
+                    {copiedSlug === (w.slug || String(w.id)) ? (
                       <Check className="w-4 h-4 text-emerald-600" />
                     ) : (
                       <Share2 className="w-4 h-4" />
@@ -821,7 +843,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                     className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none resize-y"
                   />
                   <p className="text-[11px] text-stone-500 mt-1.5">
-                    Agrega uno o varios correos, separados por líneas o comas. Cada persona podrá entrar con Google o con su cuenta de correo y contraseña; el correo debe coincidir con el de su inicio de sesión.
+                    Agrega {selectedWeddingForClient.planAccess?.maxEditors === 'unlimited' ? 'los correos necesarios' : `hasta ${Math.max(0, Number(selectedWeddingForClient.planAccess?.maxEditors || 1) - 1)} correos adicionales`}. El propietario también cuenta entre las personas con acceso. Cada persona podrá entrar con Google o con su cuenta de correo y contraseña.
                   </p>
                 </div>
 

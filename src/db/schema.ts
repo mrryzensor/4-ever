@@ -189,6 +189,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   tipsList: text('tips_list').default('[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]'),
   showRsvpSection: boolean('show_rsvp_section').default(true),
   rsvpDeadlineMessage: text('rsvp_deadline_message').default('Por favor confirma tu asistencia antes del {date}.'),
+  shareMessageTemplate: text('share_message_template').default('💌 ¡Estás invitado/a!\n\n{coupleNames} te invita a celebrar este día tan especial. ✨\n📅 {eventDate}\n\nConfirma tu asistencia aquí:\n{url}\n\n¡Te esperamos! 💛'),
   rsvpButtonText: text('rsvp_button_text').default('Confirmar asistencia'),
   rsvpButtonStyle: text('rsvp_button_style').default('auto'),
   rsvpCompanionToggleText: text('rsvp_companion_toggle_text').default('¿Llevas invitados?'),

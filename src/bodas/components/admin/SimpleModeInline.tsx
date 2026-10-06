@@ -94,6 +94,10 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
   // Gallery Management State for Novios
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
+  const planPhotoLimit = settings.planAccess?.maxUploadedPhotos ?? 'unlimited';
+  const uploadedHeroPhotoCount = String(settings.coverPhoto || '').startsWith('/uploads/') ? 1 : 0;
+  const usedUploadPhotoCount = Math.max(settings.planAccess?.uploadedPhotoCount || 0, galleryPhotos.length + uploadedHeroPhotoCount);
+  const canUploadPhotos = planPhotoLimit === 'unlimited' || planPhotoLimit > usedUploadPhotoCount;
   const [galleryPhotoTitleDrafts, setGalleryPhotoTitleDrafts] = useState<Record<number, string>>({});
   const [savingGalleryPhotoTitleId, setSavingGalleryPhotoTitleId] = useState<number | null>(null);
   const [galleryPhotoTitleError, setGalleryPhotoTitleError] = useState<string | null>(null);
@@ -323,6 +327,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
       setCoverUploadMsg('Guardando en almacenamiento persistente...');
       const formData = new FormData();
+      formData.append('weddingId', String(settings.id || 1));
       formData.append('file', result.file);
 
       const uploadRes = await fetch('/api/upload', {
@@ -442,7 +447,9 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
     if (rawFiles.length === 0) return;
 
     // Limit to max 10 photos
-    const filesToUpload = rawFiles.slice(0, 10);
+    const remainingPhotoSlots = planPhotoLimit === 'unlimited' ? 10 : Math.max(0, planPhotoLimit - usedUploadPhotoCount);
+    const filesToUpload = rawFiles.slice(0, Math.min(10, remainingPhotoSlots));
+    if (filesToUpload.length === 0) return;
     const totalFiles = filesToUpload.length;
 
     try {
@@ -475,6 +482,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
 
         // Upload file to server storage
         const formData = new FormData();
+        formData.append('weddingId', String(settings.id || 1));
         formData.append('file', result.file);
 
         let finalUrl = '';
@@ -1205,7 +1213,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     </div>
 
                     {/* Upload new photo for Hero */}
-                    <div className="space-y-2">
+                    <div className="space-y-2" hidden={!canUploadPhotos}>
                       <label className="block w-full py-3 px-4 rounded-xl bg-white border border-[#E5E2D0] hover:bg-[#FAF9F0] hover:border-[#5A5A40] text-[#5A5A40] font-semibold text-xs text-center cursor-pointer transition-all shadow-2xs group">
                         <input
                           type="file"
@@ -1744,7 +1752,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                   Galería de Fotos & Álbumes en la Nube
                 </h4>
                 <p className="text-xs text-stone-500">
-                  Sube las fotos oficiales que verán tus invitados o enlaza un álbum compartido en Google Photos / Drive.
+                  {settings.planAccess?.maxUploadedPhotos === 0 ? 'Enlaza una carpeta compartida de Google Drive y elige hasta 5 fotos entre la galería y la portada.' : 'Sube las fotos oficiales que verán tus invitados o enlaza un álbum compartido en Google Photos / Drive.'}
                 </p>
               </div>
               <span className="text-[10px] uppercase font-bold tracking-widest bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
@@ -1755,7 +1763,7 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
             <GalleryTextSettings settings={settings} onChange={onChange} />
 
             {/* Couple Upload Box & Drag and Drop Dropzone */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-[#FAF9F0] border border-[#E5E2D0] space-y-4" hidden={!canUploadPhotos}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Camera className="w-4 h-4 text-[#5A5A40]" />

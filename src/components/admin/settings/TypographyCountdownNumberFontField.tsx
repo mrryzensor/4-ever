@@ -36,7 +36,12 @@ export const TypographyCountdownNumberFontField: React.FC<TypographyCountdownNum
       </div>
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white px-3 py-2">
         <span className="text-[10px] uppercase tracking-wider text-stone-500">Vista previa</span>
-        <span className="text-2xl font-bold tabular-nums text-indigo-900" style={{ fontFamily }}>0123456789</span>
+        <span
+          className="text-2xl font-bold tabular-nums text-indigo-900"
+          style={{ fontFamily, fontVariantNumeric: 'lining-nums tabular-nums' }}
+        >
+          0123456789
+        </span>
       </div>
     </div>
   );

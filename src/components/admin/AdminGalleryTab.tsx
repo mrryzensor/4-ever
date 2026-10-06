@@ -155,7 +155,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
       setIsDeletingCommentId(deletingKey);
       const url = comment.driveFileId && comment.driveInteractionToken
         ? `/api/drive-folders/${encodeURIComponent(parseDriveFolderUrl(settings.galleryExternalAlbumUrl)?.folderId || '')}/photos/${encodeURIComponent(comment.driveFileId)}/comments/${comment.id}?${new URLSearchParams({ weddingId: String(weddingId), signature: comment.driveInteractionToken })}`
-        : `/api/gallery/comments/${comment.id}`;
+        : `/api/gallery/comments/${comment.id}?weddingId=${weddingId}`;
       const response = await fetch(url, { method: 'DELETE' });
       if (!response.ok) throw new Error('No se pudo eliminar el comentario.');
       setComments((prev) => prev.filter((item) => !(item.id === comment.id && item.driveFileId === comment.driveFileId && item.photoId === comment.photoId)));
