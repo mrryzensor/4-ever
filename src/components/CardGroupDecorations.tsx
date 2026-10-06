@@ -33,6 +33,14 @@ export const CardGroupDecorations: React.FC<CardGroupDecorationsProps> = ({
       setSeparators([]);
       return;
     }
+    const getChildElements = (): Element[] => {
+      const elements: Element[] = [];
+      for (let index = 0; index < group.children.length; index += 1) {
+        const child = group.children.item(index);
+        if (child) elements.push(child);
+      }
+      return elements;
+    };
 
     const measure = () => {
       const groupRect = group.getBoundingClientRect();
@@ -105,16 +113,16 @@ export const CardGroupDecorations: React.FC<CardGroupDecorationsProps> = ({
     measure();
     const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
     resizeObserver?.observe(group);
-    Array.from(group.children).forEach((child) => resizeObserver?.observe(child));
+    getChildElements().forEach((child) => resizeObserver?.observe(child));
     let mutationObserver: MutationObserver | null = null;
     if (typeof MutationObserver !== 'undefined') {
       mutationObserver = new MutationObserver(() => {
-        Array.from(group.children).forEach((child) => mutationObserver?.observe(child, { attributes: true }));
+        getChildElements().forEach((child) => mutationObserver?.observe(child, { attributes: true }));
         measure();
       });
     }
     mutationObserver?.observe(group, { childList: true });
-    Array.from(group.children).forEach((child) => mutationObserver?.observe(child, { attributes: true }));
+    getChildElements().forEach((child) => mutationObserver?.observe(child, { attributes: true }));
     window.addEventListener('resize', measure);
 
     return () => {

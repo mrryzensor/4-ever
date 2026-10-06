@@ -223,6 +223,48 @@ export default function App() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>(initialAuth.mode);
   const [authSelectedPlan, setAuthSelectedPlan] = useState<PlanId>('atelier');
 
+  // Google completes on the server and returns with an HTTP-only app session.
+  // Hydrate that session before sending the user to their event dashboard.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const query = new URLSearchParams(window.location.search);
+    const googleLogin = query.get('googleLogin');
+    if (!googleLogin) return;
+
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.hash}`);
+    if (googleLogin !== 'success') {
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    let cancelled = false;
+    fetch('/api/auth/session', { credentials: 'same-origin' })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.user) throw new Error(data.error || 'No se pudo recuperar la sesión.');
+        return data.user as UserProfile;
+      })
+      .then((user) => {
+        if (cancelled) return;
+        localStorage.setItem('wedding_user', JSON.stringify(user));
+        localStorage.setItem('atelier_user_session', JSON.stringify(user));
+        setCurrentUser(user);
+        setCurrentView('dashboard');
+        setIsAuthModalOpen(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('Could not restore Google app session:', error);
+        setAuthModalMode('login');
+        setIsAuthModalOpen(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Open & Close Auth with URL history updates
   const openAuth = (mode: 'login' | 'register', plan?: PlanId) => {
     setAuthModalMode(mode);

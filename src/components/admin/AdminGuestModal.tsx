@@ -62,11 +62,11 @@ export const AdminGuestModal: React.FC<AdminGuestModalProps> = ({
   const customAnswers = parseCustomRsvpDetails(formData.customRsvpDetails);
   const configuredFieldIds = new Set(optionalFields.map((field) => field.id));
   const savedBuiltInFields: RsvpOptionalField[] = [
-    { id: 'dietaryRestrictions', label: 'Respuesta anterior: Restricciones alimentarias / alergias', placeholder: '', type: 'text' },
-    { id: 'suggestedSong', label: 'Respuesta anterior: Canción para la fiesta', placeholder: '', type: 'text' },
-    { id: 'message', label: 'Respuesta anterior: Mensaje o dedicatoria', placeholder: '', type: 'textarea' },
-    { id: 'phone', label: 'Respuesta anterior: Teléfono / WhatsApp', placeholder: '', type: 'tel' },
-    { id: 'email', label: 'Respuesta anterior: Correo electrónico', placeholder: '', type: 'email' },
+    { id: 'dietaryRestrictions', label: 'Respuesta anterior: Restricciones alimentarias / alergias', placeholder: '', type: 'text' as const },
+    { id: 'suggestedSong', label: 'Respuesta anterior: Canción para la fiesta', placeholder: '', type: 'text' as const },
+    { id: 'message', label: 'Respuesta anterior: Mensaje o dedicatoria', placeholder: '', type: 'textarea' as const },
+    { id: 'phone', label: 'Respuesta anterior: Teléfono / WhatsApp', placeholder: '', type: 'tel' as const },
+    { id: 'email', label: 'Respuesta anterior: Correo electrónico', placeholder: '', type: 'email' as const },
   ].filter((field) => !configuredFieldIds.has(field.id) && Boolean((formData[field.id as keyof ExtendedGuestFormData] as string)?.trim()));
   const fieldsToRender = [
     ...optionalFields,

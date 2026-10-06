@@ -1,7 +1,7 @@
 import { boolean, integer, pgTable, serial, text, timestamp, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-// Users table (Firebase Auth or Local Auth linked)
+// Application user profiles for local-password and Google OAuth sign-in.
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   uid: text('uid').notNull().unique(), // Auth UID

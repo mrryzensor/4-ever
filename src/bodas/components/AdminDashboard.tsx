@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { User, signOut, signInWithPopup } from 'firebase/auth';
-import { auth, googleAuthProvider } from '../../lib/firebase.ts';
 import { Guest, WeddingSettings, GuestStats, UserProfile } from '../../types.ts';
 import { applyThemeScrollbar } from '../../lib/themes.ts';
 import { AdminHeader } from './admin/AdminHeader.tsx';
@@ -30,7 +28,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   currentUser: propUser,
 }) => {
   const [activeTab, setActiveTab] = useState<'guests' | 'settings' | 'import' | 'gallery'>('settings');
-  const [, setFirebaseUser] = useState<User | null>(auth.currentUser);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [stats, setStats] = useState<GuestStats>({
     totalGuests: 0,
@@ -70,13 +67,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       applyThemeScrollbar(tempSettings.cardStyle);
     }
   }, [tempSettings?.cardStyle]);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setFirebaseUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const fetchGuests = async () => {
     try {

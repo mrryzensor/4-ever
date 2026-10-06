@@ -5,7 +5,8 @@ import fs from 'fs';
 import multer from 'multer';
 import sharp from 'sharp';
 import { GoogleGenAI } from '@google/genai';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { createServer as createViteServer } from 'vite';
 import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
 import {
@@ -69,8 +70,6 @@ import {
   updateWeddingStatus,
   updateWeddingAccessEmails,
 } from './src/db/queries.ts';
-import { requireAuth, optionalAuth, AuthRequest } from './src/middleware/auth.ts';
-import { adminAuth } from './src/lib/firebase-admin.ts';
 import { generateWeddingOgImage } from './src/lib/ogImageGenerator.ts';
 import { formatHeroDate } from './src/lib/dateFormatters.ts';
 import { DEMO_WEDDING_ID, getEventPresentation } from './src/lib/eventUtils.ts';
@@ -164,7 +163,9 @@ async function startServer() {
   const COUPLE_NAME = process.env.COUPLE_NAME || 'Sofía & Alejandro';
 
   const APP_AUTH_COOKIE = 'atelier_auth_session';
+  const GOOGLE_OAUTH_STATE_COOKIE = 'atelier_google_oauth_state';
   const APP_AUTH_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+  const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
   const getAppSessionSecret = () => process.env.APP_SESSION_SECRET?.trim()
     || process.env.GEMINI_API_KEY?.trim()
     || (process.env.NODE_ENV === 'production' ? '' : 'atelier-development-only-session-secret');
@@ -231,6 +232,80 @@ async function startServer() {
     path: '/',
   });
 
+  const getGoogleOAuthConfig = () => {
+    const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim();
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI?.trim();
+    if (!clientId || !clientSecret || !redirectUri) return null;
+    return { clientId, clientSecret, redirectUri };
+  };
+
+  const createGoogleOAuthClient = (config: NonNullable<ReturnType<typeof getGoogleOAuthConfig>>) => new OAuth2Client({
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
+    redirectUri: config.redirectUri,
+  });
+
+  const getCookieValue = (req: any, name: string) => String(req.headers.cookie || '').split(';')
+    .map((part: string) => part.trim())
+    .find((part: string) => part.startsWith(`${name}=`))
+    ?.slice(name.length + 1) || '';
+
+  const issueGoogleOAuthStateCookie = (res: any, state: string, nonce: string, codeVerifier: string) => {
+    const secret = getAppSessionSecret();
+    if (!secret) return false;
+    const payload = Buffer.from(JSON.stringify({
+      state,
+      nonce,
+      codeVerifier,
+      exp: Math.floor((Date.now() + GOOGLE_OAUTH_STATE_TTL_MS) / 1000),
+    })).toString('base64url');
+    const signature = createHmac('sha256', secret).update(`atelier-google-oauth:${payload}`).digest('base64url');
+    res.cookie(GOOGLE_OAUTH_STATE_COOKIE, `${payload}.${signature}`, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/api/auth/google/callback',
+      maxAge: GOOGLE_OAUTH_STATE_TTL_MS,
+    });
+    return true;
+  };
+
+  const readGoogleOAuthStateCookie = (req: any) => {
+    const secret = getAppSessionSecret();
+    const token = getCookieValue(req, GOOGLE_OAUTH_STATE_COOKIE);
+    if (!secret || !token) return null;
+    const [payload, signature, extra] = token.split('.');
+    if (!payload || !signature || extra !== undefined) return null;
+    const expected = createHmac('sha256', secret).update(`atelier-google-oauth:${payload}`).digest();
+    let actual: Buffer;
+    try {
+      actual = Buffer.from(signature, 'base64url');
+    } catch {
+      return null;
+    }
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
+    try {
+      const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+      if (
+        typeof claims?.state !== 'string' || !claims.state ||
+        typeof claims?.nonce !== 'string' || !claims.nonce ||
+        typeof claims?.codeVerifier !== 'string' || !claims.codeVerifier ||
+        !Number.isSafeInteger(claims?.exp) || claims.exp <= Math.floor(Date.now() / 1000)
+      ) return null;
+      return { state: claims.state, nonce: claims.nonce, codeVerifier: claims.codeVerifier };
+    } catch {
+      return null;
+    }
+  };
+
+  const clearGoogleOAuthStateCookie = (res: any) => res.clearCookie(GOOGLE_OAUTH_STATE_COOKIE, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/api/auth/google/callback',
+  });
+
   const completeAppLogin = (res: any, user: any) => {
     if (!getAppSessionSecret()) {
       return res.status(503).json({ error: 'Configura APP_SESSION_SECRET en el servidor para habilitar sesiones seguras.' });
@@ -251,22 +326,7 @@ async function startServer() {
       };
     }
 
-    const authHeader = req.headers.authorization;
-    if (!adminAuth || typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return null;
-    try {
-      const decoded = await adminAuth.verifyIdToken(authHeader.slice('Bearer '.length));
-      const emailVerified = (decoded as any).email_verified === true;
-      const email = emailVerified ? String(decoded.email || '').trim().toLowerCase() : '';
-      const storedProfile = await getUserProfile(decoded.uid);
-      return {
-        uid: decoded.uid,
-        email,
-        role: storedProfile?.role || (decoded as any).role || ((decoded as any).admin ? 'admin' : 'couple'),
-        emailVerified,
-      };
-    } catch {
-      return null;
-    }
+    return null;
   };
 
   const resolveWeddingAccess = async (req: any, weddingId: number) => {
@@ -382,38 +442,127 @@ async function startServer() {
     }
   });
 
-  app.post('/api/auth/google', requireAuth, async (req: AuthRequest, res) => {
+  app.get('/api/auth/google', async (_req, res) => {
+    const config = getGoogleOAuthConfig();
+    if (!config) {
+      return res.status(503).send('Google OAuth no está configurado. Define GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y GOOGLE_REDIRECT_URI en el servidor.');
+    }
+    if (!getAppSessionSecret()) {
+      return res.status(503).send('Configura APP_SESSION_SECRET en el servidor para habilitar el inicio de sesión seguro.');
+    }
+
+    const state = randomBytes(32).toString('base64url');
+    const nonce = randomBytes(32).toString('base64url');
+    const google = createGoogleOAuthClient(config);
+    let codeVerifier: string;
+    let codeChallenge: string;
     try {
-      const email = String(req.user?.email || '').trim().toLowerCase();
-      if (!req.user || !email || (req.user as any).email_verified !== true) {
-        return res.status(403).json({ error: 'Google debe confirmar el correo de esta cuenta para continuar.' });
-      }
-      if (email === CEO_EMAIL) {
-        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
+      ({ codeVerifier, codeChallenge } = await google.generateCodeVerifierAsync());
+    } catch (error: any) {
+      console.error('Google OAuth PKCE generation error:', error);
+      return res.status(500).send('No se pudo iniciar el acceso seguro con Google.');
+    }
+    if (!issueGoogleOAuthStateCookie(res, state, nonce, codeVerifier)) {
+      return res.status(503).send('No se pudo iniciar una sesión segura. Revisa APP_SESSION_SECRET.');
+    }
+
+    const authorizationUrl = google.generateAuthUrl({
+      access_type: 'online',
+      scope: ['openid', 'email', 'profile'],
+      state,
+      nonce,
+      code_challenge: codeChallenge,
+      code_challenge_method: CodeChallengeMethod.S256,
+      prompt: 'select_account',
+    });
+    return res.redirect(authorizationUrl);
+  });
+
+  app.get('/api/auth/google/callback', async (req, res) => {
+    const config = getGoogleOAuthConfig();
+    if (!config) {
+      clearGoogleOAuthStateCookie(res);
+      return res.status(503).send('Google OAuth no está configurado en el servidor.');
+    }
+
+    try {
+      const googleError = String(req.query.error || '');
+      if (googleError) {
+        clearGoogleOAuthStateCookie(res);
+        return res.redirect('/?googleLogin=cancelled');
       }
 
-      // Match existing local accounts by verified email. This creates an app
-      // session for that profile without changing its stored password.
+      const code = String(req.query.code || '');
+      const returnedState = String(req.query.state || '');
+      const stateClaims = readGoogleOAuthStateCookie(req);
+      if (!code || !returnedState || !stateClaims || stateClaims.state !== returnedState) {
+        clearGoogleOAuthStateCookie(res);
+        return res.status(400).send('No se pudo validar la respuesta de Google. Inicia sesión de nuevo.');
+      }
+
+      const google = createGoogleOAuthClient(config);
+      const { tokens } = await google.getToken({ code, redirect_uri: config.redirectUri, codeVerifier: stateClaims.codeVerifier });
+      if (!tokens.id_token) throw new Error('Google no devolvió un token de identidad.');
+
+      const ticket = await google.verifyIdToken({ idToken: tokens.id_token, audience: config.clientId });
+      const googleProfile = ticket.getPayload();
+      const email = String(googleProfile?.email || '').trim().toLowerCase();
+      if (!googleProfile || !googleProfile.sub || !email || googleProfile.email_verified !== true || googleProfile.nonce !== stateClaims.nonce) {
+        throw new Error('La identidad o el correo de Google no pudo verificarse.');
+      }
+      if (email === CEO_EMAIL) {
+        clearGoogleOAuthStateCookie(res);
+        return res.status(403).send('La cuenta principal debe ingresar con su contraseña habitual.');
+      }
+
+      // Keep a matching password account and its password unchanged. A new Google-only account
+      // uses Google's stable subject as its application UID.
       const existingProfile = await getUserProfileByEmail(email);
       if (existingProfile?.role === 'ceo') {
-        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
+        clearGoogleOAuthStateCookie(res);
+        return res.status(403).send('La cuenta principal debe ingresar con su contraseña habitual.');
       }
       const user = existingProfile || await getOrCreateUser(
-        req.user.uid,
+        `google-${googleProfile.sub}`,
         email,
-        String((req.user as any).name || (req.user as any).displayName || ''),
+        String(googleProfile.name || googleProfile.given_name || 'Usuario Atelier'),
       );
-      return completeAppLogin(res, {
+      const appUser = {
         uid: user.uid,
         email: user.email,
-        name: user.name || (req.user as any).name || 'Usuario Atelier',
+        name: user.name || googleProfile.name || 'Usuario Atelier',
         role: user.role || 'couple',
         plan: user.plan || 'atelier',
         agencyName: user.agencyName || undefined,
-      });
+      };
+      if (!getAppSessionSecret() || !issueAppSessionCookie(res, appUser)) {
+        clearGoogleOAuthStateCookie(res);
+        return res.status(503).send('Configura APP_SESSION_SECRET en el servidor para habilitar sesiones seguras.');
+      }
+
+      clearGoogleOAuthStateCookie(res);
+      return res.redirect('/?googleLogin=success');
     } catch (error: any) {
-      console.error('Google login error:', error);
-      return res.status(500).json({ error: error.message || 'No se pudo iniciar sesión con Google.' });
+      clearGoogleOAuthStateCookie(res);
+      console.error('Google OAuth callback error:', error);
+      return res.status(401).send('No se pudo iniciar sesión con Google. Vuelve a intentarlo.');
+    }
+  });
+
+  app.get('/api/auth/session', async (req, res) => {
+    try {
+      const identity = await resolveRequestIdentity(req);
+      if (!identity) return res.status(401).json({ error: 'No hay una sesión activa.' });
+      const user = await getUserProfile(identity.uid);
+      if (!user) {
+        clearAppSessionCookie(res);
+        return res.status(401).json({ error: 'No se encontró el perfil de esta sesión.' });
+      }
+      const { password: _password, ...safeUser } = user as any;
+      return res.json({ user: safeUser });
+    } catch (error: any) {
+      console.error('Auth session error:', error);
+      return res.status(500).json({ error: 'No se pudo recuperar la sesión.' });
     }
   });
 
@@ -469,7 +618,7 @@ async function startServer() {
   });
 
   // 0. User Profile & Multi-tenant Workspace endpoints
-  app.get('/api/user/profile', optionalAuth, async (req: AuthRequest, res) => {
+  app.get('/api/user/profile', async (req, res) => {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
@@ -483,7 +632,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/user/plan', optionalAuth, async (req: AuthRequest, res) => {
+  app.post('/api/user/plan', async (req, res) => {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
@@ -714,7 +863,7 @@ async function startServer() {
     }
   });
 
-  app.get('/api/user/weddings', optionalAuth, async (req: AuthRequest, res) => {
+  app.get('/api/user/weddings', async (req, res) => {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
@@ -726,7 +875,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/user/weddings', optionalAuth, async (req: AuthRequest, res) => {
+  app.post('/api/user/weddings', async (req, res) => {
     try {
       const identity = await resolveRequestIdentity(req);
       if (!identity) return rejectMissingIdentity(res);
@@ -756,7 +905,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/user/weddings/:id', optionalAuth, async (req: AuthRequest, res) => {
+  app.delete('/api/user/weddings/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       const access = await resolveWeddingAccess(req, id);
@@ -1948,7 +2097,7 @@ async function startServer() {
             imageBuffer = await fs.promises.readFile(imagePath);
           } else {
             const externalUrl = new URL(photoUrl);
-            const allowedHosts = new Set(['firebasestorage.googleapis.com', 'storage.googleapis.com', 'images.unsplash.com']);
+            const allowedHosts = new Set(['storage.googleapis.com', 'images.unsplash.com']);
             if (externalUrl.protocol !== 'https:' || !allowedHosts.has(externalUrl.hostname.toLowerCase())) {
               throw new Error('No se puede analizar una foto guardada fuera del almacenamiento compatible.');
             }
@@ -2426,28 +2575,6 @@ async function startServer() {
       if (!res.headersSent) {
         res.status(500).json({ error: 'Error al reproducir streaming de audio' });
       }
-    }
-  });
-
-  // 8. Auth sync
-  app.post('/api/auth/sync', requireAuth, async (req: AuthRequest, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ error: 'No autenticado' });
-      }
-      const emailVerified = (req.user as any).email_verified === true;
-      const normalizedEmail = emailVerified ? String(req.user.email || '').trim().toLowerCase() : '';
-      const existing = normalizedEmail ? await getUserProfileByEmail(normalizedEmail) : null;
-      if (emailVerified && (normalizedEmail === CEO_EMAIL || existing?.role === 'ceo')) {
-        return res.status(403).json({ error: 'La cuenta principal debe ingresar con su contraseña habitual.' });
-      }
-      const user = existing || await getOrCreateUser(req.user.uid, normalizedEmail, req.user.name);
-      if (emailVerified) issueAppSessionCookie(res, user);
-      const { password: _password, ...safeUser } = user as any;
-      res.json(safeUser);
-    } catch (error: any) {
-      console.error('Auth sync error:', error);
-      res.status(500).json({ error: error.message || 'Error sincronizando usuario' });
     }
   });
 

@@ -1272,8 +1272,16 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     { key: 'minutes', value: timeLeft.minutes, label: 'min' },
     { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
   ];
+  const maxTimeUnitDigitCount = Math.max(...timeUnits.map(({ key, value }) => (
+    key === 'days' ? String(value) : String(value).padStart(2, '0')
+  ).length));
+  const circleNumberFontSize = `clamp(0.25rem, ${25 / maxTimeUnitDigitCount}cqw, 3rem)`;
+  const heroNumberFontSize = `clamp(0.5rem, ${18 / maxTimeUnitDigitCount}cqw, 1.875rem)`;
   const renderTimeUnits = (layout: string) => (
-    <div className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'px-1 sm:px-2 lg:grid-cols-[max-content_max-content_max-content_max-content] lg:justify-between lg:gap-x-3' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}>
+    <div
+      className={`mx-auto grid w-full grid-cols-4 items-center justify-items-center ${layout === 'circle' ? 'gap-x-1.5 px-1 sm:gap-x-2 sm:px-2 lg:gap-x-3' : layout === 'tiles' ? 'gap-2 sm:gap-3' : 'gap-1 sm:gap-2'}`}
+      style={{ containerType: 'inline-size' }}
+    >
       {timeUnits.map((unit, index) => (
         <div
           key={unit.key}
@@ -1288,13 +1296,22 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             initial={{ opacity: 0.75, y: -2 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className={`font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+            className={`max-w-full whitespace-nowrap font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
             data-countdown-numerals=""
-            style={{ ...numberFontStyle, ...(unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : {}) }}
+            style={{
+              ...numberFontStyle,
+              ...(layout === 'circle' ? { fontSize: circleNumberFontSize, letterSpacing: '-0.035em' } : {}),
+              ...(layout === 'hero' ? { fontSize: heroNumberFontSize } : {}),
+              ...(unit.key === 'seconds' && isDark ? { color: resolvedTheme.accentColorHex } : {}),
+            }}
           >
             {unit.key === 'days' ? unit.value : String(unit.value).padStart(2, '0')}
           </motion.span>
-          <span data-typography-role="detail" className={`mt-1 font-sans uppercase tracking-[0.1em] sm:tracking-[0.16em] ${layout === 'hero' ? 'text-[10px] text-white/75 sm:text-[9px]' : 'text-[11px] text-stone-600 sm:text-[10px]'}`}>
+          <span
+            data-typography-role="detail"
+            className={`mt-1 max-w-full whitespace-nowrap font-sans uppercase tracking-[0.1em] sm:tracking-[0.16em] ${layout === 'hero' ? 'text-[10px] text-white/75 sm:text-[9px]' : 'text-[11px] text-stone-600 sm:text-[10px]'}`}
+            style={layout === 'circle' ? { fontSize: 'clamp(0.375rem, 2.6cqw, 0.625rem)', letterSpacing: 'clamp(0.02em, 0.3cqw, 0.1em)' } : undefined}
+          >
             {unit.label}
           </span>
         </div>
@@ -1305,19 +1322,19 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     <div className="mx-auto flex w-full flex-col items-center text-center">
       <time
         dateTime={settings.eventDate || undefined}
-        className={`max-w-[min(100%,22rem)] text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
+        className={`w-full max-w-[min(100%,22rem)] break-words text-balance leading-snug font-sans font-medium tracking-wide ${layout === 'circle' ? 'text-base md:text-lg' : 'text-base sm:text-lg'} ${isDark ? 'text-stone-200' : 'text-stone-700'}`}
       >
         <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventDate}</NumeralText>
       </time>
       {formattedEventTime && (
-        <span data-typography-role="detail" className={`mt-1 inline-flex items-center gap-1.5 font-sans text-sm tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
+        <span data-typography-role="detail" className={`mt-1 inline-flex max-w-full flex-wrap items-center justify-center gap-1.5 break-words font-sans text-sm tracking-wide sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
           <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
           <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventTime}</NumeralText>
         </span>
       )}
       <span
         data-typography-role="heading"
-        className={`mt-1 font-serif italic tracking-wide text-3xl sm:text-4xl md:text-5xl ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
+        className={`mt-1 max-w-full break-words font-serif italic tracking-wide text-3xl sm:text-4xl md:text-5xl ${isDark ? 'text-amber-200' : 'text-stone-800'}`}
         style={{ fontFamily: '"Playfair Display", "Cinzel", Georgia, serif' }}
       >
         {displayTitle}
