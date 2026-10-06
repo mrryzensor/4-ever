@@ -95,6 +95,8 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   countdownLayout: 'circle',
   countdownTitle: 'Faltan',
   typographyNumberFont: 'theme',
+  typographyHeroNumberFont: 'global',
+  typographyCountdownNumberFont: 'global',
   countdownPlacement: 'transition',
   showCountdownGuestsBadge: true,
   colorPaletteStyle: 'auto',

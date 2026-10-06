@@ -122,6 +122,8 @@ export const weddingSettings = pgTable('wedding_settings', {
   typographyToggleScale: integer('typography_toggle_scale').default(100),
   typographyGalleryFullscreenScale: integer('typography_gallery_fullscreen_scale').default(100),
   typographyNumberFont: text('typography_number_font').default('theme'),
+  typographyHeroNumberFont: text('typography_hero_number_font').default('global'),
+  typographyCountdownNumberFont: text('typography_countdown_number_font').default('global'),
   dividerStyle: text('divider_style').default('auto'),
   showCardDividers: boolean('show_card_dividers').default(false),
   borderlessCards: boolean('borderless_cards').default(false),

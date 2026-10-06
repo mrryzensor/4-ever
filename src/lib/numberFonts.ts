@@ -31,3 +31,27 @@ export function resolveNumberFontFamily(
   const theme = CARD_THEMES[themeId as CardStyleId] || CARD_THEMES['classic-gold'];
   return getThemeDisplayFontFamily(theme.fontDisplay);
 }
+
+export function resolveHeroNumberFontFamily(
+  selectedHeroFont: WeddingSettings['typographyHeroNumberFont'],
+  selectedGlobalFont: WeddingSettings['typographyNumberFont'],
+  settings: Pick<WeddingSettings, 'cardStyle' | 'fontPairStyle'>,
+  themeFontFallback?: string,
+): string {
+  const selectedFont = !selectedHeroFont || selectedHeroFont === 'global'
+    ? selectedGlobalFont
+    : selectedHeroFont;
+  return resolveNumberFontFamily(selectedFont, settings, themeFontFallback);
+}
+
+export function resolveCountdownNumberFontFamily(
+  selectedCountdownFont: WeddingSettings['typographyCountdownNumberFont'],
+  selectedGlobalFont: WeddingSettings['typographyNumberFont'],
+  settings: Pick<WeddingSettings, 'cardStyle' | 'fontPairStyle'>,
+  themeFontFallback?: string,
+): string {
+  const selectedFont = !selectedCountdownFont || selectedCountdownFont === 'global'
+    ? selectedGlobalFont
+    : selectedCountdownFont;
+  return resolveNumberFontFamily(selectedFont, settings, themeFontFallback);
+}

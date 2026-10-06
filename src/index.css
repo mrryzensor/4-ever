@@ -21,6 +21,16 @@
   font-variant-numeric: lining-nums tabular-nums;
 }
 
+.public-invitation [data-invitation-hero] [data-global-numerals] {
+  font-family: var(--invitation-font-hero-numbers, var(--invitation-font-numbers, inherit)) !important;
+}
+
+.public-invitation [data-countdown-numerals],
+.public-invitation-typography [data-countdown-numerals] {
+  font-family: var(--invitation-font-countdown-numbers, var(--invitation-font-numbers, inherit)) !important;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
 .public-invitation :where(h1, h2, h3, h4, h5, h6, [data-typography-role="heading"]) {
   font-family: var(--invitation-font-display, inherit) !important;
 }

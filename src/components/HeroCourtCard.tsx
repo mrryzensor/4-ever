@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { CardThemeConfig, EventType, WeddingSettings } from '../types.ts';
 import { getThemeDisplayFontFamily } from '../lib/rsvpButtonStyle.ts';
+import { NumeralText } from './NumeralText.tsx';
 
 interface HeroCourtCardProps {
   settings: WeddingSettings;
@@ -80,10 +81,10 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
             {isXv ? 'Familia y padrinos de honor' : 'Familia y cortejo de honor'}
           </p>
           <h2 style={{ fontFamily: displayFontFamily }} className={`mx-auto max-w-5xl text-4xl leading-tight sm:text-5xl md:text-6xl lg:text-7xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-            {pageHeading}
+            <NumeralText>{pageHeading}</NumeralText>
           </h2>
           <p className={`mx-auto mt-4 max-w-3xl text-lg font-medium italic sm:text-xl ${theme.textSecondaryClass} ${theme.fontBody}`}>
-            {title}
+            <NumeralText>{title}</NumeralText>
           </p>
           <div className={`mx-auto mt-8 grid w-full max-w-[1500px] gap-4 sm:mt-10 sm:gap-5 ${courtItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'} ${fullPageGridColumns}`}>
             {courtItems.map((item, index) => (
@@ -93,10 +94,10 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                 style={{ borderColor: `${theme.accentColorHex}66` }}
               >
                 <span className="text-sm font-semibold uppercase tracking-[0.14em] sm:text-sm sm:tracking-[0.22em]" style={{ color: theme.accentColorHex }}>
-                  {item.title}
+                  <NumeralText>{item.title}</NumeralText>
                 </span>
                 <p data-typography-role="heading" style={{ fontFamily: displayFontFamily }} className={`mt-3 break-words text-2xl font-medium italic leading-snug sm:text-3xl md:text-4xl lg:text-5xl ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                  {item.names}
+                  <NumeralText>{item.names}</NumeralText>
                 </p>
               </article>
             ))}
@@ -110,7 +111,7 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
             }`}
           >
             <span aria-hidden="true" style={{ color: theme.accentColorHex }}>✦</span>
-            <span>{title}</span>
+            <span><NumeralText>{title}</NumeralText></span>
             <span aria-hidden="true" style={{ color: theme.accentColorHex }}>✦</span>
           </span>
 
@@ -130,10 +131,10 @@ export const HeroCourtCard: React.FC<HeroCourtCardProps> = ({
                     className={`block uppercase tracking-[0.14em] ${compact ? 'text-[7px]' : 'text-[9px] sm:text-[10px]'} ${theme.textSecondaryClass}`}
                     style={{ color: theme.accentColorHex }}
                   >
-                    {item.title}
+                    <NumeralText>{item.title}</NumeralText>
                   </span>
                   <p data-typography-role="heading" style={{ fontFamily: displayFontFamily }} className={`mt-0.5 break-words font-medium italic leading-snug ${nameSize} ${theme.textPrimaryClass} ${theme.fontDisplay}`}>
-                    {item.names}
+                    <NumeralText>{item.names}</NumeralText>
                   </p>
                 </div>
               );

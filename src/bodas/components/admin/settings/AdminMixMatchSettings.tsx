@@ -19,6 +19,8 @@ import {
 import { WeddingSettings, CardStyleId } from '../../../../types.ts';
 import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { TypographyNumberFontField } from '../../../../components/admin/settings/TypographyNumberFontField.tsx';
+import { TypographyHeroNumberFontField } from '../../../../components/admin/settings/TypographyHeroNumberFontField.tsx';
+import { TypographyCountdownNumberFontField } from '../../../../components/admin/settings/TypographyCountdownNumberFontField.tsx';
 import {
   StyleSpecificDivider,
   FixDateAnimatedTransitionDivider,
@@ -153,6 +155,8 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       customBgColor: '',
       fontPairStyle: 'auto',
       typographyNumberFont: 'theme',
+      typographyHeroNumberFont: 'global',
+      typographyCountdownNumberFont: 'global',
       countdownStyle: 'auto',
       countdownLayout: 'circle',
       dividerStyle: 'auto',
@@ -186,6 +190,8 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     !!settings.customBgColor ||
     (settings.fontPairStyle && settings.fontPairStyle !== 'auto') ||
     (settings.typographyNumberFont && settings.typographyNumberFont !== 'theme') ||
+    (settings.typographyHeroNumberFont && settings.typographyHeroNumberFont !== 'global') ||
+    (settings.typographyCountdownNumberFont && settings.typographyCountdownNumberFont !== 'global') ||
     (settings.countdownStyle && settings.countdownStyle !== 'auto') ||
     (settings.countdownLayout && settings.countdownLayout !== 'circle') ||
     (settings.dividerStyle && settings.dividerStyle !== 'auto') ||
@@ -484,6 +490,8 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               })}
             </div>
             <TypographyNumberFontField settings={settings} onChange={onChange} />
+            <TypographyHeroNumberFontField settings={settings} onChange={onChange} />
+            <TypographyCountdownNumberFontField settings={settings} onChange={onChange} />
           </div>
         )}
       </div>

@@ -42,6 +42,7 @@ import { resolveInvitationTheme } from '../../lib/invitationTheme.ts';
 import { preserveViewportPosition } from '../../lib/preserveViewportPosition.ts';
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
+import { resolveHeroNumberFontFamily } from '../../lib/numberFonts.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
@@ -117,6 +118,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const theme = resolveInvitationTheme(settings, CARD_THEMES, 'romantic-floral');
   const accentContrastColor = getContrastTextColor(theme.accentColorHex);
   const themeDisplayFontFamily = getThemeDisplayFontFamily(theme.fontDisplay);
+  const heroNumberFontFamily = resolveHeroNumberFontFamily(
+    settings.typographyHeroNumberFont,
+    settings.typographyNumberFont,
+    settings,
+    themeDisplayFontFamily,
+  );
   const rsvpButtonPresentation = getRsvpButtonPresentation(settings.rsvpButtonStyle, settings.cardStyle, theme.accentColorHex);
   const detailSectionOrder = getDetailSectionOrder(settings.detailSectionOrder);
   const bankAccounts = getBankAccounts(settings);
@@ -523,6 +530,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           customStyle={settings.countdownStyle}
           customTitle={settings.countdownTitle}
           showGuestsBadge={settings.showCountdownGuestsBadge}
+          themeNumberFontFallback={themeDisplayFontFamily}
         />
       </div>
     </section>
@@ -530,7 +538,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
   return (
     <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
-      <div ref={heroContainerRef} className="sticky top-0 h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-6 sm:py-10 select-none z-0">
+      <div
+        ref={heroContainerRef}
+        data-invitation-hero=""
+        style={{ '--invitation-font-hero-numbers': heroNumberFontFamily } as React.CSSProperties}
+        className="sticky top-0 h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-6 sm:py-10 select-none z-0"
+      >
         <motion.div style={{ opacity: heroBgOpacity }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity]">
           {settings.heroImageFit === 'contain' && (
             <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${displayedCoverImage})` }} />
@@ -596,7 +609,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
             )}
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}><NumeralText>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</NumeralText></motion.p>
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
-            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
+            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}><NumeralText>{coupleNamesSafe}</NumeralText></motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             {heroGuestPillEnabled && guest && (
               <motion.div
@@ -616,7 +629,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
 
               {(settings.heroVerse ?? '1 Corintios 13:7').trim() && (
                 <p className={`mt-2 w-full text-xs sm:text-sm font-sans font-semibold uppercase tracking-[0.2em] text-amber-100 drop-shadow-md ${settings.heroVersePosition === 'left' ? 'text-left' : settings.heroVersePosition === 'right' ? 'text-right' : 'text-center'}`}>
-                  {(settings.heroVerse ?? '1 Corintios 13:7').trim()}
+                  <NumeralText>{(settings.heroVerse ?? '1 Corintios 13:7').trim()}</NumeralText>
                 </p>
               )}
             </motion.div>
@@ -629,6 +642,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   customStyle={settings.countdownStyle}
                   customTitle={settings.countdownTitle || 'Faltan'}
                   showGuestsBadge={false}
+                  themeNumberFontFallback={themeDisplayFontFamily}
                   compact
                 />
               </div>
@@ -680,6 +694,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 customStyle={settings.countdownStyle}
                 customTitle={settings.countdownTitle || 'Faltan'}
                 showGuestsBadge={settings.showCountdownGuestsBadge}
+                themeNumberFontFallback={themeDisplayFontFamily}
               />
             </div>
           )}
