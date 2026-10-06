@@ -525,6 +525,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={loading}
+                    aria-describedby="auth-privacy-notice"
                     className="w-full py-3 px-6 bg-white hover:bg-stone-50 text-stone-800 border border-stone-300 font-sans font-semibold text-xs sm:text-sm rounded-full transition-colors flex items-center justify-center gap-3 cursor-pointer disabled:opacity-50"
                   >
                     <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
@@ -536,13 +537,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <span>{loading ? 'Conectando con Google…' : 'Continuar con Google'}</span>
                   </button>
                   <p id="auth-privacy-notice" className="text-center text-[11px] leading-relaxed text-stone-500">
-                    Antes de continuar, lee nuestras{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
-                      Condiciones del servicio
-                    </a>
-                    {' '}y la{' '}
+                    Al continuar con Google, 2date recibe tu correo verificado, nombre e identificador para confirmar tu identidad y habilitar el acceso a los eventos autorizados. No recibimos tu contraseña de Google. Consulta la{' '}
                     <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
                       Política de privacidad
+                    </a>
+                    {' '}y las{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-stone-900">
+                      Condiciones del servicio
                     </a>
                     .
                   </p>
