@@ -1365,7 +1365,12 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                     <button
                       key={themeKey}
                       type="button"
-                      onClick={() => onChange({ cardStyle: themeKey })}
+                      onClick={() => onChange({
+                        cardStyle: themeKey,
+                        colorPaletteStyle: 'auto',
+                        customAccentColor: '',
+                        customBgColor: '',
+                      })}
                       className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between min-w-0 ${
                         isSelected
                           ? 'bg-white border-[#5A5A40] ring-2 ring-[#5A5A40]/30 shadow-md scale-[1.01]'
