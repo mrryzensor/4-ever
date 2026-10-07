@@ -1154,8 +1154,10 @@ export async function getCeoGlobalStats() {
         free: allUsers.filter((u) => u.plan === 'free').length,
         atelier: allUsers.filter((u) => u.plan === 'atelier').length,
         elite: allUsers.filter((u) => u.plan === 'elite').length,
+        individual_permanent: allUsers.filter((u) => u.plan === 'individual_permanent').length,
         planner_starter: allUsers.filter((u) => u.plan === 'planner_starter').length,
         planner_pro: allUsers.filter((u) => u.plan === 'planner_pro').length,
+        planner_permanent: allUsers.filter((u) => u.plan === 'planner_permanent').length,
         ceo_unlimited: allUsers.filter((u) => u.plan === 'ceo_unlimited').length,
       };
 
@@ -1198,8 +1200,10 @@ export async function getCeoGlobalStats() {
     free: memoryState.users.filter((u) => u.plan === 'free').length,
     atelier: memoryState.users.filter((u) => u.plan === 'atelier').length,
     elite: memoryState.users.filter((u) => u.plan === 'elite').length,
+    individual_permanent: memoryState.users.filter((u) => u.plan === 'individual_permanent').length,
     planner_starter: memoryState.users.filter((u) => u.plan === 'planner_starter').length,
     planner_pro: memoryState.users.filter((u) => u.plan === 'planner_pro').length,
+    planner_permanent: memoryState.users.filter((u) => u.plan === 'planner_permanent').length,
     ceo_unlimited: memoryState.users.filter((u) => u.plan === 'ceo_unlimited').length,
   };
 

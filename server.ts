@@ -803,7 +803,7 @@ async function startServer() {
       }
 
       const determinedRole = role === 'wedding_planner' || plan?.startsWith('planner_') ? 'wedding_planner' : 'couple';
-      const publicPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro'];
+      const publicPlans = ['free', 'atelier', 'elite', 'individual_permanent', 'planner_starter', 'planner_pro', 'planner_permanent'];
       const determinedPlan = publicPlans.includes(plan) ? plan : (determinedRole === 'wedding_planner' ? 'planner_starter' : 'atelier');
       const generatedUid = 'usr-' + Buffer.from(cleanEmail).toString('base64').substring(0, 12).toLowerCase().replace(/[^a-z0-9]/g, 'x');
 
@@ -853,7 +853,7 @@ async function startServer() {
       const uid = identity.uid;
       const plan = req.body.plan;
       const currentProfile = await getUserProfile(uid);
-      const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'];
+      const validPlans = ['free', 'atelier', 'elite', 'individual_permanent', 'planner_starter', 'planner_pro', 'planner_permanent', 'ceo_unlimited'];
       if (!validPlans.includes(plan)) {
         return res.status(400).json({ error: 'Plan inválido' });
       }
@@ -935,7 +935,7 @@ async function startServer() {
     try {
       const { uid } = req.params;
       const { plan } = req.body;
-      const validPlans = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited', 'registered'];
+      const validPlans = ['free', 'atelier', 'elite', 'individual_permanent', 'planner_starter', 'planner_pro', 'planner_permanent', 'ceo_unlimited', 'registered'];
       if (!validPlans.includes(plan)) {
         return res.status(400).json({ error: 'Plan no válido' });
       }
@@ -1000,7 +1000,7 @@ async function startServer() {
       if (!['plan', 'role', 'delete'].includes(action)) {
         return res.status(400).json({ error: 'Acción de actualización no válida.' });
       }
-      if (action === 'plan' && !['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited', 'registered'].includes(value)) {
+      if (action === 'plan' && !['free', 'atelier', 'elite', 'individual_permanent', 'planner_starter', 'planner_pro', 'planner_permanent', 'ceo_unlimited', 'registered'].includes(value)) {
         return res.status(400).json({ error: 'Plan no válido.' });
       }
       if (action === 'role' && !['ceo', 'wedding_planner', 'couple', 'admin'].includes(value)) {
@@ -1148,7 +1148,7 @@ async function startServer() {
       const profile = await getUserProfile(identity.uid);
       const isPrivileged = identity.role === 'ceo' || identity.role === 'admin' || identity.email === CEO_EMAIL;
       const activePlanId = String(profile?.plan || '');
-      const hasActivePlan = ['free', 'atelier', 'elite', 'planner_starter', 'planner_pro', 'ceo_unlimited'].includes(activePlanId);
+      const hasActivePlan = ['free', 'atelier', 'elite', 'individual_permanent', 'planner_starter', 'planner_pro', 'planner_permanent', 'ceo_unlimited'].includes(activePlanId);
       if (!isPrivileged && !hasActivePlan) {
         return res.status(403).json({ error: 'Tu cuenta está registrada, pero aún no tiene un plan activo para crear eventos. Elige un plan para continuar.' });
       }

@@ -20,8 +20,10 @@ export type PlanId =
   | 'free' 
   | 'atelier' 
   | 'elite' 
+  | 'individual_permanent'
   | 'planner_starter' 
   | 'planner_pro' 
+  | 'planner_permanent'
   | 'ceo_unlimited'
   | 'registered';
 

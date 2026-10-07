@@ -226,8 +226,10 @@ export const UserEditModal: React.FC<UserEditModalProps> = ({
                   <option value="free">Plan Esencial ($0 USD)</option>
                   <option value="atelier">Plan Atelier Romance ($29 USD)</option>
                   <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
+                  <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                   <option value="planner_starter">Planner Studio ($89 USD)</option>
                   <option value="planner_pro">Planner Agencia ($179 USD)</option>
+                  <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                   <option value="ceo_unlimited">CEO Ilimitado</option>
                 </select>
               </div>

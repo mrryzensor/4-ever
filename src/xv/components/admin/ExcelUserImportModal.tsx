@@ -150,7 +150,8 @@ export const ExcelUserImportModal: React.FC<ExcelUserImportModalProps> = ({
           }
         } else if (mapping === 'plan') {
           const lower = val.toLowerCase();
-          if (lower.includes('free') || lower.includes('esencial') || lower.includes('gratis')) userObj.plan = 'free';
+          if (lower.includes('permanente') || lower.includes('permanent')) userObj.plan = lower.includes('planner') ? 'planner_permanent' : 'individual_permanent';
+          else if (lower.includes('free') || lower.includes('esencial') || lower.includes('gratis')) userObj.plan = 'free';
           else if (lower.includes('elite')) userObj.plan = 'elite';
           else if (lower.includes('pro') || lower.includes('agencia')) userObj.plan = 'planner_pro';
           else if (lower.includes('starter') || lower.includes('studio')) userObj.plan = 'planner_starter';
@@ -317,8 +318,10 @@ export const ExcelUserImportModal: React.FC<ExcelUserImportModalProps> = ({
                     <option value="free">Plan Esencial ($0 USD)</option>
                     <option value="atelier">Plan Atelier Romance ($29 USD)</option>
                     <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
+                    <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                     <option value="planner_starter">Planner Studio 5 Bodas ($89 USD)</option>
                     <option value="planner_pro">Planner Agencia Ilimitado ($179 USD)</option>
+                    <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                     <option value="ceo_unlimited">CEO Maestro Ilimitado</option>
                   </select>
                 </div>

@@ -1159,8 +1159,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     <option value="free">Esencial ($0)</option>
                     <option value="atelier">Atelier Romance ($29)</option>
                     <option value="elite">Élite Gran Boda ($59)</option>
+                    <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                     <option value="planner_starter">Planner Studio ($89)</option>
                     <option value="planner_pro">Planner Agencia ($179)</option>
+                    <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                     <option value="ceo_unlimited">CEO Ilimitado</option>
                   </select>
                 </div>
@@ -1217,8 +1219,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                       <option value="free">Esencial ($0)</option>
                       <option value="atelier">Atelier Romance ($29)</option>
                       <option value="elite">Élite Gran Boda ($59)</option>
+                      <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                       <option value="planner_starter">Planner Studio ($89)</option>
                       <option value="planner_pro">Planner Agencia ($179)</option>
+                      <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                       <option value="ceo_unlimited">CEO Ilimitado</option>
                     </select>
                     <button
@@ -1460,8 +1464,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                                   <option value="free">Esencial ($0)</option>
                                   <option value="atelier">Atelier ($29)</option>
                                   <option value="elite">Élite ($59)</option>
+                                  <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                                   <option value="planner_starter">Studio ($89)</option>
                                   <option value="planner_pro">Agencia ($179)</option>
+                                  <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                                   <option value="ceo_unlimited">CEO Ilimitado</option>
                                 </select>
                               </td>
@@ -1605,8 +1611,10 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                             <option value="free">Plan Esencial ($0 USD)</option>
                             <option value="atelier">Plan Atelier Romance ($29 USD)</option>
                             <option value="elite">Plan Élite Gran Boda ($59 USD)</option>
+                            <option value="individual_permanent">Plan Individual Permanente (Consultar)</option>
                             <option value="planner_starter">Planner Studio 5 Eventos ($89 USD)</option>
                             <option value="planner_pro">Planner Agencia Ilimitado ($179 USD)</option>
+                            <option value="planner_permanent">Planner Permanente (Cotizar)</option>
                             <option value="ceo_unlimited">CEO Maestro Ilimitado</option>
                           </select>
                         </div>
