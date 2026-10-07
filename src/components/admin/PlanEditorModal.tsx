@@ -37,6 +37,7 @@ export const PlanEditorModal: React.FC<PlanEditorModalProps> = ({
   const [features, setFeatures] = useState<string[]>([]);
   const [newFeatureText, setNewFeatureText] = useState('');
   const [maxWeddings, setMaxWeddings] = useState<string>('1');
+  const [retentionYears, setRetentionYears] = useState<string>('0');
   const [ctaText, setCtaText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,6 +51,7 @@ export const PlanEditorModal: React.FC<PlanEditorModalProps> = ({
       setDescription(plan.description || '');
       setFeatures(plan.features ? [...plan.features] : []);
       setMaxWeddings(String(plan.maxWeddings || '1'));
+      setRetentionYears(String(plan.limits?.retentionYears ?? 0));
       setCtaText(plan.ctaText || 'Elegir Plan');
     }
   }, [plan, isOpen]);
@@ -85,6 +87,10 @@ export const PlanEditorModal: React.FC<PlanEditorModalProps> = ({
         description: description.trim(),
         features,
         maxWeddings: maxWeddings === 'unlimited' ? 'unlimited' : Number(maxWeddings) || 1,
+        limits: {
+          ...plan.limits,
+          retentionYears: retentionYears === 'unlimited' ? 'unlimited' : Number(retentionYears) || 0,
+        },
         ctaText: ctaText.trim() || 'Elegir Plan',
       };
 
@@ -230,7 +236,7 @@ export const PlanEditorModal: React.FC<PlanEditorModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-300 mb-1">
                   Capacidad de Bodas Permitidas:
@@ -244,6 +250,22 @@ export const PlanEditorModal: React.FC<PlanEditorModalProps> = ({
                   <option value="5">5 Bodas</option>
                   <option value="15">15 Bodas</option>
                   <option value="unlimited">Ilimitadas (Sin Límite)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-300 mb-1">
+                  Duración del acceso al evento:
+                </label>
+                <select
+                  value={retentionYears}
+                  onChange={(e) => setRetentionYears(e.target.value)}
+                  className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2.5 text-stone-200 focus:outline-none focus:border-amber-500 font-medium"
+                >
+                  <option value="0">Hasta la fecha RSVP o del evento</option>
+                  <option value="1">1 año después del evento</option>
+                  <option value="2">2 años después del evento</option>
+                  <option value="unlimited">Permanente (sin vencimiento)</option>
                 </select>
               </div>
 

@@ -46,6 +46,12 @@ export async function autoMigrateDatabase() {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS agency_name TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 
+        CREATE TABLE IF NOT EXISTS subscription_plans (
+          plan_id TEXT PRIMARY KEY,
+          plan_data TEXT NOT NULL,
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+
         -- 2. Wedding Settings Table
         CREATE TABLE IF NOT EXISTS wedding_settings (
           id SERIAL PRIMARY KEY,

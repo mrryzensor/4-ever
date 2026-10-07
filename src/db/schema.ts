@@ -16,6 +16,13 @@ export const users = pgTable('users', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+// CEO-managed subscription plan overrides, persisted separately from source defaults.
+export const subscriptionPlans = pgTable('subscription_plans', {
+  planId: text('plan_id').primaryKey(),
+  planData: text('plan_data').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Wedding global configuration
 export const weddingSettings = pgTable('wedding_settings', {
   id: serial('id').primaryKey(),

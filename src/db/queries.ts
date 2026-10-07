@@ -9,7 +9,8 @@ import {
   drivePhotoComments,
   weddingVideos,
   guestbookWishes,
-  users
+  users,
+  subscriptionPlans,
 } from './schema.ts';
 import { eq, desc, asc, ilike, or, and, inArray, sql } from 'drizzle-orm';
 import {
@@ -2763,17 +2764,49 @@ import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
 let customPlansMemory = [...SUBSCRIPTION_PLANS];
 
 export async function getCustomPlans() {
+  if (hasPostgresConfig()) {
+    const savedPlans = await db.select().from(subscriptionPlans);
+    const savedById = new Map(savedPlans.map((row) => [row.planId, row.planData]));
+    customPlansMemory = SUBSCRIPTION_PLANS.map((defaultPlan) => {
+      const stored = savedById.get(defaultPlan.id);
+      if (!stored) return defaultPlan;
+      try {
+        const override = JSON.parse(stored);
+        return {
+          ...defaultPlan,
+          ...override,
+          limits: { ...defaultPlan.limits, ...(override.limits || {}) },
+        };
+      } catch (error) {
+        console.warn(`Ignoring invalid saved subscription plan ${defaultPlan.id}:`, error);
+        return defaultPlan;
+      }
+    });
+  }
   return customPlansMemory;
 }
 
 export async function updateCustomPlan(planId: string, updates: any) {
+  if (hasPostgresConfig()) await getCustomPlans();
   const idx = customPlansMemory.findIndex((p) => p.id === planId);
   if (idx !== -1) {
-    customPlansMemory[idx] = {
+    const updatedPlan = {
       ...customPlansMemory[idx],
       ...updates,
+      limits: { ...customPlansMemory[idx].limits, ...(updates.limits || {}) },
     };
-    return customPlansMemory[idx];
+    if (hasPostgresConfig()) {
+      await db.insert(subscriptionPlans).values({
+        planId,
+        planData: JSON.stringify(updatedPlan),
+        updatedAt: new Date(),
+      }).onConflictDoUpdate({
+        target: subscriptionPlans.planId,
+        set: { planData: JSON.stringify(updatedPlan), updatedAt: new Date() },
+      });
+    }
+    customPlansMemory[idx] = updatedPlan;
+    return updatedPlan;
   }
   throw new Error('Plan no encontrado');
 }

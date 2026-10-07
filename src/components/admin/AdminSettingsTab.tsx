@@ -346,7 +346,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               className={`${
                 atelierViewMode === 'split'
                   ? 'col-span-6 2xl:col-span-5 max-h-[calc(100vh-140px)] overflow-y-auto overflow-x-hidden pr-3 sticky top-24 custom-scrollbar space-y-6 min-w-0'
-                  : 'max-w-4xl mx-auto space-y-8 min-w-0'
+                  : 'w-full space-y-8 min-w-0'
               }`}
             >
               <ShareMessageSettings settings={settings} onChange={onChange} />

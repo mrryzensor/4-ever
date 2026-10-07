@@ -9,7 +9,6 @@ import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { CodeChallengeMethod, OAuth2Client } from 'google-auth-library';
 import { createServer as createViteServer } from 'vite';
 import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
-import { SUBSCRIPTION_PLANS } from './src/data/plans.ts';
 import {
   getWeddingSettings,
   updateWeddingSettings,
@@ -387,8 +386,11 @@ async function startServer() {
     }
   };
 
-  const planDetailsFor = (planId: string) => SUBSCRIPTION_PLANS.find((plan) => plan.id === planId)
-    || SUBSCRIPTION_PLANS.find((plan) => plan.id === 'free')!;
+  const planDetailsFor = async (planId: string) => {
+    const plans = await getCustomPlans();
+    return plans.find((plan) => plan.id === planId)
+      || plans.find((plan) => plan.id === 'free')!;
+  };
   const uploadedHeroPhotoCount = (wedding: any) => {
     const urls = new Set<string>();
     const addIfUploaded = (value: unknown) => {
@@ -406,7 +408,7 @@ async function startServer() {
     const owner = wedding?.ownerUid ? await getUserProfile(String(wedding.ownerUid)) : null;
     const isUnrestrictedEvent = isCeo || demoEvent || owner?.role === 'ceo';
     const planId = isUnrestrictedEvent ? 'ceo_unlimited' : String(owner?.plan || 'free');
-    const plan = planDetailsFor(planId);
+    const plan = await planDetailsFor(planId);
     const limits = plan.limits;
     const dateOnly = (value: unknown) => {
       if (value instanceof Date) return value.toISOString().slice(0, 10);
@@ -1150,7 +1152,7 @@ async function startServer() {
       if (!isPrivileged && !hasActivePlan) {
         return res.status(403).json({ error: 'Tu cuenta está registrada, pero aún no tiene un plan activo para crear eventos. Elige un plan para continuar.' });
       }
-      const accountPlan = planDetailsFor(isPrivileged ? 'ceo_unlimited' : activePlanId);
+      const accountPlan = await planDetailsFor(isPrivileged ? 'ceo_unlimited' : activePlanId);
       if (!isPrivileged && accountPlan.maxWeddings !== 'unlimited') {
         const ownedEvents = await getUserWeddings(identity.uid, identity.email, false);
         const countableEvents = ownedEvents.filter((item: any) => item.ownerUid === identity.uid && (
