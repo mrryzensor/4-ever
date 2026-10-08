@@ -16,6 +16,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
+import { parseDressCodePalette } from '../../lib/dressCodePalette.ts';
 import { StyleSpecificDivider } from './AnimatedSvgs.tsx';
 import { CARD_THEMES } from '../../lib/themes.ts';
 import { ManFashionIllustration, WomanFashionIllustration } from '../../components/FashionIllustrations.tsx';
@@ -872,12 +873,7 @@ export const DressCodeSection: React.FC<DressCodeSectionProps> = ({
   }
 
   // Parse color palette
-  let paletteList: string[] = [];
-  try {
-    paletteList = JSON.parse(settings.dressCodePalette || '[]');
-  } catch {
-    paletteList = ['#1C2D37', '#9E7D47', '#D4AF37', '#D8C7B8', '#4A5B52'];
-  }
+  let paletteList = parseDressCodePalette(settings.dressCodePalette);
 
   if (!Array.isArray(paletteList) || paletteList.length === 0) {
     paletteList = ['#1C2D37', '#9E7D47', '#D4AF37', '#D8C7B8', '#4A5B52'];

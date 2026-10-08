@@ -43,6 +43,7 @@ import { preserveViewportPosition } from '../../lib/preserveViewportPosition.ts'
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import { getRsvpButtonPresentation, getThemeDisplayFontFamily } from '../../lib/rsvpButtonStyle.ts';
 import { resolveHeroNumberFontFamily } from '../../lib/numberFonts.ts';
+import { parseDressCodePalette } from '../../lib/dressCodePalette.ts';
 import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from '../../lib/dateFormatters.ts';
 import {
   AnimatedFloatingPetals,
@@ -156,12 +157,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Dress Code interactive visualizer state
-  let paletteList: string[] = [];
-  try {
-    paletteList = settings.dressCodePalette ? JSON.parse(settings.dressCodePalette) : [];
-  } catch {
-    paletteList = [];
-  }
+  let paletteList = parseDressCodePalette(settings.dressCodePalette);
   if (!paletteList.length) {
     switch (settings.cardStyle) {
       case 'romantic-floral':

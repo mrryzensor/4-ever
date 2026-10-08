@@ -822,6 +822,9 @@ export async function updateWeddingSettings(
 ) {
   const targetId = weddingId || 1;
   const normalizedData: any = { ...data };
+  if (Array.isArray(normalizedData.dressCodePalette)) {
+    normalizedData.dressCodePalette = JSON.stringify(normalizedData.dressCodePalette);
+  }
   const resolvedEventType = resolveEventType(data.eventType, data.slug);
 
   if (data.eventType !== undefined) {

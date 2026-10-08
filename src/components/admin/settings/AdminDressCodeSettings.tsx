@@ -8,6 +8,7 @@ import {
   Footprints,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
+import { isDressCodeHexColor, parseDressCodePalette, serializeDressCodePalette, toColorInputHex } from '../../../lib/dressCodePalette.ts';
 import { WomanFashionMockup, ManFashionMockup } from '../../DressCodeSection.tsx';
 
 interface AdminDressCodeSettingsProps {
@@ -15,33 +16,34 @@ interface AdminDressCodeSettingsProps {
   onChange: (updated: Partial<WeddingSettings>) => void;
 }
 
+type DressCodeSettingsUpdate = Omit<Partial<WeddingSettings>, 'dressCodePalette'> & {
+  dressCodePalette?: string | string[];
+};
+
 export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
   settings,
   onChange,
 }) => {
+  const [paletteDrafts, setPaletteDrafts] = React.useState<Record<number, string>>({});
+
+  const updateSettings = (updated: DressCodeSettingsUpdate) => {
+    const normalizedUpdate = Array.isArray(updated.dressCodePalette)
+      ? { ...updated, dressCodePalette: serializeDressCodePalette(updated.dressCodePalette) }
+      : updated;
+    onChange(normalizedUpdate as Partial<WeddingSettings>);
+  };
+
   // Helper to parse dress code palette
   const getParsedDressCodePalette = (): string[] => {
-    if (Array.isArray(settings.dressCodePalette)) {
-      return settings.dressCodePalette;
-    }
-    if (typeof settings.dressCodePalette === 'string') {
-      try {
-        const parsed = JSON.parse(settings.dressCodePalette);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        return (settings.dressCodePalette as string)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-    }
-    return ['#1C2D37', '#9E7D47', '#D4AF37', '#4A5B52', '#B26E59'];
+    const palette = parseDressCodePalette(settings.dressCodePalette);
+    return palette.length ? palette : ['#1C2D37', '#9E7D47', '#D4AF37', '#4A5B52', '#B26E59'];
   };
 
   const handleApplyDressCodePreset = (presetId: string) => {
+    setPaletteDrafts({});
     switch (presetId) {
       case 'black-tie':
-        onChange({
+        updateSettings({
           dressCode: 'Rigurosa Etiqueta (Black Tie)',
           dressCodeDescription:
             'Agradecemos su estricto apego al código de gala. Esmoquin para caballeros y vestido largo de noche para damas.',
@@ -61,7 +63,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
         });
         break;
       case 'formal':
-        onChange({
+        updateSettings({
           dressCode: 'Formal / Traje de Noche',
           dressCodeDescription:
             'Vestimenta formal elegante. Traje oscuro para caballeros y vestido largo o midi de gala para damas.',
@@ -81,7 +83,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
         });
         break;
       case 'guayabera':
-        onChange({
+        updateSettings({
           dressCode: 'Guayabera Formal / Playa & Jardín',
           dressCodeDescription:
             'Etiqueta fresca y sofisticada. Guayabera de lino manga larga para caballeros y vestido fresco para damas.',
@@ -101,7 +103,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
         });
         break;
       case 'cocktail':
-        onChange({
+        updateSettings({
           dressCode: 'Cóctel / Semi-Formal',
           dressCodeDescription:
             'Elegancia moderna y dinámica. Vestido a la rodilla o traje sastre para damas y blazer con pantalón de vestir para caballeros.',
@@ -121,7 +123,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
         });
         break;
       case 'boho':
-        onChange({
+        updateSettings({
           dressCode: 'Boho Chic & Romántico',
           dressCodeDescription:
             'Estilo bohemio, natural y relajado en armonía con los tonos de la naturaleza y campos abiertos.',
@@ -148,19 +150,21 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
   const handleAddPaletteColor = (color: string) => {
     const current = getParsedDressCodePalette();
     if (!current.includes(color)) {
-      onChange({ dressCodePalette: [...current, color] });
+      updateSettings({ dressCodePalette: [...current, color] });
     }
   };
 
   const handleUpdatePaletteColor = (index: number, newColor: string) => {
+    if (!isDressCodeHexColor(newColor)) return;
     const current = [...getParsedDressCodePalette()];
-    current[index] = newColor;
-    onChange({ dressCodePalette: current });
+    current[index] = newColor.trim();
+    updateSettings({ dressCodePalette: current });
   };
 
   const handleRemovePaletteColor = (index: number) => {
     const current = getParsedDressCodePalette().filter((_, i) => i !== index);
-    onChange({ dressCodePalette: current });
+    setPaletteDrafts({});
+    updateSettings({ dressCodePalette: current });
   };
 
   return (
@@ -220,7 +224,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             placeholder="Ej. Formal Riguroso / Traje de Noche"
             value={settings.dressCode || ''}
             onChange={(e) =>
-              onChange({ dressCode: e.target.value })
+              updateSettings({ dressCode: e.target.value })
             }
             className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs font-semibold text-[#1a1a1a] focus:outline-none focus:border-[#5A5A40]"
           />
@@ -235,7 +239,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             placeholder="Ej. Agradecemos su puntualidad y apego al código de vestimenta."
             value={settings.dressCodeDescription || ''}
             onChange={(e) =>
-              onChange({ dressCodeDescription: e.target.value })
+              updateSettings({ dressCodeDescription: e.target.value })
             }
             className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
           />
@@ -280,14 +284,30 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             >
               <input
                 type="color"
-                value={color.startsWith('#') ? color : '#1C2D37'}
-                onChange={(e) => handleUpdatePaletteColor(idx, e.target.value)}
+                value={toColorInputHex(color)}
+                onChange={(e) => {
+                  handleUpdatePaletteColor(idx, e.target.value);
+                  setPaletteDrafts((previous) => {
+                    const next = { ...previous };
+                    delete next[idx];
+                    return next;
+                  });
+                }}
                 className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg cursor-pointer border-0 p-0"
               />
               <input
                 type="text"
-                value={color}
-                onChange={(e) => handleUpdatePaletteColor(idx, e.target.value)}
+                value={paletteDrafts[idx] ?? color}
+                onChange={(e) => {
+                  const draft = e.target.value;
+                  setPaletteDrafts((previous) => ({ ...previous, [idx]: draft }));
+                  handleUpdatePaletteColor(idx, draft);
+                }}
+                onBlur={() => setPaletteDrafts((previous) => {
+                  const next = { ...previous };
+                  delete next[idx];
+                  return next;
+                })}
                 className="w-14 sm:w-16 text-[11px] font-mono font-medium text-stone-700 bg-transparent border-0 focus:outline-none"
               />
               {getParsedDressCodePalette().length > 1 && (
@@ -324,7 +344,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             <select
               value={settings.dressCodeWomanOutfit || 'long-gown'}
               onChange={(e) =>
-                onChange({
+                updateSettings({
                   dressCodeWomanOutfit: e.target.value as any,
                 })
               }
@@ -346,7 +366,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               placeholder="Para Ellas (Damas)"
               value={settings.dressCodeWomenTitle || 'Para Ellas (Damas)'}
               onChange={(e) =>
-                onChange({ dressCodeWomenTitle: e.target.value })
+                updateSettings({ dressCodeWomenTitle: e.target.value })
               }
               className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
             />
@@ -361,7 +381,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               placeholder="Vestido largo de noche o gala en telas finas (satén, crepé, seda). Evitar tonos blancos o marfil."
               value={settings.dressCodeWomenDescription || ''}
               onChange={(e) =>
-                onChange({ dressCodeWomenDescription: e.target.value })
+                updateSettings({ dressCodeWomenDescription: e.target.value })
               }
               className="w-full bg-white border border-[#E5E2D0] rounded-xl p-3 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] resize-none shadow-2xs"
             />
@@ -385,7 +405,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             <select
               value={settings.dressCodeManOutfit || 'suit'}
               onChange={(e) =>
-                onChange({
+                updateSettings({
                   dressCodeManOutfit: e.target.value as any,
                 })
               }
@@ -407,7 +427,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               placeholder="Para Ellos (Caballeros)"
               value={settings.dressCodeMenTitle || 'Para Ellos (Caballeros)'}
               onChange={(e) =>
-                onChange({ dressCodeMenTitle: e.target.value })
+                updateSettings({ dressCodeMenTitle: e.target.value })
               }
               className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
             />
@@ -422,7 +442,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
               placeholder="Traje formal completo en tonos oscuros (marino, carbón, gris oxford), camisa blanca o clara, corbata o moño y calzado de vestir."
               value={settings.dressCodeMenDescription || ''}
               onChange={(e) =>
-                onChange({ dressCodeMenDescription: e.target.value })
+                updateSettings({ dressCodeMenDescription: e.target.value })
               }
               className="w-full bg-white border border-[#E5E2D0] rounded-xl p-3 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] resize-none shadow-2xs"
             />
@@ -442,7 +462,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             placeholder="Ej. El color blanco, marfil y champaña claro están reservados..."
             value={settings.dressCodeProhibitedColors || ''}
             onChange={(e) =>
-              onChange({ dressCodeProhibitedColors: e.target.value })
+              updateSettings({ dressCodeProhibitedColors: e.target.value })
             }
             className="w-full bg-amber-50/70 border border-amber-200 rounded-xl px-3.5 py-2 text-xs text-amber-900 focus:outline-none focus:border-amber-400 shadow-2xs"
           />
@@ -458,7 +478,7 @@ export const AdminDressCodeSettings: React.FC<AdminDressCodeSettingsProps> = ({
             placeholder="Ej. La recepción es en jardín con césped: sugerimos tacón corrido..."
             value={settings.dressCodeFootwearNote || ''}
             onChange={(e) =>
-              onChange({ dressCodeFootwearNote: e.target.value })
+              updateSettings({ dressCodeFootwearNote: e.target.value })
             }
             className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40] shadow-2xs"
           />

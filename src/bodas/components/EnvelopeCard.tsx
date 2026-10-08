@@ -37,6 +37,7 @@ import { formatHeroDate, parseEventTargetDate, calculateCountdownTimeLeft } from
 import { getBankAccountBadgeText, getBankAccounts, hasBankAccountData } from '../../lib/bankAccounts.ts';
 import { getGiftRegistryCopy, getGiftRegistryMessage } from '../../lib/giftRegistryCopy.ts';
 import { getContrastTextColor } from '../../lib/colorUtils.ts';
+import { parseDressCodePalette } from '../../lib/dressCodePalette.ts';
 import { preserveViewportPosition } from '../../lib/preserveViewportPosition.ts';
 import { SocialVideoEmbed } from '../../components/SocialVideoEmbed.tsx';
 import {
@@ -152,12 +153,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   const showBankAccountsWhenCollapsed = settings.showBankAccountsWhenCollapsed !== false;
 
   // Dress Code interactive visualizer state
-  let paletteList: string[] = [];
-  try {
-    paletteList = settings.dressCodePalette ? JSON.parse(settings.dressCodePalette) : [];
-  } catch {
-    paletteList = [];
-  }
+  let paletteList = parseDressCodePalette(settings.dressCodePalette);
   if (!paletteList.length) {
     switch (settings.cardStyle) {
       case 'romantic-floral':
