@@ -15,6 +15,8 @@ import {
 } from '../lib/letterAppearance.ts';
 import { getThemeFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { CardOrnamentFrame } from './animations/CardOrnamentFrame.tsx';
+import { StyleSpecificDivider } from './animations/StyleSpecificDivider.tsx';
+import { CountdownStyleOrnament } from './animations/AnimatedCountdown.tsx';
 
 interface InvitationLetterProps {
   settings: WeddingSettings;
@@ -39,25 +41,87 @@ const shade = (hex: string, amount: number) => {
   return `rgb(${channel(r)}, ${channel(g)}, ${channel(b)})`;
 };
 
-const LetterFlorals = ({ color }: { color: string }) => (
-  <svg aria-hidden="true" viewBox="0 0 260 190" className="pointer-events-none absolute h-auto w-40 opacity-45 sm:w-52" fill="none">
-    <g fill={color} fillOpacity=".16">
-      <ellipse cx="180" cy="24" rx="31" ry="13" transform="rotate(38 180 24)" />
-      <ellipse cx="215" cy="46" rx="31" ry="13" transform="rotate(-12 215 46)" />
-      <ellipse cx="228" cy="82" rx="31" ry="13" transform="rotate(55 228 82)" />
-      <ellipse cx="167" cy="58" rx="28" ry="12" transform="rotate(-48 167 58)" />
-      <ellipse cx="193" cy="96" rx="28" ry="12" transform="rotate(21 193 96)" />
-      <ellipse cx="125" cy="24" rx="24" ry="10" transform="rotate(18 125 24)" />
-    </g>
-    <g stroke={color} strokeOpacity=".24" strokeWidth="2" strokeLinecap="round">
-      <path d="M248 12c-39 30-56 68-62 111M223 39c-16-3-29-10-39-22m61 41c-15 3-28 1-41-5m25 34c-14-4-25-12-34-24" />
-      <path d="M198 100c-23 9-43 25-57 47" />
-    </g>
-    <g fill={color} fillOpacity=".25">
-      <circle cx="189" cy="43" r="4" /><circle cx="229" cy="78" r="4" /><circle cx="162" cy="73" r="3" />
-    </g>
-  </svg>
-);
+const LetterCornerOrnament: React.FC<{ styleId: string; color: string }> = ({ styleId, color }) => {
+  const celestial = ['dark-luxury', 'royal-navy', 'champagne-glam', 'minimal-editorial'].includes(styleId);
+  const softFlorals = ['romantic-floral', 'watercolor-garden', 'lavender-provence'].includes(styleId);
+  const washGradientId = `letter-corner-wash-${useId().replace(/:/g, '')}`;
+  const leaves = [
+    { x: 280, y: 15, rx: 11, ry: 4, rotate: 34 },
+    { x: 253, y: 27, rx: 12, ry: 4, rotate: -22 },
+    { x: 224, y: 23, rx: 10, ry: 3.5, rotate: 26 },
+    { x: 197, y: 38, rx: 11, ry: 4, rotate: -34 },
+    { x: 275, y: 53, rx: 12, ry: 4, rotate: 68 },
+    { x: 286, y: 81, rx: 12, ry: 4, rotate: -35 },
+    { x: 265, y: 106, rx: 11, ry: 4, rotate: 42 },
+    { x: 241, y: 130, rx: 12, ry: 4, rotate: -42 },
+    { x: 226, y: 161, rx: 11, ry: 4, rotate: 36 },
+    { x: 254, y: 69, rx: 9, ry: 3.5, rotate: -28 },
+    { x: 228, y: 91, rx: 10, ry: 3.5, rotate: 36 },
+    { x: 205, y: 116, rx: 9, ry: 3.5, rotate: -36 },
+    { x: 170, y: 43, rx: 9, ry: 3.5, rotate: 22 },
+    { x: 294, y: 112, rx: 9, ry: 3.5, rotate: 74 },
+    { x: 250, y: 171, rx: 10, ry: 3.5, rotate: -28 },
+    { x: 184, y: 136, rx: 8, ry: 3.2, rotate: 28 },
+  ];
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute -right-4 -top-5 z-[1] h-48 w-[72%] max-w-[330px] opacity-90 sm:h-56 sm:w-[62%] md:-right-3 md:-top-4 md:h-72 md:w-[40%] md:max-w-[420px]">
+      <svg viewBox="0 0 300 220" fill="none" className="h-full w-full overflow-visible">
+        <defs>
+          <linearGradient id={washGradientId} x1="300" y1="0" x2="160" y2="220" gradientUnits="userSpaceOnUse">
+            <stop stopColor={color} stopOpacity={softFlorals ? 0.24 : 0.17} />
+            <stop offset="1" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {!celestial && <path d="M302 -8C276 21 245 28 216 23C193 19 176 29 157 47M299 -2C277 31 270 55 278 79C286 105 270 128 245 150C226 167 220 190 226 224M268 59C245 66 224 84 209 109C198 128 183 143 160 153M255 87C278 85 294 91 310 107" stroke={color} strokeOpacity=".62" strokeWidth="1.8" strokeLinecap="round" />}
+        {!celestial && leaves.map((leaf, index) => (
+          <motion.ellipse
+            key={index}
+            cx={leaf.x}
+            cy={leaf.y}
+            rx={softFlorals ? leaf.rx * 1.15 : leaf.rx}
+            ry={softFlorals ? leaf.ry * 1.35 : leaf.ry}
+            fill={index % 3 === 0 ? `url(#${washGradientId})` : color}
+            fillOpacity={index % 3 === 0 ? 1 : 0.43 + (index % 2) * 0.12}
+            transform={`rotate(${leaf.rotate} ${leaf.x} ${leaf.y})`}
+            initial={{ scale: 0.82, opacity: 0.45 }}
+            animate={{ scale: [0.92, 1.12, 0.92], opacity: [0.58, 0.88, 0.58] }}
+            transition={{ duration: 3 + (index % 4) * 0.45, repeat: Infinity, ease: 'easeInOut', delay: (index % 5) * 0.18 }}
+            style={{ transformOrigin: `${leaf.x}px ${leaf.y}px` }}
+          />
+        ))}
+        {celestial ? (
+          <g fill={color}>
+            <path d="m274 20 4 11 11 4-11 4-4 11-4-11-11-4 11-4 4-11ZM228 58l2.5 6.5L237 67l-6.5 2.5L228 76l-2.5-6.5L219 67l6.5-2.5L228 58ZM278 112l2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" opacity=".5" />
+            <circle cx="199" cy="31" r="2.2" opacity=".55" /><circle cx="254" cy="91" r="2" opacity=".45" /><circle cx="218" cy="139" r="1.8" opacity=".55" />
+          </g>
+        ) : softFlorals ? (
+          <g fill={color}>
+            {[{ x: 253, y: 44, r: 6 }, { x: 210, y: 72, r: 5 }, { x: 287, y: 132, r: 6 }, { x: 237, y: 185, r: 5 }].map(({ x, y, r }, index) => (
+              <g key={index}>
+                <motion.g animate={{ rotate: [0, 10, 0], scale: [0.9, 1.1, 0.9] }} transition={{ duration: 4 + index * 0.4, repeat: Infinity, ease: 'easeInOut' }} style={{ transformOrigin: `${x}px ${y}px` }}>
+                  <ellipse cx={x} cy={y - r * 0.65} rx={r * 0.48} ry={r * 0.82} opacity=".42" />
+                  <ellipse cx={x + r * 0.65} cy={y} rx={r * 0.48} ry={r * 0.82} transform={`rotate(90 ${x + r * 0.65} ${y})`} opacity=".36" />
+                  <ellipse cx={x} cy={y + r * 0.65} rx={r * 0.48} ry={r * 0.82} opacity=".42" />
+                  <ellipse cx={x - r * 0.65} cy={y} rx={r * 0.48} ry={r * 0.82} transform={`rotate(90 ${x - r * 0.65} ${y})`} opacity=".36" />
+                </motion.g>
+                <circle cx={x} cy={y} r={r * 0.26} fill="#fff" opacity=".9" />
+              </g>
+            ))}
+          </g>
+        ) : (
+          <g fill="#D4A373">
+            <path d="M245 48c-5-5-12 2 0 11 12-9 5-16 0-11Z" opacity=".92" />
+            <path d="M282 98c-4-4-10 2 0 9 10-7 4-13 0-9Z" opacity=".88" />
+            <path d="M194 132c-4-4-10 2 0 9 10-7 4-13 0-9Z" opacity=".8" />
+            <path d="M258 153c-3-3-8 2 0 7 8-5 3-10 0-7Z" opacity=".78" />
+            <circle cx="271" cy="28" r="3" opacity=".9" /><circle cx="232" cy="153" r="2.5" opacity=".85" />
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+};
 
 const TintedLetterArtwork = ({
   source,
@@ -223,11 +287,34 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
         style={{ backgroundColor: settings.transparentCards ? 'transparent' : theme.secondaryBgHex || '#fff', borderColor: `${theme.accentColorHex}38`, color: theme.primaryColorHex }}
       >
         <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
-        <div className="pointer-events-none absolute -right-7 -top-3 opacity-70">
-          <LetterFlorals color={theme.accentColorHex} />
+        <LetterCornerOrnament
+          styleId={settings.dividerStyle && settings.dividerStyle !== 'auto' ? settings.dividerStyle : settings.cardStyle || fallbackStyle}
+          color={theme.accentColorHex}
+        />
+        <div className="pointer-events-none absolute -right-8 -top-8 z-[1] h-48 w-48 opacity-75 sm:h-56 sm:w-56 md:h-72 md:w-72">
+          <CountdownStyleOrnament
+            style={settings.countdownStyle}
+            fallbackStyle={settings.cardStyle || fallbackStyle}
+            accentColor={theme.accentColorHex}
+          />
         </div>
-        <div className="pointer-events-none absolute -bottom-20 -left-14 rotate-180 opacity-50 md:bottom-0 md:left-0">
-          <LetterFlorals color={theme.accentColorHex} />
+        <div className="pointer-events-none absolute right-0 top-0 z-[2] h-12 w-[58%] max-w-[300px] opacity-90 md:w-[35%] md:max-w-[380px]">
+          <StyleSpecificDivider
+            cardStyle={settings.cardStyle || fallbackStyle}
+            dividerStyle={settings.dividerStyle}
+            fallbackStyle={fallbackStyle}
+            color={theme.accentColorHex}
+            className="!mx-0 !my-0 h-full w-full"
+          />
+        </div>
+        <div className="pointer-events-none absolute -bottom-8 left-0 z-[1] h-28 w-full overflow-hidden opacity-90 sm:h-36 md:h-40">
+          <StyleSpecificDivider
+            cardStyle={settings.cardStyle || fallbackStyle}
+            dividerStyle={settings.dividerStyle}
+            fallbackStyle={fallbackStyle}
+            color={theme.accentColorHex}
+            className="!mx-0 !my-0 h-full w-full"
+          />
         </div>
 
         <section className="relative z-10 flex flex-col items-center justify-center px-5 pb-1 pt-11 text-center sm:px-10 sm:pt-14 md:items-start md:px-12 md:py-12 md:text-left lg:px-16">
@@ -281,12 +368,12 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
               transition={{ duration: 0.2 }}
             >
               <defs>
-                <marker id={arrowMarkerId} markerWidth="6" markerHeight="6" refX="5.2" refY="3" orient="auto" markerUnits="userSpaceOnUse">
-                  <path d="M0 0 6 3 0 6 1.5 3Z" fill={theme.accentColorHex} />
+                <marker id={arrowMarkerId} markerWidth="12" markerHeight="12" refX="10.5" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                  <path d="M0 0 12 6 0 12 2.5 6Z" fill={theme.accentColorHex} />
                 </marker>
               </defs>
               <motion.path
-                d="M146 337 C127 320 132 294 151 292 C171 290 176 316 158 316 C148 316 145 302 157 296 C169 290 184 255 205 221"
+                d="M146 337 C127 320 132 294 151 292 C171 290 176 316 158 316 C148 316 145 302 157 296 C169 290 179 272 187 258"
                 fill="none"
                 stroke={theme.accentColorHex}
                 strokeWidth="2.5"

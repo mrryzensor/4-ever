@@ -1148,6 +1148,21 @@ function resolveCountdownStyle(...candidates: Array<string | undefined>): CardSt
   return 'classic-gold';
 }
 
+/** Reuses the selected countdown's animated frame as decorative artwork. */
+export const CountdownStyleOrnament: React.FC<{
+  style?: string;
+  fallbackStyle?: string;
+  accentColor?: string;
+}> = ({ style, fallbackStyle, accentColor }) => {
+  const activeStyleId = resolveCountdownStyle(style, fallbackStyle);
+  const Ornament = COUNTDOWN_STYLE_RENDERERS[activeStyleId];
+  return (
+    <div aria-hidden="true" className="relative h-full w-full">
+      <Ornament accentColor={accentColor} />
+    </div>
+  );
+};
+
 // ----------------------------------------------------------------------
 // MASTER COUNTDOWN COMPONENT
 // ----------------------------------------------------------------------
