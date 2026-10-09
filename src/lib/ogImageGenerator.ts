@@ -1,42 +1,41 @@
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs';
-import { WeddingSettings, Guest } from '../types.ts';
+import { WeddingSettings, Guest, CardStyleId, CardThemeConfig } from '../types.ts';
 import { formatHeroDate } from './dateFormatters.ts';
-import { getEventPresentation } from './eventUtils.ts';
+import { getDisplayedWaxSealText, getEventPresentation } from './eventUtils.ts';
+import { CARD_THEMES } from './themes.ts';
+import { XV_CARD_THEMES } from '../xv/themes.ts';
+import { resolveInvitationTheme } from './invitationTheme.ts';
+import { getEnvelopeTintMatrix, normalizeLetterShadow } from './letterAppearance.ts';
 
-// Helper to escape XML characters for SVG text
-function escapeXml(unsafe: string): string {
-  if (!unsafe) return '';
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
+const escapeXml = (value: string): string => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&apos;');
 
-function wrapHeroNames(value: string, maxLineLength = 18): string[] {
-  const words = value.trim().split(/\s+/).filter(Boolean);
-  if (!words.length) return [];
+const safeColor = (value: string | undefined, fallback: string): string =>
+  value && /^#[\da-f]{3}(?:[\da-f]{3})?$/i.test(value) ? value : fallback;
 
+let closedLetterAsset: Promise<Buffer> | null = null;
+
+const getSvgFont = (fontClass?: string, fallback = 'Georgia, serif') => {
+  const family = fontClass?.match(/font-\["([^"]+)"\]/)?.[1]?.replaceAll('_', ' ');
+  return family ? `'${escapeXml(family)}', ${fallback}` : fallback;
+};
+
+const wrapNames = (value: string, maxLength = 23): string[] => {
+  const words = value.trim().split(/\s+/).filter(Boolean).flatMap((word) => {
+    if (word.length <= maxLength) return [word];
+    return Array.from({ length: Math.ceil(word.length / maxLength) }, (_, index) => word.slice(index * maxLength, (index + 1) * maxLength));
+  });
   const lines: string[] = [];
   let line = '';
   for (const word of words) {
-    const wordCharacters = Array.from(word);
-    if (wordCharacters.length > maxLineLength) {
-      if (line) {
-        lines.push(line);
-        line = '';
-      }
-      for (let index = 0; index < wordCharacters.length; index += maxLineLength) {
-        lines.push(wordCharacters.slice(index, index + maxLineLength).join(''));
-      }
-      continue;
-    }
-
     const candidate = line ? `${line} ${word}` : word;
-    if (line && candidate.length > maxLineLength) {
+    if (line && candidate.length > maxLength) {
       lines.push(line);
       line = word;
     } else {
@@ -44,282 +43,130 @@ function wrapHeroNames(value: string, maxLineLength = 18): string[] {
     }
   }
   if (line) lines.push(line);
-
-  // Reserve a clear, visible name block even when an unusually long name is entered.
-  const visibleLines = lines.slice(0, 3);
-  if (lines.length > visibleLines.length && visibleLines.length) {
-    const lastLine = Array.from(visibleLines[visibleLines.length - 1]);
-    visibleLines[visibleLines.length - 1] = `${lastLine.slice(0, maxLineLength - 1).join('')}…`;
+  const visible = lines.slice(0, 3);
+  if (lines.length > visible.length && visible.length) {
+    visible[visible.length - 1] = `${visible[visible.length - 1].slice(0, maxLength - 1)}…`;
   }
-  return visibleLines;
-}
+  return visible.length ? visible : ['Nuestra celebración'];
+};
 
-/**
- * Generates an ultra-crisp 1200x630 Open Graph image representing the event hero.
- * Designed specifically for rich social cards on WhatsApp, Facebook, iMessage, Twitter/X, Instagram, LinkedIn, etc.
- */
+const brighten = (hex: string, amount: number) => {
+  const normalized = hex.slice(1);
+  const full = normalized.length === 3 ? normalized.split('').map((part) => part + part).join('') : normalized;
+  const parsed = Number.parseInt(full, 16);
+  if (!Number.isFinite(parsed)) return '#5A5A40';
+  const channel = (shift: number) => Math.min(255, Math.round(((parsed >> shift) & 255) + (255 - ((parsed >> shift) & 255)) * amount));
+  return `rgb(${channel(16)},${channel(8)},${channel(0)})`;
+};
+
+const renderLetterImage = (
+  settings: Partial<WeddingSettings>,
+  guest: Partial<Guest> | null | undefined,
+  closedEnvelopeDataUri: string,
+) => {
+  const presentation = getEventPresentation(settings.eventType, settings.slug);
+  const eventType = presentation.type;
+  const themes: Record<CardStyleId, CardThemeConfig> = eventType === 'xv' ? XV_CARD_THEMES : CARD_THEMES;
+  const fallbackStyle = (eventType === 'xv' ? 'romantic-floral' : 'classic-gold') as CardStyleId;
+  const baseStyle = settings.cardStyle && themes[settings.cardStyle as CardStyleId]
+    ? settings.cardStyle
+    : fallbackStyle;
+  const theme = resolveInvitationTheme({ ...settings, cardStyle: baseStyle }, themes, fallbackStyle);
+  const accent = safeColor(theme.accentColorHex, '#5A5A40');
+  const background = safeColor(theme.bgHex, '#FDFCF0');
+  const paper = safeColor(theme.secondaryBgHex, '#FFFFFF');
+  const text = safeColor(theme.primaryColorHex, '#1A1A1A');
+  const envelopeColor = safeColor(settings.envelopeColor, '#9F705A');
+  const envelopeShadowColor = safeColor(settings.envelopeShadowColor, '#2C211B');
+  const envelopeShadowIntensity = normalizeLetterShadow(settings.envelopeShadowIntensity, 36);
+  const sealColor = safeColor(settings.waxSealColor, accent);
+  const sealShadowColor = safeColor(settings.waxSealShadowColor, '#211A14');
+  const sealShadowIntensity = normalizeLetterShadow(settings.waxSealShadowIntensity, 55);
+  const selectedSealStyle = settings.sealStyle && settings.sealStyle !== 'auto'
+    ? settings.sealStyle
+    : baseStyle;
+  const sealTheme = themes[selectedSealStyle as CardStyleId] || themes[baseStyle as CardStyleId];
+  const name = settings.coupleNames?.trim() || presentation.defaultName;
+  const lines = wrapNames(name);
+  const fontDisplay = getSvgFont(theme.fontDisplay);
+  const fontBody = getSvgFont(theme.fontBody, 'Arial, sans-serif');
+  const eventDate = formatHeroDate(
+    settings.eventDate || '2026-11-28',
+    settings.heroDateFormat || 'dd.mm.aaaa',
+    settings.heroCustomDateText,
+  );
+  const guestName = guest?.fullName?.trim();
+  const reservedSeats = guest
+    ? Math.max(1, Number(guest.allocatedPasses || guest.confirmedPasses || 1))
+    : null;
+  const sealText = getDisplayedWaxSealText(settings as Pick<WeddingSettings, 'coupleNames' | 'eventType' | 'waxSealText' | 'waxSealTextIsCustom'>);
+  const eventHeading = eventType === 'xv' ? 'MIS XV AÑOS' : eventType === 'bodas' ? 'NUESTRA BODA' : 'NUESTRA CELEBRACIÓN';
+  const longestNameLine = Math.max(...lines.map((line) => line.length), 1);
+  const maxNameFontSize = lines.length > 2 ? 49 : lines.length > 1 ? 60 : 72;
+  const nameFontSize = Math.max(38, Math.min(maxNameFontSize, Math.floor(575 / (longestNameLine * 0.58))));
+  const namesMarkup = lines.map((line, index) =>
+    `<tspan x="374"${index ? ` dy="${Math.round(nameFontSize * 1.08)}"` : ''}>${escapeXml(line)}</tspan>`
+  ).join('');
+  const nameStartY = 254 - ((lines.length - 1) * nameFontSize * 0.54);
+  const floralSeal = ['floral', 'watercolor'].some((part) => sealTheme.ornamentStyle.toLowerCase().includes(part));
+  const seatMarkup = reservedSeats
+    ? `<text x="374" y="474" text-anchor="middle" font-family="${fontBody}" font-size="19" letter-spacing="3" fill="${accent}" opacity=".82">HEMOS RESERVADO</text>
+       <rect x="349" y="492" width="50" height="50" rx="10" fill="none" stroke="${accent}" stroke-opacity=".6" stroke-width="1.5" />
+       <text x="374" y="529" text-anchor="middle" font-family="${fontDisplay}" font-size="42" fill="${accent}">${reservedSeats}</text>
+       <text x="374" y="563" text-anchor="middle" font-family="${fontBody}" font-size="16" letter-spacing="2" fill="${text}" opacity=".72">${reservedSeats === 1 ? 'LUGAR EN TU HONOR' : 'LUGARES EN TU HONOR'}</text>`
+    : `<text x="374" y="503" text-anchor="middle" font-family="${fontBody}" font-size="22" font-style="italic" fill="${text}" opacity=".72">Nos encantará celebrar contigo</text>`;
+  const personalMarkup = guestName
+    ? `<text x="374" y="585" text-anchor="middle" font-family="${fontBody}" font-size="16" fill="${text}" opacity=".62">Para ${escapeXml(guestName)}</text>`
+    : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+    <defs>
+      <linearGradient id="letter-paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${paper}"/><stop offset="1" stop-color="${brighten(background, .11)}"/></linearGradient>
+      <radialGradient id="letter-seal" cx="34%" cy="25%" r="78%"><stop offset="0" stop-color="${brighten(sealColor, .18)}"/><stop offset="1" stop-color="${brighten(sealColor, -.2)}"/></radialGradient>
+      <filter id="letter-shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#28231c" flood-opacity=".14"/></filter>
+      <filter id="envelope-tint" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${getEnvelopeTintMatrix(envelopeColor)}"/></filter>
+      <filter id="envelope-shadow" x="-25%" y="-25%" width="150%" height="160%"><feDropShadow dx="0" dy="${Math.round(3 + envelopeShadowIntensity * .11)}" stdDeviation="${(1 + envelopeShadowIntensity * .11).toFixed(1)}" flood-color="${envelopeShadowColor}" flood-opacity="${(envelopeShadowIntensity * .005).toFixed(2)}"/></filter>
+      <filter id="seal-shadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="${Math.round(2 + sealShadowIntensity * .07)}" stdDeviation="${(1 + sealShadowIntensity * .06).toFixed(1)}" flood-color="${sealShadowColor}" flood-opacity="${(sealShadowIntensity * .0055).toFixed(2)}"/></filter>
+    </defs>
+    <rect width="1200" height="630" fill="${background}"/>
+    <g fill="${accent}" opacity=".08"><circle cx="1090" cy="35" r="155"/><circle cx="30" cy="600" r="125"/></g>
+    <g fill="${accent}" fill-opacity=".14">
+      <ellipse cx="1081" cy="56" rx="52" ry="18" transform="rotate(28 1081 56)"/><ellipse cx="1124" cy="91" rx="52" ry="18" transform="rotate(-13 1124 91)"/><ellipse cx="1060" cy="112" rx="46" ry="16" transform="rotate(-46 1060 112)"/>
+      <ellipse cx="85" cy="554" rx="46" ry="16" transform="rotate(29 85 554)"/><ellipse cx="46" cy="586" rx="46" ry="16" transform="rotate(-18 46 586)"/>
+    </g>
+    <rect x="28" y="26" width="1144" height="578" rx="18" fill="url(#letter-paper)" stroke="${accent}" stroke-opacity=".28" stroke-width="1.5" filter="url(#letter-shadow)"/>
+    <path d="M652 72v486" stroke="${accent}" stroke-opacity=".2"/>
+    <text x="374" y="102" text-anchor="middle" font-family="${fontBody}" font-size="22" letter-spacing="6" fill="${accent}">${escapeXml(eventHeading)}</text>
+    <path d="M292 124h164" stroke="${accent}" stroke-opacity=".48"/>
+    <text x="374" y="${nameStartY}" text-anchor="middle" font-family="${fontDisplay}" font-size="${nameFontSize}" font-style="italic" fill="${text}">${namesMarkup}</text>
+    <g transform="translate(374 397)"><circle cx="-9" cy="0" r="8" fill="none" stroke="${accent}" stroke-width="1.6"/><circle cx="9" cy="0" r="8" fill="none" stroke="${accent}" stroke-width="1.6"/></g>
+    <text x="374" y="433" text-anchor="middle" font-family="${fontBody}" font-size="30" letter-spacing="2.5" fill="${text}" opacity=".78">${escapeXml(eventDate)}</text>
+    ${seatMarkup}${personalMarkup}
+    <text x="911" y="121" text-anchor="middle" font-family="${fontBody}" font-size="19" letter-spacing="3" fill="${accent}" opacity=".8">UNA INVITACIÓN ESPECIAL</text>
+    <image href="${closedEnvelopeDataUri}" x="716" y="164" width="390" height="275" preserveAspectRatio="xMidYMid meet" filter="url(#envelope-tint) url(#envelope-shadow)"/>
+    <g transform="translate(911 338) scale(.82) translate(-911 -307)" filter="url(#seal-shadow)">
+      <circle cx="911" cy="307" r="52" fill="url(#letter-seal)" stroke="#fff" stroke-opacity=".4" stroke-width="2"/>
+      <circle cx="911" cy="307" r="42" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="1.5" ${floralSeal ? '' : 'stroke-dasharray="2 4"'}/>
+      ${floralSeal
+        ? `<g fill="none" stroke="#fff" stroke-opacity=".53" stroke-width="1.4"><path d="M911 280c12 9 13 18 0 27-13-9-12-18 0-27Zm0 27c12 9 13 18 0 27-13-9-12-18 0-27Zm0-1c-9-12-18-13-27 0 9 13 18 12 27 0Zm0 0c9-12 18-13 27 0-9 13-18 12-27 0Z"/><circle cx="911" cy="307" r="3" fill="#fff"/></g>`
+        : `<path d="m911 282 7 18 18 7-18 7-7 18-7-18-18-7 18-7Z" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"/>`}
+      <text x="911" y="313" text-anchor="middle" font-family="${fontDisplay}" font-size="${sealText.length > 4 ? 12 : 16}" font-weight="700" fill="#fff">${escapeXml(sealText)}</text>
+    </g>
+    <path d="M796 475h230" stroke="${accent}" stroke-opacity=".25"/>
+    <text x="911" y="515" text-anchor="middle" font-family="${fontBody}" font-size="24" font-style="italic" fill="${text}" opacity=".72">Toca para abrir la invitación</text>
+    <text x="911" y="552" text-anchor="middle" font-family="${fontDisplay}" font-size="18" font-style="italic" fill="${accent}" opacity=".75">Con cariño, ${escapeXml(name)}</text>
+    <text x="600" y="584" text-anchor="middle" font-family="${fontBody}" font-size="15" letter-spacing="2.5" fill="${accent}" opacity=".55">2DATE · INVITACIÓN DIGITAL</text>
+  </svg>`;
+};
+
+/** Renders the same sealed invitation letter used as the first screen of the event. */
 export async function generateWeddingOgImage(
   settings: Partial<WeddingSettings>,
   guest?: Partial<Guest> | null,
-  internalAssetOrigin?: string,
+  _internalAssetOrigin?: string,
 ): Promise<Buffer> {
-  const width = 1200;
-  const height = 630;
-
-  const presentation = getEventPresentation(settings.eventType, settings.slug);
-  const rawEventType = String(settings.eventType ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
-  const isXvEvent = presentation.type === 'xv';
-  const isWeddingEvent = !rawEventType || ['boda', 'bodas', 'wedding', 'nupcias'].includes(rawEventType);
-  const isGenericEvent = !isXvEvent && !isWeddingEvent;
-  const coupleNames = settings.coupleNames?.trim() || (isGenericEvent ? 'Tu Evento' : presentation.defaultName);
-  const nameLines = wrapHeroNames(coupleNames);
-  const longestNameLine = Math.max(...nameLines.map((line) => line.length), 1);
-  const maxNamesFontSize = nameLines.length >= 3 ? 56 : 72;
-  const namesFontSize = Math.max(42, Math.min(maxNamesFontSize, Math.floor(maxNamesFontSize * (26 / longestNameLine))));
-  const nameLineHeight = Math.round(namesFontSize * 1.12);
-  const namesStartY = Math.round(325 - ((nameLines.length - 1) * nameLineHeight) / 2);
-  const ringsY = 395 + Math.min((nameLines.length - 1) * 16, 32);
-  const namesMarkup = nameLines
-    .map((line, index) => `<tspan x="600"${index ? ` dy="${nameLineHeight}"` : ''}>${escapeXml(line)}</tspan>`)
-    .join('');
-  const eventDateFormatted = formatHeroDate(
-    settings.eventDate || '2026-11-28',
-    settings.heroDateFormat || 'dd.mm.aaaa',
-    settings.heroCustomDateText
-  );
-  const venue = settings.ceremonyVenue || settings.receptionVenue || 'Acompáñanos a Celebrar';
-  const rawLocation = settings.receptionAddress || settings.ceremonyAddress || '';
-  const location = rawLocation
-    .split(/https?:\/\/|www\./i)[0]
-    .replace(/\s*(?:[·•|—–-]\s*)?c[oó]mo\s+llegar\s*:.*/i, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const venueAndLocation = [venue.trim(), location].filter(Boolean).join(' • ');
-  const footerLocation = venueAndLocation.length > 76
-    ? `${venueAndLocation.slice(0, 75).trimEnd()}…`
-    : venueAndLocation;
-
-  // 1. Resolve Background Image
-  let backgroundBuffer: Buffer | null = null;
-  const coverPhoto = settings.coverPhoto;
-
-  if (coverPhoto) {
-    try {
-      if (coverPhoto.startsWith('/uploads/')) {
-        // Uploaded covers are persisted in UPLOADS_DIR, which may be mounted
-        // somewhere other than <cwd>/uploads in production.
-        const uploadsDir = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
-        const filename = path.basename(coverPhoto.split(/[?#]/, 1)[0]);
-        const localPath = path.join(uploadsDir, filename);
-        if (fs.existsSync(localPath)) {
-          backgroundBuffer = await sharp(localPath)
-            .resize(width, height, { fit: 'cover', position: 'center' })
-            .toBuffer();
-        }
-      } else if (/^data:image\/(?:png|jpe?g|webp|avif);base64,/i.test(coverPhoto)) {
-        // Older editor sessions may have saved a data URL when the upload
-        // endpoint was unavailable. It is still usable by the server renderer.
-        const [, encodedImage] = coverPhoto.match(/^data:image\/(?:png|jpe?g|webp|avif);base64,([\s\S]+)$/i) || [];
-        if (encodedImage) {
-          const imageBuffer = Buffer.from(encodedImage, 'base64');
-          if (imageBuffer.length <= 25 * 1024 * 1024) {
-            backgroundBuffer = await sharp(imageBuffer)
-              .resize(width, height, { fit: 'cover', position: 'center' })
-              .toBuffer();
-          }
-        }
-      } else if (coverPhoto.startsWith('/api/drive-folders/') && internalAssetOrigin) {
-        // The Drive picker persists a signed, same-app proxy URL (not a
-        // Google-hosted URL). Fetch it through this server so its existing
-        // Drive API key and signature checks can resolve the private asset.
-        const assetUrl = new URL(coverPhoto, internalAssetOrigin);
-        const origin = new URL(internalAssetOrigin).origin;
-        const validDriveAsset = assetUrl.origin === origin
-          && /^\/api\/drive-folders\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+\/thumbnail$/.test(assetUrl.pathname)
-          && assetUrl.searchParams.has('signature');
-        if (validDriveAsset) {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 25000);
-          try {
-            const resp = await fetch(assetUrl, { signal: controller.signal });
-            if (resp.ok) {
-              const contentLength = Number(resp.headers.get('content-length') || 0);
-              if (contentLength <= 25 * 1024 * 1024) {
-                const arrayBuf = await resp.arrayBuffer();
-                if (arrayBuf.byteLength <= 25 * 1024 * 1024) {
-                  backgroundBuffer = await sharp(Buffer.from(arrayBuf))
-                    .resize(width, height, { fit: 'cover', position: 'center' })
-                    .toBuffer();
-                }
-              }
-            }
-          } finally {
-            clearTimeout(timeout);
-          }
-        }
-      } else if (coverPhoto.startsWith('http://') || coverPhoto.startsWith('https://')) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 4000);
-        try {
-          const resp = await fetch(coverPhoto, { signal: controller.signal });
-          if (resp.ok) {
-            const contentLength = Number(resp.headers.get('content-length') || 0);
-            if (contentLength <= 25 * 1024 * 1024) {
-              const arrayBuf = await resp.arrayBuffer();
-              if (arrayBuf.byteLength <= 25 * 1024 * 1024) {
-                backgroundBuffer = await sharp(Buffer.from(arrayBuf))
-                  .resize(width, height, { fit: 'cover', position: 'center' })
-                  .toBuffer();
-              }
-            }
-          }
-        } finally {
-          clearTimeout(timeout);
-        }
-      }
-    } catch (e) {
-      console.warn('Could not resolve custom hero photo for OG card, using procedural background:', e);
-    }
-  }
-
-  // If no background image found, generate elegant dark luxury procedural background
-  if (!backgroundBuffer) {
-    backgroundBuffer = await sharp({
-      create: {
-        width,
-        height,
-        channels: 4,
-        background: { r: 25, g: 54, b: 46, alpha: 1 },
-      },
-    })
-      .png()
-      .toBuffer();
-  }
-
-  const categoryLabel = isXvEvent
-    ? 'M I S   X V   A Ñ O S'
-    : isGenericEvent
-      ? 'C E L E B R A C I Ó N   E S P E C I A L'
-      : 'N U E S T R A   B O D A';
-  const celebrationSymbol = isXvEvent
-    ? `<path d="M-37,8 L-28,-20 L-10,-5 L0,-30 L10,-5 L28,-20 L37,8 Z" fill="rgba(212,175,55,0.12)" stroke="url(#goldGradient)" stroke-width="3" stroke-linejoin="round" />
-        <path d="M-37,13 L37,13" fill="none" stroke="url(#goldGradient)" stroke-width="3" stroke-linecap="round" />
-        <path d="M-8,-13 L0,-22 L8,-13" fill="none" stroke="url(#goldGradient)" stroke-width="2" />`
-    : isGenericEvent
-      ? `<path d="M0,-29 L7,-8 L29,-7 L12,7 L18,29 L0,17 L-18,29 L-12,7 L-29,-7 L-7,-8 Z" fill="rgba(212,175,55,0.12)" stroke="url(#goldGradient)" stroke-width="3" stroke-linejoin="round" />`
-      : `<circle cx="-14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
-        <circle cx="14" cy="0" r="18" fill="none" stroke="url(#goldGradient)" stroke-width="3" />
-        <path d="M-8,-14 L0,-24 L8,-14" fill="none" stroke="url(#goldGradient)" stroke-width="2" />`;
-
-  // 2. Build Hero Overlay SVG with Typography & Golden Accents
-  const guestBadge = guest?.fullName
-    ? `<g transform="translate(600, 490)">
-        <rect x="-240" y="-22" width="480" height="44" rx="22" fill="rgba(197, 160, 89, 0.25)" stroke="#D4AF37" stroke-width="1.5" />
-      <text x="0" y="6" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="#FDFCF0" font-weight="600" letter-spacing="2">
-          INVITACIÓN ESPECIAL PARA: ${escapeXml(guest.fullName.toUpperCase())}
-        </text>
-      </g>`
-    : '';
-
-  const locationText = location
-    ? `<text x="600" y="555" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="18" fill="rgba(255,255,255,0.8)" font-weight="400" letter-spacing="2">
-        ${escapeXml(footerLocation.toUpperCase())}
-      </text>`
-    : `<text x="600" y="555" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="20" fill="rgba(255,255,255,0.85)" font-weight="400" letter-spacing="3">
-        ${escapeXml(venue.toUpperCase())}
-      </text>`;
-
-  const svgOverlay = `
-    <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <!-- Dark Vignette Gradient for high contrast -->
-        <linearGradient id="vignette" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#000000" stop-opacity="0.45" />
-          <stop offset="40%" stop-color="#000000" stop-opacity="0.25" />
-          <stop offset="70%" stop-color="#000000" stop-opacity="0.42" />
-          <stop offset="100%" stop-color="#000000" stop-opacity="0.68" />
-        </linearGradient>
-
-        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#F9F5E8" />
-          <stop offset="50%" stop-color="#E5C77A" />
-          <stop offset="100%" stop-color="#C5A059" />
-        </linearGradient>
-
-        <filter id="textGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.9" />
-        </filter>
-        <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.7" />
-        </filter>
-      </defs>
-
-      <!-- Vignette Overlay -->
-      <rect width="${width}" height="${height}" fill="url(#vignette)" />
-
-      <!-- Inner Border Frame -->
-      <rect x="30" y="30" width="${width - 60}" height="${height - 60}" rx="12" fill="none" stroke="url(#goldGradient)" stroke-width="1.5" stroke-opacity="0.5" />
-      <rect x="40" y="40" width="${width - 80}" height="${height - 80}" rx="8" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
-
-      <!-- Corner Ornaments -->
-      <path d="M45,65 L45,45 L65,45" fill="none" stroke="url(#goldGradient)" stroke-width="2" />
-      <path d="M${width - 45},65 L${width - 45},45 L${width - 65},45" fill="none" stroke="url(#goldGradient)" stroke-width="2" />
-      <path d="M45,${height - 65} L45,${height - 45} L65,${height - 45}" fill="none" stroke="url(#goldGradient)" stroke-width="2" />
-      <path d="M${width - 45},${height - 65} L${width - 45},${height - 45} L${width - 65},${height - 45}" fill="none" stroke="url(#goldGradient)" stroke-width="2" />
-
-      <!-- Top Tag / Category -->
-      <g filter="url(#softGlow)">
-        <text x="600" y="110" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="18" fill="url(#goldGradient)" font-weight="700" letter-spacing="6">
-          ${categoryLabel}
-        </text>
-        <line x1="420" y1="130" x2="780" y2="130" stroke="url(#goldGradient)" stroke-width="1" stroke-opacity="0.6" />
-      </g>
-
-      <!-- Date Badge -->
-      <g filter="url(#softGlow)">
-        <text x="600" y="185" text-anchor="middle" font-family="'DejaVu Serif', 'Cinzel', 'Playfair Display', Georgia, serif" font-size="28" fill="#F3F0E6" font-weight="600" letter-spacing="4">
-          ${escapeXml(eventDateFormatted)}
-        </text>
-      </g>
-
-      <!-- Primary names from the event Hero (couple or quinceañera), wrapped to fit social previews -->
-      <g filter="url(#textGlow)">
-        <text x="600" y="${namesStartY}" text-anchor="middle" font-family="'DejaVu Serif', 'Playfair Display', Georgia, 'Times New Roman', serif" font-size="${namesFontSize}" fill="#FFFFFF" font-weight="700" letter-spacing="2">
-          ${namesMarkup}
-        </text>
-      </g>
-
-      <!-- Event-specific accent symbol -->
-      <g transform="translate(600, ${ringsY})" filter="url(#softGlow)">
-        ${celebrationSymbol}
-      </g>
-
-      <!-- Guest Personalized Badge (if present) -->
-      ${guestBadge}
-
-      <!-- Venue & Location Info at Bottom -->
-      <g filter="url(#softGlow)">
-        ${locationText}
-      </g>
-
-      <!-- Bottom RSVP Call to Action -->
-      <text x="600" y="585" text-anchor="middle" font-family="'DejaVu Sans', 'Montserrat', 'Inter', sans-serif" font-size="14" fill="url(#goldGradient)" font-weight="600" letter-spacing="3">
-        TOCA PARA ABRIR LA INVITACIÓN &amp; CONFIRMAR ASISTENCIA
-      </text>
-    </svg>
-  `;
-
-  // 3. Composite the background photo with the vector SVG overlay
-  const finalImageBuffer = await sharp(backgroundBuffer)
-    .composite([
-      {
-        input: Buffer.from(svgOverlay),
-        top: 0,
-        left: 0,
-      },
-    ])
-    .png({ quality: 90, compressionLevel: 6 })
-    .toBuffer();
-
-  return finalImageBuffer;
+  closedLetterAsset ??= readFile(resolve(process.cwd(), 'public', 'carta-cerrada.svg'));
+  const closedEnvelopeDataUri = `data:image/svg+xml;base64,${(await closedLetterAsset).toString('base64')}`;
+  const svg = renderLetterImage(settings, guest, closedEnvelopeDataUri);
+  return sharp(Buffer.from(svg)).png({ compressionLevel: 7 }).toBuffer();
 }

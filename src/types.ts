@@ -161,9 +161,13 @@ export interface WeddingSettings {
   heroEnableScrollBlur?: boolean; // Progressive scroll blur toggle
   cardStyle: CardStyleId;
   envelopeColor: string;
+  envelopeShadowColor?: string;
+  envelopeShadowIntensity?: number;
   waxSealText: string;
   waxSealTextIsCustom?: boolean;
   waxSealColor: string;
+  waxSealShadowColor?: string;
+  waxSealShadowIntensity?: number;
   audioUrl: string;
   audioTitle: string;
   audioAutoplay: boolean;

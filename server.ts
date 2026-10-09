@@ -3212,7 +3212,7 @@ async function startServer() {
 
         // Dynamic Subtitle / Description with event date, venue, city & personalized welcome
         const locationPart = cityOrAddress ? `${venue} (${cityOrAddress})` : venue;
-        description = `${welcomeSubtitle} • ${formattedDate} en ${locationPart}. Toca aquí para ver itinerario, mapa y confirmar tu asistencia.`;
+        description = `${welcomeSubtitle} • ${formattedDate} en ${locationPart}. Abre tu carta de invitación para ver los detalles y confirmar tu asistencia.`;
         ogImageAlt = presentation.imageAlt(coupleNames, formattedDate);
       }
 

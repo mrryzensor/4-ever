@@ -4,6 +4,7 @@ import { WeddingSettings, CardStyleId } from '../../../../types.ts';
 import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { StyleSpecificDivider, FixDateAnimatedTransitionDivider } from '../../AnimatedSvgs.tsx';
 import { AdminMixMatchSettings } from './AdminMixMatchSettings.tsx';
+import { InvitationLetterAppearanceSettings } from '../../../../components/admin/settings/InvitationLetterAppearanceSettings.tsx';
 import { RsvpAvailabilitySettings } from '../../../../components/admin/settings/RsvpAvailabilitySettings.tsx';
 import { RsvpFormOptionsSettings } from '../../../../components/admin/settings/RsvpFormOptionsSettings.tsx';
 
@@ -175,9 +176,10 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
 
       {/* Advanced Modular Mix & Match Customization */}
       <AdminMixMatchSettings settings={settings} onChange={onChange} />
+      <InvitationLetterAppearanceSettings settings={settings} onChange={onChange} />
 
       {/* Wax Seal & Digital Envelope settings */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
         <div>
           <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">
             Monograma en Sello de Cera:
@@ -191,25 +193,6 @@ export const AdminThemeSettings: React.FC<AdminThemeSettingsProps> = ({
             placeholder="Ej. I & N"
             className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2.5 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
           />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-[#5A5A40] block mb-1.5">
-            Color del Sobre Digital:
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={settings.envelopeColor || '#5A5A40'}
-              onChange={(e) =>
-                onChange({ envelopeColor: e.target.value })
-              }
-              className="w-9 h-9 rounded-xl border border-[#E5E2D0] cursor-pointer p-0"
-            />
-            <span className="font-mono text-xs text-[#5A5A40]">
-              {settings.envelopeColor}
-            </span>
-          </div>
         </div>
 
         <div>

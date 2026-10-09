@@ -107,8 +107,12 @@ export async function autoMigrateDatabase() {
           hero_autoplay_interval INTEGER DEFAULT 5,
           card_style TEXT DEFAULT 'classic-gold',
           envelope_color TEXT DEFAULT '#2C2B29',
+          envelope_shadow_color TEXT DEFAULT '#2C211B',
+          envelope_shadow_intensity INTEGER DEFAULT 36,
           wax_seal_text TEXT DEFAULT 'S&A',
           wax_seal_color TEXT DEFAULT '#C5A059',
+          wax_seal_shadow_color TEXT DEFAULT '#211A14',
+          wax_seal_shadow_intensity INTEGER DEFAULT 55,
           audio_url TEXT DEFAULT 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
           audio_title TEXT DEFAULT 'Acoustic Romance - Guitarra Suave',
           audio_autoplay BOOLEAN DEFAULT false,
@@ -300,6 +304,10 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_scale INTEGER DEFAULT 100;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ambient_particle_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS seal_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS envelope_shadow_color TEXT DEFAULT '#2C211B';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS envelope_shadow_intensity INTEGER DEFAULT 36;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_shadow_color TEXT DEFAULT '#211A14';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_shadow_intensity INTEGER DEFAULT 55;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_padrinos BOOLEAN DEFAULT false;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_padrinos_title TEXT DEFAULT 'Nuestros Padrinos';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_padrinos TEXT DEFAULT '';

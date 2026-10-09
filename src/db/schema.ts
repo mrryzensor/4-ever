@@ -79,9 +79,13 @@ export const weddingSettings = pgTable('wedding_settings', {
   heroAutoplayInterval: integer('hero_autoplay_interval').default(5),
   cardStyle: text('card_style').default('classic-gold'), // 'classic-gold', 'romantic-floral', 'boho-chic', 'minimal-editorial', 'dark-luxury', 'watercolor-garden'
   envelopeColor: text('envelope_color').default('#2C2B29'),
+  envelopeShadowColor: text('envelope_shadow_color').default('#2C211B'),
+  envelopeShadowIntensity: integer('envelope_shadow_intensity').default(36),
   waxSealText: text('wax_seal_text').default('S&A'),
   waxSealTextIsCustom: boolean('wax_seal_text_is_custom').default(false),
   waxSealColor: text('wax_seal_color').default('#C5A059'),
+  waxSealShadowColor: text('wax_seal_shadow_color').default('#211A14'),
+  waxSealShadowIntensity: integer('wax_seal_shadow_intensity').default(55),
   audioUrl: text('audio_url').default('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3'),
   audioTitle: text('audio_title').default('Acoustic Romance - Guitarra Suave'),
   audioAutoplay: boolean('audio_autoplay').default(false),

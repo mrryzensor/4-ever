@@ -43,6 +43,7 @@ import { LandingPage } from './components/LandingPage.tsx';
 import { UserDashboard } from './components/UserDashboard.tsx';
 import { CeoMasterDashboard } from './components/CeoMasterDashboard.tsx';
 import { MainPortalLanding } from './components/MainPortalLanding.tsx';
+import { InvitationLetter } from './components/InvitationLetter.tsx';
 
 // Quince Años (XV Años) Specialized Components
 import { EnvelopeCard as XvEnvelopeCard } from './xv/components/EnvelopeCard.tsx';
@@ -345,6 +346,7 @@ export default function App() {
     }
     return DEMO_WEDDING_ID;
   });
+  const [hasOpenedInvitation, setHasOpenedInvitation] = useState(false);
 
   // Active Event Settings State
   const [settings, setSettings] = useState<WeddingSettings>(() => {
@@ -411,6 +413,10 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHostPill, setShowHostPill] = useState(true);
   const [isViewingDemo, setIsViewingDemo] = useState<boolean>(() => checkIsDemoUrl());
+
+  useEffect(() => {
+    if (currentView === 'invitation') setHasOpenedInvitation(false);
+  }, [currentView, currentWeddingId]);
   const openSubscriptionUpgrade = () => {
     const target = new URL(window.location.origin);
     target.searchParams.set('upgrade', '1');
@@ -518,7 +524,7 @@ export default function App() {
       settings?.heroCustomDateText,
     );
     const location = settings?.receptionVenue || settings?.ceremonyVenue || 'nuestra celebración';
-    const invitationDescription = `${settings?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.'} • ${formattedDate} en ${location}. Toca aquí para ver los detalles y confirmar tu asistencia.`;
+    const invitationDescription = `${settings?.welcomeSubtitle || 'Nos emociona compartir este día tan especial contigo.'} • ${formattedDate} en ${location}. Abre tu carta de invitación para ver los detalles y confirmar tu asistencia.`;
     const previewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
     const demoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !previewEmbed;
 
@@ -1383,6 +1389,21 @@ export default function App() {
           </p>
         </div>
       </>
+    );
+  }
+
+  if (currentView === 'invitation' && settings && !hasOpenedInvitation) {
+    return (
+      <InvitationLetter
+        key={`${currentWeddingId}-${settings.id}`}
+        settings={settings}
+        guest={activeGuest}
+        eventType={settingsEventCategory}
+        onOpen={() => {
+          setHasOpenedInvitation(true);
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }}
+      />
     );
   }
 
