@@ -168,6 +168,7 @@ export interface WeddingSettings {
   waxSealColor: string;
   waxSealShadowColor?: string;
   waxSealShadowIntensity?: number;
+  showInvitationLetter?: boolean; // Mostrar la carta con sobre antes del contenido de la invitación
   audioUrl: string;
   audioTitle: string;
   audioAutoplay: boolean;
@@ -239,6 +240,33 @@ export interface WeddingSettings {
   heroEmblemScale?: number; // 70-150 percent
   ambientParticleStyle?: string; // 'auto' | 'petals' | 'gold-sparkles' | 'champagne-bubbles' | 'fireflies' | 'stars' | 'none'
   sealStyle?: string; // 'auto' | CardStyleId - Textura y estilo del sello de lacre digital
+  letterBackgroundColor?: string;
+  letterPaperColor?: string;
+  letterTextColor?: string;
+  letterAccentColor?: string;
+  letterHeroColor?: string;
+  letterMotifColor?: string;
+  letterFrameColor?: string;
+  letterShowCardBorder?: boolean;
+  letterShowCornerMotifs?: boolean;
+  letterHeadingText?: string;
+  letterNamesText?: string;
+  letterDateText?: string;
+  letterMessageText?: string;
+  letterReservationHeadingText?: string;
+  letterReservationSingleText?: string;
+  letterReservationPluralText?: string;
+  letterGuestLabelText?: string;
+  letterCtaText?: string;
+  letterOpeningText?: string;
+  letterSignoffText?: string;
+  letterDividerColor?: string;
+  letterArrowColor?: string;
+  letterDisplayFont?: string;
+  letterBodyFont?: string;
+  letterFrameStyle?: string;
+  letterMotifStyle?: string;
+  letterDividerStyle?: string;
   // Section Visibility Toggles (Atelier / Design)
   showItinerary?: boolean; // Cronograma del evento
   showLocations?: boolean; // Lugares & Cómo llegar (Google Maps)

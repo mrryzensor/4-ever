@@ -1392,7 +1392,7 @@ export default function App() {
     );
   }
 
-  if (currentView === 'invitation' && settings && !hasOpenedInvitation) {
+  if (currentView === 'invitation' && settings && settings.showInvitationLetter !== false && !hasOpenedInvitation) {
     return (
       <InvitationLetter
         key={`${currentWeddingId}-${settings.id}`}

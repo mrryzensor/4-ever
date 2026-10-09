@@ -12,7 +12,9 @@ import {
   getLetterBoxShadowStyle,
   getLetterShadowStyle,
   normalizeLetterShadow,
+  resolveLetterFontFamily,
 } from '../lib/letterAppearance.ts';
+import { getWaxSealMotifPaths } from '../lib/waxSealAppearance.ts';
 import { getThemeFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { CardOrnamentFrame } from './animations/CardOrnamentFrame.tsx';
 import { StyleSpecificDivider } from './animations/StyleSpecificDivider.tsx';
@@ -110,7 +112,7 @@ const LetterCornerOrnament: React.FC<{ styleId: string; color: string }> = ({ st
             ))}
           </g>
         ) : (
-          <g fill="#D4A373">
+          <g fill={color}>
             <path d="M245 48c-5-5-12 2 0 11 12-9 5-16 0-11Z" opacity=".92" />
             <path d="M282 98c-4-4-10 2 0 9 10-7 4-13 0-9Z" opacity=".88" />
             <path d="M194 132c-4-4-10 2 0 9 10-7 4-13 0-9Z" opacity=".8" />
@@ -148,6 +150,15 @@ const TintedLetterArtwork = ({
   </svg>
 );
 
+const WaxSealFinish: React.FC<{ ornamentStyle: string }> = ({ ornamentStyle }) => (
+  <svg aria-hidden="true" viewBox="0 0 100 100" className="pointer-events-none absolute inset-[7%] h-[86%] w-[86%] overflow-visible">
+    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeOpacity=".46" strokeWidth="1.4" />
+    <g fill="none" stroke="white" strokeOpacity=".62" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+      {getWaxSealMotifPaths(ornamentStyle).map((path, index) => <path key={index} d={path} />)}
+    </g>
+  </svg>
+);
+
 const SealedEnvelope = ({
   envelopeColor,
   envelopeShadowColor,
@@ -173,7 +184,6 @@ const SealedEnvelope = ({
 }) => {
   const envelopeTintId = `letter-envelope-tint-${useId().replace(/:/g, '')}`;
   const darkerSeal = shade(sealColor, 0.22);
-  const isFloral = ['floral', 'watercolor'].some((style) => sealTheme.ornamentStyle.toLowerCase().includes(style));
   return (
     <motion.button
       type="button"
@@ -230,11 +240,7 @@ const SealedEnvelope = ({
             boxShadow: getLetterBoxShadowStyle(sealShadowColor, sealShadowIntensity),
           }}
         >
-          {isFloral ? (
-            <span className="absolute inset-[10%] rounded-full border border-white/45" />
-          ) : (
-            <span className="absolute h-1/2 w-1/2 rotate-45 border border-white/45" />
-          )}
+          <WaxSealFinish ornamentStyle={sealTheme.ornamentStyle} />
           <span className="relative z-10 max-w-[88%] truncate">{sealText}</span>
         </motion.span>
       </span>
@@ -251,18 +257,47 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
   const activeFrameStyle = settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto'
     ? settings.frameOrnamentStyle
     : settings.cardStyle || fallbackStyle;
+  const frameStyle = settings.letterFrameStyle && settings.letterFrameStyle !== 'auto' ? settings.letterFrameStyle : activeFrameStyle;
+  const motifStyle = settings.letterMotifStyle && settings.letterMotifStyle !== 'auto'
+    ? settings.letterMotifStyle
+    : settings.countdownStyle && settings.countdownStyle !== 'auto'
+      ? settings.countdownStyle
+      : settings.cardStyle || fallbackStyle;
+  const dividerStyle = settings.letterDividerStyle && settings.letterDividerStyle !== 'auto'
+    ? settings.letterDividerStyle
+    : settings.dividerStyle && settings.dividerStyle !== 'auto'
+      ? settings.dividerStyle
+      : settings.cardStyle || fallbackStyle;
   const [isOpening, setIsOpening] = useState(false);
   const arrowMarkerId = `letter-arrow-${useId().replace(/:/g, '')}`;
-  const namesFont = getThemeFontFamily(theme.fontDisplay, 'Georgia, serif');
-  const bodyFont = getThemeFontFamily(theme.fontBody, 'Georgia, serif');
-  const date = useMemo(() => formatHeroDate(
+  const namesFont = resolveLetterFontFamily(settings.letterDisplayFont, getThemeFontFamily(theme.fontDisplay, 'Georgia, serif'));
+  const bodyFont = resolveLetterFontFamily(settings.letterBodyFont, getThemeFontFamily(theme.fontBody, 'Georgia, serif'));
+  const backgroundColor = settings.letterBackgroundColor || theme.bgHex;
+  const paperColor = settings.letterPaperColor || theme.secondaryBgHex || '#fff';
+  const textColor = settings.letterTextColor || theme.primaryColorHex;
+  const accentColor = settings.letterAccentColor || theme.accentColorHex;
+  const heroColor = settings.letterHeroColor || textColor;
+  const motifColor = settings.letterMotifColor || accentColor;
+  const frameColor = settings.letterFrameColor || accentColor;
+  const dividerColor = settings.letterDividerColor || accentColor;
+  const arrowColor = settings.letterArrowColor || accentColor;
+  const eventDateText = useMemo(() => formatHeroDate(
     settings.eventDate || '',
     settings.heroDateFormat || 'dd.mm.aaaa',
     settings.heroCustomDateText,
   ), [settings.eventDate, settings.heroDateFormat, settings.heroCustomDateText]);
+  const date = settings.letterDateText?.trim() || eventDateText;
   const reservedPasses = guest ? Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) : null;
-  const heading = eventType === 'xv' ? 'MIS XV AÑOS' : 'NUESTRA BODA';
-  const displayNames = settings.coupleNames?.trim() || (eventType === 'xv' ? 'Una celebración especial' : 'Nuestra celebración');
+  const heading = settings.letterHeadingText?.trim() || (eventType === 'xv' ? 'MIS XV AÑOS' : 'NUESTRA BODA');
+  const displayNames = settings.letterNamesText?.trim() || settings.coupleNames?.trim() || (eventType === 'xv' ? 'Una celebración especial' : 'Nuestra celebración');
+  const reservationHeading = settings.letterReservationHeadingText?.trim() || 'Hemos reservado';
+  const reservationSingle = settings.letterReservationSingleText?.trim() || 'lugar en tu honor';
+  const reservationPlural = settings.letterReservationPluralText?.trim() || 'lugares en tu honor';
+  const guestLabel = settings.letterGuestLabelText?.trim() || 'Para';
+  const ctaText = settings.letterCtaText?.trim() || 'Toca el sobre para abrir la invitación';
+  const openingText = settings.letterOpeningText?.trim() || 'Abriendo tu invitación…';
+  const signoffText = settings.letterSignoffText?.trim() || 'Con cariño,';
+  const messageText = settings.letterMessageText?.trim() || 'Nos encantará compartir este día tan especial contigo.';
   const sealText = getDisplayedWaxSealText(settings);
   const envelopeShadowIntensity = normalizeLetterShadow(settings.envelopeShadowIntensity, 36);
   const sealShadowIntensity = normalizeLetterShadow(settings.waxSealShadowIntensity, 55);
@@ -275,78 +310,80 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
 
   return (
     <main
-      className="fixed inset-0 z-[200] flex min-h-[100svh] items-center justify-center overflow-y-auto p-3 sm:p-5"
-      style={{ backgroundColor: theme.bgHex, color: theme.primaryColorHex, fontFamily: bodyFont }}
+      className="fixed inset-0 z-[200] flex h-[100svh] max-h-[100svh] items-center justify-center overflow-hidden p-2 sm:p-5"
+      style={{ backgroundColor, color: textColor, fontFamily: bodyFont }}
     >
       <motion.article
         initial={{ opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: isOpening ? 0 : 1, y: isOpening ? -10 : 0, scale: isOpening ? 1.025 : 1 }}
         transition={{ duration: isOpening ? 0.55 : 0.55, ease: 'easeOut' }}
         data-invitation-card="true"
-        className={`relative grid min-h-[calc(100svh-1.5rem)] w-full max-w-[540px] grid-rows-[auto_1fr] overflow-hidden sm:min-h-[calc(100svh-2.5rem)] md:aspect-[1.72/1] md:min-h-0 md:max-w-[1180px] md:grid-cols-[1fr_0.94fr] md:grid-rows-1 ${settings.borderlessCards ? '!border-0 !ring-0' : 'border'} ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'} ${settings.transparentCards ? '!bg-transparent !bg-none !shadow-none' : ''}`}
-        style={{ backgroundColor: settings.transparentCards ? 'transparent' : theme.secondaryBgHex || '#fff', borderColor: `${theme.accentColorHex}38`, color: theme.primaryColorHex }}
+        className={`relative grid h-[calc(100svh-1rem)] max-h-[calc(100svh-1rem)] min-h-0 w-full max-w-[540px] grid-rows-[auto_minmax(0,1fr)] overflow-hidden ${settings.letterShowCardBorder === false ? '!border-0 !ring-0' : 'border'} sm:h-[calc(100svh-2.5rem)] sm:max-h-[calc(100svh-2.5rem)] md:aspect-[1.72/1] md:h-auto md:max-h-none md:min-h-0 md:max-w-[1180px] md:grid-cols-[1fr_0.94fr] md:grid-rows-1 ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'}`}
+        style={{ backgroundColor: paperColor, borderColor: `${frameColor}55`, color: textColor }}
       >
-        <CardOrnamentFrame cardStyle={activeFrameStyle} accentColor={theme.accentColorHex} />
-        <LetterCornerOrnament
-          styleId={settings.dividerStyle && settings.dividerStyle !== 'auto' ? settings.dividerStyle : settings.cardStyle || fallbackStyle}
-          color={theme.accentColorHex}
-        />
-        <div className="pointer-events-none absolute -right-8 -top-8 z-[1] h-48 w-48 opacity-75 sm:h-56 sm:w-56 md:h-72 md:w-72">
-          <CountdownStyleOrnament
-            style={settings.countdownStyle}
-            fallbackStyle={settings.cardStyle || fallbackStyle}
-            accentColor={theme.accentColorHex}
+        {settings.letterShowCornerMotifs !== false && <>
+          <CardOrnamentFrame cardStyle={frameStyle} accentColor={frameColor} />
+          <LetterCornerOrnament
+            styleId={settings.letterMotifStyle && settings.letterMotifStyle !== 'auto' ? settings.letterMotifStyle : settings.cardStyle || fallbackStyle}
+            color={motifColor}
           />
-        </div>
+          <div className="pointer-events-none absolute -right-8 -top-8 z-[1] h-48 w-48 opacity-75 sm:h-56 sm:w-56 md:h-72 md:w-72">
+            <CountdownStyleOrnament
+              style={motifStyle}
+              fallbackStyle={motifStyle}
+              accentColor={motifColor}
+            />
+          </div>
+        </>}
         <div className="pointer-events-none absolute right-0 top-0 z-[2] h-12 w-[58%] max-w-[300px] opacity-90 md:w-[35%] md:max-w-[380px]">
           <StyleSpecificDivider
-            cardStyle={settings.cardStyle || fallbackStyle}
-            dividerStyle={settings.dividerStyle}
+            cardStyle={dividerStyle}
+            dividerStyle={dividerStyle}
             fallbackStyle={fallbackStyle}
-            color={theme.accentColorHex}
+            color={dividerColor}
             className="!mx-0 !my-0 h-full w-full"
           />
         </div>
         <div className="pointer-events-none absolute -bottom-8 left-0 z-[1] h-28 w-full overflow-hidden opacity-90 sm:h-36 md:h-40">
           <StyleSpecificDivider
-            cardStyle={settings.cardStyle || fallbackStyle}
-            dividerStyle={settings.dividerStyle}
+            cardStyle={dividerStyle}
+            dividerStyle={dividerStyle}
             fallbackStyle={fallbackStyle}
-            color={theme.accentColorHex}
+            color={dividerColor}
             className="!mx-0 !my-0 h-full w-full"
           />
         </div>
 
-        <section className="relative z-10 flex flex-col items-center justify-center px-5 pb-1 pt-11 text-center sm:px-10 sm:pt-14 md:items-start md:px-12 md:py-12 md:text-left lg:px-16">
-          <p className="mb-4 text-lg font-medium uppercase tracking-[0.2em] sm:text-xl" style={{ color: theme.accentColorHex }}>{heading}</p>
-          <div className="mb-4 h-px w-24" style={{ backgroundColor: `${theme.accentColorHex}80` }} />
-          <h1 className="max-w-full break-words text-[clamp(3.5rem,13vw,5.8rem)] leading-[1.04] tracking-tight sm:text-[clamp(4rem,7vw,6.4rem)] md:text-[clamp(3.75rem,5vw,6.5rem)]" style={{ color: theme.primaryColorHex, fontFamily: namesFont }}>
+        <section className="relative z-10 flex min-h-0 flex-col items-center justify-start overflow-hidden px-4 pt-[clamp(1.5rem,5.5svh,3.5rem)] pb-[clamp(0.25rem,0.8svh,0.5rem)] text-center sm:px-10 md:items-start md:justify-center md:px-12 md:py-12 md:text-left lg:px-16">
+          <p className="mb-[clamp(0.15rem,0.8svh,0.5rem)] text-[clamp(0.68rem,1.8svh,1.05rem)] font-medium uppercase tracking-[0.2em] md:mb-4 md:text-lg" style={{ color: accentColor }}>{heading}</p>
+          <div className="mb-[clamp(0.15rem,0.8svh,0.5rem)] h-px w-20 md:mb-4 md:w-24" style={{ backgroundColor: `${dividerColor}80` }} />
+          <h1 className="max-w-full break-words text-[clamp(2rem,6.2svh,3.5rem)] leading-[1.02] tracking-tight md:text-[clamp(3.75rem,5vw,6.5rem)] md:leading-[1.04]" style={{ color: heroColor, fontFamily: namesFont }}>
             {displayNames}
           </h1>
-          <p className="mt-5 flex items-center justify-center gap-2 text-2xl tracking-[0.1em] sm:text-3xl md:justify-start" style={{ color: theme.accentColorHex }}>
-            <CalendarDays className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden="true" />
-            <span>{date}</span>
+          <p className="mt-[clamp(0.3rem,1.3svh,0.8rem)] flex max-w-full flex-wrap items-center justify-center gap-2 text-[clamp(1rem,3.2svh,1.7rem)] tracking-[0.1em] md:mt-5 md:text-3xl md:justify-start" style={{ color: accentColor }}>
+            <CalendarDays className="h-[clamp(1rem,3svh,1.75rem)] w-[clamp(1rem,3svh,1.75rem)] md:h-8 md:w-8" aria-hidden="true" />
+            <span className="min-w-0 break-words">{date}</span>
           </p>
 
-          <div className="mt-6 hidden h-px w-full max-w-sm md:block" style={{ backgroundColor: `${theme.accentColorHex}30` }} />
-          <div className="mt-5 min-h-[86px] text-center md:text-left">
+          <div className="mt-6 hidden h-px w-full max-w-sm md:block" style={{ backgroundColor: `${dividerColor}50` }} />
+          <div className="mt-[clamp(0.25rem,1svh,0.65rem)] min-h-0 text-center md:mt-5 md:min-h-[86px] md:text-left">
             {reservedPasses ? (
               <>
-                <p className="text-lg uppercase tracking-[0.16em] opacity-75 sm:text-xl">Hemos reservado</p>
-                <p className="mt-2 flex items-center justify-center gap-3 md:justify-start">
-                  <span className="inline-flex h-16 min-w-16 items-center justify-center rounded-xl border px-3 text-5xl" style={{ color: theme.accentColorHex, borderColor: `${theme.accentColorHex}70`, fontFamily: namesFont }}>{reservedPasses}</span>
-                  <span className="text-lg uppercase tracking-[0.12em] sm:text-xl">{reservedPasses === 1 ? 'lugar en tu honor' : 'lugares en tu honor'}</span>
+                <p className="text-[clamp(0.68rem,2.1svh,1.1rem)] uppercase tracking-[0.16em] opacity-75 md:text-lg">{reservationHeading}</p>
+                <p className="mt-[clamp(0.15rem,0.6svh,0.45rem)] flex items-center justify-center gap-2 md:mt-2 md:gap-3 md:justify-start">
+                  <span className="inline-flex h-[clamp(2.4rem,7.5svh,4rem)] min-w-[clamp(2.4rem,7.5svh,4rem)] items-center justify-center rounded-xl border px-2 text-[clamp(1.8rem,5.5svh,3rem)] md:h-16 md:min-w-16 md:px-3 md:text-5xl" style={{ color: accentColor, borderColor: `${accentColor}70`, fontFamily: namesFont }}>{reservedPasses}</span>
+                  <span className="text-[clamp(0.62rem,1.8svh,1.1rem)] uppercase tracking-[0.12em] md:text-lg">{reservedPasses === 1 ? reservationSingle : reservationPlural}</span>
                 </p>
               </>
             ) : (
-              <p className="mx-auto max-w-xs text-2xl italic opacity-75 md:mx-0">Nos encantará compartir este día tan especial contigo.</p>
+              <p className="mx-auto max-w-xs text-[clamp(0.85rem,2.7svh,1.4rem)] italic opacity-75 md:mx-0 md:text-2xl">{messageText}</p>
             )}
           </div>
-          {guest?.fullName && <p className="mt-3 break-words text-lg opacity-70 sm:text-xl">Para {guest.fullName}</p>}
+          {guest?.fullName && <p className="mt-[clamp(0.15rem,0.6svh,0.5rem)] max-w-full break-words text-[clamp(0.68rem,1.8svh,1rem)] opacity-70 md:mt-3 md:text-lg">{guestLabel} {guest.fullName}</p>}
         </section>
 
-        <section className="relative z-10 flex flex-col items-center justify-start px-3 pb-8 pt-2 sm:px-10 sm:pb-10 md:justify-center md:px-10 md:py-10 lg:px-14">
-          <div className="relative w-full max-w-[440px]">
+        <section className="relative z-10 flex min-h-0 flex-col items-center justify-start overflow-hidden px-3 pt-[clamp(0.35rem,1.2svh,0.7rem)] pb-[clamp(0.35rem,1.5svh,0.85rem)] sm:px-10 md:justify-center md:px-10 md:py-10 lg:px-14">
+          <div className="relative flex w-[calc(31svh*1.421)] max-w-full flex-col items-center md:w-full md:max-w-[440px]">
             <SealedEnvelope
               envelopeColor={settings.envelopeColor || '#9F705A'}
               envelopeShadowColor={settings.envelopeShadowColor || '#2C211B'}
@@ -369,13 +406,13 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
             >
               <defs>
                 <marker id={arrowMarkerId} markerWidth="12" markerHeight="12" refX="10.5" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-                  <path d="M0 0 12 6 0 12 2.5 6Z" fill={theme.accentColorHex} />
+                  <path d="M0 0 12 6 0 12 2.5 6Z" fill={arrowColor} />
                 </marker>
               </defs>
               <motion.path
                 d="M146 337 C127 320 132 294 151 292 C171 290 176 316 158 316 C148 316 145 302 157 296 C169 290 179 272 187 258"
                 fill="none"
-                stroke={theme.accentColorHex}
+                stroke={arrowColor}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeDasharray="1.2 7"
@@ -384,11 +421,11 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
               />
             </motion.svg>
-            <p aria-live="polite" className="relative z-20 mt-2 flex min-h-7 w-full flex-wrap items-center justify-center gap-2 text-center text-[clamp(1rem,4.1vw,1.25rem)] font-medium uppercase tracking-[0.09em] sm:mt-4" style={{ color: theme.accentColorHex }}>
-              {isOpening ? 'Abriendo tu invitación…' : <><Heart className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />Toca el sobre para abrir la invitación</>}
+            <p aria-live="polite" className="relative z-20 mt-[clamp(0.15rem,0.8svh,0.5rem)] flex min-h-0 w-full flex-wrap items-center justify-center gap-1 text-center text-[clamp(0.68rem,1.9svh,1rem)] font-medium uppercase tracking-[0.07em] md:mt-4 md:min-h-7 md:gap-2 md:text-base md:tracking-[0.09em]" style={{ color: arrowColor }}>
+              {isOpening ? openingText : <><Heart className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />{ctaText}</>}
             </p>
           </div>
-          <p className="mt-14 text-center text-lg italic tracking-[0.04em] opacity-65 sm:mt-16 sm:text-xl md:mt-20" style={{ fontFamily: namesFont }}>Con cariño, {displayNames}</p>
+          <p className="mt-[clamp(0.2rem,1.3svh,0.85rem)] max-w-full break-words text-center text-[clamp(0.75rem,2svh,1.05rem)] italic leading-tight tracking-[0.04em] opacity-65 md:mt-20 md:text-xl" style={{ color: heroColor, fontFamily: namesFont }}>{signoffText} {displayNames}</p>
         </section>
       </motion.article>
     </main>

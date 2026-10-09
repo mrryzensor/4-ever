@@ -16,7 +16,7 @@ export function getEnvelopeTintMatrix(color: string): string {
   const green = target.g / SOURCE_ENVELOPE_RGB.g;
   const blue = target.b / SOURCE_ENVELOPE_RGB.b;
 
-  return [red, 0, 0, 0, 0, 0, green, 0, 0, 0, 0, 0, blue, 0, 0, 0, 0, 1, 0]
+  return [red, 0, 0, 0, 0, 0, green, 0, 0, 0, 0, 0, blue, 0, 0, 0, 0, 0, 1, 0]
     .map((value) => Number(value.toFixed(4)))
     .join(' ');
 }
@@ -45,4 +45,15 @@ export function getLetterBoxShadowStyle(color: string, intensity: number): strin
   const offset = Math.round(2 + strength * 4);
   const blur = Math.round(4 + strength * 10);
   return `0 ${offset}px ${blur}px ${getHexColorWithAlpha(color, strength * 0.55)}`;
+}
+
+export function resolveLetterFontFamily(selection: string | undefined, fallback: string): string {
+  const family = selection?.trim();
+  if (!family || family === 'auto' || !/^[\w -]+$/.test(family)) return fallback;
+  const genericFallback = ['Montserrat', 'Plus Jakarta Sans'].includes(family)
+    ? 'Arial, sans-serif'
+    : family === 'Alex Brush'
+      ? 'cursive'
+      : 'Georgia, serif';
+  return `"${family}", ${genericFallback}`;
 }
