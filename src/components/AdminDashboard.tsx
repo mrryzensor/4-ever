@@ -10,7 +10,7 @@ import { AdminGalleryTab } from './admin/AdminGalleryTab.tsx';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../lib/toast.ts';
 import { applyWeddingSettingsChange } from '../lib/eventUtils.ts';
-import { buildInvitationShareMessage, sendInvitationMessage } from '../lib/invitationSharing.ts';
+import { buildInvitationShareMessage, getInvitationShareImageUrl, sendInvitationMessage } from '../lib/invitationSharing.ts';
 
 interface AdminDashboardProps {
   settings: WeddingSettings;
@@ -174,7 +174,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleCopyInvitationLink = async () => {
     setCopiedLink(false);
     const message = buildInvitationShareMessage(tempSettings, window.location.origin);
-    const result = await sendInvitationMessage(message, 'Invitación de ' + tempSettings.coupleNames);
+    const imageUrl = getInvitationShareImageUrl(tempSettings, window.location.origin);
+    const result = await sendInvitationMessage(message, 'Invitación de ' + tempSettings.coupleNames, imageUrl);
     if (result === 'copied') {
       setCopiedLink(true);
       toast.success('Mensaje con enlace copiado. Ya puedes pegarlo en tu aplicación de mensajería.', 'Listo para compartir');

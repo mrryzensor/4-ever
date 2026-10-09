@@ -32,7 +32,7 @@ import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../..
 import { SUBSCRIPTION_PLANS } from '../../data/plans.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
-import { buildInvitationShareMessage, sendInvitationMessage } from '../../lib/invitationSharing.ts';
+import { buildInvitationShareMessage, getInvitationShareImageUrl, sendInvitationMessage } from '../../lib/invitationSharing.ts';
 import { resolveEventType } from '../../lib/eventUtils.ts';
 
 interface UserDashboardProps {
@@ -177,7 +177,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
     e?.stopPropagation();
     setCopiedSlug(null);
     const message = buildInvitationShareMessage(wedding, window.location.origin);
-    const result = await sendInvitationMessage(message, 'Invitación de ' + wedding.coupleNames);
+    const imageUrl = getInvitationShareImageUrl(wedding, window.location.origin);
+    const result = await sendInvitationMessage(message, 'Invitación de ' + wedding.coupleNames, imageUrl);
     if (result === 'copied') {
       const shareKey = wedding.slug || String(wedding.id);
       setCopiedSlug(shareKey);

@@ -21,6 +21,14 @@ export function getInvitationUrl(settings: Pick<InvitationShareSettings, 'id' | 
   return `${origin}/?${query.toString()}`;
 }
 
+export function getInvitationShareImageUrl(settings: Pick<InvitationShareSettings, 'id' | 'slug'>, origin: string) {
+  const query = new URLSearchParams({
+    wedding: settings.slug || String(settings.id || 1),
+    v: String(Date.now()),
+  });
+  return `${origin}/api/og-image?${query.toString()}`;
+}
+
 function formatShareDate(value: string | undefined) {
   if (!value) return '';
   const dateOnly = value.slice(0, 10);
@@ -80,11 +88,29 @@ export async function copyTextToClipboard(text: string) {
 
 export type InvitationShareResult = 'shared' | 'opened-whatsapp' | 'copied' | 'prompted' | 'cancelled' | 'failed';
 
-export async function sendInvitationMessage(message: string, title: string): Promise<InvitationShareResult> {
+export async function sendInvitationMessage(message: string, title: string, imageUrl?: string): Promise<InvitationShareResult> {
   if (isMobileShareDevice()) {
     if (typeof navigator.share === 'function') {
+      let imageFile: File | null = null;
+      if (imageUrl && typeof File !== 'undefined' && typeof navigator.canShare === 'function') {
+        try {
+          const response = await fetch(imageUrl, { cache: 'no-store', credentials: 'same-origin' });
+          if (response.ok) {
+            const blob = await response.blob();
+            if (blob.type.startsWith('image/')) {
+              imageFile = new File([blob], 'invitacion-2date.png', { type: blob.type });
+            }
+          }
+        } catch {
+          // If the image endpoint is unavailable, continue with the text and link.
+        }
+      }
+
       try {
-        await navigator.share({ title, text: message });
+        const shareData: ShareData = imageFile && navigator.canShare?.({ files: [imageFile] })
+          ? { title, text: message, files: [imageFile] }
+          : { title, text: message };
+        await navigator.share(shareData);
         return 'shared';
       } catch (error) {
         return (error as DOMException)?.name === 'AbortError' ? 'cancelled' : 'failed';
