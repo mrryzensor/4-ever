@@ -318,7 +318,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
         animate={{ opacity: isOpening ? 0 : 1, y: isOpening ? -10 : 0, scale: isOpening ? 1.025 : 1 }}
         transition={{ duration: isOpening ? 0.55 : 0.55, ease: 'easeOut' }}
         data-invitation-card="true"
-        className={`relative grid h-[calc(100svh-1rem)] max-h-[calc(100svh-1rem)] min-h-0 w-full max-w-[540px] grid-rows-[minmax(0,0.44fr)_minmax(0,0.56fr)] overflow-hidden ${settings.letterShowCardBorder === false ? '!border-0 !ring-0' : 'border'} sm:h-[calc(100svh-2.5rem)] sm:max-h-[calc(100svh-2.5rem)] md:aspect-[1.72/1] md:h-auto md:max-h-none md:min-h-0 md:max-w-[1180px] md:grid-cols-[1fr_0.94fr] md:grid-rows-1 ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'}`}
+        className={`relative flex h-[calc(100svh-1rem)] max-h-[calc(100svh-1rem)] min-h-0 w-full max-w-[540px] flex-col justify-center gap-[clamp(1.25rem,4svh,2.25rem)] overflow-hidden ${settings.letterShowCardBorder === false ? '!border-0 !ring-0' : 'border'} sm:h-[calc(100svh-2.5rem)] sm:max-h-[calc(100svh-2.5rem)] md:aspect-[1.72/1] md:h-auto md:max-h-none md:min-h-0 md:max-w-[1180px] md:grid md:grid-cols-[1fr_0.94fr] md:grid-rows-1 md:gap-0 ${theme.cardBgClass} ${theme.cardShapeClass || 'rounded-3xl'} ${theme.cardBorderDecoration || 'shadow-md'}`}
         style={{ backgroundColor: paperColor, borderColor: `${frameColor}55`, color: textColor }}
       >
         {settings.letterShowCornerMotifs !== false && <>
@@ -354,7 +354,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
           />
         </div>
 
-        <section className="relative z-10 flex min-h-0 flex-col items-center justify-center overflow-hidden px-4 py-[clamp(0.35rem,1.5svh,0.85rem)] text-center sm:px-10 md:items-start md:px-12 md:py-12 md:text-left lg:px-16">
+        <section className="relative z-10 flex min-h-0 shrink-0 flex-col items-center justify-center overflow-hidden px-4 py-[clamp(0.35rem,1.5svh,0.85rem)] text-center sm:px-10 md:items-start md:px-12 md:py-12 md:text-left lg:px-16">
           <p className="mb-[clamp(0.15rem,0.8svh,0.5rem)] text-[clamp(0.68rem,1.8svh,1.05rem)] font-medium uppercase tracking-[0.2em] md:mb-4 md:text-lg" style={{ color: accentColor }}>{heading}</p>
           <div className="mb-[clamp(0.15rem,0.8svh,0.5rem)] h-px w-20 md:mb-4 md:w-24" style={{ backgroundColor: `${dividerColor}80` }} />
           <h1 className="max-w-full break-words text-[clamp(2rem,6.2svh,3.5rem)] leading-[1.02] tracking-tight md:text-[clamp(3.75rem,5vw,6.5rem)] md:leading-[1.04]" style={{ color: heroColor, fontFamily: namesFont }}>
@@ -382,7 +382,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
           {guest?.fullName && <p className="mt-[clamp(0.15rem,0.6svh,0.5rem)] max-w-full break-words text-[clamp(0.68rem,1.8svh,1rem)] opacity-70 md:mt-3 md:text-lg">{guestLabel} {guest.fullName}</p>}
         </section>
 
-        <section className="relative z-10 flex min-h-0 flex-col items-center justify-center overflow-hidden px-3 py-[clamp(0.35rem,1.5svh,0.85rem)] sm:px-10 md:px-10 md:py-10 lg:px-14">
+        <section className="relative z-10 flex min-h-0 shrink-0 flex-col items-center justify-center overflow-hidden px-3 py-[clamp(0.35rem,1.5svh,0.85rem)] sm:px-10 md:px-10 md:py-10 lg:px-14">
           <div className="relative flex w-[calc(31svh*1.421)] max-w-full flex-col items-center md:w-full md:max-w-[440px]">
             <SealedEnvelope
               envelopeColor={settings.envelopeColor || '#9F705A'}
@@ -421,11 +421,11 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
               />
             </motion.svg>
-            <p aria-live="polite" className="relative z-20 mt-[clamp(0.75rem,2svh,1.25rem)] flex min-h-0 w-full flex-wrap items-center justify-center gap-1 text-center text-[clamp(0.68rem,1.9svh,1rem)] font-medium uppercase tracking-[0.07em] md:mt-4 md:min-h-7 md:gap-2 md:text-base md:tracking-[0.09em]" style={{ color: arrowColor }}>
+            <p aria-live="polite" className="relative z-20 mt-[clamp(1rem,2.6svh,1.5rem)] flex min-h-0 w-full flex-wrap items-center justify-center gap-1 text-center text-[clamp(0.68rem,1.9svh,1rem)] font-medium uppercase tracking-[0.07em] md:mt-4 md:min-h-7 md:gap-2 md:text-base md:tracking-[0.09em]" style={{ color: arrowColor }}>
               {isOpening ? openingText : <><Heart className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" />{ctaText}</>}
             </p>
           </div>
-          <p className="mt-[clamp(1.25rem,4svh,2rem)] max-w-full break-words text-center text-[clamp(1rem,2.7svh,1.35rem)] italic leading-tight tracking-[0.04em] opacity-65 md:mt-20 md:text-xl" style={{ color: heroColor, fontFamily: namesFont }}>{signoffText} {displayNames}</p>
+          <p className="mt-[clamp(1.5rem,4.5svh,2.5rem)] max-w-full break-words text-center text-[clamp(1rem,2.7svh,1.35rem)] italic leading-tight tracking-[0.04em] opacity-65 md:mt-20 md:text-xl" style={{ color: heroColor, fontFamily: namesFont }}>{signoffText} {displayNames}</p>
         </section>
       </motion.article>
     </main>
