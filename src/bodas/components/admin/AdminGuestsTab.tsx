@@ -20,6 +20,7 @@ import { Guest, GuestStats, WeddingSettings } from '../../../types.ts';
 import { toast } from '../../../lib/toast.ts';
 import { AdminGuestModal, ExtendedGuestFormData } from './AdminGuestModal.tsx';
 import { parseRsvpOptionalFields } from '../../../lib/rsvpOptionalFields.ts';
+import { parseGuestCompanionNames } from '../../../lib/guestCompanions.ts';
 
 interface AdminGuestsTabProps {
   settings: WeddingSettings;
@@ -461,6 +462,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
           guests.map((g) => {
             const isConfirmed = g.status === 'confirmed';
             const isDeclined = g.status === 'declined';
+            const companionNames = isConfirmed ? parseGuestCompanionNames(g.companionNames, g.fullName, g.confirmedPasses ?? 1) : [];
             return (
               <div
                 key={g.id}
@@ -471,6 +473,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
                     <h3 className="font-serif font-bold text-sm text-[#1a1a1a]">
                       {g.fullName}
                     </h3>
+                    {isConfirmed && (g.confirmedPasses ?? 0) > 1 && <p className="mt-1 text-[11px] leading-4 text-stone-600"><span className="font-semibold">Acompañantes:</span> {companionNames.length ? companionNames.join(', ') : `${(g.confirmedPasses ?? 1) - 1} sin nombre registrado`}</p>}
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#FAF9F0] text-[#5A5A40] border border-[#E5E2D0]">
                         {g.accessCode}
@@ -595,12 +598,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
                 guests.map((g) => {
                   const isConfirmed = g.status === 'confirmed';
                   const isDeclined = g.status === 'declined';
+                  const companionNames = isConfirmed ? parseGuestCompanionNames(g.companionNames, g.fullName, g.confirmedPasses ?? 1) : [];
                   return (
                     <tr key={g.id} className="hover:bg-[#FAF9F0]/50 transition-colors">
                       <td className="py-3.5 px-5">
                         <div className="font-serif font-bold text-stone-800 text-xs sm:text-sm">
                           {g.fullName}
                         </div>
+                        {isConfirmed && (g.confirmedPasses ?? 0) > 1 && <div className="mt-0.5 text-[11px] text-stone-600"><span className="font-semibold">Acompañantes:</span> {companionNames.length ? companionNames.join(', ') : `${(g.confirmedPasses ?? 1) - 1} sin nombre registrado`}</div>}
                         {g.message && (
                           <div className="text-[11px] text-stone-500 italic mt-0.5 truncate max-w-xs">
                             "{g.message}"

@@ -13,6 +13,7 @@ import { buildInvitationShareMessage, getInvitationShareImageUrl, sendInvitation
 
 interface AdminDashboardProps {
   settings: WeddingSettings;
+  initialTab?: 'guests' | 'settings';
   onUpdateSettings: (updated: Partial<WeddingSettings>) => void;
   onClose?: () => void;
   onBackToDashboard?: () => void;
@@ -22,13 +23,14 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   settings,
+  initialTab = 'settings',
   onUpdateSettings,
   onClose,
   onBackToDashboard,
   onBackToInvitation,
   currentUser: propUser,
 }) => {
-  const [activeTab, setActiveTab] = useState<'guests' | 'settings' | 'import' | 'gallery'>('settings');
+  const [activeTab, setActiveTab] = useState<'guests' | 'settings' | 'import' | 'gallery'>(initialTab);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [stats, setStats] = useState<GuestStats>({
     totalGuests: 0,

@@ -36,7 +36,7 @@ import { buildInvitationShareMessage, getInvitationShareImageUrl, sendInvitation
 
 interface UserDashboardProps {
   user: UserProfile;
-  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => void;
+  onSelectWedding: (weddingId: number, mode: 'invitation' | 'admin', eventType?: string, adminTab?: 'guests' | 'settings') => void;
   onLogout: () => void;
   onBackToLanding: () => void;
   onUpdatePlan: (newPlan: PlanId) => void;
@@ -473,31 +473,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                   {/* Card Body */}
                   <div className="p-5 space-y-3">
-                    <div className="flex items-center text-xs text-stone-600 gap-2">
-                      <Calendar className="w-4 h-4 text-amber-800/80" />
-                      <span>{w.eventDate ? w.eventDate.substring(0, 10) : 'Fecha por definir'}</span>
-                    </div>
-
-                    <div className="flex items-center text-xs text-stone-600 gap-2">
-                      <Users className="w-4 h-4 text-amber-800/80" />
-                      <span>
-                        <strong>{w.confirmedGuests || 0}</strong> confirmados de{' '}
-                        <strong>{w.totalGuests || 0}</strong> invitados
-                      </span>
-                    </div>
-
-                    <div className="pt-2">
-                      <div className="w-full bg-stone-100 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className="bg-amber-800 h-full rounded-full transition-all"
-                          style={{
-                            width: `${
-                              (w.totalGuests || 0) > 0 ? ((w.confirmedGuests || 0) / (w.totalGuests || 1)) * 100 : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+                    <button type="button" onClick={() => onSelectWedding(w.id, 'admin', w.eventType, 'guests')} aria-label={`Abrir Gestión de Invitados y RSVP para ${w.coupleNames}`} className="group -m-2 w-[calc(100%+1rem)] rounded-xl p-2 text-left transition-colors hover:bg-amber-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-800">
+                      <span className="mb-3 flex items-center gap-2 text-xs text-stone-600"><Calendar className="w-4 h-4 text-amber-800/80" /><span>{w.eventDate ? w.eventDate.substring(0, 10) : 'Fecha por definir'}</span></span>
+                      <span className="flex items-center gap-2 text-xs text-stone-600"><Users className="w-4 h-4 text-amber-800/80" /><span><strong>{w.confirmedGuests || 0}</strong> confirmados de{' '}<strong>{w.totalGuests || 0}</strong> invitados</span></span>
+                      <span className="mt-3 block h-1.5 w-full overflow-hidden rounded-full bg-stone-100"><span className="block h-full rounded-full bg-amber-800 transition-all" style={{ width: `${(w.totalGuests || 0) > 0 ? ((w.confirmedGuests || 0) / (w.totalGuests || 1)) * 100 : 0}%` }} /></span>
+                      <span className="mt-1 block text-[10px] font-medium text-amber-900 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">Abrir Gestión de Invitados & RSVP</span>
+                    </button>
                   </div>
                 </div>
 

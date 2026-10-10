@@ -408,6 +408,7 @@ export default function App() {
   const [isInlineRsvpOpen, setIsInlineRsvpOpen] = useState(false);
   const [showRsvpModal, setShowRsvpModal] = useState(false);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [initialAdminTab, setInitialAdminTab] = useState<'guests' | 'settings'>('settings');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -966,8 +967,9 @@ export default function App() {
     }
   };
 
-  const handleSelectWedding = (weddingId: number, mode: 'invitation' | 'admin', eventType?: string) => {
+  const handleSelectWedding = (weddingId: number, mode: 'invitation' | 'admin', eventType?: string, adminTab?: 'guests' | 'settings') => {
     setIsViewingDemo(false);
+    setInitialAdminTab(mode === 'admin' ? adminTab || 'settings' : 'settings');
     setCurrentWeddingId(weddingId);
     const resolvedCat = resolveEventType(eventType);
     setEventCategory(resolvedCat as EventCategory);
@@ -1299,6 +1301,7 @@ export default function App() {
         {isXvAdmin ? (
           <XvAdminDashboard
             settings={settings}
+            initialTab={initialAdminTab}
             onUpdateSettings={handleUpdateSettings}
             onBackToDashboard={() => {
               setCurrentView('dashboard');
@@ -1317,6 +1320,7 @@ export default function App() {
         ) : (
           <AdminDashboard
             settings={settings}
+            initialTab={initialAdminTab}
             onUpdateSettings={handleUpdateSettings}
             onBackToDashboard={() => {
               setCurrentView('dashboard');
