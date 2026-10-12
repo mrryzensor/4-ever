@@ -142,6 +142,24 @@ const INVITATION_BRANCH_TEXT_FIELDS = [
   'heroWitnessesTitle', 'heroWitnesses',
   'heroCourtTitle', 'heroCourtPageHeading',
 ] as const;
+const INVITATION_BRANCH_CODE_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
+
+const normalizeInvitationBranchCode = (value: unknown) => String(value ?? '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+  .slice(0, 32)
+  .replace(/-+$/g, '');
+
+const isValidInvitationBranchCode = (value: string) =>
+  value.length >= 3 && value.length <= 32 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+
+const generateInvitationBranchCode = () => {
+  const bytes = randomBytes(6);
+  return Array.from(bytes, (byte) => INVITATION_BRANCH_CODE_ALPHABET[byte % INVITATION_BRANCH_CODE_ALPHABET.length]).join('');
+};
 
 const normalizeInvitationBranchText = (value: unknown) => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -1300,12 +1318,23 @@ async function startServer() {
       if (!access.allowed) return rejectWeddingAccess(res);
       const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 80) : '';
       if (!name) return res.status(400).json({ error: 'Escribe un nombre para esta rama de invitación.' });
+      const rawSlug = typeof req.body?.slug === 'string' ? req.body.slug.trim() : '';
+      const requestedSlug = normalizeInvitationBranchCode(rawSlug);
+      if (rawSlug && !isValidInvitationBranchCode(requestedSlug)) {
+        return res.status(400).json({ error: 'Usa un código de 3 a 32 caracteres con letras, números y guiones.' });
+      }
       const overrides = normalizeInvitationBranchText(req.body?.textOverrides);
       if (!Object.keys(overrides).length) return res.status(400).json({ error: 'Personaliza al menos uno de los textos disponibles.' });
+      const existingCodes = new Set((await getInvitationBranches(weddingId)).map((branch) => branch.slug));
+      if (requestedSlug && existingCodes.has(requestedSlug)) {
+        return res.status(409).json({ error: 'Ese código ya está en uso para este evento. Elige otro.' });
+      }
+      let slug = requestedSlug || generateInvitationBranchCode();
+      while (existingCodes.has(slug)) slug = generateInvitationBranchCode();
       const branch = await createInvitationBranch({
         weddingId,
         name,
-        slug: randomBytes(15).toString('base64url'),
+        slug,
         textOverrides: JSON.stringify(overrides),
       });
       res.status(201).json({ ...branch, textOverrides: overrides });
@@ -1328,6 +1357,23 @@ async function startServer() {
         const name = typeof req.body.name === 'string' ? req.body.name.trim().slice(0, 80) : '';
         if (!name) return res.status(400).json({ error: 'Escribe un nombre para esta rama de invitación.' });
         updates.name = name;
+      }
+      if (req.body?.slug !== undefined) {
+        const rawSlug = typeof req.body.slug === 'string' ? req.body.slug.trim() : '';
+        const isUnchangedSlug = rawSlug === String(current.slug || '');
+        const requestedSlug = isUnchangedSlug ? String(current.slug) : normalizeInvitationBranchCode(rawSlug);
+        if (rawSlug && !isUnchangedSlug && !isValidInvitationBranchCode(requestedSlug)) {
+          return res.status(400).json({ error: 'Usa un código de 3 a 32 caracteres con letras, números y guiones.' });
+        }
+        const existingCodes = new Set((await getInvitationBranches(Number(current.weddingId)))
+          .filter((branch) => branch.id !== id)
+          .map((branch) => branch.slug));
+        if (requestedSlug && existingCodes.has(requestedSlug)) {
+          return res.status(409).json({ error: 'Ese código ya está en uso para este evento. Elige otro.' });
+        }
+        let slug = requestedSlug || generateInvitationBranchCode();
+        while (existingCodes.has(slug)) slug = generateInvitationBranchCode();
+        updates.slug = slug;
       }
       if (req.body?.textOverrides !== undefined) {
         const overrides = normalizeInvitationBranchText(req.body.textOverrides);

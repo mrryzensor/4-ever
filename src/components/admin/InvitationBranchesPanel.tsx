@@ -38,11 +38,21 @@ const getBaseTexts = (settings: WeddingSettings): BranchText => Object.fromEntri
   textFields.map(({ key }) => [key, String(settings[key] || '')]),
 ) as BranchText;
 
+const normalizeBranchCodeInput = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9-]+/g, '-')
+  .replace(/-+/g, '-')
+  .replace(/^-/, '')
+  .slice(0, 32);
+
 const getBranchUrl = (settings: WeddingSettings, slug: string) => {
   const baseUrl = settings.slug
     ? `${window.location.origin}/${encodeURIComponent(settings.slug)}`
     : `${window.location.origin}/?w=${encodeURIComponent(String(settings.id || 1))}`;
   const url = new URL(baseUrl);
+  if (!settings.slug && settings.eventType) url.searchParams.set('event', settings.eventType);
   url.searchParams.set('branch', slug);
   return url.toString();
 };
@@ -54,6 +64,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState<BranchDraft | null>(null);
   const [draftName, setDraftName] = useState('');
+  const [draftSlug, setDraftSlug] = useState('');
   const [draftTexts, setDraftTexts] = useState<BranchText>(() => getBaseTexts(settings));
   const weddingId = settings.id || 1;
   const baseTexts = useMemo(() => getBaseTexts(settings), [settings]);
@@ -78,6 +89,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
     setIsEditorOpen(true);
     setEditingBranch(null);
     setDraftName('');
+    setDraftSlug('');
     setDraftTexts({ ...baseTexts });
   };
 
@@ -85,6 +97,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
     setIsEditorOpen(true);
     setEditingBranch(branch);
     setDraftName(branch.name);
+    setDraftSlug(branch.slug);
     setDraftTexts({ ...baseTexts, ...branch.textOverrides });
   };
 
@@ -93,13 +106,21 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
     setIsEditorOpen(false);
     setEditingBranch(null);
     setDraftName('');
+    setDraftSlug('');
   };
 
   const saveBranch = async (event: React.FormEvent) => {
     event.preventDefault();
     const name = draftName.trim();
+    const slug = editingBranch && draftSlug === editingBranch.slug
+      ? editingBranch.slug
+      : normalizeBranchCodeInput(draftSlug).replace(/-+$/, '');
     if (!name) {
       toast.warning('Escribe un nombre para identificar esta rama.');
+      return;
+    }
+    if (slug && slug.length < 3) {
+      toast.warning('El código del enlace debe tener al menos 3 caracteres.');
       return;
     }
     const overrides = Object.fromEntries(textFields.flatMap(({ key }) => (
@@ -115,7 +136,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
       const response = await fetch(editingBranch ? `/api/invitation-branches/${editingBranch.id}` : '/api/invitation-branches', {
         method: editingBranch ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ weddingId, name, textOverrides: overrides }),
+        body: JSON.stringify({ weddingId, name, slug, textOverrides: overrides }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'No se pudo guardar la rama.');
@@ -123,6 +144,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
       setIsEditorOpen(false);
       setEditingBranch(null);
       setDraftName('');
+      setDraftSlug('');
       await loadBranches();
     } catch (error: any) {
       toast.error(error.message || 'No se pudo guardar la rama.', 'Error');
@@ -174,7 +196,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
           </div>
           <div>
             <h3 className="font-serif font-bold text-lg text-stone-900">Invitaciones personalizadas</h3>
-            <p className="text-xs text-stone-500 mt-0.5">Crea enlaces con textos distintos. El diseño, la lista RSVP y las métricas son compartidos.</p>
+            <p className="text-xs text-stone-500 mt-0.5">Crea ramas para este evento. Solo cambian los textos; diseño, RSVP y métricas se comparten entre sus enlaces.</p>
           </div>
         </div>
         <button
@@ -203,6 +225,7 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
                 <p className="mt-0.5 flex items-center gap-1 text-[11px] text-stone-500">
                   <Link2 className="w-3 h-3 shrink-0" /> Enlace personalizado · RSVP compartido
                 </p>
+                <p className="mt-1 text-[10px] text-stone-400">Código: <span className="font-mono">{branch.slug}</span></p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button type="button" onClick={() => void shareBranch(branch)} className="inline-flex items-center gap-1.5 rounded-full bg-[#5A5A40] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#484833]">
@@ -238,6 +261,25 @@ export const InvitationBranchesPanel: React.FC<{ settings: WeddingSettings }> = 
                 <span className="text-xs font-semibold text-stone-700">Nombre de la rama</span>
                 <input value={draftName} onChange={(event) => setDraftName(event.target.value)} maxLength={80} placeholder="Ej. Familia de Ana" className="w-full rounded-xl border border-[#D8D2BC] px-3.5 py-2.5 text-sm text-stone-800 outline-none focus:border-[#5A5A40] focus:ring-2 focus:ring-[#5A5A40]/10" />
               </label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="invitation-branch-code" className="text-xs font-semibold text-stone-700">Código del enlace</label>
+                  <button type="button" onClick={() => setDraftSlug('')} className="text-[10px] font-semibold text-[#5A5A40] underline underline-offset-2 hover:text-[#484833]">
+                    Usar código aleatorio corto
+                  </button>
+                </div>
+                <input
+                  id="invitation-branch-code"
+                  value={draftSlug}
+                  onChange={(event) => setDraftSlug(normalizeBranchCodeInput(event.target.value))}
+                  maxLength={32}
+                  placeholder="Ej. familia-ana (opcional)"
+                  className="w-full rounded-xl border border-[#D8D2BC] px-3.5 py-2.5 text-sm text-stone-800 outline-none focus:border-[#5A5A40] focus:ring-2 focus:ring-[#5A5A40]/10"
+                />
+                <span className="block text-[10px] leading-4 text-stone-500">
+                  Personalízalo o déjalo vacío para generar un código aleatorio corto. Se conserva el slug del evento: <span className="font-mono">/{settings.slug || `?w=${settings.id || 1}`}{settings.slug ? '?' : '&'}branch=…</span>
+                </span>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 {textFields.map(({ key, label, hint }) => (
                   <label key={key} className="block space-y-1.5">

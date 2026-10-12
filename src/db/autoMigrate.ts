@@ -411,11 +411,14 @@ export async function autoMigrateDatabase() {
           id SERIAL PRIMARY KEY,
           wedding_id INTEGER NOT NULL,
           name TEXT NOT NULL,
-          slug TEXT NOT NULL UNIQUE,
+          slug TEXT NOT NULL,
           text_overrides TEXT NOT NULL DEFAULT '{}',
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
+        ALTER TABLE invitation_branches DROP CONSTRAINT IF EXISTS invitation_branches_slug_unique;
+        ALTER TABLE invitation_branches DROP CONSTRAINT IF EXISTS invitation_branches_slug_key;
+        CREATE UNIQUE INDEX IF NOT EXISTS invitation_branches_wedding_slug_unique_idx ON invitation_branches(wedding_id, slug);
         CREATE INDEX IF NOT EXISTS invitation_branches_wedding_id_idx ON invitation_branches(wedding_id);
 
         -- 4. Gallery Photos Table

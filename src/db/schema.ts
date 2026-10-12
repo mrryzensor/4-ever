@@ -293,12 +293,13 @@ export const invitationBranches = pgTable('invitation_branches', {
   id: serial('id').primaryKey(),
   weddingId: integer('wedding_id').notNull(),
   name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
+  slug: text('slug').notNull(),
   textOverrides: text('text_overrides').notNull().default('{}'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
   weddingIdIndex: index('invitation_branches_wedding_id_idx').on(table.weddingId),
+  weddingSlugUnique: uniqueIndex('invitation_branches_wedding_slug_unique_idx').on(table.weddingId, table.slug),
 }));
 
 // Photo gallery shared by guests and couple
