@@ -15,6 +15,7 @@ import {
   FileText,
   AlertCircle,
   X,
+  RefreshCw,
 } from 'lucide-react';
 import { Guest, GuestStats, WeddingSettings } from '../../types.ts';
 import { toast } from '../../lib/toast.ts';
@@ -34,6 +35,7 @@ interface AdminGuestsTabProps {
   onExportCsv: () => void;
   onSaveGuest: (guestData: Partial<Guest> & { id?: number }) => Promise<void>;
   onDeleteGuest: (id: number) => Promise<void>;
+  onRefresh: () => void | Promise<void>;
   onGuestsImported?: () => void;
 }
 
@@ -49,6 +51,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
   onExportCsv,
   onSaveGuest,
   onDeleteGuest,
+  onRefresh,
   onGuestsImported,
 }) => {
   const optionalFields = parseRsvpOptionalFields(settings.rsvpOptionalFields);
@@ -417,6 +420,16 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
         </div>
 
         <div className="flex items-center gap-2 justify-end flex-wrap">
+          <button
+            onClick={() => { void onRefresh(); }}
+            disabled={loading}
+            className="px-4 py-2 rounded-full border border-[#E5E2D0] text-[#5A5A40] bg-white hover:bg-[#FAF9F0] disabled:opacity-60 text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:cursor-wait shadow-xs transition-colors"
+            title="Actualizar datos de invitados"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Actualizar</span>
+          </button>
+
           {/* BOTÓN 1: IMPORTAR EXCEL / PEGAR TABLA */}
           <button
             onClick={() => setShowBulkModal(true)}
@@ -449,7 +462,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       </div>
 
       {/* Mobile Guest Cards List (Visible on Small Screens) */}
-      <div className="md:hidden space-y-3">
+      <div className="md:hidden h-[65vh] min-h-[320px] max-h-[680px] overflow-y-auto overscroll-contain pr-1 space-y-3">
         {loading ? (
           <div className="p-8 text-center bg-white rounded-3xl border border-[#E5E2D0] text-[#7D8C7A] font-serif italic text-sm">
             Cargando invitados...
@@ -567,11 +580,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       </div>
 
       {/* Desktop Guest Table (Visible on Tablets & Desktops) */}
-      <div className="hidden md:block bg-white rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+      <div className="hidden md:block h-[65vh] min-h-[320px] max-h-[680px] bg-white rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] shadow-sm overflow-auto overscroll-contain">
+          <table className="min-w-[900px] w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[#E5E2D0] bg-[#FAF9F0]/80 text-[#5A5A40] font-serif uppercase tracking-wider text-[11px]">
+              <tr className="sticky top-0 z-10 border-b border-[#E5E2D0] bg-[#FAF9F0] text-[#5A5A40] font-serif uppercase tracking-wider text-[11px]">
                 <th className="py-4 px-5 font-bold">Invitado / Familia</th>
                 <th className="py-4 px-4 font-bold">Código</th>
                 <th className="py-4 px-4 font-bold">Grupo</th>
@@ -688,7 +700,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
               )}
             </tbody>
           </table>
-        </div>
       </div>
 
       {/* ========================================================================= */}

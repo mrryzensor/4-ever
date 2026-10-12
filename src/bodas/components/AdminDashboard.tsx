@@ -276,6 +276,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }}
               onDeleteGuest={handleDeleteGuest}
               onExportCsv={exportCsv}
+              onRefresh={fetchGuests}
               onGuestsImported={fetchGuests}
             />
           )}
