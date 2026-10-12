@@ -466,7 +466,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   </div>
                   <p className="text-[10px] text-[#7D8C7A] truncate">
                     {isMobileSheetOpen
-                      ? 'Edita y observa cambios en tiempo real arriba'
+                      ? 'El simulador se pausa mientras editas para mejorar el rendimiento.'
                       : 'Configuración minimizada para interactuar con la invitación'}
                   </p>
                 </div>
