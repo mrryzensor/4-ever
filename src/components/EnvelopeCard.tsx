@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { getOptimizedImageUrl, getResponsiveImageAttributes } from '../lib/responsiveImageAttributes.ts';
 import {
   MapPin,
   Heart,
@@ -452,11 +451,6 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   useEffect(() => {
     let isCurrentImage = true;
     const image = new Image();
-    const responsiveImage = getResponsiveImageAttributes(currentCoverImage, '100vw', settings.id);
-    if (responsiveImage) {
-      image.srcset = responsiveImage.srcSet;
-      image.sizes = responsiveImage.sizes;
-    }
     const displayLoadedImage = () => {
       if (isCurrentImage && image.naturalWidth > 0) setDisplayedCoverImage(currentCoverImage);
     };
@@ -473,7 +467,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       isCurrentImage = false;
       image.onload = null;
     };
-  }, [currentCoverImage, settings.id]);
+  }, [currentCoverImage]);
 
   const scrollToContent = () => document.getElementById('detalles-boda')?.scrollIntoView({ behavior: 'smooth' });
 
@@ -547,7 +541,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       >
         <motion.div style={{ opacity: heroBgOpacity }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity]">
           {settings.heroImageFit === 'contain' && (
-            <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${getOptimizedImageUrl(displayedCoverImage, 960, settings.id)})` }} />
+            <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${displayedCoverImage})` }} />
           )}
           
           <AnimatePresence mode="sync">
@@ -558,24 +552,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 1.2, ease: 'easeInOut' }}
               className="absolute inset-0 bg-no-repeat will-change-transform"
-              style={{ scale: heroBgScale }}
+              style={{
+                backgroundImage: `url(${displayedCoverImage})`,
+                backgroundSize: settings.heroImageFit || 'cover',
+                backgroundPosition: settings.heroImagePosition === 'top' ? 'center top' : 'center center',
+                scale: heroBgScale,
+              }}
             >
-              <picture className="absolute inset-0 block h-full w-full">
-                <img
-                  src={displayedCoverImage}
-                  {...(getResponsiveImageAttributes(displayedCoverImage, '100vw', settings.id) || {})}
-                  alt=""
-                  aria-hidden="true"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-                  className="h-full w-full"
-                  style={{
-                    objectFit: settings.heroImageFit || 'cover',
-                    objectPosition: settings.heroImagePosition === 'top' ? 'center top' : 'center center',
-                  }}
-                />
-              </picture>
               {(() => {
                 const alpha = (settings.heroOverlayOpacity !== undefined ? settings.heroOverlayOpacity : 50) / 100;
                 return (

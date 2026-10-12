@@ -18,23 +18,19 @@ import {
   Edit3,
 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
-const LiveInvitationCanvas = React.lazy(() => import('../LiveInvitationCanvas.tsx').then((module) => ({ default: module.LiveInvitationCanvas })));
-const AdminHeroSettings = React.lazy(() => import('./settings/AdminHeroSettings.tsx').then((module) => ({ default: module.AdminHeroSettings })));
-const AdminThemeSettings = React.lazy(() => import('./settings/AdminThemeSettings.tsx').then((module) => ({ default: module.AdminThemeSettings })));
-const AdminSectionToggles = React.lazy(() => import('./settings/AdminSectionToggles.tsx').then((module) => ({ default: module.AdminSectionToggles })));
-const AdminLocationsSettings = React.lazy(() => import('./settings/AdminLocationsSettings.tsx').then((module) => ({ default: module.AdminLocationsSettings })));
-const AdminDressCodeSettings = React.lazy(() => import('./settings/AdminDressCodeSettings.tsx').then((module) => ({ default: module.AdminDressCodeSettings })));
-const AdminGiftRegistrySettings = React.lazy(() => import('./settings/AdminGiftRegistrySettings.tsx').then((module) => ({ default: module.AdminGiftRegistrySettings })));
-const AudioSettingsPanel = React.lazy(() => import('./settings/AudioSettingsPanel.tsx').then((module) => ({ default: module.AudioSettingsPanel })));
-const SimpleModeInline = React.lazy(() => import('./SimpleModeInline.tsx').then((module) => ({ default: module.SimpleModeInline })));
+import { LiveInvitationCanvas } from '../LiveInvitationCanvas.tsx';
+import { AdminHeroSettings } from './settings/AdminHeroSettings.tsx';
+import { AdminThemeSettings } from './settings/AdminThemeSettings.tsx';
+import { AdminSectionToggles } from './settings/AdminSectionToggles.tsx';
+import { AdminLocationsSettings } from './settings/AdminLocationsSettings.tsx';
+import { AdminDressCodeSettings } from './settings/AdminDressCodeSettings.tsx';
+import { AdminGiftRegistrySettings } from './settings/AdminGiftRegistrySettings.tsx';
+import { AudioSettingsPanel } from './settings/AudioSettingsPanel.tsx';
+import { SimpleModeInline } from './SimpleModeInline.tsx';
 import { ShareMessageSettings } from './settings/ShareMessageSettings.tsx';
-const VideoSection = React.lazy(() => import('../VideoSection.tsx').then((module) => ({ default: module.VideoSection })));
-const AdminSimpleCoverageSettings = React.lazy(() => import('./settings/AdminSimpleCoverageSettings.tsx').then((module) => ({ default: module.AdminSimpleCoverageSettings })));
-const AdvancedModeOrganizer = React.lazy(() => import('./AdvancedModeOrganizer.tsx').then((module) => ({ default: module.AdvancedModeOrganizer })));
-
-const EditorSectionFallback: React.FC = () => (
-  <div aria-hidden="true" className="min-h-24 rounded-2xl border border-[#E5E2D0]/80 bg-[#FAF9F0]/70 animate-pulse" />
-);
+import { VideoSection } from '../VideoSection.tsx';
+import { AdminSimpleCoverageSettings } from './settings/AdminSimpleCoverageSettings.tsx';
+import { AdvancedModeOrganizer } from './AdvancedModeOrganizer.tsx';
 
 interface AdminSettingsTabProps {
   settings: WeddingSettings;
@@ -81,7 +77,6 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   const canUseAdvancedEditor = settings.planAccess?.advancedEditor !== false;
 
   const renderAdvancedGroups = () => (
-    <React.Suspense fallback={<EditorSectionFallback />}>
     <AdvancedModeOrganizer groups={[
       {
         id: 'evento',
@@ -152,7 +147,6 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         ),
       },
     ]} />
-    </React.Suspense>
   );
 
   return (
@@ -417,12 +411,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   : 'w-full min-w-0 overflow-hidden'
               } space-y-3`}
             >
-              <React.Suspense fallback={<div aria-hidden="true" className="min-h-[520px] rounded-3xl bg-[#FAF9F0] animate-pulse" />}>
               <LiveInvitationCanvas
                 settings={previewSettings}
                 onOpenFullInvitation={onBackToInvitation}
               />
-              </React.Suspense>
             </div>
           )}
         </div>
@@ -436,12 +428,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       <div className="relative w-full space-y-4 pb-28">
         {/* 1. Main Live Invitation Canvas (Always Prominent & Interactive) */}
         <div className="w-full relative rounded-3xl overflow-hidden shadow-sm border border-[#E5E2D0]/80">
-          <React.Suspense fallback={<div aria-hidden="true" className="min-h-[70vh] rounded-3xl bg-[#FAF9F0] animate-pulse" />}>
           <LiveInvitationCanvas
             settings={previewSettings}
             onOpenFullInvitation={onBackToInvitation}
           />
-          </React.Suspense>
         </div>
 
         {/* 2. Floating Semi-Transparent Configuration Sheet (Minimizable / Expandable) */}
