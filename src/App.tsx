@@ -38,23 +38,9 @@ import { LocationsSection } from './components/LocationsSection.tsx';
 import { GiftRegistrySection } from './components/GiftRegistrySection.tsx';
 import { HotelsSection } from './components/HotelsSection.tsx';
 import { GuestbookSection } from './components/GuestbookSection.tsx';
-import { AdminDashboard } from './components/AdminDashboard.tsx';
-import { LandingPage } from './components/LandingPage.tsx';
-import { UserDashboard } from './components/UserDashboard.tsx';
-import { CeoMasterDashboard } from './components/CeoMasterDashboard.tsx';
-import { MainPortalLanding } from './components/MainPortalLanding.tsx';
 import { InvitationLetter } from './components/InvitationLetter.tsx';
 
 // Quince Años (XV Años) Specialized Components
-import { EnvelopeCard as XvEnvelopeCard } from './xv/components/EnvelopeCard.tsx';
-import { LandingPage as XvLandingPage } from './xv/components/LandingPage.tsx';
-import { DemoStyleBar as XvDemoStyleBar } from './xv/components/DemoStyleBar.tsx';
-import { PhotoGallery as XvPhotoGallery } from './xv/components/PhotoGallery.tsx';
-import { VideoSection as XvVideoSection } from './xv/components/VideoSection.tsx';
-import { RsvpSection as XvRsvpSection } from './xv/components/RsvpSection.tsx';
-import { GuestbookSection as XvGuestbookSection } from './xv/components/GuestbookSection.tsx';
-import { AdminDashboard as XvAdminDashboard } from './xv/components/AdminDashboard.tsx';
-import { UserDashboard as XvUserDashboard } from './xv/components/UserDashboard.tsx';
 import { AudioPlayer as XvAudioPlayer } from './xv/components/AudioPlayer.tsx';
 import { DEFAULT_XV_SETTINGS } from './xv/defaultSettings.ts';
 import { XV_CARD_THEMES, applyXvThemeScrollbar } from './xv/themes.ts';
@@ -83,6 +69,29 @@ type AppView = 'portal' | 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ce
 type EventCategory = 'bodas' | 'xv';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop';
+
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx').then((module) => ({default: module.AdminDashboard})));
+const LandingPage = React.lazy(() => import('./components/LandingPage.tsx').then((module) => ({default: module.LandingPage})));
+const UserDashboard = React.lazy(() => import('./components/UserDashboard.tsx').then((module) => ({default: module.UserDashboard})));
+const CeoMasterDashboard = React.lazy(() => import('./components/CeoMasterDashboard.tsx').then((module) => ({default: module.CeoMasterDashboard})));
+const MainPortalLanding = React.lazy(() => import('./components/MainPortalLanding.tsx').then((module) => ({default: module.MainPortalLanding})));
+const XvLandingPage = React.lazy(() => import('./xv/components/LandingPage.tsx').then((module) => ({default: module.LandingPage})));
+const XvAdminDashboard = React.lazy(() => import('./xv/components/AdminDashboard.tsx').then((module) => ({default: module.AdminDashboard})));
+const XvEnvelopeCard = React.lazy(() => import('./xv/components/EnvelopeCard.tsx').then((module) => ({default: module.EnvelopeCard})));
+const XvDemoStyleBar = React.lazy(() => import('./xv/components/DemoStyleBar.tsx').then((module) => ({default: module.DemoStyleBar})));
+const XvPhotoGallery = React.lazy(() => import('./xv/components/PhotoGallery.tsx').then((module) => ({default: module.PhotoGallery})));
+const XvVideoSection = React.lazy(() => import('./xv/components/VideoSection.tsx').then((module) => ({default: module.VideoSection})));
+const XvRsvpSection = React.lazy(() => import('./xv/components/RsvpSection.tsx').then((module) => ({default: module.RsvpSection})));
+const XvGuestbookSection = React.lazy(() => import('./xv/components/GuestbookSection.tsx').then((module) => ({default: module.GuestbookSection})));
+
+const PageModuleFallback: React.FC<{message: string}> = ({message}) => (
+  <div className="min-h-screen bg-[#FDFCF0] flex items-center justify-center px-6" role="status" aria-live="polite">
+    <div className="flex items-center gap-3 rounded-2xl border border-[#E5E2D0] bg-white px-5 py-4 text-[#5A5A40] shadow-sm">
+      <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#D8D2BC] border-t-[#5A5A40]" aria-hidden="true" />
+      <span className="font-serif text-sm">{message}</span>
+    </div>
+  </div>
+);
 
 const getPrimaryHeroImage = (settings?: WeddingSettings | null) => {
   if (typeof settings?.heroPhotos === 'string' && settings.heroPhotos.trim()) {
@@ -1015,15 +1024,17 @@ export default function App() {
 
     return (
       <>
-        <CeoMasterDashboard
-          currentUser={ceoProfile}
-          onSelectWedding={handleSelectWedding}
-          onBackToUserDashboard={() => {
-            setCurrentView('dashboard');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onLogout={handleLogout}
-        />
+        <React.Suspense fallback={<PageModuleFallback message="Cargando el centro de control..." />}>
+          <CeoMasterDashboard
+            currentUser={ceoProfile}
+            onSelectWedding={handleSelectWedding}
+            onBackToUserDashboard={() => {
+              setCurrentView('dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onLogout={handleLogout}
+          />
+        </React.Suspense>
         <ToastContainer />
       </>
     );
@@ -1033,30 +1044,32 @@ export default function App() {
   if (currentView === 'portal') {
     return (
       <>
-        <MainPortalLanding
-          currentUser={currentUser}
-          onSelectEventType={(typeId) => {
-            if (typeId === 'xv') {
-              switchEventCategory('xv');
-              setCurrentView('landing');
-            } else if (typeId === 'bodas') {
-              switchEventCategory('bodas');
-              setCurrentView('landing');
-            } else {
-              toast.info(`La sección de ${typeId} se lanzará próximamente. ¡Mantente atento!`, 'Próximo lanzamiento');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenAuth={(mode) => openAuth(mode)}
-          onOpenDashboard={() => {
-            if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-              setCurrentView('ceo');
-            } else {
-              setCurrentView('dashboard');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        <React.Suspense fallback={<PageModuleFallback message="Cargando el portal..." />}>
+          <MainPortalLanding
+            currentUser={currentUser}
+            onSelectEventType={(typeId) => {
+              if (typeId === 'xv') {
+                switchEventCategory('xv');
+                setCurrentView('landing');
+              } else if (typeId === 'bodas') {
+                switchEventCategory('bodas');
+                setCurrentView('landing');
+              } else {
+                toast.info(`La sección de ${typeId} se lanzará próximamente. ¡Mantente atento!`, 'Próximo lanzamiento');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenAuth={(mode) => openAuth(mode)}
+            onOpenDashboard={() => {
+              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                setCurrentView('ceo');
+              } else {
+                setCurrentView('dashboard');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </React.Suspense>
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={closeAuth}
@@ -1073,6 +1086,7 @@ export default function App() {
   if (currentView === 'landing') {
     return (
       <>
+        <React.Suspense fallback={<PageModuleFallback message="Cargando diseños..." />}>
         {eventCategory === 'xv' ? (
           <XvLandingPage
             user={currentUser}
@@ -1182,6 +1196,7 @@ export default function App() {
             }}
           />
         )}
+        </React.Suspense>
 
         <AuthModal
           isOpen={isAuthModalOpen}
@@ -1207,20 +1222,22 @@ export default function App() {
 
     return (
       <>
-        <UserDashboard
-          user={activeUser}
-          onSelectWedding={handleSelectWedding}
-          onLogout={handleLogout}
-          onBackToLanding={() => {
-            setCurrentView('portal');
-            if (typeof window !== 'undefined') {
-              window.history.pushState(null, '', '/');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onUpdatePlan={handleUpdatePlan}
-          onOpenCeoDashboard={() => setCurrentView('ceo')}
-        />
+        <React.Suspense fallback={<PageModuleFallback message="Cargando tus eventos..." />}>
+          <UserDashboard
+            user={activeUser}
+            onSelectWedding={handleSelectWedding}
+            onLogout={handleLogout}
+            onBackToLanding={() => {
+              setCurrentView('portal');
+              if (typeof window !== 'undefined') {
+                window.history.pushState(null, '', '/');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onUpdatePlan={handleUpdatePlan}
+            onOpenCeoDashboard={() => setCurrentView('ceo')}
+          />
+        </React.Suspense>
         <AuthModal
           isOpen={isAuthModalOpen}
           onClose={closeAuth}
@@ -1298,6 +1315,7 @@ export default function App() {
 
     return (
       <>
+        <React.Suspense fallback={<PageModuleFallback message={isXvAdmin ? 'Cargando Atelier XV Años...' : 'Cargando Atelier & Gestión...'} />}>
         {isXvAdmin ? (
           <XvAdminDashboard
             settings={settings}
@@ -1337,6 +1355,7 @@ export default function App() {
             currentUser={currentUser}
           />
         )}
+        </React.Suspense>
         <ToastContainer />
       </>
     );
@@ -1529,6 +1548,7 @@ export default function App() {
   };
 
   return (
+    <React.Suspense fallback={<PageModuleFallback message="Preparando tu invitación..." />}>
     <NumberFontContext.Provider value={globalNumberFontFamily}>
       <div
         className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
@@ -1700,5 +1720,6 @@ export default function App() {
       <ToastContainer />
       </div>
     </NumberFontContext.Provider>
+    </React.Suspense>
   );
 }
