@@ -412,13 +412,21 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       {/* ==================================================================== */}
       {!isDesktopLayout && (
       <div className="relative w-full space-y-4 pb-28">
-        {/* 1. Main Live Invitation Canvas (Always Prominent & Interactive) */}
-        <div className="w-full relative rounded-3xl overflow-hidden shadow-sm border border-[#E5E2D0]/80">
-          <LiveInvitationCanvas
-            settings={previewSettings}
-            onOpenFullInvitation={onBackToInvitation}
-          />
-        </div>
+        {/* Pause the expensive invitation iframe while the mobile editor is open. */}
+        {!isMobileSheetOpen ? (
+          <div className="w-full relative rounded-3xl overflow-hidden shadow-sm border border-[#E5E2D0]/80">
+            <LiveInvitationCanvas
+              settings={previewSettings}
+              onOpenFullInvitation={onBackToInvitation}
+            />
+          </div>
+        ) : (
+          <div className="flex min-h-[16vh] items-center justify-center px-4 text-center" role="status">
+            <p className="rounded-full bg-white/75 px-4 py-2 text-[11px] text-stone-500">
+              Simulador pausado mientras editas. Minimiza el panel para ver tus cambios.
+            </p>
+          </div>
+        )}
 
         {/* 2. Floating Semi-Transparent Configuration Sheet (Minimizable / Expandable) */}
         <div className="fixed bottom-0 inset-x-0 z-40 px-2 sm:px-4 pb-2 sm:pb-3 pointer-events-none">
