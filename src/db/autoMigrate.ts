@@ -111,6 +111,7 @@ export async function autoMigrateDatabase() {
           envelope_shadow_intensity INTEGER DEFAULT 36,
           wax_seal_text TEXT DEFAULT 'S&A',
           wax_seal_color TEXT DEFAULT '#C5A059',
+          wax_seal_design TEXT DEFAULT 'auto',
           wax_seal_shadow_color TEXT DEFAULT '#211A14',
           wax_seal_shadow_intensity INTEGER DEFAULT 55,
           audio_url TEXT DEFAULT 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3',
@@ -304,6 +305,7 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_emblem_scale INTEGER DEFAULT 100;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS ambient_particle_style TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS seal_style TEXT DEFAULT 'auto';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS wax_seal_design TEXT DEFAULT 'auto';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_invitation_letter BOOLEAN NOT NULL DEFAULT true;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS letter_background_color TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS letter_paper_color TEXT DEFAULT '';

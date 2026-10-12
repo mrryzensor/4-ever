@@ -21,6 +21,25 @@ export function getEnvelopeTintMatrix(color: string): string {
     .join(' ');
 }
 
+export function getWaxSealTintMatrix(color: string, channel: 'luminance' | 'red' = 'luminance'): string {
+  const target = readHexColor(color);
+  const tint = [target.r, target.g, target.b];
+  const source = channel === 'red' ? [1, 0, 0] : [0.2126, 0.7152, 0.0722];
+  // Anchor the source midtones around the chosen color, then preserve enough
+  // range in the shadows and highlights for the wax relief to remain visible.
+  const highlightStrength = channel === 'red' ? 0.88 : 1.55;
+  const shadowFloor = channel === 'red' ? 0.5 : 0.72;
+
+  return [
+    ...tint.flatMap((component) => [
+      ...source.map((weight) => component / 255 * highlightStrength * weight),
+      0,
+      component / 255 * shadowFloor,
+    ]),
+    0, 0, 0, 1, 0,
+  ].map((value) => Number(value.toFixed(6))).join(' ');
+}
+
 export function normalizeLetterShadow(value: number | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : fallback;

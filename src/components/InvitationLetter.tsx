@@ -9,12 +9,12 @@ import { formatHeroDate } from '../lib/dateFormatters.ts';
 import { getDisplayedWaxSealText } from '../lib/eventUtils.ts';
 import {
   getEnvelopeTintMatrix,
-  getLetterBoxShadowStyle,
   getLetterShadowStyle,
+  getWaxSealTintMatrix,
   normalizeLetterShadow,
   resolveLetterFontFamily,
 } from '../lib/letterAppearance.ts';
-import { getWaxSealMotifPaths } from '../lib/waxSealAppearance.ts';
+import { resolveWaxSealDesign, WAX_SEAL_DESIGNS, type WaxSealDesignId } from '../lib/waxSealAppearance.ts';
 import { getThemeFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { CardOrnamentFrame } from './animations/CardOrnamentFrame.tsx';
 import { StyleSpecificDivider } from './animations/StyleSpecificDivider.tsx';
@@ -26,22 +26,6 @@ interface InvitationLetterProps {
   eventType: 'bodas' | 'xv';
   onOpen: () => void;
 }
-
-const hexToRgb = (hex: string) => {
-  const normalized = hex.replace('#', '');
-  const value = normalized.length === 3
-    ? normalized.split('').map((part) => `${part}${part}`).join('')
-    : normalized;
-  const parsed = Number.parseInt(value, 16);
-  if (!Number.isFinite(parsed)) return { r: 90, g: 90, b: 64 };
-  return { r: (parsed >> 16) & 255, g: (parsed >> 8) & 255, b: parsed & 255 };
-};
-
-const shade = (hex: string, amount: number) => {
-  const { r, g, b } = hexToRgb(hex);
-  const channel = (value: number) => Math.round(value * (1 - amount));
-  return `rgb(${channel(r)}, ${channel(g)}, ${channel(b)})`;
-};
 
 const LetterCornerOrnament: React.FC<{ styleId: string; color: string }> = ({ styleId, color }) => {
   const celestial = ['dark-luxury', 'royal-navy', 'champagne-glam', 'minimal-editorial'].includes(styleId);
@@ -150,14 +134,20 @@ const TintedLetterArtwork = ({
   </svg>
 );
 
-const WaxSealFinish: React.FC<{ ornamentStyle: string }> = ({ ornamentStyle }) => (
-  <svg aria-hidden="true" viewBox="0 0 100 100" className="pointer-events-none absolute inset-[7%] h-[86%] w-[86%] overflow-visible">
-    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeOpacity=".46" strokeWidth="1.4" />
-    <g fill="none" stroke="white" strokeOpacity=".62" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
-      {getWaxSealMotifPaths(ornamentStyle).map((path, index) => <path key={index} d={path} />)}
-    </g>
-  </svg>
-);
+const WaxSealGraphic: React.FC<{ design: WaxSealDesignId; color: string }> = ({ design, color }) => {
+  const asset = WAX_SEAL_DESIGNS[design];
+  const filterId = `wax-seal-tint-${useId().replace(/:/g, '')}`;
+  return (
+    <svg aria-hidden="true" viewBox={asset.viewBox} preserveAspectRatio="xMidYMid meet" className="absolute inset-0 h-full w-full">
+      <defs>
+        <filter id={filterId} colorInterpolationFilters="sRGB">
+          <feColorMatrix type="matrix" values={getWaxSealTintMatrix(color, asset.tintChannel)} />
+        </filter>
+      </defs>
+      <image href={asset.src} x="0" y="0" width={asset.width} height={asset.height} preserveAspectRatio="xMidYMid meet" filter={`url(#${filterId})`} />
+    </svg>
+  );
+};
 
 const SealedEnvelope = ({
   envelopeColor,
@@ -167,7 +157,7 @@ const SealedEnvelope = ({
   sealShadowColor,
   sealShadowIntensity,
   sealText,
-  sealTheme,
+  sealDesign,
   isOpening,
   onOpen,
 }: {
@@ -178,12 +168,12 @@ const SealedEnvelope = ({
   sealShadowColor: string;
   sealShadowIntensity: number;
   sealText: string;
-  sealTheme: (typeof CARD_THEMES)[CardStyleId] | (typeof XV_CARD_THEMES)[CardStyleId];
+  sealDesign: WaxSealDesignId;
   isOpening: boolean;
   onOpen: () => void;
 }) => {
   const envelopeTintId = `letter-envelope-tint-${useId().replace(/:/g, '')}`;
-  const darkerSeal = shade(sealColor, 0.22);
+  const sealAsset = WAX_SEAL_DESIGNS[sealDesign];
   return (
     <motion.button
       type="button"
@@ -230,18 +220,17 @@ const SealedEnvelope = ({
       </motion.div>
       <span aria-hidden="true" className="absolute left-1/2 top-[63.5%] w-[22%] -translate-x-1/2 -translate-y-1/2">
         <motion.span
-          className="relative flex aspect-square w-full items-center justify-center rounded-full border-2 text-[clamp(0.7rem,3.6vw,1.1rem)] font-bold tracking-wide text-white shadow-[0_5px_12px_rgba(33,26,20,0.32)]"
+          className="relative block w-full"
           animate={{ opacity: isOpening ? 0 : 1, scale: isOpening ? 0.45 : 1, y: isOpening ? 12 : 0 }}
           transition={{ duration: 0.27, ease: 'easeIn', delay: isOpening ? 0.04 : 0 }}
           style={{
             transformOrigin: 'center',
-            background: `radial-gradient(circle at 35% 25%, ${sealColor}, ${darkerSeal})`,
-            borderColor: 'rgba(255,255,255,.36)',
-            boxShadow: getLetterBoxShadowStyle(sealShadowColor, sealShadowIntensity),
+            aspectRatio: `${sealAsset.width} / ${sealAsset.height}`,
+            filter: getLetterShadowStyle(sealShadowColor, sealShadowIntensity),
           }}
         >
-          <WaxSealFinish ornamentStyle={sealTheme.ornamentStyle} />
-          <span className="relative z-10 max-w-[88%] truncate">{sealText}</span>
+          <WaxSealGraphic design={sealDesign} color={sealColor} />
+          <span className="absolute left-1/2 top-1/2 z-10 block w-[70%] -translate-x-1/2 -translate-y-1/2 truncate text-center text-[clamp(0.58rem,3.1vw,0.95rem)] font-bold leading-none tracking-wide text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,.42)' }}>{sealText}</span>
         </motion.span>
       </span>
     </motion.button>
@@ -254,6 +243,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
   const theme = resolveInvitationTheme(settings, themes, fallbackStyle);
   const sealStyle = settings.sealStyle && settings.sealStyle !== 'auto' ? settings.sealStyle : settings.cardStyle;
   const sealTheme = themes[sealStyle as CardStyleId] || theme;
+  const sealDesign = resolveWaxSealDesign(settings.waxSealDesign, sealTheme.ornamentStyle);
   const activeFrameStyle = settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto'
     ? settings.frameOrnamentStyle
     : settings.cardStyle || fallbackStyle;
@@ -392,7 +382,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
               sealShadowColor={settings.waxSealShadowColor || '#211A14'}
               sealShadowIntensity={sealShadowIntensity}
               sealText={sealText}
-              sealTheme={sealTheme}
+              sealDesign={sealDesign}
               isOpening={isOpening}
               onOpen={openInvitation}
             />

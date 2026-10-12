@@ -71,6 +71,7 @@ export const DEFAULT_XV_SETTINGS: WeddingSettings = {
   waxSealText: 'XV',
   waxSealTextIsCustom: false,
   waxSealColor: '#D4AF37',
+  waxSealDesign: 'auto',
   waxSealShadowColor: '#211A14',
   waxSealShadowIntensity: 55,
   audioUrl: '/audio/vals-danubio-azul.mp3',

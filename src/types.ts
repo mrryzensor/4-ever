@@ -167,6 +167,7 @@ export interface WeddingSettings {
   waxSealText: string;
   waxSealTextIsCustom?: boolean;
   waxSealColor: string;
+  waxSealDesign?: 'auto' | 'heart' | 'round' | 'scalloped' | 'soft-round' | 'classic';
   waxSealShadowColor?: string;
   waxSealShadowIntensity?: number;
   showInvitationLetter?: boolean; // Mostrar la carta con sobre antes del contenido de la invitación

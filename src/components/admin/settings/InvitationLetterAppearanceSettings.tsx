@@ -5,6 +5,7 @@ import { CARD_THEMES } from '../../../lib/themes.ts';
 import { XV_CARD_THEMES } from '../../../xv/themes.ts';
 import { resolveInvitationTheme } from '../../../lib/invitationTheme.ts';
 import { formatHeroDate } from '../../../lib/dateFormatters.ts';
+import { WAX_SEAL_DESIGNS } from '../../../lib/waxSealAppearance.ts';
 
 interface InvitationLetterAppearanceSettingsProps {
   settings: WeddingSettings;
@@ -224,6 +225,10 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
           <ColorControl label="Separadores" value={settings.letterDividerColor} fallback={theme.accentColorHex} onChange={(letterDividerColor) => onChange({ letterDividerColor })} />
           <ColorControl label="Flecha animada" value={settings.letterArrowColor} fallback={theme.accentColorHex} onChange={(letterArrowColor) => onChange({ letterArrowColor })} />
           <ColorControl label="Sobre" value={settings.envelopeColor} fallback="#9F705A" onChange={(envelopeColor) => onChange({ envelopeColor })} />
+          <SelectControl label="Forma del sello" value={settings.waxSealDesign} options={[
+            { value: 'auto', label: 'Automática · según el estilo' },
+            ...Object.entries(WAX_SEAL_DESIGNS).map(([value, design]) => ({ value, label: design.label })),
+          ]} onChange={(waxSealDesign) => onChange({ waxSealDesign: waxSealDesign as WeddingSettings['waxSealDesign'] })} />
           <ColorControl label="Sello de lacre" value={settings.waxSealColor} fallback={theme.accentColorHex} onChange={(waxSealColor) => onChange({ waxSealColor })} />
           <ColorControl label="Sombra del sobre" value={settings.envelopeShadowColor} fallback="#2C211B" onChange={(envelopeShadowColor) => onChange({ envelopeShadowColor })} />
           <ColorControl label="Sombra del sello" value={settings.waxSealShadowColor} fallback="#211A14" onChange={(waxSealShadowColor) => onChange({ waxSealShadowColor })} />

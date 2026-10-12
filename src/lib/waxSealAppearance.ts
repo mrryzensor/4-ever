@@ -51,6 +51,74 @@ const WAX_SEAL_MOTIFS: Record<string, string[]> = {
   ],
 };
 
+export type WaxSealDesignId = 'heart' | 'round' | 'scalloped' | 'soft-round' | 'classic';
+
+export const WAX_SEAL_DESIGNS: Record<WaxSealDesignId, {
+  label: string;
+  src: string;
+  viewBox: string;
+  width: number;
+  height: number;
+  tintChannel: 'luminance' | 'red';
+}> = {
+  heart: {
+    label: 'Corazón',
+    src: '/sellos/wax-seal-heart.webp',
+    viewBox: '0 0 119.78 106.2',
+    width: 119.78,
+    height: 106.2,
+    tintChannel: 'luminance',
+  },
+  round: {
+    label: 'Redondo',
+    src: '/sellos/wax-seal-round.webp',
+    viewBox: '0 0 103.87 105.33',
+    width: 103.87,
+    height: 105.33,
+    tintChannel: 'luminance',
+  },
+  scalloped: {
+    label: 'Borde irregular',
+    src: '/sellos/wax-seal-scalloped.webp',
+    viewBox: '0 0 106.67 105.46',
+    width: 106.67,
+    height: 105.46,
+    tintChannel: 'luminance',
+  },
+  'soft-round': {
+    label: 'Redondo suave',
+    src: '/sellos/wax-seal-soft-round.webp',
+    viewBox: '0 0 109.2 105.09',
+    width: 109.2,
+    height: 105.09,
+    tintChannel: 'luminance',
+  },
+  classic: {
+    label: 'Lacre clásico',
+    src: '/sellos/wax-seal-classic.webp',
+    viewBox: '0 0 17.44 17.62',
+    width: 17.44,
+    height: 17.62,
+    tintChannel: 'red',
+  },
+};
+
+export function resolveWaxSealDesign(
+  selection: string | undefined,
+  ornamentStyle?: string,
+): WaxSealDesignId {
+  if (selection && selection !== 'auto' && Object.prototype.hasOwnProperty.call(WAX_SEAL_DESIGNS, selection)) {
+    return selection as WaxSealDesignId;
+  }
+
+  const style = ornamentStyle?.toLowerCase() || '';
+  if (['floral', 'watercolor', 'lavender'].some((part) => style.includes(part))) return 'heart';
+  if (['boho', 'garden', 'botanical', 'monstera', 'seashell', 'coastal', 'terracotta', 'sunset'].some((part) => style.includes(part))) return 'scalloped';
+  if (['minimal', 'navy', 'luxury'].some((part) => style.includes(part))) return 'soft-round';
+  if (['stars', 'crown', 'art-deco', 'champagne'].some((part) => style.includes(part))) return 'classic';
+  return 'round';
+}
+
 export function getWaxSealMotifPaths(ornamentStyle?: string): string[] {
   const style = ornamentStyle?.toLowerCase() || 'gold';
   if (style.includes('floral') || style.includes('watercolor')) return WAX_SEAL_MOTIFS.floral;

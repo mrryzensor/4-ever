@@ -84,6 +84,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   waxSealText: text('wax_seal_text').default('S&A'),
   waxSealTextIsCustom: boolean('wax_seal_text_is_custom').default(false),
   waxSealColor: text('wax_seal_color').default('#C5A059'),
+  waxSealDesign: text('wax_seal_design').default('auto'),
   waxSealShadowColor: text('wax_seal_shadow_color').default('#211A14'),
   waxSealShadowIntensity: integer('wax_seal_shadow_intensity').default(55),
   audioUrl: text('audio_url').default('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=acoustic-guitars-ambient-uplifting-112705.mp3'),
