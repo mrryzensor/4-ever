@@ -19,6 +19,7 @@ import {
   createWedding,
   deleteWedding,
   getAllGuests,
+  getGuestStats,
   getWeddingUploadAssets,
   getGuestById,
   getGuestByCode,
@@ -1387,28 +1388,11 @@ async function startServer() {
       const access = await resolveWeddingAccess(req, weddingId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
+      const stats = await getGuestStats(weddingId);
+      if (req.query.statsOnly === 'true') return res.json({ stats });
+
       const guestList = await getAllGuests(search, status, weddingId);
-
-      // Compute statistics across all guests of this wedding
-      const allWeddingGuests = await getAllGuests(undefined, undefined, weddingId);
-      const totalGuests = allWeddingGuests.length;
-      const totalAllocatedPasses = allWeddingGuests.reduce((acc, g) => acc + (Number(g.allocatedPasses) || 0), 0);
-      const confirmedGuests = allWeddingGuests.filter((g) => g.status === 'confirmed');
-      const totalConfirmedPasses = confirmedGuests.reduce((acc, g) => acc + (Number(g.confirmedPasses) || 0), 0);
-      const declinedGuests = allWeddingGuests.filter((g) => g.status === 'declined').length;
-      const pendingGuests = allWeddingGuests.filter((g) => g.status !== 'confirmed' && g.status !== 'declined').length;
-
-      res.json({
-        guests: guestList,
-        stats: {
-          totalGuests,
-          totalAllocatedPasses,
-          totalConfirmedPasses,
-          declinedGuests,
-          pendingGuests,
-          confirmedCount: confirmedGuests.length,
-        },
-      });
+      res.json({ guests: guestList, stats });
     } catch (error: any) {
       console.error('Failed to get guests:', error);
       res.status(500).json({ error: error.message || 'Error fetching guests' });
@@ -2933,6 +2917,95 @@ async function startServer() {
   });
 
   // 7. File Upload Endpoint (Volume Storage for Audio, Images, etc.)
+  const responsiveImageCache = new Map<string, { buffer: Buffer; mtimeMs: number }>();
+  app.get('/api/image-variant', async (req, res) => {
+    const weddingId = Number(req.query.weddingId);
+    const source = typeof req.query.src === 'string' ? req.query.src : '';
+    const width = Number(req.query.width);
+    const allowedWidths = new Set([480, 640, 960, 1280, 1600, 1920]);
+    const driveAssetMatch = /^\/api\/drive-folders\/([A-Za-z0-9_-]{1,200})\/photos\/([A-Za-z0-9_-]{1,200})\/thumbnail$/.exec(source.split('?')[0]);
+    if (!Number.isSafeInteger(weddingId) || weddingId < 1 || !allowedWidths.has(width) || (!/^\/uploads\/[A-Za-z0-9._-]+$/.test(source) && !driveAssetMatch)) {
+      return res.status(400).json({ error: 'La solicitud de imagen no es válida.' });
+    }
+
+    try {
+      if (driveAssetMatch) {
+        const sourceUrl = new URL(source, 'https://local.invalid');
+        const folderId = driveAssetMatch[1];
+        const fileId = driveAssetMatch[2];
+        const resourceKey = sourceUrl.searchParams.get('resourceKey') || '';
+        const variant = sourceUrl.searchParams.get('variant');
+        const sourceWidth = Number(sourceUrl.searchParams.get('width')) || undefined;
+        const sourceDriveWidth = sourceWidth && DRIVE_IMAGE_WIDTHS.includes(sourceWidth as DriveImageWidth)
+          ? sourceWidth as DriveImageWidth
+          : undefined;
+        const signature = sourceUrl.searchParams.get('signature') || '';
+        if (
+          sourceUrl.origin !== 'https://local.invalid' || sourceUrl.searchParams.get('weddingId') !== String(weddingId) ||
+          variant !== 'full' || sourceUrl.searchParams.has('source') || !/^[a-f0-9]{64}$/.test(signature) ||
+          (resourceKey && !/^[A-Za-z0-9_-]{1,512}$/.test(resourceKey)) ||
+          (sourceWidth && !sourceDriveWidth) || !DRIVE_IMAGE_WIDTHS.includes(width as DriveImageWidth)
+        ) return res.status(400).json({ error: 'La dirección de Google Drive no es válida.' });
+
+        const apiKey = process.env.GOOGLE_DRIVE_API_KEY?.trim();
+        if (!apiKey) return res.status(503).json({ error: 'La galería de Drive aún no está configurada en el servidor.' });
+        const expectedSignature = signStableDriveAsset(apiKey, weddingId, folderId, fileId, resourceKey, 'full', sourceDriveWidth);
+        if (!timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedSignature, 'hex'))) {
+          return res.status(403).json({ error: 'La dirección de Google Drive ya no es válida.' });
+        }
+
+        const responsiveUrl = createStableDriveAssetUrl(apiKey, weddingId, folderId, fileId, resourceKey, 'full', width as DriveImageWidth);
+        return res.set('Cache-Control', 'private, max-age=1800').redirect(302, responsiveUrl);
+      }
+
+      const filename = source.slice('/uploads/'.length);
+      const scopedWeddingId = /^w(\d+)-/.exec(filename)?.[1];
+      const owners = (await getUploadedPhotoOwnerMap()).get(source);
+      if (Number(scopedWeddingId) !== weddingId && !owners?.has(weddingId)) {
+        return res.status(404).json({ error: 'No se encontró una imagen para este evento.' });
+      }
+
+      const resolvedUploadsDir = path.resolve(uploadsDir);
+      const imagePath = path.resolve(resolvedUploadsDir, filename);
+      if (!imagePath.startsWith(`${resolvedUploadsDir}${path.sep}`)) {
+        return res.status(400).json({ error: 'La ruta de imagen no es válida.' });
+      }
+
+      const stat = await fs.promises.stat(imagePath);
+      if (!stat.isFile() || stat.size < 1 || stat.size > 25 * 1024 * 1024) {
+        return res.status(404).json({ error: 'La imagen no está disponible.' });
+      }
+
+      const cacheKey = `${source}:${width}`;
+      const cached = responsiveImageCache.get(cacheKey);
+      let variant = cached?.mtimeMs === stat.mtimeMs ? cached.buffer : null;
+      if (!variant) {
+        variant = await sharp(imagePath, { failOn: 'none', limitInputPixels: 40_000_000 })
+          .rotate()
+          .resize({ width, withoutEnlargement: true })
+          .webp({ quality: 80, effort: 3 })
+          .toBuffer();
+        if (variant.byteLength <= 20 * 1024 * 1024) {
+          while ([...responsiveImageCache.values()].reduce((total, item) => total + item.buffer.byteLength, 0) + variant.byteLength > 20 * 1024 * 1024) {
+            const oldestKey = responsiveImageCache.keys().next().value;
+            if (!oldestKey) break;
+            responsiveImageCache.delete(oldestKey);
+          }
+          responsiveImageCache.delete(cacheKey);
+          responsiveImageCache.set(cacheKey, { buffer: variant, mtimeMs: stat.mtimeMs });
+        }
+      } else {
+        responsiveImageCache.delete(cacheKey);
+        responsiveImageCache.set(cacheKey, { buffer: variant, mtimeMs: stat.mtimeMs });
+      }
+      return res.type('image/webp').set('Cache-Control', 'private, max-age=300').send(variant);
+    } catch (error: any) {
+      if (error?.code === 'ENOENT') return res.status(404).json({ error: 'La imagen no está disponible.' });
+      console.warn('Responsive image generation failed:', error);
+      return res.status(415).json({ error: 'No se pudo optimizar esta imagen.' });
+    }
+  });
+
   app.post('/api/upload', upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {

@@ -3,14 +3,15 @@ import { Guest, WeddingSettings, GuestStats, UserProfile } from '../../types.ts'
 import { applyThemeScrollbar } from '../../lib/themes.ts';
 import { AdminHeader } from './admin/AdminHeader.tsx';
 import { AdminSidebar } from './admin/AdminSidebar.tsx';
-import { AdminGuestsTab } from './admin/AdminGuestsTab.tsx';
-import { AdminImportTab } from './admin/AdminImportTab.tsx';
-import { AdminSettingsTab } from './admin/AdminSettingsTab.tsx';
-import { AdminGalleryTab } from './admin/AdminGalleryTab.tsx';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { toast } from '../../lib/toast.ts';
 import { applyWeddingSettingsChange } from '../../lib/eventUtils.ts';
 import { buildInvitationShareMessage, getInvitationShareImageUrl, sendInvitationMessage } from '../../lib/invitationSharing.ts';
+
+const AdminGuestsTab = React.lazy(() => import('./admin/AdminGuestsTab.tsx').then(({ AdminGuestsTab }) => ({ default: AdminGuestsTab })));
+const AdminImportTab = React.lazy(() => import('./admin/AdminImportTab.tsx').then(({ AdminImportTab }) => ({ default: AdminImportTab })));
+const AdminSettingsTab = React.lazy(() => import('./admin/AdminSettingsTab.tsx').then(({ AdminSettingsTab }) => ({ default: AdminSettingsTab })));
+const AdminGalleryTab = React.lazy(() => import('./admin/AdminGalleryTab.tsx').then(({ AdminGalleryTab }) => ({ default: AdminGalleryTab })));
 
 interface AdminDashboardProps {
   settings: WeddingSettings;
@@ -92,9 +93,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const fetchGuestStats = async () => {
+    try {
+      const res = await fetch(`/api/guests?weddingId=${settings.id || 1}&statsOnly=true`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.stats) setStats(data.stats);
+    } catch (err) {
+      console.error('Error fetching guest statistics in admin:', err);
+    }
+  };
+
   useEffect(() => {
-    fetchGuests();
-  }, [search, filterStatus, settings.id]);
+    if (activeTab === 'guests') fetchGuests();
+    else fetchGuestStats();
+  }, [activeTab, search, filterStatus, settings.id]);
 
   const handleDeleteGuest = (id: number) => {
     const target = guests.find((g) => g.id === id);
@@ -241,6 +254,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* 3. Main Dynamic Content Body */}
         <main className="flex-1 min-w-0 p-2.5 sm:p-4 lg:p-5 overflow-x-hidden overflow-y-auto">
+          <React.Suspense fallback={<div className="min-h-72 rounded-2xl border border-[#E5E2D0] bg-white/70 animate-pulse" aria-label="Cargando sección del Atelier" />}>
           {/* TAB 1: GUESTS & RSVP LIST */}
           {activeTab === 'guests' && (
             <AdminGuestsTab
@@ -309,6 +323,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               onBackToInvitation={onBackToInvitation || (() => {})}
             />
           )}
+          </React.Suspense>
         </main>
       </div>
 

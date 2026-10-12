@@ -1853,6 +1853,43 @@ export async function getAllGuests(search?: string, statusFilter?: string, weddi
   return list;
 }
 
+export async function getGuestStats(weddingId: number = 1) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const [row] = await db.select({
+        totalGuests: sql<number>`count(*)::int`,
+        totalAllocatedPasses: sql<number>`coalesce(sum(${guests.allocatedPasses}), 0)::int`,
+        totalConfirmedPasses: sql<number>`coalesce(sum(case when ${guests.status} = 'confirmed' then ${guests.confirmedPasses} else 0 end), 0)::int`,
+        declinedGuests: sql<number>`count(*) filter (where ${guests.status} = 'declined')::int`,
+        pendingGuests: sql<number>`count(*) filter (where ${guests.status} not in ('confirmed', 'declined'))::int`,
+        confirmedCount: sql<number>`count(*) filter (where ${guests.status} = 'confirmed')::int`,
+      }).from(guests).where(eq(guests.weddingId, weddingId));
+
+      return {
+        totalGuests: Number(row?.totalGuests || 0),
+        totalAllocatedPasses: Number(row?.totalAllocatedPasses || 0),
+        totalConfirmedPasses: Number(row?.totalConfirmedPasses || 0),
+        declinedGuests: Number(row?.declinedGuests || 0),
+        pendingGuests: Number(row?.pendingGuests || 0),
+        confirmedCount: Number(row?.confirmedCount || 0),
+      };
+    }
+  } catch (err) {
+    console.warn('getGuestStats fallback to memory');
+  }
+
+  const allWeddingGuests = memoryState.guests.filter((guest) => guest.weddingId === weddingId);
+  const confirmedGuests = allWeddingGuests.filter((guest) => guest.status === 'confirmed');
+  return {
+    totalGuests: allWeddingGuests.length,
+    totalAllocatedPasses: allWeddingGuests.reduce((total, guest) => total + (Number(guest.allocatedPasses) || 0), 0),
+    totalConfirmedPasses: confirmedGuests.reduce((total, guest) => total + (Number(guest.confirmedPasses) || 0), 0),
+    declinedGuests: allWeddingGuests.filter((guest) => guest.status === 'declined').length,
+    pendingGuests: allWeddingGuests.filter((guest) => guest.status !== 'confirmed' && guest.status !== 'declined').length,
+    confirmedCount: confirmedGuests.length,
+  };
+}
+
 export async function getGuestByCode(code: string, weddingId?: number) {
   const cleanCode = code.trim().toUpperCase();
   try {

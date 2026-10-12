@@ -31,6 +31,7 @@ import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 import { getThemeFontFamily } from '../lib/rsvpButtonStyle.ts';
 import { resolveNumberFontFamily } from '../lib/numberFonts.ts';
 import { optimizeImageClient } from '../lib/mediaOptimizer.ts';
+import { getOptimizedImageUrl, getResponsiveImageAttributes } from '../lib/responsiveImageAttributes.ts';
 import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../lib/galleryPhotoTitles.ts';
 import { useDriveFolderPhotos } from './DriveFolderPhotos.tsx';
 import { NumeralText } from './NumeralText.tsx';
@@ -49,7 +50,17 @@ const getCarouselImageAttributes = (photo: CarouselPhoto) => photo.responsiveUrl
   src: photo.responsiveUrls[1920] || photo.url,
   srcSet: DRIVE_IMAGE_WIDTHS.map((width) => `${photo.responsiveUrls![width]} ${width}w`).join(', '),
   sizes: '(max-width: 640px) 94vw, (max-width: 1280px) 84vw, 1500px',
-}) : ({ src: photo.url });
+}) : ({
+  src: photo.url,
+  ...(getResponsiveImageAttributes(photo.url, '(max-width: 640px) 94vw, (max-width: 1280px) 84vw, 1500px', photo.weddingId) || {}),
+});
+const getThumbnailImageAttributes = (photo: CarouselPhoto) => {
+  const source = photo.thumbnailUrl || photo.url;
+  return {
+    src: source,
+    ...(getResponsiveImageAttributes(source, '112px', photo.weddingId) || {}),
+  };
+};
 
 const preloadCarouselImage = (photo: CarouselPhoto) => new Promise<void>((resolve, reject) => {
   const image = new Image();
@@ -879,7 +890,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                       {/* Blurred Ambient Glow Background for aesthetic framing */}
                       <div
                         className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-40 scale-110"
-                        style={{ backgroundImage: `url(${currentCarouselPhoto.thumbnailUrl || currentCarouselPhoto.url})` }}
+                        style={{ backgroundImage: `url(${getOptimizedImageUrl(currentCarouselPhoto.thumbnailUrl || currentCarouselPhoto.url, 480, currentCarouselPhoto.weddingId)})` }}
                       />
 
                       <img
@@ -1064,7 +1075,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         : 'border-transparent opacity-50 hover:opacity-90'
                         }`}
                     >
-                      <img src={photo.thumbnailUrl || photo.url} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                      <img {...getThumbnailImageAttributes(photo)} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     </button>
                   ))}
                   {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className={`flex h-12 shrink-0 items-center gap-2 rounded-xl border px-3 text-xs font-semibold disabled:opacity-60 ${isDark ? 'border-[#C5A059]/60 text-amber-200' : 'border-[#E5E2D0] text-[#3D3D2C]'}`}>{driveGallery.loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}Cargar más</button>}
@@ -1474,7 +1485,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                   : 'border-transparent opacity-50 hover:opacity-90'
                                   }`}
                               >
-                                <img src={p.thumbnailUrl || p.url} alt={`Miniatura ${idx + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                                <img {...getThumbnailImageAttributes(p)} alt={`Miniatura ${idx + 1}`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                               </button>
                             ))}
                             {driveGallery.hasMore && <button type="button" onClick={() => void driveGallery.loadMore()} disabled={driveGallery.loadingMore} className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/60 px-3 text-[10px] font-semibold text-white disabled:opacity-60">{driveGallery.loadingMore && <Loader2 className="h-3.5 w-3.5 animate-spin" />}Cargar más</button>}

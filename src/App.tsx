@@ -28,33 +28,33 @@ import {
 } from 'lucide-react';
 import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId, CardStyle } from './types.ts';
 import { AudioPlayer } from './components/AudioPlayer.tsx';
-import { EnvelopeCard } from './components/EnvelopeCard.tsx';
-import { RsvpSection } from './components/RsvpSection.tsx';
-import { PhotoGallery } from './components/PhotoGallery.tsx';
-import { VideoSection } from './components/VideoSection.tsx';
-import { ItinerarySection } from './components/ItinerarySection.tsx';
-import { DressCodeSection } from './components/DressCodeSection.tsx';
-import { LocationsSection } from './components/LocationsSection.tsx';
-import { GiftRegistrySection } from './components/GiftRegistrySection.tsx';
-import { HotelsSection } from './components/HotelsSection.tsx';
-import { GuestbookSection } from './components/GuestbookSection.tsx';
-import { AdminDashboard } from './components/AdminDashboard.tsx';
-import { LandingPage } from './components/LandingPage.tsx';
-import { UserDashboard } from './components/UserDashboard.tsx';
-import { CeoMasterDashboard } from './components/CeoMasterDashboard.tsx';
-import { MainPortalLanding } from './components/MainPortalLanding.tsx';
-import { InvitationLetter } from './components/InvitationLetter.tsx';
+import { DeferredInvitationSection } from './components/DeferredInvitationSection.tsx';
+
+// Keep rarely used page families and below-fold invitation modules out of the entry chunk.
+const EnvelopeCard = React.lazy(() => import('./components/EnvelopeCard.tsx').then(({ EnvelopeCard }) => ({ default: EnvelopeCard })));
+const RsvpSection = React.lazy(() => import('./components/RsvpSection.tsx').then(({ RsvpSection }) => ({ default: RsvpSection })));
+const PhotoGallery = React.lazy(() => import('./components/PhotoGallery.tsx').then(({ PhotoGallery }) => ({ default: PhotoGallery })));
+const VideoSection = React.lazy(() => import('./components/VideoSection.tsx').then(({ VideoSection }) => ({ default: VideoSection })));
+const HotelsSection = React.lazy(() => import('./components/HotelsSection.tsx').then(({ HotelsSection }) => ({ default: HotelsSection })));
+const GuestbookSection = React.lazy(() => import('./components/GuestbookSection.tsx').then(({ GuestbookSection }) => ({ default: GuestbookSection })));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx').then(({ AdminDashboard }) => ({ default: AdminDashboard })));
+const LandingPage = React.lazy(() => import('./components/LandingPage.tsx').then(({ LandingPage }) => ({ default: LandingPage })));
+const UserDashboard = React.lazy(() => import('./components/UserDashboard.tsx').then(({ UserDashboard }) => ({ default: UserDashboard })));
+const CeoMasterDashboard = React.lazy(() => import('./components/CeoMasterDashboard.tsx').then(({ CeoMasterDashboard }) => ({ default: CeoMasterDashboard })));
+const MainPortalLanding = React.lazy(() => import('./components/MainPortalLanding.tsx').then(({ MainPortalLanding }) => ({ default: MainPortalLanding })));
+const InvitationLetter = React.lazy(() => import('./components/InvitationLetter.tsx').then(({ InvitationLetter }) => ({ default: InvitationLetter })));
+const DemoStyleBar = React.lazy(() => import('./components/DemoStyleBar.tsx').then(({ DemoStyleBar }) => ({ default: DemoStyleBar })));
+const AuthModal = React.lazy(() => import('./components/AuthModal.tsx').then(({ AuthModal }) => ({ default: AuthModal })));
 
 // Quince Años (XV Años) Specialized Components
-import { EnvelopeCard as XvEnvelopeCard } from './xv/components/EnvelopeCard.tsx';
-import { LandingPage as XvLandingPage } from './xv/components/LandingPage.tsx';
-import { DemoStyleBar as XvDemoStyleBar } from './xv/components/DemoStyleBar.tsx';
-import { PhotoGallery as XvPhotoGallery } from './xv/components/PhotoGallery.tsx';
-import { VideoSection as XvVideoSection } from './xv/components/VideoSection.tsx';
-import { RsvpSection as XvRsvpSection } from './xv/components/RsvpSection.tsx';
-import { GuestbookSection as XvGuestbookSection } from './xv/components/GuestbookSection.tsx';
-import { AdminDashboard as XvAdminDashboard } from './xv/components/AdminDashboard.tsx';
-import { UserDashboard as XvUserDashboard } from './xv/components/UserDashboard.tsx';
+const XvEnvelopeCard = React.lazy(() => import('./xv/components/EnvelopeCard.tsx').then(({ EnvelopeCard }) => ({ default: EnvelopeCard })));
+const XvLandingPage = React.lazy(() => import('./xv/components/LandingPage.tsx').then(({ LandingPage }) => ({ default: LandingPage })));
+const XvDemoStyleBar = React.lazy(() => import('./xv/components/DemoStyleBar.tsx').then(({ DemoStyleBar }) => ({ default: DemoStyleBar })));
+const XvPhotoGallery = React.lazy(() => import('./xv/components/PhotoGallery.tsx').then(({ PhotoGallery }) => ({ default: PhotoGallery })));
+const XvVideoSection = React.lazy(() => import('./xv/components/VideoSection.tsx').then(({ VideoSection }) => ({ default: VideoSection })));
+const XvRsvpSection = React.lazy(() => import('./xv/components/RsvpSection.tsx').then(({ RsvpSection }) => ({ default: RsvpSection })));
+const XvGuestbookSection = React.lazy(() => import('./xv/components/GuestbookSection.tsx').then(({ GuestbookSection }) => ({ default: GuestbookSection })));
+const XvAdminDashboard = React.lazy(() => import('./xv/components/AdminDashboard.tsx').then(({ AdminDashboard }) => ({ default: AdminDashboard })));
 import { AudioPlayer as XvAudioPlayer } from './xv/components/AudioPlayer.tsx';
 import { DEFAULT_XV_SETTINGS } from './xv/defaultSettings.ts';
 import { XV_CARD_THEMES, applyXvThemeScrollbar } from './xv/themes.ts';
@@ -64,8 +64,6 @@ import {
   AnimatedFloralDivider,
   AnimatedWeddingRings,
 } from './components/AnimatedSvgs.tsx';
-import { AuthModal } from './components/AuthModal.tsx';
-import { DemoStyleBar } from './components/DemoStyleBar.tsx';
 import { ToastContainer } from './components/ToastContainer.tsx';
 import { toast } from './lib/toast.ts';
 import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
@@ -77,7 +75,14 @@ import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
 import { resolveNumberFontFamily } from './lib/numberFonts.ts';
 import { NumberFontContext } from './lib/NumberFontContext.ts';
 import { resolveInvitationTheme } from './lib/invitationTheme.ts';
+import { getResponsiveImageAttributes } from './lib/responsiveImageAttributes.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
+
+const RouteLoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[#FDFCF0] text-[#5A5A40]" aria-live="polite">
+    <span className="font-serif italic">Cargando…</span>
+  </div>
+);
 
 type AppView = 'portal' | 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
 type EventCategory = 'bodas' | 'xv';
@@ -865,6 +870,11 @@ export default function App() {
     let cancelled = false;
     let imageSettled = false;
     const image = new Image();
+    const responsiveImage = getResponsiveImageAttributes(primaryHeroImage, '100vw', settings?.id);
+    if (responsiveImage) {
+      image.srcset = responsiveImage.srcSet;
+      image.sizes = responsiveImage.sizes;
+    }
     const imageReady = new Promise<void>((resolve) => {
       const finish = () => {
         if (imageSettled) return;
@@ -903,7 +913,7 @@ export default function App() {
       image.onload = null;
       image.onerror = null;
     };
-  }, [currentView, loadingWedding, heroResourceKey, primaryHeroImage, heroFontFamily, readyHeroResourceKey]);
+  }, [currentView, loadingWedding, heroResourceKey, primaryHeroImage, heroFontFamily, readyHeroResourceKey, settings?.id]);
 
   // Sync user profile to backend & localStorage
   const handleAuthSuccess = async (user: UserProfile, directToAdmin = false) => {
@@ -1015,15 +1025,17 @@ export default function App() {
 
     return (
       <>
-        <CeoMasterDashboard
-          currentUser={ceoProfile}
-          onSelectWedding={handleSelectWedding}
-          onBackToUserDashboard={() => {
-            setCurrentView('dashboard');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onLogout={handleLogout}
-        />
+        <React.Suspense fallback={<RouteLoadingFallback />}>
+          <CeoMasterDashboard
+            currentUser={ceoProfile}
+            onSelectWedding={handleSelectWedding}
+            onBackToUserDashboard={() => {
+              setCurrentView('dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onLogout={handleLogout}
+          />
+        </React.Suspense>
         <ToastContainer />
       </>
     );
@@ -1033,37 +1045,35 @@ export default function App() {
   if (currentView === 'portal') {
     return (
       <>
-        <MainPortalLanding
-          currentUser={currentUser}
-          onSelectEventType={(typeId) => {
-            if (typeId === 'xv') {
-              switchEventCategory('xv');
-              setCurrentView('landing');
-            } else if (typeId === 'bodas') {
-              switchEventCategory('bodas');
-              setCurrentView('landing');
-            } else {
-              toast.info(`La sección de ${typeId} se lanzará próximamente. ¡Mantente atento!`, 'Próximo lanzamiento');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenAuth={(mode) => openAuth(mode)}
-          onOpenDashboard={() => {
-            if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-              setCurrentView('ceo');
-            } else {
-              setCurrentView('dashboard');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={closeAuth}
-          initialMode={authModalMode}
-          selectedPlan={authSelectedPlan}
-          onAuthSuccess={handleAuthSuccess}
-        />
+        <React.Suspense fallback={<RouteLoadingFallback />}>
+          <MainPortalLanding
+            currentUser={currentUser}
+            onSelectEventType={(typeId) => {
+              if (typeId === 'xv') {
+                switchEventCategory('xv');
+                setCurrentView('landing');
+              } else if (typeId === 'bodas') {
+                switchEventCategory('bodas');
+                setCurrentView('landing');
+              } else {
+                toast.info(`La sección de ${typeId} se lanzará próximamente. ¡Mantente atento!`, 'Próximo lanzamiento');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenAuth={(mode) => openAuth(mode)}
+            onOpenDashboard={() => {
+              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                setCurrentView('ceo');
+              } else {
+                setCurrentView('dashboard');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </React.Suspense>
+        {isAuthModalOpen && <React.Suspense fallback={null}>
+          <AuthModal isOpen onClose={closeAuth} initialMode={authModalMode} selectedPlan={authSelectedPlan} onAuthSuccess={handleAuthSuccess} />
+        </React.Suspense>}
         <ToastContainer />
       </>
     );
@@ -1073,6 +1083,7 @@ export default function App() {
   if (currentView === 'landing') {
     return (
       <>
+        <React.Suspense fallback={<RouteLoadingFallback />}>
         {eventCategory === 'xv' ? (
           <XvLandingPage
             user={currentUser}
@@ -1182,14 +1193,11 @@ export default function App() {
             }}
           />
         )}
+        </React.Suspense>
 
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={closeAuth}
-          initialMode={authModalMode}
-          selectedPlan={authSelectedPlan}
-          onAuthSuccess={handleAuthSuccess}
-        />
+        {isAuthModalOpen && <React.Suspense fallback={null}>
+          <AuthModal isOpen onClose={closeAuth} initialMode={authModalMode} selectedPlan={authSelectedPlan} onAuthSuccess={handleAuthSuccess} />
+        </React.Suspense>}
         <ToastContainer />
       </>
     );
@@ -1207,26 +1215,25 @@ export default function App() {
 
     return (
       <>
-        <UserDashboard
-          user={activeUser}
-          onSelectWedding={handleSelectWedding}
-          onLogout={handleLogout}
-          onBackToLanding={() => {
-            setCurrentView('portal');
-            if (typeof window !== 'undefined') {
-              window.history.pushState(null, '', '/');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onUpdatePlan={handleUpdatePlan}
-          onOpenCeoDashboard={() => setCurrentView('ceo')}
-        />
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={closeAuth}
-          initialMode={currentUser ? 'register' : 'login'}
-          onAuthSuccess={handleAuthSuccess}
-        />
+        <React.Suspense fallback={<RouteLoadingFallback />}>
+          <UserDashboard
+            user={activeUser}
+            onSelectWedding={handleSelectWedding}
+            onLogout={handleLogout}
+            onBackToLanding={() => {
+              setCurrentView('portal');
+              if (typeof window !== 'undefined') {
+                window.history.pushState(null, '', '/');
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onUpdatePlan={handleUpdatePlan}
+            onOpenCeoDashboard={() => setCurrentView('ceo')}
+          />
+        </React.Suspense>
+        {isAuthModalOpen && <React.Suspense fallback={null}>
+          <AuthModal isOpen onClose={closeAuth} initialMode={currentUser ? 'register' : 'login'} onAuthSuccess={handleAuthSuccess} />
+        </React.Suspense>}
         <ToastContainer />
       </>
     );
@@ -1245,7 +1252,7 @@ export default function App() {
             <button type="button" onClick={() => { setCurrentView(currentUser ? 'dashboard' : 'portal'); setLockedEventMessage(''); }} className="rounded-xl border border-[#E5E2D0] bg-white px-6 py-3 text-sm font-semibold text-stone-700 hover:bg-[#FAF9F0]">Volver a mis eventos</button>
           </div>
         </section>
-        {!currentUser && <AuthModal isOpen={isAuthModalOpen} onClose={closeAuth} initialMode="login" onAuthSuccess={handleAuthSuccess} />}
+        {!currentUser && isAuthModalOpen && <React.Suspense fallback={null}><AuthModal isOpen onClose={closeAuth} initialMode="login" onAuthSuccess={handleAuthSuccess} /></React.Suspense>}
         <ToastContainer />
       </div>
     );
@@ -1298,6 +1305,7 @@ export default function App() {
 
     return (
       <>
+        <React.Suspense fallback={<RouteLoadingFallback />}>
         {isXvAdmin ? (
           <XvAdminDashboard
             settings={settings}
@@ -1337,6 +1345,7 @@ export default function App() {
             currentUser={currentUser}
           />
         )}
+        </React.Suspense>
         <ToastContainer />
       </>
     );
@@ -1398,16 +1407,18 @@ export default function App() {
 
   if (currentView === 'invitation' && settings && settings.showInvitationLetter !== false && !hasOpenedInvitation) {
     return (
-      <InvitationLetter
-        key={`${currentWeddingId}-${settings.id}`}
-        settings={settings}
-        guest={activeGuest}
-        eventType={settingsEventCategory}
-        onOpen={() => {
-          setHasOpenedInvitation(true);
-          window.scrollTo({ top: 0, behavior: 'auto' });
-        }}
-      />
+      <React.Suspense fallback={<RouteLoadingFallback />}>
+        <InvitationLetter
+          key={`${currentWeddingId}-${settings.id}`}
+          settings={settings}
+          guest={activeGuest}
+          eventType={settingsEventCategory}
+          onOpen={() => {
+            setHasOpenedInvitation(true);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
+        />
+      </React.Suspense>
     );
   }
 
@@ -1458,7 +1469,7 @@ export default function App() {
     }
   };
 
-  const gallerySection: React.ReactNode = settings.showPhotoGallery !== false ? (
+  const galleryComponent: React.ReactNode = settings.showPhotoGallery !== false ? (
     settingsEventCategory === 'xv' ? (
       <XvPhotoGallery
         key="gallery"
@@ -1482,6 +1493,11 @@ export default function App() {
     )
   ) : null;
   const galleryInEventDetails = settings.galleryPlacement === 'event-details' && settings.showPhotoGallery !== false;
+  const gallerySection = galleryComponent && galleryInEventDetails ? (
+    <DeferredInvitationSection anchorId="galeria" minHeight="clamp(520px, 78vh, 980px)">
+      {galleryComponent}
+    </DeferredInvitationSection>
+  ) : galleryComponent;
   const inlineRsvp = isInlineRsvpOpen && settings.showRsvpSection !== false
     ? settingsEventCategory === 'xv'
       ? <XvRsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
@@ -1528,7 +1544,16 @@ export default function App() {
     ) : null,
   };
 
+  const deferredLandingSections: Partial<Record<LandingSectionId, { anchorId: string; minHeight: string }>> = {
+    gallery: { anchorId: 'galeria', minHeight: 'clamp(520px, 78vh, 980px)' },
+    video: { anchorId: 'videos', minHeight: 'clamp(360px, 58vh, 720px)' },
+    hotels: { anchorId: 'hoteles', minHeight: 'clamp(280px, 42vh, 540px)' },
+    rsvp: { anchorId: 'rsvp', minHeight: 'clamp(460px, 68vh, 840px)' },
+    guestbook: { anchorId: 'libro-firmas', minHeight: 'clamp(340px, 54vh, 680px)' },
+  };
+
   return (
+    <React.Suspense fallback={<RouteLoadingFallback />}>
     <NumberFontContext.Provider value={globalNumberFontFamily}>
       <div
         className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
@@ -1666,9 +1691,19 @@ export default function App() {
       )}
 
       <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
-        {getLandingSectionOrder(settings.landingSectionOrder).map((sectionId) => (
-          <React.Fragment key={sectionId}>{landingSections[sectionId]}</React.Fragment>
-        ))}
+        {getLandingSectionOrder(settings.landingSectionOrder).map((sectionId) => {
+          const section = landingSections[sectionId];
+          const deferred = deferredLandingSections[sectionId];
+          return (
+            <React.Fragment key={sectionId}>
+              {section && deferred ? (
+                <DeferredInvitationSection anchorId={deferred.anchorId} minHeight={deferred.minHeight}>
+                  {section}
+                </DeferredInvitationSection>
+              ) : section}
+            </React.Fragment>
+          );
+        })}
       </main>
 
       {/* Scroll to top button */}
@@ -1688,17 +1723,14 @@ export default function App() {
       </AnimatePresence>
 
       {/* Auth Modal for Choosing Design or Logging in */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuth}
-        initialMode={authModalMode}
-        selectedPlan={authSelectedPlan}
-        onAuthSuccess={handleAuthSuccess}
-      />
+      {isAuthModalOpen && <React.Suspense fallback={null}>
+        <AuthModal isOpen onClose={closeAuth} initialMode={authModalMode} selectedPlan={authSelectedPlan} onAuthSuccess={handleAuthSuccess} />
+      </React.Suspense>}
 
       {/* Global Toast Notifications */}
       <ToastContainer />
       </div>
     </NumberFontContext.Provider>
+    </React.Suspense>
   );
 }
