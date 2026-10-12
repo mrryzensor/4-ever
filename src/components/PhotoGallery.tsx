@@ -962,7 +962,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <div
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                className={`relative w-full rounded-3xl overflow-hidden shadow-2xl bg-stone-950 border border-[#E5E2D0]/40 group select-none transition-all duration-700 ease-in-out ${containerClass}`}
+                className={`relative @container w-full rounded-3xl overflow-hidden shadow-2xl bg-stone-950 border border-[#E5E2D0]/40 group select-none transition-all duration-700 ease-in-out ${containerClass}`}
               >
                 {/* Current Photo Slide with AnimatePresence */}
                 <AnimatePresence mode="wait">
@@ -1028,9 +1028,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         </div>
 
                         {/* Bottom Area: Animated Comments + Badge + Caption */}
-                        <div className="space-y-1 pointer-events-auto max-w-2xl">
+                        <div className="w-full space-y-1 pointer-events-auto">
                           {getCommentsForPhoto(currentCarouselPhoto).length > 0 && (
-                            <div className="hidden lg:block space-y-0.5 mb-1">
+                            <div className="hidden lg:block mx-auto w-[90cqw] space-y-0.5 mb-1">
                               {getCommentsForPhoto(currentCarouselPhoto).slice(0, 2).map((comm, cIdx) => {
                                 const commentText = (comm && (comm.comment || (comm as any).message)) ? String(comm.comment || (comm as any).message) : '';
                                 if (!commentText) return null;
@@ -1040,7 +1040,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     transition={{ duration: 0.45, delay: 0.15 * (cIdx + 1) }}
-                                    className="flex w-[90%] items-start px-0 py-0 text-xs text-stone-100 max-w-xl"
+                                    className="flex w-full items-start px-0 py-0 text-xs text-stone-100"
                                   >
                                     <div className="min-w-0 flex-1 leading-tight">
                                       <span className="block font-semibold text-amber-300 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
@@ -1062,20 +1062,22 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                           />
 
                           {/* Category Badge positioned nicely above caption */}
-                          <div className="mb-1.5">
-                            <span data-typography-role="badge" className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
-                              {currentCarouselPhoto.driveOpenUrl ? galleryText.driveBadge : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
-                            </span>
-                          </div>
+                          <div className="max-w-2xl">
+                            <div className="mb-1.5">
+                              <span data-typography-role="badge" className="inline-block text-[10px] sm:text-[11px] uppercase font-bold tracking-widest bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-amber-300 shadow-sm">
+                                {currentCarouselPhoto.driveOpenUrl ? galleryText.driveBadge : currentCarouselPhoto.caption ? 'Sesión de Fotos' : 'Foto de los Novios'}
+                              </span>
+                            </div>
 
-                          {currentCarouselPhoto.caption && (
-                            <p className="text-sm sm:text-base font-serif font-medium text-stone-100 mb-1 drop-shadow-md">
-                              {currentCarouselPhoto.caption}
+                            {currentCarouselPhoto.caption && (
+                              <p className="text-sm sm:text-base font-serif font-medium text-stone-100 mb-1 drop-shadow-md">
+                                {currentCarouselPhoto.caption}
+                              </p>
+                            )}
+                            <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
+                              {currentCarouselPhoto.driveOpenUrl ? galleryText.sharedAlbumCaption : currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
                             </p>
-                          )}
-                          <p className="text-xs text-amber-200/90 font-serif italic drop-shadow-sm">
-                            {currentCarouselPhoto.driveOpenUrl ? galleryText.sharedAlbumCaption : currentCarouselPhoto.authorName ? `Fotografía: ${currentCarouselPhoto.authorName}` : 'Recuerdos de los novios'}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

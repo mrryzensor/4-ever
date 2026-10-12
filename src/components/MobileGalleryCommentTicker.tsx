@@ -29,7 +29,7 @@ export function MobileGalleryCommentTicker({ comments, photoKey, onOpen }: Mobil
   if (comments.length === 0) return null;
 
   return (
-    <div className="lg:hidden mb-1 w-[90%] max-w-xl overflow-hidden" aria-label={`${comments.length} comentarios`}>
+    <div className="lg:hidden mx-auto mb-1 w-[90cqw] overflow-hidden" aria-label={`${comments.length} comentarios`}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${photoKey}:${startIndex}`}
