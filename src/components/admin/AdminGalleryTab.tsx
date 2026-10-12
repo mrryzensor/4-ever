@@ -185,7 +185,7 @@ export const AdminGalleryTab: React.FC<AdminGalleryTabProps> = ({
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="w-full min-w-0 space-y-6 p-4 sm:p-6 lg:p-8">
       {/* 1. Header & Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-[#E5E2D0] shadow-xs">
         <div>

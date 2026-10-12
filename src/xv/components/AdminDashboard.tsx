@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Guest, WeddingSettings, GuestStats, UserProfile } from '../../types.ts';
 import { applyThemeScrollbar } from '../../lib/themes.ts';
 import { AdminHeader } from './admin/AdminHeader.tsx';
@@ -44,6 +44,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const guestRequestSequenceRef = useRef(0);
+  const latestWeddingIdRef = useRef(settings.id || 1);
+  const loadedStatsWeddingIdRef = useRef<number | null>(null);
+  const statsRequestWeddingIdRef = useRef<number | null>(null);
+  const statsRequestIdRef = useRef<number | null>(null);
+  const guestRequestsRef = useRef<Array<{ requestId: number; includeStats: boolean; controller: AbortController }>>([]);
+  latestWeddingIdRef.current = settings.id || 1;
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Sidebar collapsible state
@@ -72,29 +79,56 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   }, [tempSettings?.cardStyle]);
 
-  const fetchGuests = async () => {
+  const fetchGuests = useCallback(async (refreshStats = false) => {
+    const weddingId = settings.id || 1;
+    const includeStats = refreshStats
+      || (loadedStatsWeddingIdRef.current !== weddingId && statsRequestWeddingIdRef.current !== weddingId);
+    const requestId = ++guestRequestSequenceRef.current;
+    if (includeStats) {
+      statsRequestWeddingIdRef.current = weddingId;
+      statsRequestIdRef.current = requestId;
+    }
+    guestRequestsRef.current = guestRequestsRef.current.filter((request) => {
+      if (!request.includeStats) request.controller.abort();
+      return request.includeStats;
+    });
+    const controller = new AbortController();
+    guestRequestsRef.current.push({ requestId, includeStats, controller });
+
     try {
       setLoading(true);
-      let url = `/api/guests?weddingId=${settings.id || 1}&`;
-      if (search) url += `search=${encodeURIComponent(search)}&`;
-      if (filterStatus !== 'all') url += `status=${filterStatus}&`;
+      const params = new URLSearchParams({ weddingId: String(weddingId), includeStats: String(includeStats) });
+      if (search.trim()) params.set('search', search.trim());
+      if (filterStatus !== 'all') params.set('status', filterStatus);
 
-      const res = await fetch(url);
+      const res = await fetch(`/api/guests?${params}`, { signal: controller.signal });
+      if (!res.ok) throw new Error('No se pudieron cargar los invitados.');
       const data = await res.json();
-      if (data.guests) {
+      if (data.guests && requestId === guestRequestSequenceRef.current) {
         setGuests(data.guests);
+      }
+      if (data.stats && requestId === statsRequestIdRef.current && weddingId === latestWeddingIdRef.current) {
         setStats(data.stats);
+        loadedStatsWeddingIdRef.current = weddingId;
+        statsRequestWeddingIdRef.current = null;
       }
     } catch (err) {
-      console.error('Error fetching guests in admin:', err);
+      if (!controller.signal.aborted) console.error('Error fetching guests in admin:', err);
+      if (includeStats && statsRequestIdRef.current === requestId) statsRequestWeddingIdRef.current = null;
     } finally {
-      setLoading(false);
+      guestRequestsRef.current = guestRequestsRef.current.filter((request) => request.requestId !== requestId);
+      if (requestId === guestRequestSequenceRef.current) setLoading(false);
     }
-  };
+  }, [filterStatus, search, settings.id]);
 
   useEffect(() => {
-    fetchGuests();
-  }, [search, filterStatus, settings.id]);
+    const timer = window.setTimeout(() => { void fetchGuests(); }, search.trim() ? 300 : 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchGuests]);
+
+  useEffect(() => () => {
+    guestRequestsRef.current.forEach((request) => request.controller.abort());
+  }, []);
 
   const handleDeleteGuest = (id: number) => {
     const target = guests.find((g) => g.id === id);
@@ -111,7 +145,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setGuests((prev) => prev.filter((g) => g.id !== guestToDelete.id));
       toast.success(`Invitado "${guestToDelete.fullName}" eliminado`, 'Eliminado');
       setGuestToDelete(null);
-      fetchGuests();
+      void fetchGuests(true);
     } catch (err) {
       console.error('Error deleting guest:', err);
       toast.error('Error al eliminar el invitado', 'Error');
@@ -273,11 +307,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   const created = await res.json();
                   setGuests((prev) => [created, ...prev]);
                 }
-                fetchGuests();
+                await fetchGuests(true);
               }}
               onDeleteGuest={handleDeleteGuest}
               onExportCsv={exportCsv}
-              onGuestsImported={fetchGuests}
+              onGuestsImported={() => fetchGuests(true)}
             />
           )}
 
@@ -290,7 +324,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {activeTab === 'import' && (
             <AdminImportTab
               weddingId={settings.id || 1}
-              onGuestsImported={fetchGuests}
+              onGuestsImported={() => fetchGuests(true)}
             />
           )}
 

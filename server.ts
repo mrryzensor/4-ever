@@ -1384,30 +1384,41 @@ async function startServer() {
       const search = typeof req.query.search === 'string' ? req.query.search : undefined;
       const status = typeof req.query.status === 'string' ? req.query.status : undefined;
       const weddingId = req.query.weddingId ? Number(req.query.weddingId) : 1;
+      const includeStats = req.query.includeStats !== 'false';
       const access = await resolveWeddingAccess(req, weddingId);
       if (!access.identity) return rejectMissingIdentity(res);
       if (!access.allowed) return rejectWeddingAccess(res);
       const guestList = await getAllGuests(search, status, weddingId);
 
-      // Compute statistics across all guests of this wedding
-      const allWeddingGuests = await getAllGuests(undefined, undefined, weddingId);
-      const totalGuests = allWeddingGuests.length;
-      const totalAllocatedPasses = allWeddingGuests.reduce((acc, g) => acc + (Number(g.allocatedPasses) || 0), 0);
-      const confirmedGuests = allWeddingGuests.filter((g) => g.status === 'confirmed');
-      const totalConfirmedPasses = confirmedGuests.reduce((acc, g) => acc + (Number(g.confirmedPasses) || 0), 0);
-      const declinedGuests = allWeddingGuests.filter((g) => g.status === 'declined').length;
-      const pendingGuests = allWeddingGuests.filter((g) => g.status !== 'confirmed' && g.status !== 'declined').length;
+      let stats: {
+        totalGuests: number;
+        totalAllocatedPasses: number;
+        totalConfirmedPasses: number;
+        declinedGuests: number;
+        pendingGuests: number;
+        confirmedCount: number;
+      } | undefined;
+
+      if (includeStats) {
+        // Reuse the unfiltered list when it already contains every guest.
+        const hasFilters = Boolean(search?.trim() || (status && status !== 'all'));
+        const allWeddingGuests = hasFilters
+          ? await getAllGuests(undefined, undefined, weddingId)
+          : guestList;
+        const confirmedGuests = allWeddingGuests.filter((g) => g.status === 'confirmed');
+        stats = {
+          totalGuests: allWeddingGuests.length,
+          totalAllocatedPasses: allWeddingGuests.reduce((acc, g) => acc + (Number(g.allocatedPasses) || 0), 0),
+          totalConfirmedPasses: confirmedGuests.reduce((acc, g) => acc + (Number(g.confirmedPasses) || 0), 0),
+          declinedGuests: allWeddingGuests.filter((g) => g.status === 'declined').length,
+          pendingGuests: allWeddingGuests.filter((g) => g.status !== 'confirmed' && g.status !== 'declined').length,
+          confirmedCount: confirmedGuests.length,
+        };
+      }
 
       res.json({
         guests: guestList,
-        stats: {
-          totalGuests,
-          totalAllocatedPasses,
-          totalConfirmedPasses,
-          declinedGuests,
-          pendingGuests,
-          confirmedCount: confirmedGuests.length,
-        },
+        ...(stats ? { stats } : {}),
       });
     } catch (error: any) {
       console.error('Failed to get guests:', error);

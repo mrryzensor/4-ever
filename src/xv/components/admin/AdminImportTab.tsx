@@ -169,7 +169,7 @@ export const AdminImportTab: React.FC<AdminImportTabProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full min-w-0 space-y-6">
       <div className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] shadow-sm space-y-6">
         
         {/* Header Title */}
