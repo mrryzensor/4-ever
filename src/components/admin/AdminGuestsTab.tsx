@@ -22,6 +22,7 @@ import { toast } from '../../lib/toast.ts';
 import { AdminGuestModal, ExtendedGuestFormData } from './AdminGuestModal.tsx';
 import { parseRsvpOptionalFields } from '../../lib/rsvpOptionalFields.ts';
 import { parseGuestCompanionNames } from '../../lib/guestCompanions.ts';
+import { InvitationBranchesPanel } from './InvitationBranchesPanel.tsx';
 
 interface AdminGuestsTabProps {
   settings: WeddingSettings;
@@ -320,6 +321,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      <InvitationBranchesPanel settings={settings} />
       {/* 1. Header Metrics Card */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[36px] border border-[#E5E2D0] shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -495,6 +497,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
                         {g.groupName || 'Invitados'}
                       </span>
                     </div>
+                    {g.rsvpBranchName && g.status !== 'pending' && (
+                      <span className="mt-1.5 inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800">
+                        Rama: {g.rsvpBranchName}
+                      </span>
+                    )}
                   </div>
 
                   <span
@@ -617,6 +624,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
                         <div className="font-serif font-bold text-stone-800 text-xs sm:text-sm">
                           {g.fullName}
                         </div>
+                        {g.rsvpBranchName && g.status !== 'pending' && (
+                          <span className="mt-1 inline-flex rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-800">
+                            Rama: {g.rsvpBranchName}
+                          </span>
+                        )}
                         {isConfirmed && (g.confirmedPasses ?? 0) > 1 && <div className="mt-0.5 text-[11px] text-stone-600"><span className="font-semibold">Acompañantes:</span> {companionNames.length ? companionNames.join(', ') : `${(g.confirmedPasses ?? 1) - 1} sin nombre registrado`}</div>}
                         {g.message && (
                           <div className="text-[11px] text-stone-500 italic mt-0.5 truncate max-w-xs">

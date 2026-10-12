@@ -59,7 +59,7 @@ export const DEFAULT_WEDDING_SETTINGS: WeddingSettings = {
   heroOverlayOpacity: 40,
   heroEnableScrollBlur: true,
   cardStyle: 'classic-gold',
-  envelopeColor: '#2C2B29',
+  envelopeColor: '#FDF9F2',
   envelopeShadowColor: '#2C211B',
   envelopeShadowIntensity: 36,
   waxSealText: 'S&A',

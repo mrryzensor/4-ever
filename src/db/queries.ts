@@ -3,6 +3,7 @@ import { autoMigrateDatabase } from './autoMigrate.ts';
 import {
   weddingSettings,
   guests,
+  invitationBranches,
   galleryPhotos,
   photoComments,
   drivePhotoInteractions,
@@ -13,6 +14,8 @@ import {
   subscriptionPlans,
 } from './schema.ts';
 import { eq, desc, asc, ilike, or, and, inArray, sql } from 'drizzle-orm';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import {
   generateDynamicInitials,
   generateEventHashtag,
@@ -29,7 +32,7 @@ import { assertRsvpActionAllowed } from '../lib/rsvpAvailability.ts';
 import { parseCustomRsvpDetails, resolveRsvpMaxCompanions } from '../lib/rsvpOptionalFields.ts';
 
 // In-memory fallback state to ensure 100% server uptime even without local PostgreSQL
-const memoryState = {
+const defaultMemoryState = {
   weddings: [
     {
       id: 1,
@@ -92,7 +95,7 @@ const memoryState = {
       liverpoolRegistryUrl: '',
       amazonRegistryUrl: '',
       cardStyle: 'classic-gold',
-      envelopeColor: '#2C2B29',
+      envelopeColor: '#FDF9F2',
       envelopeShadowColor: '#2C211B',
       envelopeShadowIntensity: 36,
       waxSealText: 'S&A',
@@ -427,6 +430,7 @@ const memoryState = {
       updatedAt: new Date(),
     }
   ] as any[],
+  invitationBranches: [] as any[],
   guests: [
     {
       id: 1,
@@ -661,9 +665,107 @@ const memoryState = {
 
 // Check if PostgreSQL is available
 let sqlEnabled = false;
+const DEV_STATE_FILE = resolve(process.cwd(), '.local', 'dev-state.json');
+const DEV_STATE_KEYS = [
+  'weddings',
+  'invitationBranches',
+  'guests',
+  'gallery',
+  'videos',
+  'wishes',
+  'photoComments',
+  'drivePhotoLikes',
+  'drivePhotoComments',
+] as const;
+
+function loadDevMemoryState(defaults: Record<string, any>) {
+  const restored = { ...defaults };
+  if (process.env.NODE_ENV === 'production' || !existsSync(DEV_STATE_FILE)) return restored;
+
+  try {
+    const saved = JSON.parse(readFileSync(DEV_STATE_FILE, 'utf8'), (_key, value) => {
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(value)) {
+        const parsedDate = new Date(value);
+        if (!Number.isNaN(parsedDate.getTime())) return parsedDate;
+      }
+      return value;
+    });
+
+    for (const key of DEV_STATE_KEYS) {
+      if (!Array.isArray(saved?.[key])) continue;
+      const seededRows = new Map(
+        (Array.isArray(defaults[key]) ? defaults[key] : [])
+          .filter((row: any) => row && typeof row === 'object' && row.id != null)
+          .map((row: any): [string, any] => [String(row.id), row]),
+      );
+      restored[key] = saved[key].map((row: any) => {
+        const seededRow = row && typeof row === 'object' && row.id != null
+          ? seededRows.get(String(row.id))
+          : undefined;
+        return seededRow ? { ...seededRow, ...row } : row;
+      });
+    }
+    console.log('📦 Local development data restored from .local/dev-state.json.');
+  } catch (error) {
+    console.warn('Could not restore local development JSON state; using demo defaults.', error);
+  }
+
+  return restored;
+}
+
+let devStateSaveScheduled = false;
+function saveDevMemoryState() {
+  if (process.env.NODE_ENV === 'production') return;
+  try {
+    const snapshot = Object.fromEntries(DEV_STATE_KEYS.map((key) => [key, memoryState[key]]));
+    mkdirSync(dirname(DEV_STATE_FILE), { recursive: true });
+    const temporaryFile = `${DEV_STATE_FILE}.${process.pid}.tmp`;
+    writeFileSync(temporaryFile, JSON.stringify(snapshot, null, 2), 'utf8');
+    renameSync(temporaryFile, DEV_STATE_FILE);
+  } catch (error) {
+    console.warn('Could not persist local development JSON state.', error);
+  }
+}
+
+function scheduleDevMemorySave() {
+  if (process.env.NODE_ENV === 'production' || devStateSaveScheduled) return;
+  devStateSaveScheduled = true;
+  queueMicrotask(() => {
+    devStateSaveScheduled = false;
+    saveDevMemoryState();
+  });
+}
+
+function wrapDevMemoryState<T>(value: T, cache = new WeakMap<object, any>()): T {
+  if (!value || typeof value !== 'object' || value instanceof Date) return value;
+  const target = value as object;
+  const cached = cache.get(target);
+  if (cached) return cached;
+
+  const proxy = new Proxy(target, {
+    get(current, property, receiver) {
+      return wrapDevMemoryState(Reflect.get(current, property, receiver), cache);
+    },
+    set(current, property, nextValue, receiver) {
+      const changed = Reflect.get(current, property, receiver) !== nextValue;
+      const updated = Reflect.set(current, property, nextValue, receiver);
+      if (updated && changed) scheduleDevMemorySave();
+      return updated;
+    },
+    deleteProperty(current, property) {
+      const existed = Reflect.has(current, property);
+      const deleted = Reflect.deleteProperty(current, property);
+      if (deleted && existed) scheduleDevMemorySave();
+      return deleted;
+    },
+  });
+  cache.set(target, proxy);
+  return proxy as T;
+}
+
+const memoryState: any = wrapDevMemoryState(loadDevMemoryState(defaultMemoryState));
 const hasPostgresConfig = () => Boolean(
-  sqlEnabled || process.env.DATABASE_URL || process.env.POSTGRES_URL ||
-  process.env.SQL_HOST || process.env.POSTGRES_HOST || process.env.DB_HOST || process.env.NODE_ENV === 'production',
+  sqlEnabled || process.env.NODE_ENV === 'production',
 );
 
 const LEGACY_AUTO_HASHTAGS = new Set(['#BodaSofyAle2026', '#MisXValeria2026']);
@@ -859,6 +961,109 @@ export async function getWeddingSettings(identifier?: number | string) {
     return null;
   }
   return memoryState.weddings[0] ? hydrateWeddingAutoFields(memoryState.weddings[0] as any) : null;
+}
+
+export async function getInvitationBranches(weddingId: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      return await db.select().from(invitationBranches)
+        .where(eq(invitationBranches.weddingId, weddingId))
+        .orderBy(desc(invitationBranches.id));
+    }
+  } catch (err) {
+    console.warn('getInvitationBranches fallback to memory');
+  }
+  return memoryState.invitationBranches
+    .filter((branch) => branch.weddingId === weddingId)
+    .sort((a, b) => b.id - a.id);
+}
+
+export async function getInvitationBranchBySlug(weddingId: number, slug: string) {
+  const cleanSlug = String(slug || '').trim();
+  if (!cleanSlug) return null;
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.select().from(invitationBranches)
+        .where(and(eq(invitationBranches.weddingId, weddingId), eq(invitationBranches.slug, cleanSlug)))
+        .limit(1);
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('getInvitationBranchBySlug fallback to memory');
+  }
+  return memoryState.invitationBranches.find((branch) => branch.weddingId === weddingId && branch.slug === cleanSlug) || null;
+}
+
+export async function getInvitationBranchById(id: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.select().from(invitationBranches).where(eq(invitationBranches.id, id)).limit(1);
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('getInvitationBranchById fallback to memory');
+  }
+  return memoryState.invitationBranches.find((branch) => branch.id === id) || null;
+}
+
+export async function createInvitationBranch(data: typeof invitationBranches.$inferInsert) {
+  const normalizedData = {
+    ...data,
+    name: String(data.name || '').trim().slice(0, 80),
+    slug: String(data.slug || '').trim(),
+    textOverrides: typeof data.textOverrides === 'string' ? data.textOverrides : JSON.stringify(data.textOverrides || {}),
+  };
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.insert(invitationBranches).values(normalizedData).returning();
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('createInvitationBranch fallback to memory');
+  }
+  const branch = {
+    id: memoryState.invitationBranches.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1,
+    ...normalizedData,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  memoryState.invitationBranches.push(branch);
+  return branch;
+}
+
+export async function updateInvitationBranch(id: number, weddingId: number, data: Partial<typeof invitationBranches.$inferInsert>) {
+  const normalizedData: any = { ...data, updatedAt: new Date() };
+  if (normalizedData.name !== undefined) normalizedData.name = String(normalizedData.name || '').trim().slice(0, 80);
+  if (normalizedData.textOverrides !== undefined && typeof normalizedData.textOverrides !== 'string') {
+    normalizedData.textOverrides = JSON.stringify(normalizedData.textOverrides || {});
+  }
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      const rows = await db.update(invitationBranches).set(normalizedData)
+        .where(and(eq(invitationBranches.id, id), eq(invitationBranches.weddingId, weddingId)))
+        .returning();
+      if (rows.length > 0) return rows[0];
+    }
+  } catch (err) {
+    console.warn('updateInvitationBranch fallback to memory');
+  }
+  const index = memoryState.invitationBranches.findIndex((branch) => branch.id === id && branch.weddingId === weddingId);
+  if (index < 0) return null;
+  memoryState.invitationBranches[index] = { ...memoryState.invitationBranches[index], ...normalizedData };
+  return memoryState.invitationBranches[index];
+}
+
+export async function deleteInvitationBranch(id: number, weddingId: number) {
+  try {
+    if (sqlEnabled || process.env.SQL_HOST) {
+      await db.delete(invitationBranches).where(and(eq(invitationBranches.id, id), eq(invitationBranches.weddingId, weddingId)));
+      return { success: true };
+    }
+  } catch (err) {
+    console.warn('deleteInvitationBranch fallback to memory');
+  }
+  memoryState.invitationBranches = memoryState.invitationBranches.filter((branch) => !(branch.id === id && branch.weddingId === weddingId));
+  return { success: true };
 }
 
 export async function updateWeddingSettings(
@@ -1899,6 +2104,31 @@ export async function getGuestById(id: number) {
   return memoryState.guests.find((guest) => guest.id === id) || null;
 }
 
+const normalizeRsvpIdentity = (value: unknown) => String(value || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toLowerCase();
+
+export async function findOpenRsvpGuest(identity: { weddingId: number; fullName?: string; email?: string; phone?: string }) {
+  const email = normalizeRsvpIdentity(identity.email);
+  const phone = String(identity.phone || '').replace(/\D/g, '');
+  const fullName = normalizeRsvpIdentity(identity.fullName).replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+  if (!email && !phone && !fullName) return null;
+  const eventGuests = await getAllGuests(undefined, undefined, identity.weddingId);
+  const openGuests = eventGuests.filter((guest) => guest.groupName === 'Invitación Genérica / Registro Abierto');
+  if (email) {
+    const emailMatch = openGuests.find((guest) => normalizeRsvpIdentity(guest.email) === email);
+    if (emailMatch) return emailMatch;
+  }
+  if (phone) {
+    const phoneMatch = openGuests.find((guest) => String(guest.phone || '').replace(/\D/g, '') === phone);
+    if (phoneMatch) return phoneMatch;
+  }
+  if (email || phone) return null;
+  return openGuests.find((guest) => normalizeRsvpIdentity(guest.fullName).replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ') === fullName) || null;
+}
+
 export async function createGuest(data: typeof guests.$inferInsert) {
   if (!data.weddingId) data.weddingId = 1;
   if (!data.accessCode) {
@@ -2064,6 +2294,8 @@ export async function submitRsvp(
     phone?: string;
     email?: string;
     customRsvpDetails?: string | Record<string, string>;
+    branchSlug?: string | null;
+    branchName?: string | null;
   }
 ) {
   const guest = await getGuestByCode(accessCode, payload.weddingId);
@@ -2081,7 +2313,13 @@ export async function submitRsvp(
 
   // Keep duplicate submissions idempotent unless the guest explicitly opened edit mode.
   if (hasSavedResponse && !payload.editExisting) {
-    return guest;
+    if (payload.branchSlug === undefined) return guest;
+    const branchAttribution = {
+      rsvpBranchSlug: payload.branchSlug || null,
+      rsvpBranchName: payload.branchSlug ? (payload.branchName || null) : null,
+    };
+    if (guest.rsvpBranchSlug === branchAttribution.rsvpBranchSlug && guest.rsvpBranchName === branchAttribution.rsvpBranchName) return guest;
+    return await updateGuest(guest.id, branchAttribution);
   }
 
   const isOpenRegistration = guest.groupName === 'Invitación Genérica / Registro Abierto';
@@ -2102,6 +2340,10 @@ export async function submitRsvp(
     ...parseCustomRsvpDetails(payload.customRsvpDetails),
   });
   const updatedFullName = payload.editExisting ? payload.fullName?.trim() || guest.fullName : guest.fullName;
+  const branchAttribution = payload.branchSlug === undefined ? {} : {
+    rsvpBranchSlug: payload.branchSlug || null,
+    rsvpBranchName: payload.branchSlug ? (payload.branchName || null) : null,
+  };
   const nextWishMessage = payload.message?.trim() || '';
   const wishRelationship = guest.groupName === 'Invitación Genérica / Registro Abierto'
     ? 'Invitado Registrado'
@@ -2125,6 +2367,7 @@ export async function submitRsvp(
           customRsvpDetails: customRsvpDetailsJson,
           phone: payload.phone ?? guest.phone ?? '',
           email: payload.email ?? guest.email ?? '',
+          ...branchAttribution,
           confirmedAt: new Date(),
           updatedAt: new Date(),
         })
@@ -2187,6 +2430,7 @@ export async function submitRsvp(
       customRsvpDetails: customRsvpDetailsJson,
       phone: payload.phone ?? guest.phone ?? '',
       email: payload.email ?? guest.email ?? '',
+      ...branchAttribution,
       confirmedAt: new Date(),
       updatedAt: new Date(),
     };
@@ -2248,11 +2492,21 @@ export async function submitOpenRsvp(payload: {
   suggestedSong?: string;
   message?: string;
   customRsvpDetails?: string | Record<string, string>;
+  branchSlug?: string | null;
+  branchName?: string | null;
 }) {
   if (!payload.fullName || !payload.fullName.trim()) {
     throw new Error('El nombre completo es requerido.');
   }
   const weddingSettingsForRsvp = await getWeddingSettings(payload.weddingId);
+
+  const existingGuest = await findOpenRsvpGuest(payload);
+  if (existingGuest) {
+    return await submitRsvp(existingGuest.accessCode, {
+      ...payload,
+      editExisting: true,
+    });
+  }
   assertRsvpActionAllowed(weddingSettingsForRsvp || {}, 'register');
 
   // Generate unique clean access code (e.g. REG-GARCIA-742)
@@ -2291,6 +2545,8 @@ export async function submitOpenRsvp(payload: {
     suggestedSong: payload.suggestedSong || '',
     message: payload.message || '',
     customRsvpDetails: customRsvpDetailsJson,
+    rsvpBranchSlug: payload.branchSlug || null,
+    rsvpBranchName: payload.branchSlug ? (payload.branchName || null) : null,
     confirmedAt: new Date(),
   };
 
@@ -2817,23 +3073,28 @@ let customPlansMemory = [...SUBSCRIPTION_PLANS];
 
 export async function getCustomPlans() {
   if (hasPostgresConfig()) {
-    const savedPlans = await db.select().from(subscriptionPlans);
-    const savedById = new Map(savedPlans.map((row) => [row.planId, row.planData]));
-    customPlansMemory = SUBSCRIPTION_PLANS.map((defaultPlan) => {
-      const stored = savedById.get(defaultPlan.id);
-      if (!stored) return defaultPlan;
-      try {
-        const override = JSON.parse(stored);
-        return {
-          ...defaultPlan,
-          ...override,
-          limits: { ...defaultPlan.limits, ...(override.limits || {}) },
-        };
-      } catch (error) {
-        console.warn(`Ignoring invalid saved subscription plan ${defaultPlan.id}:`, error);
-        return defaultPlan;
-      }
-    });
+    try {
+      const savedPlans = await db.select().from(subscriptionPlans);
+      const savedById = new Map(savedPlans.map((row) => [row.planId, row.planData]));
+      customPlansMemory = SUBSCRIPTION_PLANS.map((defaultPlan) => {
+        const stored = savedById.get(defaultPlan.id);
+        if (!stored) return defaultPlan;
+        try {
+          const override = JSON.parse(stored);
+          return {
+            ...defaultPlan,
+            ...override,
+            limits: { ...defaultPlan.limits, ...(override.limits || {}) },
+          };
+        } catch (error) {
+          console.warn(`Ignoring invalid saved subscription plan ${defaultPlan.id}:`, error);
+          return defaultPlan;
+        }
+      });
+    } catch (error) {
+      if (process.env.NODE_ENV === 'production') throw error;
+      console.warn('Could not load subscription plans from PostgreSQL; using local defaults.');
+    }
   }
   return customPlansMemory;
 }

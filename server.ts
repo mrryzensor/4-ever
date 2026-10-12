@@ -12,6 +12,13 @@ import { RsvpAvailabilityError } from './src/lib/rsvpAvailability.ts';
 import {
   getWeddingSettings,
   updateWeddingSettings,
+  getInvitationBranches,
+  getInvitationBranchBySlug,
+  getInvitationBranchById,
+  createInvitationBranch,
+  updateInvitationBranch,
+  deleteInvitationBranch,
+  findOpenRsvpGuest,
   getUserProfile,
   getUserProfileByEmail,
   updateUserPlan,
@@ -127,6 +134,30 @@ const escapeHtml = (value: unknown): string => String(value ?? '')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
+
+const INVITATION_BRANCH_TEXT_FIELDS = [
+  'heroPadrinosTitle', 'heroPadrinos',
+  'heroBrideParentsTitle', 'heroBrideParents',
+  'heroGroomParentsTitle', 'heroGroomParents',
+  'heroWitnessesTitle', 'heroWitnesses',
+  'heroCourtTitle', 'heroCourtPageHeading',
+] as const;
+
+const normalizeInvitationBranchText = (value: unknown) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  const source = value as Record<string, unknown>;
+  return Object.fromEntries(INVITATION_BRANCH_TEXT_FIELDS.flatMap((field) => (
+    typeof source[field] === 'string' ? [[field, String(source[field]).slice(0, 1000)]] : []
+  )));
+};
+
+const parseInvitationBranchText = (value: unknown) => {
+  try {
+    return normalizeInvitationBranchText(typeof value === 'string' ? JSON.parse(value) : value);
+  } catch {
+    return {};
+  }
+};
 
 async function startServer() {
   const app = express();
@@ -1246,6 +1277,87 @@ async function startServer() {
     }
   });
 
+  // Text-only invitation branches share the same wedding, guests, and metrics.
+  app.get('/api/invitation-branches', async (req, res) => {
+    try {
+      const weddingId = Number(req.query.weddingId || 0);
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      const branches = await getInvitationBranches(weddingId);
+      res.json(branches.map((branch) => ({ ...branch, textOverrides: parseInvitationBranchText(branch.textOverrides) })));
+    } catch (error: any) {
+      console.error('Failed to list invitation branches:', error);
+      res.status(500).json({ error: error.message || 'No se pudieron cargar las ramas de invitación.' });
+    }
+  });
+
+  app.post('/api/invitation-branches', async (req, res) => {
+    try {
+      const weddingId = Number(req.body?.weddingId || 0);
+      const access = await resolveWeddingAccess(req, weddingId);
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      const name = typeof req.body?.name === 'string' ? req.body.name.trim().slice(0, 80) : '';
+      if (!name) return res.status(400).json({ error: 'Escribe un nombre para esta rama de invitación.' });
+      const overrides = normalizeInvitationBranchText(req.body?.textOverrides);
+      if (!Object.keys(overrides).length) return res.status(400).json({ error: 'Personaliza al menos uno de los textos disponibles.' });
+      const branch = await createInvitationBranch({
+        weddingId,
+        name,
+        slug: randomBytes(15).toString('base64url'),
+        textOverrides: JSON.stringify(overrides),
+      });
+      res.status(201).json({ ...branch, textOverrides: overrides });
+    } catch (error: any) {
+      console.error('Failed to create invitation branch:', error);
+      res.status(500).json({ error: error.message || 'No se pudo crear la rama de invitación.' });
+    }
+  });
+
+  app.put('/api/invitation-branches/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const current = await getInvitationBranchById(id);
+      if (!current) return res.status(404).json({ error: 'No se encontró esta rama de invitación.' });
+      const access = await resolveWeddingAccess(req, Number(current.weddingId));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      const updates: Record<string, unknown> = {};
+      if (req.body?.name !== undefined) {
+        const name = typeof req.body.name === 'string' ? req.body.name.trim().slice(0, 80) : '';
+        if (!name) return res.status(400).json({ error: 'Escribe un nombre para esta rama de invitación.' });
+        updates.name = name;
+      }
+      if (req.body?.textOverrides !== undefined) {
+        const overrides = normalizeInvitationBranchText(req.body.textOverrides);
+        updates.textOverrides = JSON.stringify(overrides);
+      }
+      const updated = await updateInvitationBranch(id, Number(current.weddingId), updates as any);
+      if (!updated) return res.status(404).json({ error: 'No se encontró esta rama de invitación.' });
+      res.json({ ...updated, textOverrides: parseInvitationBranchText(updated.textOverrides) });
+    } catch (error: any) {
+      console.error('Failed to update invitation branch:', error);
+      res.status(500).json({ error: error.message || 'No se pudo guardar la rama de invitación.' });
+    }
+  });
+
+  app.delete('/api/invitation-branches/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const current = await getInvitationBranchById(id);
+      if (!current) return res.status(404).json({ error: 'No se encontró esta rama de invitación.' });
+      const access = await resolveWeddingAccess(req, Number(current.weddingId));
+      if (!access.identity) return rejectMissingIdentity(res);
+      if (!access.allowed) return rejectWeddingAccess(res);
+      await deleteInvitationBranch(id, Number(current.weddingId));
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Failed to delete invitation branch:', error);
+      res.status(500).json({ error: error.message || 'No se pudo eliminar la rama de invitación.' });
+    }
+  });
+
   // 1. Wedding settings endpoints
   app.get('/api/wedding-config', async (req, res) => {
     try {
@@ -1257,7 +1369,17 @@ async function startServer() {
       if (!config) return res.json(config);
       const planAccess = await eventPlanAccess(config, false, true);
       if (planAccess.locked) return res.status(403).json({ error: planAccess.upgradeMessage, planAccess });
-      const publicConfig: any = { ...config, planAccess };
+      let publicConfig: any = { ...config, planAccess };
+      const requestedBranchSlug = typeof req.query.branch === 'string' ? req.query.branch.trim() : '';
+      if (requestedBranchSlug) {
+        const branch = await getInvitationBranchBySlug(Number(config.id), requestedBranchSlug);
+        if (!branch) return res.status(404).json({ error: 'Rama de invitación no encontrada.' });
+        publicConfig = {
+          ...publicConfig,
+          ...parseInvitationBranchText(branch.textOverrides),
+          invitationBranch: { id: branch.id, name: branch.name, slug: branch.slug },
+        };
+      }
       if (planAccess.maxUploadedPhotos === 0) {
         if (String(publicConfig.coverPhoto || '').startsWith('/uploads/') || String(publicConfig.coverPhoto || '').startsWith('data:')) publicConfig.coverPhoto = '';
         try {
@@ -1599,10 +1721,18 @@ async function startServer() {
       }
       const guestSnapshot = await getGuestByCode(String(accessCode), payload.weddingId);
       const weddingId = Number(guestSnapshot?.weddingId || payload.weddingId || 1);
+      const requestedBranchSlug = typeof payload.branchSlug === 'string' ? payload.branchSlug.trim() : '';
+      const sourceBranch = requestedBranchSlug ? await getInvitationBranchBySlug(weddingId, requestedBranchSlug) : null;
+      if (requestedBranchSlug && !sourceBranch) return res.status(400).json({ error: 'El enlace de invitación ya no está disponible.' });
+      const trustedPayload = {
+        ...payload,
+        branchSlug: sourceBranch?.slug || null,
+        branchName: sourceBranch?.name || null,
+      };
       const updatedGuest = await withEventMutationLock(weddingId, async () => {
         const existingGuest = await getGuestByCode(String(accessCode), weddingId);
-        await enforceRsvpPlanLimit(weddingId, String(payload.status || ''), Number(payload.confirmedPasses) || 1, existingGuest, Boolean(payload.editExisting));
-        return submitRsvp(accessCode, payload);
+        await enforceRsvpPlanLimit(weddingId, String(trustedPayload.status || ''), Number(trustedPayload.confirmedPasses) || 1, existingGuest, Boolean(trustedPayload.editExisting));
+        return submitRsvp(accessCode, trustedPayload);
       });
       res.json({ success: true, guest: updatedGuest });
     } catch (error: any) {
@@ -1619,8 +1749,12 @@ async function startServer() {
         return res.status(400).json({ error: 'El nombre completo es requerido para registrarse.' });
       }
       const targetWeddingId = Number(weddingId) || 1;
+      const requestedBranchSlug = typeof req.body?.branchSlug === 'string' ? req.body.branchSlug.trim() : '';
+      const sourceBranch = requestedBranchSlug ? await getInvitationBranchBySlug(targetWeddingId, requestedBranchSlug) : null;
+      if (requestedBranchSlug && !sourceBranch) return res.status(400).json({ error: 'El enlace de invitación ya no está disponible.' });
       const createdGuest = await withEventMutationLock(targetWeddingId, async () => {
-        await enforceRsvpPlanLimit(targetWeddingId, String(status || 'confirmed'), Number(confirmedPasses) || 1);
+        const existingGuest = await findOpenRsvpGuest({ weddingId: targetWeddingId, fullName, email, phone });
+        await enforceRsvpPlanLimit(targetWeddingId, String(status || 'confirmed'), Number(confirmedPasses) || 1, existingGuest || undefined, Boolean(existingGuest));
         return submitOpenRsvp({
           weddingId: targetWeddingId,
           fullName,
@@ -1635,6 +1769,8 @@ async function startServer() {
           phone,
           email,
           customRsvpDetails,
+          branchSlug: sourceBranch?.slug || null,
+          branchName: sourceBranch?.name || null,
         });
       });
       res.status(201).json({ success: true, guest: createdGuest });
@@ -3102,11 +3238,17 @@ async function startServer() {
     try {
       const weddingParam = (req.params.slug || req.query.wedding || req.query.w || '').toString().replace(/\.png$/, '');
       const guestCodeParam = (req.query.guest || req.query.g || req.query.code || '').toString();
+      const branchSlugParam = typeof req.query.branch === 'string' ? req.query.branch.trim() : '';
 
       // Retrieve wedding settings
       let wedding = await getWeddingSettings(weddingParam || undefined);
       if (!wedding) {
         wedding = await getWeddingSettings();
+      }
+
+      if (wedding && branchSlugParam) {
+        const branch = await getInvitationBranchBySlug(Number(wedding.id), branchSlugParam);
+        if (branch) wedding = { ...wedding, ...parseInvitationBranchText(branch.textOverrides) };
       }
 
       // Retrieve optional personalized guest info
@@ -3149,6 +3291,7 @@ async function startServer() {
 
       const weddingParam = (req.query.wedding || req.query.w || pathSlug || '').toString();
       const guestCodeParam = (req.query.guest || req.query.g || req.query.code || '').toString();
+      const branchSlugParam = typeof req.query.branch === 'string' ? req.query.branch.trim() : '';
 
       // Determine public host URL
       const host = req.get('x-forwarded-host') || req.get('host') || `localhost:${PORT}`;
@@ -3195,6 +3338,11 @@ async function startServer() {
           wedding = await getWeddingSettings();
         }
 
+        if (wedding && branchSlugParam) {
+          const branch = await getInvitationBranchBySlug(Number(wedding.id), branchSlugParam);
+          if (branch) wedding = { ...wedding, ...parseInvitationBranchText(branch.textOverrides) };
+        }
+
         presentation = getEventPresentation(wedding?.eventType, wedding?.slug ?? weddingParam);
 
         let guest = null;
@@ -3215,7 +3363,7 @@ async function startServer() {
         const socialImageVersion = wedding?.updatedAt
           ? new Date(wedding.updatedAt).getTime()
           : `${wedding?.eventDate || '2026-11-28'}-${coupleNames}`;
-        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}&v=${encodeURIComponent(String(socialImageVersion))}`;
+        ogImageUrl = `${baseUrl}/api/og-image?wedding=${encodeURIComponent(weddingParam || wedding?.slug || '')}${guestCodeParam ? `&guest=${encodeURIComponent(guestCodeParam)}` : ''}${branchSlugParam ? `&branch=${encodeURIComponent(branchSlugParam)}` : ''}&v=${encodeURIComponent(String(socialImageVersion))}`;
 
         // Dynamic Title for social sharing (WhatsApp, Facebook, iMessage, Twitter/X)
         const guestName = guest?.name || guest?.fullName;

@@ -228,13 +228,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleSaveAllSettings = async () => {
     setSavingSettings(true);
     try {
+      const { invitationBranch, ...settingsToSave } = tempSettings;
       const res = await fetch('/api/wedding-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(tempSettings),
+        body: JSON.stringify(settingsToSave),
       });
       const updated = await res.json();
-      onUpdateSettings(updated);
+      onUpdateSettings({ ...updated, invitationBranch });
       setSettingsSavedToast(true);
       toast.success('Configuración y personalizaciones guardadas correctamente', 'Guardado');
       setTimeout(() => setSettingsSavedToast(false), 3000);

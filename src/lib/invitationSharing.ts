@@ -8,24 +8,29 @@ interface InvitationShareSettings {
   eventDate?: string;
   eventTime?: string;
   shareMessageTemplate?: string;
+  branchSlug?: string | null;
 }
 
 export const DEFAULT_INVITATION_SHARE_TEMPLATE = `💌 ¡Estás invitado/a!\n\n{coupleNames} te invita a celebrar este día tan especial. ✨\n📅 {eventDate}\n\nConfirma tu asistencia aquí:\n{url}\n\n¡Te esperamos! 💛`;
 
-export function getInvitationUrl(settings: Pick<InvitationShareSettings, 'id' | 'slug' | 'eventType'>, origin: string) {
-  if (settings.slug) return `${origin}/${encodeURIComponent(settings.slug)}`;
-  const query = new URLSearchParams({
-    w: String(settings.id || 1),
-    event: settings.eventType || 'bodas',
-  });
-  return `${origin}/?${query.toString()}`;
+export function getInvitationUrl(settings: Pick<InvitationShareSettings, 'id' | 'slug' | 'eventType' | 'branchSlug'>, origin: string) {
+  const url = settings.slug
+    ? new URL(`/${encodeURIComponent(settings.slug)}`, origin)
+    : new URL('/', origin);
+  if (!settings.slug) {
+    url.searchParams.set('w', String(settings.id || 1));
+    url.searchParams.set('event', settings.eventType || 'bodas');
+  }
+  if (settings.branchSlug) url.searchParams.set('branch', settings.branchSlug);
+  return url.toString();
 }
 
-export function getInvitationShareImageUrl(settings: Pick<InvitationShareSettings, 'id' | 'slug'>, origin: string) {
+export function getInvitationShareImageUrl(settings: Pick<InvitationShareSettings, 'id' | 'slug' | 'branchSlug'>, origin: string) {
   const query = new URLSearchParams({
     wedding: settings.slug || String(settings.id || 1),
     v: String(Date.now()),
   });
+  if (settings.branchSlug) query.set('branch', settings.branchSlug);
   return `${origin}/api/og-image?${query.toString()}`;
 }
 

@@ -318,6 +318,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         // Confirm assigned guest
         const payload = {
           weddingId: settings.id || 1,
+          branchSlug: settings.invitationBranch?.slug || null,
           accessCode: guest.accessCode,
           fullName: fullName.trim(),
           editExisting: isEditingSavedResponse,
@@ -343,6 +344,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
         // Open / generic registration
         const payload = {
           weddingId: settings.id || 1,
+          branchSlug: settings.invitationBranch?.slug || null,
           fullName: fullName.trim(),
           status,
           confirmedPasses: submittedPasses,

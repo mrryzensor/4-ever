@@ -404,6 +404,19 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS client_email TEXT;
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
         ALTER TABLE guests ADD COLUMN IF NOT EXISTS custom_rsvp_details TEXT DEFAULT '{}';
+        ALTER TABLE guests ADD COLUMN IF NOT EXISTS rsvp_branch_slug TEXT;
+        ALTER TABLE guests ADD COLUMN IF NOT EXISTS rsvp_branch_name TEXT;
+
+        CREATE TABLE IF NOT EXISTS invitation_branches (
+          id SERIAL PRIMARY KEY,
+          wedding_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          slug TEXT NOT NULL UNIQUE,
+          text_overrides TEXT NOT NULL DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS invitation_branches_wedding_id_idx ON invitation_branches(wedding_id);
 
         -- 4. Gallery Photos Table
         CREATE TABLE IF NOT EXISTS gallery_photos (

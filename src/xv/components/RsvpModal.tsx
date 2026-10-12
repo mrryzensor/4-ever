@@ -156,6 +156,8 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
         .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
       const payload = {
         accessCode: guest.accessCode,
+        weddingId: settings.id || 1,
+        branchSlug: settings.invitationBranch?.slug || null,
         status,
         confirmedPasses: submittedPasses,
         attendingCeremony: status === 'confirmed' ? attendingCeremony : false,
@@ -212,6 +214,7 @@ export const RsvpModal: React.FC<RsvpModalProps> = ({
         .filter((name): name is string => typeof name === 'string' && name.trim() !== '');
       const payload = {
         weddingId: settings.id || 1,
+        branchSlug: settings.invitationBranch?.slug || null,
         fullName: genericFullName.trim(),
         status,
         confirmedPasses: submittedPasses,

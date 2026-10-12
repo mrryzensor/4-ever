@@ -776,6 +776,12 @@ export default function App() {
         if (weddingParam && isNaN(Number(weddingParam))) {
           url = `/api/wedding-config?slug=${encodeURIComponent(weddingParam)}`;
         }
+        const invitationBranchSlug = params.get('branch');
+        if (invitationBranchSlug) {
+          const configUrl = new URL(url, window.location.origin);
+          configUrl.searchParams.set('branch', invitationBranchSlug);
+          url = `${configUrl.pathname}${configUrl.search}`;
+        }
 
         const res = await fetch(url);
         if (!res.ok) {

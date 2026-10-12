@@ -110,6 +110,7 @@ export interface WeddingSettings {
   userId?: number | null;
   ownerUid?: string | null;
   slug?: string | null;
+  invitationBranch?: { id: number; name: string; slug: string } | null;
   isPublished?: boolean;
   coupleNames: string;
   hashtag: string;
@@ -487,7 +488,19 @@ export interface Guest {
   customRsvpDetails?: string | null;
   confirmedAt?: string | null;
   viewedAt?: string | null;
+  rsvpBranchSlug?: string | null;
+  rsvpBranchName?: string | null;
   createdAt?: string;
+}
+
+export interface InvitationBranch {
+  id: number;
+  weddingId: number;
+  name: string;
+  slug: string;
+  textOverrides: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface PhotoComment {

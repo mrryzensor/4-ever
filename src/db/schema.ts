@@ -282,9 +282,24 @@ export const guests = pgTable('guests', {
   customRsvpDetails: text('custom_rsvp_details').default('{}'),
   confirmedAt: timestamp('confirmed_at'),
   viewedAt: timestamp('viewed_at'),
+  rsvpBranchSlug: text('rsvp_branch_slug'),
+  rsvpBranchName: text('rsvp_branch_name'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+// Text-only invitation variants that share the parent event and its metrics.
+export const invitationBranches = pgTable('invitation_branches', {
+  id: serial('id').primaryKey(),
+  weddingId: integer('wedding_id').notNull(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  textOverrides: text('text_overrides').notNull().default('{}'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  weddingIdIndex: index('invitation_branches_wedding_id_idx').on(table.weddingId),
+}));
 
 // Photo gallery shared by guests and couple
 export const galleryPhotos = pgTable('gallery_photos', {
