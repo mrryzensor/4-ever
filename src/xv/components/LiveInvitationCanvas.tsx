@@ -102,6 +102,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const settingsRef = useRef(settings);
+  const previewReadyRef = useRef(false);
   settingsRef.current = settings;
 
   const [selectedDevice, setSelectedDevice] = useState<DevicePreset>('iphone15');
@@ -110,7 +111,6 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   const [zoom, setZoom] = useState<number>(0.85);
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [isCanvasVisible, setIsCanvasVisible] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -201,7 +201,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     const updateVisibility = () => {
       const visible = element.clientWidth > 0 && element.clientHeight > 0;
       setIsCanvasVisible(visible);
-      if (!visible) setIsIframeLoaded(false);
+      if (!visible) previewReadyRef.current = false;
     };
 
     updateVisibility();
@@ -215,17 +215,9 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     };
   }, []);
 
-  // Batch preview and storage updates so typing does not serialize settings on every keystroke.
-  const sendSettingsToIframe = useCallback((nextSettings: WeddingSettings, persist = true) => {
-    if (persist) {
-      try {
-        const serializedSettings = JSON.stringify(nextSettings);
-        sessionStorage.setItem('atelier_live_settings', serializedSettings);
-        localStorage.setItem('atelier_live_settings', serializedSettings);
-      } catch (e) {
-        console.warn('Failed to save to storage', e);
-      }
-    }
+  // Keep the preview sync off the editor's keystroke path; browser storage is
+  // updated once per iframe load instead of serializing the full event on edits.
+  const sendSettingsToIframe = useCallback((nextSettings: WeddingSettings) => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
       try {
         iframeRef.current.contentWindow.postMessage(
@@ -242,9 +234,11 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   }, []);
 
   useEffect(() => {
+    if (!previewReadyRef.current) return;
+    const delay = window.matchMedia('(max-width: 1279px)').matches ? 400 : 250;
     const timeoutId = window.setTimeout(() => {
       sendSettingsToIframe(settings);
-    }, 250);
+    }, delay);
 
     return () => window.clearTimeout(timeoutId);
   }, [settings, sendSettingsToIframe]);
@@ -253,7 +247,15 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
   useEffect(() => {
     const handleParentMessage = (e: MessageEvent) => {
       if (e.data?.type === 'ATELIER_EMBED_READY') {
-        sendSettingsToIframe(settingsRef.current, false);
+        previewReadyRef.current = true;
+        try {
+          const serializedSettings = JSON.stringify(settingsRef.current);
+          sessionStorage.setItem('atelier_live_settings', serializedSettings);
+          localStorage.setItem('atelier_live_settings', serializedSettings);
+        } catch (error) {
+          console.warn('Failed to cache Atelier preview settings', error);
+        }
+        sendSettingsToIframe(settingsRef.current);
       }
     };
     window.addEventListener('message', handleParentMessage);
@@ -380,24 +382,8 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     }
   };
 
-  const handleIframeLoad = () => {
-    setIsIframeLoaded(true);
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      try {
-        iframeRef.current.contentWindow.postMessage(
-          {
-            type: 'ATELIER_SYNC_SETTINGS',
-            settings: settingsRef.current,
-          },
-          '*'
-        );
-      } catch (err) {
-        console.warn('postMessage on iframe load failed:', err);
-      }
-    }
-  };
-
   const handleReloadIframe = () => {
+    previewReadyRef.current = false;
     setRefreshKey((k) => k + 1);
   };
 
@@ -777,7 +763,6 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
                   src={iframeSrc}
                   title="Invitación Digital en Vivo"
                   allow="autoplay"
-                  onLoad={handleIframeLoad}
                   className="w-full h-full border-0 block"
                   style={{
                     width: '100%',

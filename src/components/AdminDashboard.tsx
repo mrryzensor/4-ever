@@ -72,6 +72,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setTempSettings(settings);
   }, [settings]);
 
+  const handleSettingsChange = useCallback((updated: Partial<WeddingSettings>) => {
+    setTempSettings((prev) => applyWeddingSettingsChange(prev, updated));
+  }, []);
+
   // Update theme-reactive scrollbars when theme changes
   useEffect(() => {
     if (tempSettings?.cardStyle) {
@@ -332,9 +336,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {activeTab === 'settings' && (
             <AdminSettingsTab
               settings={tempSettings}
-              onChange={(updated) =>
-                setTempSettings((prev) => applyWeddingSettingsChange(prev, updated))
-              }
+              onChange={handleSettingsChange}
               atelierViewMode={atelierViewMode}
               setAtelierViewMode={setAtelierViewMode}
               onSaveAllSettings={handleSaveAllSettings}

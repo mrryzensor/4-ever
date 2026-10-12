@@ -721,9 +721,11 @@ export default function App() {
     // Live settings synchronization listener (for real-time atelier canvas simulation)
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'ATELIER_SYNC_SETTINGS' && event.data.settings) {
-        setSettings(event.data.settings);
-        setPreviewSettingsReady(true);
-        setLoadingWedding(false);
+        React.startTransition(() => {
+          setSettings(event.data.settings);
+          setPreviewSettingsReady(true);
+          setLoadingWedding(false);
+        });
       }
     };
     window.addEventListener('message', handleMessage);
