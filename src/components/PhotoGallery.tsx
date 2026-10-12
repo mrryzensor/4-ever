@@ -34,6 +34,7 @@ import { optimizeImageClient } from '../lib/mediaOptimizer.ts';
 import { getDrivePhotoFallbackTitle, parseDrivePhotoTitles } from '../lib/galleryPhotoTitles.ts';
 import { useDriveFolderPhotos } from './DriveFolderPhotos.tsx';
 import { NumeralText } from './NumeralText.tsx';
+import { MobileGalleryCommentTicker } from './MobileGalleryCommentTicker.tsx';
 
 type CarouselPhoto = GalleryPhoto & {
   driveOpenUrl?: string;
@@ -126,7 +127,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   };
   const formatCommentsPrompt = (count: number) => galleryText.commentsPrompt.replace('{count}', String(count));
   const effectiveAlbumUrl = externalAlbumUrl || settings?.galleryExternalAlbumUrl;
-  const driveGallery = useDriveFolderPhotos(effectiveAlbumUrl, weddingId);
+  const [galleryDataRequested, setGalleryDataRequested] = useState(false);
+  const gallerySectionRef = useRef<HTMLElement | null>(null);
+  const driveGallery = useDriveFolderPhotos(galleryDataRequested ? effectiveAlbumUrl : undefined, weddingId);
   const drivePhotoSelectionMode = settings?.galleryDrivePhotoSelectionMode === 'selected' ? 'selected' : 'all';
   const drivePhotoSelectionIds = useMemo(() => {
     try {
@@ -164,7 +167,30 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const [drivePhotoLikesById, setDrivePhotoLikesById] = useState<Record<string, number>>({});
   const [drivePhotoCommentsById, setDrivePhotoCommentsById] = useState<Record<string, PhotoComment[]>>({});
   const [photoCommentsMap, setPhotoCommentsMap] = useState<Record<number, PhotoComment[]>>({});
+  const [galleryCommentsLoadedFor, setGalleryCommentsLoadedFor] = useState<number | null>(null);
   const [mobileCommentsOpen, setMobileCommentsOpen] = useState(false);
+
+  useEffect(() => {
+    const section = gallerySectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setGalleryDataRequested(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setGalleryDataRequested(true);
+        observer.disconnect();
+      }
+    }, {rootMargin: '900px 0px'});
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setPhotoCommentsMap({});
+    setGalleryCommentsLoadedFor(null);
+  }, [weddingId]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 1023px)');
@@ -290,8 +316,24 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   useEffect(() => {
     if (!activePhoto) {
       setComments([]);
+      setLoadingComments(false);
       return;
     }
+
+    if (activePhoto.driveFileId) {
+      const fileId = activePhoto.driveFileId;
+      if (Object.prototype.hasOwnProperty.call(drivePhotoCommentsById, fileId)
+        && Object.prototype.hasOwnProperty.call(drivePhotoLikesById, fileId)) {
+        setComments(drivePhotoCommentsById[fileId] || []);
+        setLoadingComments(false);
+        return;
+      }
+    } else if (galleryCommentsLoadedFor === weddingId) {
+      setComments(photoCommentsMap[activePhoto.id] || []);
+      setLoadingComments(false);
+      return;
+    }
+
     let cancelled = false;
     setComments([]);
 
@@ -333,14 +375,18 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
     void fetchComments();
     return () => { cancelled = true; };
-  }, [activePhoto?.id, activePhoto?.driveFileId, activePhoto?.driveInteractionToken, driveGallery.folderId, weddingId]);
+  }, [activePhoto?.id, activePhoto?.driveFileId, activePhoto?.driveInteractionToken, driveGallery.folderId, drivePhotoCommentsById, drivePhotoLikesById, galleryCommentsLoadedFor, photoCommentsMap, weddingId]);
 
   // Bulk load comments for all photos to animate during auto-play
   useEffect(() => {
+    if (!galleryDataRequested) return;
+    let cancelled = false;
     const fetchAllComments = async () => {
       try {
         const res = await fetch(`/api/gallery-comments?weddingId=${weddingId}`);
+        if (!res.ok) throw new Error('No se pudieron cargar los comentarios de la galería.');
         const data = await res.json();
+        if (cancelled) return;
         if (Array.isArray(data)) {
           const map: Record<number, PhotoComment[]> = {};
           data.forEach((c: PhotoComment) => {
@@ -348,14 +394,67 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             map[c.photoId].push(c);
           });
           setPhotoCommentsMap(map);
+          setGalleryCommentsLoadedFor(weddingId);
         }
       } catch (err) {
-        console.error('Error loading all gallery comments:', err);
+        if (!cancelled) console.error('Error loading all gallery comments:', err);
       }
     };
 
-    fetchAllComments();
-  }, [weddingId]);
+    void fetchAllComments();
+    return () => { cancelled = true; };
+  }, [galleryDataRequested, weddingId]);
+
+  useEffect(() => {
+    setDrivePhotoCommentsById({});
+    setDrivePhotoLikesById({});
+  }, [weddingId, driveGallery.folderId]);
+
+  useEffect(() => {
+    if (!galleryDataRequested || !driveGallery.folderId || driveGallery.photos.length === 0) return;
+    const visibleDrivePhotos = driveGallery.photos.filter((photo) => drivePhotoSelectionMode === 'all'
+      ? !drivePhotoSelectionIds.has(photo.id)
+      : drivePhotoSelectionIds.has(photo.id));
+    const missingPhotos = visibleDrivePhotos.filter((photo) =>
+      !Object.prototype.hasOwnProperty.call(drivePhotoCommentsById, photo.id)
+      || !Object.prototype.hasOwnProperty.call(drivePhotoLikesById, photo.id));
+    if (missingPhotos.length === 0) return;
+
+    const controller = new AbortController();
+    const loadDriveInteractions = async () => {
+      try {
+        for (let start = 0; start < missingPhotos.length; start += 200) {
+          const photos = missingPhotos.slice(start, start + 200);
+          const response = await fetch(`/api/drive-folders/${encodeURIComponent(driveGallery.folderId!)}/interactions/batch`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              weddingId,
+              photos: photos.map((photo) => ({fileId: photo.id, signature: photo.interactionToken})),
+            }),
+            signal: controller.signal,
+          });
+          if (!response.ok) throw new Error('No se pudieron cargar las métricas de Drive.');
+          const data = await response.json() as Array<{fileId: string; likesCount?: number; comments?: PhotoComment[]}>;
+          if (controller.signal.aborted) return;
+
+          const commentsByFileId: Record<string, PhotoComment[]> = Object.fromEntries(photos.map((photo) => [photo.id, []]));
+          const likesByFileId: Record<string, number> = Object.fromEntries(photos.map((photo) => [photo.id, 0]));
+          data.forEach((item) => {
+            commentsByFileId[item.fileId] = Array.isArray(item.comments) ? item.comments : [];
+            likesByFileId[item.fileId] = Number(item.likesCount) || 0;
+          });
+          setDrivePhotoCommentsById((current) => ({...current, ...commentsByFileId}));
+          setDrivePhotoLikesById((current) => ({...current, ...likesByFileId}));
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) console.error('Error loading Drive gallery metrics:', error);
+      }
+    };
+
+    void loadDriveInteractions();
+    return () => controller.abort();
+  }, [driveGallery.folderId, driveGallery.photos, drivePhotoCommentsById, drivePhotoLikesById, drivePhotoSelectionIds, drivePhotoSelectionMode, galleryDataRequested, weddingId]);
 
   // Update guest default name if props update
   useEffect(() => {
@@ -450,18 +549,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   }, [weddingId]);
 
   useEffect(() => {
+    if (!galleryDataRequested) return;
     void fetchPhotos();
-  }, [fetchPhotos]);
+  }, [fetchPhotos, galleryDataRequested]);
 
   useEffect(() => {
     const handleParentMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
       if (event.data?.type !== 'ATELIER_REFRESH_GALLERY' || Number(event.data.weddingId) !== weddingId) return;
-      void fetchPhotos();
+      if (galleryDataRequested) void fetchPhotos();
     };
     window.addEventListener('message', handleParentMessage);
     return () => window.removeEventListener('message', handleParentMessage);
-  }, [fetchPhotos, weddingId]);
+  }, [fetchPhotos, galleryDataRequested, weddingId]);
 
   const handleLike = async (photo: CarouselPhoto, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -790,7 +890,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   };
 
   return (
-    <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
+    <section ref={gallerySectionRef} className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-10 sm:py-14 bg-transparent" id="galeria">
       <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-10">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xs" style={{ color: activeTheme.accentColorHex, backgroundColor: `${activeTheme.accentColorHex}1A`, borderColor: `${activeTheme.accentColorHex}66` }}>
           <AnimatedCameraLens className="w-10 h-10" color={activeTheme?.accentColorHex} />
@@ -930,7 +1030,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         {/* Bottom Area: Animated Comments + Badge + Caption */}
                         <div className="space-y-2 pointer-events-auto max-w-2xl">
                           {getCommentsForPhoto(currentCarouselPhoto).length > 0 && (
-                            <div className="space-y-2 mb-3">
+                            <div className="hidden lg:block space-y-2 mb-3">
                               {getCommentsForPhoto(currentCarouselPhoto).slice(0, 2).map((comm, cIdx) => {
                                 const commentText = (comm && (comm.comment || (comm as any).message)) ? String(comm.comment || (comm as any).message) : '';
                                 if (!commentText) return null;
@@ -958,6 +1058,11 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                               })}
                             </div>
                           )}
+                          <MobileGalleryCommentTicker
+                            comments={getCommentsForPhoto(currentCarouselPhoto)}
+                            photoKey={getCarouselPhotoLoadKey(currentCarouselPhoto)}
+                            onOpen={() => void openPhotoAtIndex(carouselIndex)}
+                          />
 
                           {/* Category Badge positioned nicely above caption */}
                           <div className="mb-1.5">
