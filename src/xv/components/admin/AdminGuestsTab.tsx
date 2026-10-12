@@ -464,7 +464,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({
       </div>
 
       {/* Mobile Guest Cards List (Visible on Small Screens) */}
-      <div className="md:hidden h-[65vh] min-h-[320px] max-h-[680px] overflow-y-auto overscroll-contain pr-1 space-y-3">
+      <div className="md:hidden mr-2 h-[65vh] min-h-[320px] max-h-[680px] overflow-y-auto overscroll-contain pr-1 space-y-3">
         {loading ? (
           <div className="p-8 text-center bg-white rounded-3xl border border-[#E5E2D0] text-[#7D8C7A] font-serif italic text-sm">
             Cargando invitados...
