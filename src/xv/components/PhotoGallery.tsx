@@ -1035,11 +1035,8 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     transition={{ duration: 0.45, delay: 0.15 * (cIdx + 1) }}
-                                    className="flex items-start gap-1.5 px-1 py-0 text-xs text-stone-100 max-w-xl"
+                                    className="flex items-start px-0 py-0 text-xs text-stone-100 max-w-xl"
                                   >
-                                    <div className="w-5 h-5 text-amber-300 font-bold flex items-center justify-center text-[10px] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
-                                      {comm.guestName?.charAt(0).toUpperCase() || 'I'}
-                                    </div>
                                     <div className="min-w-0 flex-1 leading-tight">
                                       <span className="block font-semibold text-amber-300 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                         {comm.guestName || 'Invitado'}:
