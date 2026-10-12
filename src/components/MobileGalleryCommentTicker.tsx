@@ -48,7 +48,7 @@ export function MobileGalleryCommentTicker({ comments, photoKey, onOpen }: Mobil
                 type="button"
                 onClick={onOpen}
                 title={`${author}: ${message}`}
-                className="flex h-7 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-lg border border-white/15 bg-black/75 px-2 text-left text-[10px] leading-none text-stone-100 shadow-lg backdrop-blur-md"
+                className="flex h-7 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-lg bg-black/30 px-2 text-left text-[10px] leading-none text-stone-100 shadow-sm backdrop-blur-[1px]"
               >
                 <span className="max-w-[34%] shrink-0 truncate font-semibold text-amber-300">{author}:</span>
                 <span className="min-w-0 flex-1 truncate italic">{message}</span>

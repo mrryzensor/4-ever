@@ -1040,7 +1040,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     transition={{ duration: 0.45, delay: 0.15 * (cIdx + 1) }}
-                                    className="flex items-start gap-2.5 px-4 py-2.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 text-xs text-stone-200 shadow-2xl max-w-xl"
+                                    className="flex items-start gap-2.5 px-4 py-2.5 rounded-2xl bg-black/30 backdrop-blur-[2px] text-xs text-stone-100 shadow-lg max-w-xl"
                                   >
                                     <div className="w-6 h-6 rounded-full bg-amber-500/30 text-amber-300 font-bold flex items-center justify-center text-[11px] shrink-0 border border-amber-400/40 mt-0.5">
                                       {comm.guestName?.charAt(0).toUpperCase() || 'I'}
