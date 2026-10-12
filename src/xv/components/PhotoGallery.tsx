@@ -1023,9 +1023,9 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                         </div>
 
                         {/* Bottom Area: Animated Comments + Badge + Caption */}
-                        <div className="space-y-2 pointer-events-auto max-w-2xl">
+                        <div className="space-y-1 pointer-events-auto max-w-2xl">
                           {getCommentsForPhoto(currentCarouselPhoto).length > 0 && (
-                            <div className="hidden lg:block space-y-2 mb-3">
+                            <div className="hidden lg:block space-y-0.5 mb-1">
                               {getCommentsForPhoto(currentCarouselPhoto).slice(0, 2).map((comm, cIdx) => {
                                 const commentText = (comm && (comm.comment || (comm as any).message)) ? String(comm.comment || (comm as any).message) : '';
                                 if (!commentText) return null;
@@ -1035,16 +1035,16 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                                     initial={{ opacity: 0, y: 15, scale: 0.95 }}
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     transition={{ duration: 0.45, delay: 0.15 * (cIdx + 1) }}
-                                    className="flex items-start gap-2.5 px-4 py-2.5 rounded-2xl bg-black/30 backdrop-blur-[2px] text-xs text-stone-100 shadow-lg max-w-xl"
+                                    className="flex items-start gap-1.5 px-1 py-0 text-xs text-stone-100 max-w-xl"
                                   >
-                                    <div className="w-6 h-6 rounded-full bg-amber-500/30 text-amber-300 font-bold flex items-center justify-center text-[11px] shrink-0 border border-amber-400/40 mt-0.5">
+                                    <div className="w-5 h-5 text-amber-300 font-bold flex items-center justify-center text-[10px] shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                       {comm.guestName?.charAt(0).toUpperCase() || 'I'}
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                      <span className="font-semibold text-amber-300 mr-1.5">
+                                    <div className="min-w-0 flex-1 leading-tight">
+                                      <span className="block font-semibold text-amber-300 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                         {comm.guestName || 'Invitado'}:
                                       </span>
-                                      <span className="italic text-stone-100 line-clamp-2 leading-snug">
+                                      <span className="block italic text-stone-100 line-clamp-2 leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                                         "{commentText.length > 120 ? commentText.slice(0, 117) + '...' : commentText}"
                                       </span>
                                     </div>

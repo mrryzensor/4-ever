@@ -29,7 +29,7 @@ export function MobileGalleryCommentTicker({ comments, photoKey, onOpen }: Mobil
   if (comments.length === 0) return null;
 
   return (
-    <div className="lg:hidden mb-3 w-full max-w-xl overflow-hidden" aria-label={`${comments.length} comentarios`}>
+    <div className="lg:hidden mb-1 w-full max-w-xl overflow-hidden" aria-label={`${comments.length} comentarios`}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${photoKey}:${startIndex}`}
@@ -37,7 +37,7 @@ export function MobileGalleryCommentTicker({ comments, photoKey, onOpen }: Mobil
           animate={{ opacity: 1, y: 0 }}
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
           transition={{ duration: reduceMotion ? 0 : 0.35, ease: 'easeOut' }}
-          className="space-y-1"
+          className="space-y-0"
         >
           {visibleComments.map((comment) => {
             const author = comment.guestName || 'Invitado';
@@ -48,10 +48,10 @@ export function MobileGalleryCommentTicker({ comments, photoKey, onOpen }: Mobil
                 type="button"
                 onClick={onOpen}
                 title={`${author}: ${message}`}
-                className="flex h-7 w-full min-w-0 items-center gap-1.5 overflow-hidden rounded-lg bg-black/30 px-2 text-left text-[10px] leading-none text-stone-100 shadow-sm backdrop-blur-[1px]"
+                className="flex h-5 w-full min-w-0 items-center gap-1 overflow-hidden px-0 text-left text-[10px] leading-none text-stone-100"
               >
-                <span className="max-w-[34%] shrink-0 truncate font-semibold text-amber-300">{author}:</span>
-                <span className="min-w-0 flex-1 truncate italic">{message}</span>
+                <span className="max-w-[34%] shrink-0 truncate font-semibold text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">{author}:</span>
+                <span className="min-w-0 flex-1 truncate italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">{message}</span>
               </button>
             );
           })}
