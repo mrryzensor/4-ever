@@ -427,6 +427,17 @@ export default function App() {
   useEffect(() => {
     if (currentView === 'invitation') setHasOpenedInvitation(false);
   }, [currentView, currentWeddingId]);
+
+  useEffect(() => {
+    if (!isInlineRsvpOpen || typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      document.getElementById('rsvp-inline')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isInlineRsvpOpen]);
+
   const openSubscriptionUpgrade = () => {
     const target = new URL(window.location.origin);
     target.searchParams.set('upgrade', '1');
@@ -1472,7 +1483,7 @@ export default function App() {
 
   const isPreviewEmbed = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('mode') === 'preview_embed';
   const isDemoMode = (isViewingDemo || (!currentUser && currentWeddingId === DEMO_WEDDING_ID && !getPathSlug())) && !isPreviewEmbed;
-  const openInlineRsvp = () => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth' });
+  const openInlineRsvp = () => document.getElementById('rsvp')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const toggleInlineRsvp = () => setIsInlineRsvpOpen((isOpen) => !isOpen);
   const handleRsvpSuccess = (updated: Guest) => {
     setActiveGuest(updated);
