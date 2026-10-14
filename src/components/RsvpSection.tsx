@@ -124,6 +124,16 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
     }
   }, [initialGuest]);
 
+  useEffect(() => {
+    if (!inline || !isEditingSavedResponse || typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      document.getElementById('rsvp-inline')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [inline, isEditingSavedResponse]);
+
   const applyGuestData = (selected: Guest) => {
     setGuest(selected);
     setFullName(selected.fullName);
