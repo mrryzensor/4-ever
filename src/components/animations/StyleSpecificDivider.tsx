@@ -11,6 +11,7 @@ import { AnimatedLavenderDivider } from './lavenderProvence.tsx';
 import { AnimatedEmeraldBotanicalDivider } from './emeraldBotanical.tsx';
 import { AnimatedCoastalBreezeDivider } from './coastalBreeze.tsx';
 import { AnimatedChampagneGlamDivider } from './champagneGlam.tsx';
+import { AnimatedDiscoDivider } from './discoSilver.tsx';
 
 /**
  * Universal Dynamic Theme Divider Dispatcher
@@ -53,6 +54,8 @@ export const StyleSpecificDivider: React.FC<{
       return <AnimatedCoastalBreezeDivider className={className} color={color || '#2B6CB0'} />;
     case 'champagne-glam':
       return <AnimatedChampagneGlamDivider className={className} color={color || '#C39B60'} />;
+    case 'disco-silver':
+      return <AnimatedDiscoDivider className={className} color={color || '#E2E8F0'} />;
     case 'classic-gold':
     default:
       return <AnimatedFloralDivider className={className} color={color || '#7D8C7A'} />;

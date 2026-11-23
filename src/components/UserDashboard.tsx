@@ -26,7 +26,8 @@ import {
   Layers,
   SlidersHorizontal,
   Mail,
-  UserPlus
+  UserPlus,
+  Cake
 } from 'lucide-react';
 import { UserProfile, WeddingSummary, PlanId, CardStyle, EventType } from '../types.ts';
 import { SUBSCRIPTION_PLANS } from '../data/plans.ts';
@@ -60,7 +61,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'planning' | 'completed'>('all');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'all' | 'bodas' | 'xv'>('all');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<'all' | 'bodas' | 'xv' | 'birthday'>('all');
   
   // Delete Confirmation Modal
   const [weddingToDelete, setWeddingToDelete] = useState<WeddingSummary | null>(null);
@@ -135,7 +136,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         setIsCreatingWedding(false);
         setNewCoupleNames('');
         fetchWeddings();
-        const eventLabel = newEventType === 'xv' ? 'XV Años' : 'Boda';
+        const eventLabel = newEventType === 'xv' ? 'XV Años' : newEventType === 'birthday' ? 'Cumpleaños' : 'Boda';
         toast.success(`${eventLabel} "${newCoupleNames}" creado exitosamente`, `${eventLabel} Creado`);
       } else {
         const errData = await res.json();
@@ -233,16 +234,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const eventLimitReached = !isCeo && currentPlan?.maxWeddings !== 'unlimited' && ownedPlanEvents.length >= Number(currentPlan?.maxWeddings || 1);
 
   const bodasCount = weddings.filter(
-    (w) => resolveEventType(w.eventType, w.slug) !== 'xv'
+    (w) => resolveEventType(w.eventType, w.slug) === 'bodas'
   ).length;
   const xvCount = weddings.filter(
     (w) => resolveEventType(w.eventType, w.slug) === 'xv'
   ).length;
+  const birthdayCount = weddings.filter(
+    (w) => resolveEventType(w.eventType, w.slug) === 'birthday'
+  ).length;
 
   const filteredWeddings = weddings.filter((w) => {
-    const isXv = resolveEventType(w.eventType, w.slug) === 'xv';
-    if (selectedCategoryFilter === 'bodas' && isXv) return false;
-    if (selectedCategoryFilter === 'xv' && !isXv) return false;
+    const evType = resolveEventType(w.eventType, w.slug);
+    if (selectedCategoryFilter !== 'all' && evType !== selectedCategoryFilter) return false;
 
     const matchesSearch =
       w.coupleNames?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -450,6 +453,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                 <span>👑 XV Años</span>
                 <span className="text-[10px] opacity-75">({xvCount})</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter('birthday')}
+                className={`px-3 py-1 rounded-lg font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+                  selectedCategoryFilter === 'birthday'
+                    ? 'bg-white text-purple-900 shadow-2xs'
+                    : 'text-stone-600 hover:text-stone-900'
+                }`}
+              >
+                <span>🎂 Cumpleaños</span>
+                <span className="text-[10px] opacity-75">({birthdayCount})</span>
+              </button>
             </div>
 
             {/* Events Counter */}
@@ -499,13 +514,20 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <div className="p-5 pb-3 border-b border-stone-100 flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                          resolveEventType(w.eventType, w.slug) === 'xv'
-                            ? 'bg-pink-100 text-pink-900 border border-pink-200'
-                            : 'bg-amber-100 text-amber-900 border border-amber-200'
-                        }`}>
-                          {resolveEventType(w.eventType, w.slug) === 'xv' ? '👑 XV Años' : '💍 Boda'}
-                        </span>
+                        {(() => {
+                          const evType = resolveEventType(w.eventType, w.slug);
+                          return (
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                              evType === 'xv'
+                                ? 'bg-pink-100 text-pink-900 border border-pink-200'
+                                : evType === 'birthday'
+                                ? 'bg-purple-100 text-purple-900 border border-purple-200'
+                                : 'bg-amber-100 text-amber-900 border border-amber-200'
+                            }`}>
+                              {evType === 'xv' ? '👑 XV Años' : evType === 'birthday' ? '🎂 Cumpleaños' : '💍 Boda'}
+                            </span>
+                          );
+                        })()}
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">
                           Estilo: {w.cardStyle || 'Classic Gold'}
                         </span>
@@ -647,12 +669,22 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               </button>
 
               <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-amber-50 text-amber-800 mb-3">
-                  <Heart className="w-6 h-6" />
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full aspect-square shrink-0 circle-badge mb-3 ${
+                  newEventType === 'xv' ? 'bg-pink-50 text-pink-700' : newEventType === 'birthday' ? 'bg-purple-50 text-purple-700' : 'bg-amber-50 text-amber-800'
+                }`}>
+                  {newEventType === 'xv' ? (
+                    <Crown className="w-6 h-6 text-pink-600" />
+                  ) : newEventType === 'birthday' ? (
+                    <Cake className="w-6 h-6 text-purple-600" />
+                  ) : (
+                    <Heart className="w-6 h-6 text-amber-700" />
+                  )}
                 </div>
                 <h2 className="text-2xl font-serif font-bold text-stone-900">
                   {newEventType === 'xv' 
                     ? (isWeddingPlanner ? 'Nuevo Evento XV Años para Cliente' : 'Crea tu Invitación de Quince Años')
+                    : newEventType === 'birthday'
+                    ? (isWeddingPlanner ? 'Nuevo Cumpleaños para Cliente' : 'Crea tu Invitación de Cumpleaños')
                     : (isWeddingPlanner ? 'Nueva Boda para Cliente' : 'Crea tu Nueva Invitación de Boda')}
                 </h2>
                 <p className="text-xs text-stone-500 mt-1">
@@ -666,42 +698,54 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                   <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                     Tipo de Celebración *
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setNewEventType('bodas')}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`px-2.5 py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         newEventType === 'bodas'
                           ? 'bg-amber-50 border-amber-400 text-amber-950 shadow-xs'
                           : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                       }`}
                     >
-                      <Heart className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Boda Nupcial</span>
+                      <Heart className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <span>Boda</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewEventType('xv')}
-                      className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`px-2.5 py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         newEventType === 'xv'
                           ? 'bg-pink-50 border-pink-400 text-pink-950 shadow-xs'
                           : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                       }`}
                     >
-                      <Crown className="w-3.5 h-3.5 text-pink-600" />
-                      <span>Fiesta de XV Años</span>
+                      <Crown className="w-3.5 h-3.5 text-pink-600 shrink-0" />
+                      <span>XV Años</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewEventType('birthday')}
+                      className={`px-2.5 py-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        newEventType === 'birthday'
+                          ? 'bg-purple-50 border-purple-400 text-purple-950 shadow-xs'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Cake className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <span>Cumpleaños</span>
                     </button>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {newEventType === 'xv' ? 'Nombre de la Quinceañera *' : 'Nombres de los Novios *'}
+                    {newEventType === 'xv' ? 'Nombre de la Quinceañera *' : newEventType === 'birthday' ? 'Nombre del Cumpleañero(a) *' : 'Nombres de los Novios *'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder={newEventType === 'xv' ? 'Ej. Valeria Montserrat' : 'Ej. Sofía & Alejandro'}
+                    placeholder={newEventType === 'xv' ? 'Ej. Valeria Montserrat' : newEventType === 'birthday' ? 'Ej. Lucas Martín' : 'Ej. Sofía & Alejandro'}
                     value={newCoupleNames}
                     onChange={(e) => setNewCoupleNames(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-700 focus:outline-none"
@@ -740,6 +784,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
                           <option value="midnight-stellar">Midnight Galaxia & Estrellas</option>
                           <option value="cherry-blossom">Sakura Cerezo de Ensueño</option>
                         </>
+                      ) : newEventType === 'birthday' ? (
+                        <>
+                          <option value="classic-gold">Festive Gold & Velas</option>
+                          <option value="minimal-editorial">Fiesta Neón & Glow</option>
+                          <option value="dark-luxury">Midnight Party Deluxe</option>
+                          <option value="romantic-floral">Sweet Confetti Pastel</option>
+                          <option value="boho-chic">Tropical Sunset Bash</option>
+                          <option value="watercolor-garden">Garden Party Botanic</option>
+                        </>
                       ) : (
                         <>
                           <option value="classic-gold">Classic Gold & Marfil</option>
@@ -756,7 +809,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Lugar de la Ceremonia
+                    {newEventType === 'birthday' ? 'Lugar de Encuentro / Ceremonia' : 'Lugar de la Ceremonia'}
                   </label>
                   <input
                     type="text"
@@ -768,7 +821,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Lugar de Recepción / Banquete
+                    {newEventType === 'birthday' ? 'Lugar de la Fiesta / Celebración' : 'Lugar de Recepción / Banquete'}
                   </label>
                   <input
                     type="text"

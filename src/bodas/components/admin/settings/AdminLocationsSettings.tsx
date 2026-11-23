@@ -19,7 +19,7 @@ export const AdminLocationsSettings: React.FC<AdminLocationsSettingsProps> = ({
         <div className="min-w-0">
           <h3 className="text-base sm:text-lg font-serif text-[#1a1a1a] flex items-center gap-2 font-bold truncate">
             <MapPin className="w-5 h-5 text-[#7D8C7A] shrink-0" />
-            <span>Lugares & Ubicaciones con Google Maps</span>
+            <span>Ubicaciones & Cómo Llegar (Google Maps)</span>
           </h3>
           <p className="text-xs text-[#7D8C7A] mt-0.5">
             Permite a los invitados abrir el lugar en Google Maps, generar rutas automáticas y ver el mapa integrado.

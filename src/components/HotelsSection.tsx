@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Building2, ChevronDown, ExternalLink, MapPin, Phone } from 'lucide-react';
-import { EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
+import { CardStyleId, EventType, HotelRecommendation, WeddingSettings } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
+import { BIRTHDAY_CARD_THEMES } from '../birthday/themes.ts';
 import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 import { NumeralText } from './NumeralText.tsx';
 
@@ -44,8 +45,8 @@ export const HotelsSection: React.FC<HotelsSectionProps> = ({ settings, eventTyp
 
   const theme = resolveInvitationTheme(
     settings,
-    eventType === 'xv' ? XV_CARD_THEMES : CARD_THEMES,
-    eventType === 'xv' ? 'romantic-floral' : 'classic-gold',
+    eventType === 'xv' ? XV_CARD_THEMES : eventType === 'birthday' ? BIRTHDAY_CARD_THEMES : CARD_THEMES,
+    (eventType === 'xv' ? 'romantic-floral' : 'classic-gold') as CardStyleId,
   );
   const isDark = theme.isDark;
 

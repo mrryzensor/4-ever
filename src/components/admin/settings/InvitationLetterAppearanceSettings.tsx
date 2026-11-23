@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Mail, DoorOpen } from 'lucide-react';
 import type { CardStyleId, WeddingSettings } from '../../../types.ts';
 import { CARD_THEMES } from '../../../lib/themes.ts';
 import { XV_CARD_THEMES } from '../../../xv/themes.ts';
@@ -134,9 +134,9 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
       <div className="flex items-start gap-2.5">
         <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#7D8C7A]" aria-hidden="true" />
         <div>
-          <h3 className="text-sm font-bold text-[#3D3D3D]">Carta de entrada</h3>
+          <h3 className="text-sm font-bold text-[#3D3D3D]">Experiencia de Entrada (Carta o Puertas)</h3>
           <p className="mt-0.5 text-xs leading-relaxed text-stone-600">
-            Personaliza la carta sin alterar los colores ni las fuentes del resto de la invitación. Los valores automáticos siguen el estilo elegido.
+            Personaliza cómo tus invitados ingresan a la invitación: un sobre tradicional con lacre o unas puertas dobles 3D abriéndose.
           </p>
         </div>
       </div>
@@ -144,10 +144,57 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
       <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E5E2D0] bg-white/75 p-3">
         <input type="checkbox" checked={settings.showInvitationLetter !== false} onChange={(event) => onChange({ showInvitationLetter: event.target.checked })} className="mt-0.5 h-4 w-4 shrink-0 accent-[#5A5A40]" />
         <span>
-          <span className="block text-xs font-semibold text-[#3D3D3D]">Mostrar carta de entrada</span>
+          <span className="block text-xs font-semibold text-[#3D3D3D]">Mostrar experiencia de entrada</span>
           <span className="mt-0.5 block text-[11px] leading-relaxed text-stone-500">Si la desactivas, la invitación abrirá directamente en su portada.</span>
         </span>
       </label>
+
+      {/* Selector de Tipo de Entrada */}
+      <div className="space-y-2 rounded-xl border border-[#E5E2D0] bg-white/80 p-3 sm:p-4">
+        <label className="text-xs font-bold text-[#3D3D3D] block">
+          Tipo de Apertura:
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => onChange({ entranceType: 'letter' })}
+            className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+              (settings.entranceType || 'letter') === 'letter'
+                ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-sm'
+                : 'bg-white hover:bg-stone-50 text-stone-700 border-[#E5E2D0]'
+            }`}
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+              (settings.entranceType || 'letter') === 'letter' ? 'bg-white/20 text-white' : 'bg-[#FAF9F0] text-amber-800'
+            }`}>
+              <Mail className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="block text-xs font-bold">Carta con Sobre</span>
+              <span className="text-[10px] opacity-80 block">Sobre elegante con sello de lacre interactivo</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ entranceType: 'door' })}
+            className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+              settings.entranceType === 'door'
+                ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-sm'
+                : 'bg-white hover:bg-stone-50 text-stone-700 border-[#E5E2D0]'
+            }`}
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+              settings.entranceType === 'door' ? 'bg-white/20 text-white' : 'bg-[#FAF9F0] text-amber-800'
+            }`}>
+              <DoorOpen className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="block text-xs font-bold">Puertas Abriéndose</span>
+              <span className="text-[10px] opacity-80 block">Puertas dobles 3D abriéndose a la celebración</span>
+            </div>
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#E5E2D0] bg-white/75 p-3">
@@ -164,6 +211,27 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
             <span className="mt-0.5 block text-[11px] leading-relaxed text-stone-500">Controla los adornos del marco y los motivos animados de las esquinas.</span>
           </span>
         </label>
+      </div>
+
+            <div className="space-y-3 rounded-xl border border-[#E5E2D0] bg-white/65 p-3 sm:p-4">
+        <div>
+          <h4 className="text-xs font-bold text-[#3D3D3D]">Textos del Hero (Portada)</h4>
+          <p className="mt-0.5 text-[11px] text-stone-500">Personaliza la frase de invitación y el encabezado superior que se muestra en la portada de la invitación.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <TextControl
+            label="Frase de invitación del Hero"
+            value={settings.heroInvitationText}
+            fallback={isXv ? 'TE INVITO A CELEBRAR MIS XV' : settings.eventType === 'birthday' ? 'Te invito a celebrar mi cumpleaños' : 'Te invitamos a celebrar nuestra boda'}
+            onChange={(heroInvitationText) => onChange({ heroInvitationText })}
+          />
+          <TextControl
+            label="Encabezado superior del Hero (Estilo Disco / Glam)"
+            value={settings.heroHeadingText}
+            fallback={isXv ? "It's my Birthday" : settings.eventType === 'birthday' ? "It's my Birthday" : 'Nuestra Boda'}
+            onChange={(heroHeadingText) => onChange({ heroHeadingText })}
+          />
+        </div>
       </div>
 
       <div className="space-y-3 rounded-xl border border-[#E5E2D0] bg-white/65 p-3 sm:p-4">

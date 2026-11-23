@@ -15,10 +15,12 @@ import {
   Minus,
   ChevronDown,
   Pencil,
+  MessageCircle,
 } from 'lucide-react';
 import { Guest, WeddingSettings } from '../types.ts';
 import { DEMO_GUESTS } from '../data/demoGuests.ts';
 import { formatRsvpDeadlineMessage } from '../lib/dateFormatters.ts';
+import { getWhatsappRsvpUrl } from '../lib/whatsappRsvp.ts';
 
 // Helper for comprehensive fuzzy/multi-token matching
 const matchGuestTokens = (guest: Guest, search: string) => {
@@ -115,6 +117,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
   const rsvpAccentColor = activeTheme.itineraryAccentColorHex || activeTheme.accentColorHex;
   const rsvpAccentTextColor = getContrastTextColor(rsvpAccentColor);
   const isDark = activeTheme.isDark;
+  const whatsappRsvpUrl = getWhatsappRsvpUrl(settings, guest || initialGuest);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Synchronize when initialGuest arrives from URL code
@@ -441,7 +444,40 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
 
         {/* Main Inline Card Container (Broad and spacious) */}
         <div className={`w-full ${inline ? 'rounded-2xl p-4 sm:p-6 shadow-md' : 'rounded-[32px] sm:rounded-[40px] p-6 sm:p-10 md:p-14 shadow-xl'} border transition-all ${activeTheme.cardBgClass}`}>
-          {(isSuccess || savedResponseGuest) && !isEditingSavedResponse ? (
+          {settings.rsvpActionType === 'whatsapp' ? (
+            <div className="text-center py-8 sm:py-12 px-4 max-w-xl mx-auto space-y-6 animate-fadeIn">
+              <div className="w-20 h-20 rounded-full bg-[#25D366]/15 border-2 border-[#25D366] flex items-center justify-center mx-auto shadow-lg shadow-[#25D366]/20">
+                <MessageCircle className="w-10 h-10 text-[#25D366] fill-[#25D366]" />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 data-typography-role="heading" className={`text-2xl sm:text-3xl font-serif font-bold ${activeTheme.textPrimaryClass}`}>
+                  Confirmación Directa por WhatsApp
+                </h3>
+                <p data-typography-role="body" className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                  Para tu comodidad, puedes confirmar tu asistencia directamente enviando un mensaje a nuestro WhatsApp oficial sin necesidad de llenar un formulario:
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <a
+                  href={whatsappRsvpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-typography-role="button"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-serif font-bold text-sm sm:text-base uppercase tracking-wider shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  <MessageCircle className="w-5 h-5 fill-white text-white" />
+                  Confirmar Asistencia por WhatsApp
+                </a>
+                {(settings.rsvpWhatsappPhone || settings.contactPhone) && (
+                  <p data-typography-role="detail" className={`text-xs mt-3 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                    Número de WhatsApp: <span className="font-mono font-semibold">{settings.rsvpWhatsappPhone || settings.contactPhone}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (isSuccess || savedResponseGuest) && !isEditingSavedResponse ? (
             /* Success View */
             <div className="text-center py-10 sm:py-14 animate-fadeIn">
               <motion.div
@@ -507,8 +543,35 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 <p data-typography-role="body" className={`mt-2 ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>{getRsvpClosedMessage('edit', settings)}</p>
               </div>
             ) : (
-            /* Open Inline Registration Form */
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <div>
+              {settings.rsvpActionType === 'both' && whatsappRsvpUrl && (
+                <div className={`mb-8 p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${isDark ? 'bg-[#25D366]/10 border-[#25D366]/30' : 'bg-emerald-50/80 border-emerald-200'}`}>
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center shrink-0 shadow-sm">
+                      <MessageCircle className="w-5 h-5 text-white fill-white" />
+                    </div>
+                    <div>
+                      <p className={`text-xs sm:text-sm font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-900'}`}>
+                        ¿Prefieres confirmar al instante por WhatsApp?
+                      </p>
+                      <p className={`text-[11px] sm:text-xs ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
+                        Envía un mensaje rápido a nuestro número oficial sin llenar el formulario manual.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={whatsappRsvpUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="whitespace-nowrap px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-sans font-bold text-xs uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all shrink-0"
+                  >
+                    Confirmar por WhatsApp
+                  </a>
+                </div>
+              )}
+
+              {/* Open Inline Registration Form */}
+              <form onSubmit={handleSubmit} className="space-y-8">
 
               {isEditingSavedResponse && (
                 <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${isDark ? 'border-stone-700 bg-stone-900/60' : 'border-stone-200 bg-stone-50'}`}>
@@ -819,6 +882,7 @@ export const RsvpSection: React.FC<RsvpSectionProps> = ({
                 </button>
               </div>
             </form>
+            </div>
             )
           )}
         </div>

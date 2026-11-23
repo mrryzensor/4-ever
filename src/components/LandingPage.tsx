@@ -169,6 +169,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       accentColor: '#C39B60',
       description: 'Gala Art Déco con destellos de perlas, champagne efervescente y geometría dorada.',
     },
+    {
+      id: 'disco-silver' as CardStyle,
+      name: 'Disco Silver & Glitter',
+      tag: 'Disco Club & Globos 3D',
+      bgClass: 'bg-[#08080A] text-white border-white/20',
+      accentColor: '#E2E8F0',
+      description: 'Fiesta de club nocturno con purpurina plateada, esferas de espejos disco, estrellas brillantes y tipografía de globos metálicos inflables 3D.',
+    },
   ];
 
   const faqs = [

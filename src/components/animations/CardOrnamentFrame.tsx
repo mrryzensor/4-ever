@@ -281,6 +281,25 @@ export const CardOrnamentFrame: React.FC<CardOrnamentProps> = ({
         </div>
       );
 
+    case 'disco-silver':
+      // Disco Silver Glitter Stars & Glints Corners
+      return (
+        <div data-ornament-frame className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+          <svg className="absolute top-2.5 left-2.5 w-6 h-6 text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 20 L10.5 12.5 L3 11 L10.5 9.5 Z" />
+          </svg>
+          <svg className="absolute top-2.5 right-2.5 w-6 h-6 text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 20 L10.5 12.5 L3 11 L10.5 9.5 Z" />
+          </svg>
+          <svg className="absolute bottom-2.5 left-2.5 w-6 h-6 text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 20 L10.5 12.5 L3 11 L10.5 9.5 Z" />
+          </svg>
+          <svg className="absolute bottom-2.5 right-2.5 w-6 h-6 text-white/90 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2 L13.5 9.5 L21 11 L13.5 12.5 L12 20 L10.5 12.5 L3 11 L10.5 9.5 Z" />
+          </svg>
+        </div>
+      );
+
     default:
       return null;
   }

@@ -100,19 +100,19 @@ export const EVENT_TYPES: EventTypeOption[] = [
     features: ['Lista de graduados', 'Protocolo y cena de gala', 'Código de vestimenta riguroso', 'Galería fotográfica de grupo'],
   },
   {
-    id: 'cumpleanos',
+    id: 'birthday',
     name: 'Cumpleaños & Fiestas Temáticas',
     badge: 'Diversión & Estilo',
     tagline: 'Celebra un año más de vida',
-    description: 'Invitaciones dinámicas con cuenta regresiva, playlist interactiva, temática neón, retro o cóctel para todas las edades.',
+    description: 'Invitaciones dinámicas con sobre interactivo, cuenta regresiva, playlist, temática neón, retro o cóctel para todas las edades.',
     icon: Cake,
     gradient: 'from-amber-500 via-orange-600 to-red-950',
     accentHex: '#F59E0B',
     borderClass: 'border-amber-200/80 hover:border-amber-400',
     bgGlass: 'bg-white/80 hover:bg-white/95',
     coverImage: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=900&q=80',
-    isAvailable: false,
-    features: ['Cuenta regresiva animada', 'Petición de canciones al DJ', 'Mapa interactivo de ubicación', 'Filtro dinámico de confirmación'],
+    isAvailable: true,
+    features: ['Sobre interactivo con lacre 3D', 'Cuenta regresiva animada', 'Música y peticiones al DJ', 'Confirmación RSVP en tiempo real'],
   },
   {
     id: 'aniversarios',
@@ -246,7 +246,7 @@ export const MainPortalLanding: React.FC<MainPortalLandingProps> = ({
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-base sm:text-xl text-stone-600 max-w-3xl mx-auto mt-6 leading-relaxed font-serif"
           >
-            Cada momento único merece su propio arte. Explora nuestras experiencias diseñadas a la medida: desde la solemnidad de una <strong>Boda</strong> hasta el glamour deslumbrante de los <strong>XV Años</strong> y futuras celebraciones.
+            Cada momento único merece su propio arte. Explora nuestras experiencias diseñadas a la medida: desde la solemnidad de una <strong>Boda</strong> hasta el glamour deslumbrante de los <strong>XV Años</strong> y la emoción festiva de un <strong>Cumpleaños</strong>.
           </motion.p>
 
           {/* Filter Tabs */}

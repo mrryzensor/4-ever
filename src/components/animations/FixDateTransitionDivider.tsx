@@ -19,6 +19,7 @@ const WAVE_PROFILES: Record<string, {
   'emerald-botanical': { cycles: 1.5, amplitude: 1.05, ripple: 0.2, asymmetry: -10 },
   'coastal-breeze': { cycles: 2, amplitude: 0.95, ripple: 0.1, asymmetry: 6 },
   'champagne-glam': { cycles: 2, amplitude: 0.68, ripple: 0.26, asymmetry: 4 },
+  'disco-silver': { cycles: 1.5, amplitude: 1.1, ripple: 0.28, asymmetry: -12 },
 };
 
 const buildWavePath = (style: string, layer: number) => {

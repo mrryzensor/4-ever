@@ -39,6 +39,7 @@ export const AnimatedAmbientParticles: React.FC<AnimatedAmbientParticlesProps> =
         resolvedVariant = 'gold-sparkles';
         break;
       case 'dark-luxury':
+      case 'disco-silver':
         resolvedVariant = 'stars';
         break;
       case 'boho-chic':

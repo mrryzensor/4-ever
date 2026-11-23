@@ -24,9 +24,10 @@ import {
   SlidersHorizontal,
   Share2,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Cake
 } from 'lucide-react';
-import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId, CardStyle } from './types.ts';
+import { WeddingSettings, Guest, UserProfile, PlanId, LandingSectionId, CardStyle, CardStyleId } from './types.ts';
 import { AudioPlayer } from './components/AudioPlayer.tsx';
 import { EnvelopeCard } from './components/EnvelopeCard.tsx';
 import { RsvpSection } from './components/RsvpSection.tsx';
@@ -39,11 +40,17 @@ import { GiftRegistrySection } from './components/GiftRegistrySection.tsx';
 import { HotelsSection } from './components/HotelsSection.tsx';
 import { GuestbookSection } from './components/GuestbookSection.tsx';
 import { InvitationLetter } from './components/InvitationLetter.tsx';
+import { InvitationDoors } from './components/InvitationDoors.tsx';
 
 // Quince Años (XV Años) Specialized Components
 import { AudioPlayer as XvAudioPlayer } from './xv/components/AudioPlayer.tsx';
 import { DEFAULT_XV_SETTINGS } from './xv/defaultSettings.ts';
 import { XV_CARD_THEMES, applyXvThemeScrollbar } from './xv/themes.ts';
+
+// Cumpleaños (Birthday) Specialized Components
+import { AudioPlayer as BirthdayAudioPlayer } from './birthday/components/AudioPlayer.tsx';
+import { DEFAULT_BIRTHDAY_SETTINGS } from './birthday/defaultSettings.ts';
+import { BIRTHDAY_CARD_THEMES, applyBirthdayThemeScrollbar } from './birthday/themes.ts';
 
 import {
   AnimatedFloatingPetals,
@@ -56,7 +63,7 @@ import { ToastContainer } from './components/ToastContainer.tsx';
 import { toast } from './lib/toast.ts';
 import { CARD_THEMES, applyThemeScrollbar } from './lib/themes.ts';
 import { formatHeroDate } from './lib/dateFormatters.ts';
-import { DEMO_WEDDING_ID, DEMO_XV_ID, getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
+import { DEMO_WEDDING_ID, DEMO_XV_ID, DEMO_BIRTHDAY_ID, getEventPresentation, resolveEventType } from './lib/eventUtils.ts';
 import { SUBSCRIPTION_PLANS } from './data/plans.ts';
 import { getLandingSectionOrder } from './lib/sectionOrder.ts';
 import { getThemeFontFamily } from './lib/rsvpButtonStyle.ts';
@@ -66,25 +73,33 @@ import { resolveInvitationTheme } from './lib/invitationTheme.ts';
 import { DEFAULT_WEDDING_SETTINGS } from './data/defaultSettings.ts';
 
 type AppView = 'portal' | 'landing' | 'dashboard' | 'invitation' | 'admin' | 'ceo';
-type EventCategory = 'bodas' | 'xv';
+type EventCategory = 'bodas' | 'xv' | 'birthday';
 
 const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop';
 
-const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx').then((module) => ({default: module.AdminDashboard})));
-const LandingPage = React.lazy(() => import('./components/LandingPage.tsx').then((module) => ({default: module.LandingPage})));
-const UserDashboard = React.lazy(() => import('./components/UserDashboard.tsx').then((module) => ({default: module.UserDashboard})));
-const CeoMasterDashboard = React.lazy(() => import('./components/CeoMasterDashboard.tsx').then((module) => ({default: module.CeoMasterDashboard})));
-const MainPortalLanding = React.lazy(() => import('./components/MainPortalLanding.tsx').then((module) => ({default: module.MainPortalLanding})));
-const XvLandingPage = React.lazy(() => import('./xv/components/LandingPage.tsx').then((module) => ({default: module.LandingPage})));
-const XvAdminDashboard = React.lazy(() => import('./xv/components/AdminDashboard.tsx').then((module) => ({default: module.AdminDashboard})));
-const XvEnvelopeCard = React.lazy(() => import('./xv/components/EnvelopeCard.tsx').then((module) => ({default: module.EnvelopeCard})));
-const XvDemoStyleBar = React.lazy(() => import('./xv/components/DemoStyleBar.tsx').then((module) => ({default: module.DemoStyleBar})));
-const XvPhotoGallery = React.lazy(() => import('./xv/components/PhotoGallery.tsx').then((module) => ({default: module.PhotoGallery})));
-const XvVideoSection = React.lazy(() => import('./xv/components/VideoSection.tsx').then((module) => ({default: module.VideoSection})));
-const XvRsvpSection = React.lazy(() => import('./xv/components/RsvpSection.tsx').then((module) => ({default: module.RsvpSection})));
-const XvGuestbookSection = React.lazy(() => import('./xv/components/GuestbookSection.tsx').then((module) => ({default: module.GuestbookSection})));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx').then((module) => ({ default: module.AdminDashboard })));
+const LandingPage = React.lazy(() => import('./components/LandingPage.tsx').then((module) => ({ default: module.LandingPage })));
+const UserDashboard = React.lazy(() => import('./components/UserDashboard.tsx').then((module) => ({ default: module.UserDashboard })));
+const CeoMasterDashboard = React.lazy(() => import('./components/CeoMasterDashboard.tsx').then((module) => ({ default: module.CeoMasterDashboard })));
+const MainPortalLanding = React.lazy(() => import('./components/MainPortalLanding.tsx').then((module) => ({ default: module.MainPortalLanding })));
+const XvLandingPage = React.lazy(() => import('./xv/components/LandingPage.tsx').then((module) => ({ default: module.LandingPage })));
+const XvAdminDashboard = React.lazy(() => import('./xv/components/AdminDashboard.tsx').then((module) => ({ default: module.AdminDashboard })));
+const XvEnvelopeCard = React.lazy(() => import('./xv/components/EnvelopeCard.tsx').then((module) => ({ default: module.EnvelopeCard })));
+const XvDemoStyleBar = React.lazy(() => import('./xv/components/DemoStyleBar.tsx').then((module) => ({ default: module.DemoStyleBar })));
+const XvPhotoGallery = React.lazy(() => import('./xv/components/PhotoGallery.tsx').then((module) => ({ default: module.PhotoGallery })));
+const XvVideoSection = React.lazy(() => import('./xv/components/VideoSection.tsx').then((module) => ({ default: module.VideoSection })));
+const XvRsvpSection = React.lazy(() => import('./xv/components/RsvpSection.tsx').then((module) => ({ default: module.RsvpSection })));
+const XvGuestbookSection = React.lazy(() => import('./xv/components/GuestbookSection.tsx').then((module) => ({ default: module.GuestbookSection })));
+const BirthdayLandingPage = React.lazy(() => import('./birthday/components/LandingPage.tsx').then((module) => ({ default: module.LandingPage })));
+const BirthdayAdminDashboard = React.lazy(() => import('./birthday/components/AdminDashboard.tsx').then((module) => ({ default: module.AdminDashboard })));
+const BirthdayEnvelopeCard = React.lazy(() => import('./birthday/components/EnvelopeCard.tsx').then((module) => ({ default: module.EnvelopeCard })));
+const BirthdayDemoStyleBar = React.lazy(() => import('./birthday/components/DemoStyleBar.tsx').then((module) => ({ default: module.DemoStyleBar })));
+const BirthdayPhotoGallery = React.lazy(() => import('./birthday/components/PhotoGallery.tsx').then((module) => ({ default: module.PhotoGallery })));
+const BirthdayVideoSection = React.lazy(() => import('./birthday/components/VideoSection.tsx').then((module) => ({ default: module.VideoSection })));
+const BirthdayRsvpSection = React.lazy(() => import('./birthday/components/RsvpSection.tsx').then((module) => ({ default: module.RsvpSection })));
+const BirthdayGuestbookSection = React.lazy(() => import('./birthday/components/GuestbookSection.tsx').then((module) => ({ default: module.GuestbookSection })));
 
-const PageModuleFallback: React.FC<{message: string}> = ({message}) => (
+const PageModuleFallback: React.FC<{ message: string }> = ({ message }) => (
   <div className="min-h-screen bg-[#FDFCF0] flex items-center justify-center px-6" role="status" aria-live="polite">
     <div className="flex items-center gap-3 rounded-2xl border border-[#E5E2D0] bg-white px-5 py-4 text-[#5A5A40] shadow-sm">
       <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#D8D2BC] border-t-[#5A5A40]" aria-hidden="true" />
@@ -119,7 +134,7 @@ export default function App() {
       'api', 'uploads', 'src', 'assets', 'admin', 'dashboard', 'ceo', 'landing',
       'login', 'register', 'ingresar', 'registro', 'signin', 'signup',
       'demo', 'demostracion',
-      'boda', 'bodas', 'xv', 'quince', 'quinceanera', 'portal', 'mis-eventos'
+      'boda', 'bodas', 'xv', 'quince', 'quinceanera', 'birthday', 'cumple', 'cumpleanos', 'cumpleaños', 'portal', 'mis-eventos'
     ];
     if (segments.length === 1 && !reserved.includes(segments[0].toLowerCase())) {
       return decodeURIComponent(segments[0]);
@@ -199,6 +214,10 @@ export default function App() {
         pathname === '/xv' ||
         pathname === '/quince' ||
         pathname === '/quinceanera' ||
+        pathname === '/birthday' ||
+        pathname === '/cumple' ||
+        pathname === '/cumpleanos' ||
+        pathname === '/cumpleaños' ||
         pathname === '/landing'
       ) {
         return 'landing';
@@ -306,35 +325,47 @@ export default function App() {
     }
   };
 
-  // Event Domain Category ('bodas' | 'xv')
+  // Event Domain Category ('bodas' | 'xv' | 'birthday')
   const [eventCategory, setEventCategory] = useState<EventCategory>(() => {
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname.toLowerCase();
       // Explicit pathname takes precedence over previous localStorage
       if (pathname === '/boda' || pathname === '/bodas' || pathname.startsWith('/boda/') || pathname.startsWith('/bodas/')) {
-        try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
+        try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) { }
         return 'bodas';
       }
       if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera' || pathname.startsWith('/xv/') || pathname.startsWith('/quince/')) {
-        try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) {}
+        try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) { }
         return 'xv';
+      }
+      if (pathname === '/birthday' || pathname === '/cumple' || pathname === '/cumpleanos' || pathname === '/cumpleaños' || pathname.startsWith('/birthday/') || pathname.startsWith('/cumple/')) {
+        try { localStorage.setItem('atelier_event_category', 'birthday'); } catch (e) { }
+        return 'birthday';
       }
 
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('event') || params.get('tipo');
       if (cat && resolveEventType(cat) === 'xv') return 'xv';
+      if (cat && resolveEventType(cat) === 'birthday') return 'birthday';
       if (cat === 'bodas' || cat === 'boda') return 'bodas';
 
       const pathSlug = getPathSlug()?.toLowerCase();
       if (pathSlug && (pathSlug.startsWith('xv') || pathSlug.startsWith('quince') || pathSlug.includes('-xv-') || pathSlug.endsWith('-xv'))) {
         return 'xv';
       }
+      if (pathSlug && (pathSlug.startsWith('birthday') || pathSlug.startsWith('cumple') || pathSlug.includes('-birthday-') || pathSlug.includes('-cumple-'))) {
+        return 'birthday';
+      }
       const wParam = (params.get('w') || params.get('wedding') || '').toLowerCase();
       if (wParam.startsWith('xv') || wParam.startsWith('quince') || wParam.includes('-xv-') || wParam.endsWith('-xv')) {
         return 'xv';
       }
+      if (wParam.startsWith('birthday') || wParam.startsWith('cumple') || wParam.includes('-birthday-') || wParam.includes('-cumple-')) {
+        return 'birthday';
+      }
       const saved = localStorage.getItem('atelier_event_category');
       if (saved === 'xv') return 'xv';
+      if (saved === 'birthday') return 'birthday';
     }
     return 'bodas';
   });
@@ -343,13 +374,14 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname.toLowerCase();
       if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') return DEMO_XV_ID;
+      if (pathname === '/birthday' || pathname === '/cumple' || pathname === '/cumpleanos' || pathname === '/cumpleaños') return DEMO_BIRTHDAY_ID;
       if (pathname === '/boda' || pathname === '/bodas') return DEMO_WEDDING_ID;
 
       const params = new URLSearchParams(window.location.search);
       const cat = params.get('event') || params.get('tipo');
-      const isXv = (cat ? resolveEventType(cat) === 'xv' : eventCategory === 'xv');
+      const resolvedCat = cat ? resolveEventType(cat) : eventCategory;
       const isDemo = checkIsDemoUrl();
-      if (isDemo) return isXv ? DEMO_XV_ID : DEMO_WEDDING_ID;
+      if (isDemo) return resolvedCat === 'xv' ? DEMO_XV_ID : resolvedCat === 'birthday' ? DEMO_BIRTHDAY_ID : DEMO_WEDDING_ID;
       const w = params.get('w') || params.get('wedding');
       if (w && !isNaN(Number(w))) return Number(w);
     }
@@ -367,10 +399,10 @@ export default function App() {
           if (saved) {
             return JSON.parse(saved);
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
-    return eventCategory === 'xv' ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS;
+    return eventCategory === 'xv' ? DEFAULT_XV_SETTINGS : eventCategory === 'birthday' ? DEFAULT_BIRTHDAY_SETTINGS : DEFAULT_WEDDING_SETTINGS;
   });
   const [previewSettingsReady, setPreviewSettingsReady] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -385,13 +417,17 @@ export default function App() {
     setEventCategory(category);
     if (typeof window !== 'undefined') {
       localStorage.setItem('atelier_event_category', category);
-      const targetPath = category === 'xv' ? '/xv' : '/boda';
+      const targetPath = category === 'xv' ? '/xv' : category === 'birthday' ? '/birthday' : '/boda';
       window.history.pushState({}, '', targetPath);
     }
     if (category === 'xv') {
       setCurrentWeddingId(DEMO_XV_ID);
       setSettings(DEFAULT_XV_SETTINGS);
       toast.info('Modo Quince Años (XV) activado', 'Atelier XV');
+    } else if (category === 'birthday') {
+      setCurrentWeddingId(DEMO_BIRTHDAY_ID);
+      setSettings(DEFAULT_BIRTHDAY_SETTINGS);
+      toast.info('Modo Cumpleaños activado', 'Atelier Cumpleaños');
     } else {
       setCurrentWeddingId(DEMO_WEDDING_ID);
       setSettings(DEFAULT_WEDDING_SETTINGS);
@@ -468,24 +504,30 @@ export default function App() {
       } else if (pathname === '/demo' || pathname === '/demostracion' || authQuery === 'demo' || hash === '#demo') {
         setIsViewingDemo(true);
         const eventParam = search.get('event') || search.get('tipo');
-        const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
-        const targetCategory = isXv ? 'xv' : 'bodas';
+        const targetCategory = (eventParam ? resolveEventType(eventParam) : eventCategory) as EventCategory;
         setEventCategory(targetCategory);
-        setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
-        setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
+        setCurrentWeddingId(targetCategory === 'xv' ? DEMO_XV_ID : targetCategory === 'birthday' ? DEMO_BIRTHDAY_ID : DEMO_WEDDING_ID);
+        setSettings(targetCategory === 'xv' ? DEFAULT_XV_SETTINGS : targetCategory === 'birthday' ? DEFAULT_BIRTHDAY_SETTINGS : DEFAULT_WEDDING_SETTINGS);
         setCurrentView('invitation');
       } else if (pathname === '/boda' || pathname === '/bodas') {
         setEventCategory('bodas');
-        try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
+        try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) { }
         setCurrentWeddingId(DEMO_WEDDING_ID);
         setSettings(DEFAULT_WEDDING_SETTINGS);
         setIsViewingDemo(false);
         setCurrentView('landing');
       } else if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') {
         setEventCategory('xv');
-        try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) {}
+        try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) { }
         setCurrentWeddingId(DEMO_XV_ID);
         setSettings(DEFAULT_XV_SETTINGS);
+        setIsViewingDemo(false);
+        setCurrentView('landing');
+      } else if (pathname === '/birthday' || pathname === '/cumple' || pathname === '/cumpleanos' || pathname === '/cumpleaños') {
+        setEventCategory('birthday');
+        try { localStorage.setItem('atelier_event_category', 'birthday'); } catch (e) { }
+        setCurrentWeddingId(DEMO_BIRTHDAY_ID);
+        setSettings(DEFAULT_BIRTHDAY_SETTINGS);
         setIsViewingDemo(false);
         setCurrentView('landing');
       } else if (pathname === '/portal' || pathname === '/') {
@@ -523,11 +565,13 @@ export default function App() {
         : settings.cardStyle;
       if (settingsEventCategory === 'xv') {
         applyXvThemeScrollbar(paletteStyle as CardStyle);
+      } else if (settingsEventCategory === 'birthday') {
+        applyBirthdayThemeScrollbar(paletteStyle as CardStyle);
       } else {
         applyThemeScrollbar(paletteStyle as CardStyle);
       }
       if (settings.customAccentColor) {
-        const prefix = settingsEventCategory === 'xv' ? '--theme-scrollbar' : '--scrollbar';
+        const prefix = (settingsEventCategory === 'xv' || settingsEventCategory === 'birthday') ? '--theme-scrollbar' : '--scrollbar';
         document.documentElement.style.setProperty(`${prefix}-thumb`, settings.customAccentColor);
         document.documentElement.style.setProperty(`${prefix}-thumb-hover`, settings.customAccentColor);
       }
@@ -638,7 +682,7 @@ export default function App() {
 
     if (pathname === '/boda' || pathname === '/bodas') {
       setEventCategory('bodas');
-      try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) {}
+      try { localStorage.setItem('atelier_event_category', 'bodas'); } catch (e) { }
       setCurrentWeddingId(DEMO_WEDDING_ID);
       setSettings(DEFAULT_WEDDING_SETTINGS);
       setIsViewingDemo(false);
@@ -648,9 +692,19 @@ export default function App() {
     }
     if (pathname === '/xv' || pathname === '/quince' || pathname === '/quinceanera') {
       setEventCategory('xv');
-      try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) {}
-      setCurrentWeddingId(5);
+      try { localStorage.setItem('atelier_event_category', 'xv'); } catch (e) { }
+      setCurrentWeddingId(DEMO_XV_ID);
       setSettings(DEFAULT_XV_SETTINGS);
+      setIsViewingDemo(false);
+      setCurrentView('landing');
+      setLoadingWedding(false);
+      return;
+    }
+    if (pathname === '/birthday' || pathname === '/cumple' || pathname === '/cumpleanos' || pathname === '/cumpleaños') {
+      setEventCategory('birthday');
+      try { localStorage.setItem('atelier_event_category', 'birthday'); } catch (e) { }
+      setCurrentWeddingId(DEMO_BIRTHDAY_ID);
+      setSettings(DEFAULT_BIRTHDAY_SETTINGS);
       setIsViewingDemo(false);
       setCurrentView('landing');
       setLoadingWedding(false);
@@ -666,16 +720,15 @@ export default function App() {
     // Check if URL is pointing to demo
     const isDemo = checkIsDemoUrl();
     if (isDemo) {
-      const isXv = (eventParam ? resolveEventType(eventParam) === 'xv' : eventCategory === 'xv');
-      const targetCategory = isXv ? 'xv' : 'bodas';
+      const targetCategory = (eventParam ? resolveEventType(eventParam) : eventCategory) as EventCategory;
       setEventCategory(targetCategory);
-      setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
-      setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
+      setCurrentWeddingId(targetCategory === 'xv' ? DEMO_XV_ID : targetCategory === 'birthday' ? DEMO_BIRTHDAY_ID : DEMO_WEDDING_ID);
+      setSettings(targetCategory === 'xv' ? DEFAULT_XV_SETTINGS : targetCategory === 'birthday' ? DEFAULT_BIRTHDAY_SETTINGS : DEFAULT_WEDDING_SETTINGS);
       setIsViewingDemo(true);
       setCurrentView('invitation');
       setLoadingWedding(false);
 
-      // Ensure URL has ?event=xv or ?event=bodas explicitly on /demo
+      // Ensure URL has ?event=xv or ?event=bodas or ?event=birthday explicitly on /demo
       const currentUrl = new URL(window.location.href);
       if (currentUrl.searchParams.get('event') !== targetCategory) {
         currentUrl.searchParams.set('event', targetCategory);
@@ -709,11 +762,10 @@ export default function App() {
     } else if (modeParam === 'admin') {
       setCurrentView(weddingParam ? 'admin' : 'dashboard');
     } else if (eventParam) {
-      const isXv = resolveEventType(eventParam) === 'xv';
-      const targetCategory = isXv ? 'xv' : 'bodas';
+      const targetCategory = resolveEventType(eventParam) as EventCategory;
       setEventCategory(targetCategory);
-      setCurrentWeddingId(isXv ? DEMO_XV_ID : DEMO_WEDDING_ID);
-      setSettings(isXv ? DEFAULT_XV_SETTINGS : DEFAULT_WEDDING_SETTINGS);
+      setCurrentWeddingId(targetCategory === 'xv' ? DEMO_XV_ID : targetCategory === 'birthday' ? DEMO_BIRTHDAY_ID : DEMO_WEDDING_ID);
+      setSettings(targetCategory === 'xv' ? DEFAULT_XV_SETTINGS : targetCategory === 'birthday' ? DEFAULT_BIRTHDAY_SETTINGS : DEFAULT_WEDDING_SETTINGS);
       setCurrentView('landing');
     } else {
       // Pure root URL default: Global Portal Landing
@@ -809,7 +861,7 @@ export default function App() {
 
             if (eventCategory !== resolvedCategory) {
               setEventCategory(resolvedCategory);
-              try { localStorage.setItem('atelier_event_category', resolvedCategory); } catch (e) {}
+              try { localStorage.setItem('atelier_event_category', resolvedCategory); } catch (e) { }
             }
 
             // Cleanly fix conflicting URL event parameter ONLY if one was already present
@@ -837,7 +889,7 @@ export default function App() {
                 setActiveGuest(guestData);
                 try {
                   localStorage.setItem(`rsvp_guest_${data.id}`, JSON.stringify(guestData));
-                } catch {}
+                } catch { }
               }
             } catch (guestErr) {
               console.warn('Could not find guest by code:', guestErr);
@@ -855,7 +907,7 @@ export default function App() {
                     setActiveGuest(freshGuest);
                     try {
                       localStorage.setItem(`rsvp_guest_${data.id}`, JSON.stringify(freshGuest));
-                    } catch {}
+                    } catch { }
                   } else {
                     setActiveGuest(parsed);
                   }
@@ -915,11 +967,11 @@ export default function App() {
 
     const fontsReady = typeof document !== 'undefined' && document.fonts
       ? Promise.allSettled([
-          document.fonts.load(`400 48px "${heroFontFamily}"`),
-          document.fonts.load('400 16px "Cormorant Garamond"'),
-          document.fonts.load('400 16px "Plus Jakarta Sans"'),
-          document.fonts.ready,
-        ]).then(() => undefined)
+        document.fonts.load(`400 48px "${heroFontFamily}"`),
+        document.fonts.load('400 16px "Cormorant Garamond"'),
+        document.fonts.load('400 16px "Plus Jakarta Sans"'),
+        document.fonts.ready,
+      ]).then(() => undefined)
       : Promise.resolve();
 
     void Promise.all([imageReady, fontsReady]).then(() => {
@@ -932,6 +984,38 @@ export default function App() {
       image.onerror = null;
     };
   }, [currentView, loadingWedding, heroResourceKey, primaryHeroImage, heroFontFamily, readyHeroResourceKey]);
+
+  const heroCountdownEnabled = settings?.showCountdown !== false && Boolean(settings?.heroShowCountdown);
+  const hasVisibleContentSections = Boolean(
+    settings?.showWelcomeSection !== false ||
+    settings?.showItinerary !== false ||
+    settings?.showLocations !== false ||
+    settings?.showDressCode !== false ||
+    settings?.showGiftRegistry !== false ||
+    settings?.showPhotoGallery !== false ||
+    Boolean(settings?.showVideoMemories) ||
+    Boolean(settings?.showGuestbook) ||
+    Boolean(settings?.showHotels) ||
+    Boolean(settings?.showTips) ||
+    settings?.showRsvpSection !== false
+  );
+  const isStandaloneHero = !hasVisibleContentSections && (settings?.showCountdown === false || heroCountdownEnabled);
+
+  // When only the hero is active without any additional content sections, lock vertical scroll so the single-screen invitation fits cleanly without scrollbars
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (currentView === 'invitation' && isStandaloneHero) {
+      document.documentElement.classList.add('overflow-hidden', 'h-full');
+      document.body.classList.add('overflow-hidden', 'h-full');
+    } else {
+      document.documentElement.classList.remove('overflow-hidden', 'h-full');
+      document.body.classList.remove('overflow-hidden', 'h-full');
+    }
+    return () => {
+      document.documentElement.classList.remove('overflow-hidden', 'h-full');
+      document.body.classList.remove('overflow-hidden', 'h-full');
+    };
+  }, [currentView, isStandaloneHero]);
 
   // Sync user profile to backend & localStorage
   const handleAuthSuccess = async (user: UserProfile, directToAdmin = false) => {
@@ -1001,7 +1085,7 @@ export default function App() {
     setCurrentWeddingId(weddingId);
     const resolvedCat = resolveEventType(eventType);
     setEventCategory(resolvedCat as EventCategory);
-    try { localStorage.setItem('atelier_event_category', resolvedCat); } catch (e) {}
+    try { localStorage.setItem('atelier_event_category', resolvedCat); } catch (e) { }
 
     setCurrentView(mode === 'admin' ? 'admin' : 'invitation');
     if (typeof window !== 'undefined') {
@@ -1073,6 +1157,9 @@ export default function App() {
               } else if (typeId === 'bodas') {
                 switchEventCategory('bodas');
                 setCurrentView('landing');
+              } else if (typeId === 'birthday' || typeId === 'cumpleanos') {
+                switchEventCategory('birthday');
+                setCurrentView('landing');
               } else {
                 toast.info(`La sección de ${typeId} se lanzará próximamente. ¡Mantente atento!`, 'Próximo lanzamiento');
               }
@@ -1106,115 +1193,168 @@ export default function App() {
     return (
       <>
         <React.Suspense fallback={<PageModuleFallback message="Cargando diseños..." />}>
-        {eventCategory === 'xv' ? (
-          <XvLandingPage
-            user={currentUser}
-            isLoggedIn={!!currentUser}
-            userEmail={currentUser?.email}
-            onBackToPortal={() => {
-              setCurrentView('portal');
-              if (typeof window !== 'undefined') {
-                window.history.pushState(null, '', '/');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onOpenAuth={(mode, plan) => openAuth(mode, plan)}
-            onOpenDashboard={() => {
-              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-                setCurrentView('ceo');
-              } else {
-                setCurrentView('dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onGoToDashboard={() => {
-              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-                setCurrentView('ceo');
-              } else {
-                setCurrentView('dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onExploreDemo={(style) => {
-              setCurrentWeddingId(DEMO_XV_ID);
-              setIsViewingDemo(true);
-              setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
-              setShowAdminDashboard(false);
-              setCurrentView('invitation');
-              if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
-                window.history.pushState({ mode: 'demo' }, '', '/demo?event=xv');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onViewDemo={(style) => {
-              setCurrentWeddingId(DEMO_XV_ID);
-              setIsViewingDemo(true);
-              setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
-              setShowAdminDashboard(false);
-              setCurrentView('invitation');
-              if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
-                window.history.pushState({ mode: 'demo' }, '', '/demo?event=xv');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        ) : (
-          <LandingPage
-            user={currentUser}
-            isLoggedIn={!!currentUser}
-            userEmail={currentUser?.email}
-            onBackToPortal={() => {
-              setCurrentView('portal');
-              if (typeof window !== 'undefined') {
-                window.history.pushState(null, '', '/');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onOpenAuth={(mode, plan) => openAuth(mode, plan)}
-            onOpenDashboard={() => {
-              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-                setCurrentView('ceo');
-              } else {
-                setCurrentView('dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onGoToDashboard={() => {
-              if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
-                setCurrentView('ceo');
-              } else {
-                setCurrentView('dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onExploreDemo={(style) => {
-              setCurrentWeddingId(DEMO_WEDDING_ID);
-              setIsViewingDemo(true);
-              if (style && settings) {
-                setSettings({ ...settings, cardStyle: style });
-              }
-              setShowAdminDashboard(false);
-              setCurrentView('invitation');
-              if (typeof window !== 'undefined') {
-                window.history.pushState({ mode: 'demo' }, '', '/demo?event=bodas');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onViewDemo={(style) => {
-              setCurrentWeddingId(DEMO_WEDDING_ID);
-              setIsViewingDemo(true);
-              if (style && settings) {
-                setSettings({ ...settings, cardStyle: style });
-              }
-              setShowAdminDashboard(false);
-              setCurrentView('invitation');
-              if (typeof window !== 'undefined') {
-                window.history.pushState({ mode: 'demo' }, '', '/demo?event=bodas');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        )}
+          {eventCategory === 'xv' ? (
+            <XvLandingPage
+              user={currentUser}
+              isLoggedIn={!!currentUser}
+              userEmail={currentUser?.email}
+              onBackToPortal={() => {
+                setCurrentView('portal');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState(null, '', '/');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenAuth={(mode, plan) => openAuth(mode, plan)}
+              onOpenDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onGoToDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onExploreDemo={(style) => {
+                setCurrentWeddingId(DEMO_XV_ID);
+                setIsViewingDemo(true);
+                setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=xv');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onViewDemo={(style) => {
+                setCurrentWeddingId(DEMO_XV_ID);
+                setIsViewingDemo(true);
+                setSettings((prev) => ({ ...(prev?.eventType === 'xv' ? prev : DEFAULT_XV_SETTINGS), cardStyle: style || prev?.cardStyle || 'romantic-floral' }));
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=xv');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          ) : eventCategory === 'birthday' ? (
+            <BirthdayLandingPage
+              settings={settings?.eventType === 'birthday' ? settings : DEFAULT_BIRTHDAY_SETTINGS}
+              user={currentUser}
+              isLoggedIn={!!currentUser}
+              userEmail={currentUser?.email}
+              onBackToPortal={() => {
+                setCurrentView('portal');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState(null, '', '/');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenAuth={(mode, plan) => openAuth(mode, plan)}
+              onOpenDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onGoToDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onExploreDemo={(style) => {
+                setCurrentWeddingId(DEMO_BIRTHDAY_ID);
+                setIsViewingDemo(true);
+                setSettings((prev) => ({ ...(prev?.eventType === 'birthday' ? prev : DEFAULT_BIRTHDAY_SETTINGS), cardStyle: style || prev?.cardStyle || 'champagne-glam' }));
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=birthday');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onViewDemo={(style) => {
+                setCurrentWeddingId(DEMO_BIRTHDAY_ID);
+                setIsViewingDemo(true);
+                setSettings((prev) => ({ ...(prev?.eventType === 'birthday' ? prev : DEFAULT_BIRTHDAY_SETTINGS), cardStyle: style || prev?.cardStyle || 'champagne-glam' }));
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined' && window.location.pathname !== '/demo') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=birthday');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          ) : (
+            <LandingPage
+              user={currentUser}
+              isLoggedIn={!!currentUser}
+              userEmail={currentUser?.email}
+              onBackToPortal={() => {
+                setCurrentView('portal');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState(null, '', '/');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onOpenAuth={(mode, plan) => openAuth(mode, plan)}
+              onOpenDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onGoToDashboard={() => {
+                if (currentUser?.role === 'ceo' || currentUser?.email === 'daviex14@gmail.com') {
+                  setCurrentView('ceo');
+                } else {
+                  setCurrentView('dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onExploreDemo={(style) => {
+                setCurrentWeddingId(DEMO_WEDDING_ID);
+                setIsViewingDemo(true);
+                if (style && settings) {
+                  setSettings({ ...settings, cardStyle: style });
+                }
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=bodas');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onViewDemo={(style) => {
+                setCurrentWeddingId(DEMO_WEDDING_ID);
+                setIsViewingDemo(true);
+                if (style && settings) {
+                  setSettings({ ...settings, cardStyle: style });
+                }
+                setShowAdminDashboard(false);
+                setCurrentView('invitation');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState({ mode: 'demo' }, '', '/demo?event=bodas');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          )}
         </React.Suspense>
 
         <AuthModal
@@ -1290,6 +1430,7 @@ export default function App() {
   // 3. ADMIN / ATELIER FULL-PAGE VIEW
   if (currentView === 'admin') {
     const isXvAdmin = settingsEventCategory === 'xv';
+    const isBirthdayAdmin = settingsEventCategory === 'birthday';
 
     if (settings?.planAccess?.readOnly) {
       return (
@@ -1318,15 +1459,17 @@ export default function App() {
           >
             {isXvAdmin ? (
               <Crown className="w-8 h-8 text-pink-500" />
+            ) : isBirthdayAdmin ? (
+              <Cake className="w-8 h-8 text-amber-500" />
             ) : (
               <Heart className="w-8 h-8 fill-current text-[#7D8C7A]" />
             )}
           </motion.div>
           <p className="font-serif italic text-xl tracking-wider text-[#5A5A40]">
-            {isXvAdmin ? 'Cargando Atelier XV Años...' : 'Cargando Atelier & Gestión...'}
+            {isXvAdmin ? 'Cargando Atelier XV Años...' : isBirthdayAdmin ? 'Cargando Atelier Cumpleaños...' : 'Cargando Atelier & Gestión...'}
           </p>
           <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
-            {isXvAdmin ? 'Atelier Quince Años Digital' : 'Atelier Nupcial Digital'}
+            {isXvAdmin ? 'Atelier Quince Años Digital' : isBirthdayAdmin ? 'Atelier Cumpleaños Digital' : 'Atelier Nupcial Digital'}
           </p>
         </div>
       );
@@ -1334,46 +1477,65 @@ export default function App() {
 
     return (
       <>
-        <React.Suspense fallback={<PageModuleFallback message={isXvAdmin ? 'Cargando Atelier XV Años...' : 'Cargando Atelier & Gestión...'} />}>
-        {isXvAdmin ? (
-          <XvAdminDashboard
-            settings={settings}
-            initialTab={initialAdminTab}
-            onUpdateSettings={handleUpdateSettings}
-            onBackToDashboard={() => {
-              setCurrentView('dashboard');
-              if (typeof window !== 'undefined') {
-                window.history.pushState({}, '', '/?mode=dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onBackToInvitation={() => {
-              setCurrentView('invitation');
-              setShowAdminDashboard(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            currentUser={currentUser}
-          />
-        ) : (
-          <AdminDashboard
-            settings={settings}
-            initialTab={initialAdminTab}
-            onUpdateSettings={handleUpdateSettings}
-            onBackToDashboard={() => {
-              setCurrentView('dashboard');
-              if (typeof window !== 'undefined') {
-                window.history.pushState({}, '', '/?mode=dashboard');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onBackToInvitation={() => {
-              setCurrentView('invitation');
-              setShowAdminDashboard(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            currentUser={currentUser}
-          />
-        )}
+        <React.Suspense fallback={<PageModuleFallback message={isXvAdmin ? 'Cargando Atelier XV Años...' : isBirthdayAdmin ? 'Cargando Atelier Cumpleaños...' : 'Cargando Atelier & Gestión...'} />}>
+          {isXvAdmin ? (
+            <XvAdminDashboard
+              settings={settings}
+              initialTab={initialAdminTab}
+              onUpdateSettings={handleUpdateSettings}
+              onBackToDashboard={() => {
+                setCurrentView('dashboard');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState({}, '', '/?mode=dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onBackToInvitation={() => {
+                setCurrentView('invitation');
+                setShowAdminDashboard(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              currentUser={currentUser}
+            />
+          ) : isBirthdayAdmin ? (
+            <BirthdayAdminDashboard
+              settings={settings}
+              initialTab={initialAdminTab}
+              onUpdateSettings={handleUpdateSettings}
+              onBackToDashboard={() => {
+                setCurrentView('dashboard');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState({}, '', '/?mode=dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onBackToInvitation={() => {
+                setCurrentView('invitation');
+                setShowAdminDashboard(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              currentUser={currentUser}
+            />
+          ) : (
+            <AdminDashboard
+              settings={settings}
+              initialTab={initialAdminTab}
+              onUpdateSettings={handleUpdateSettings}
+              onBackToDashboard={() => {
+                setCurrentView('dashboard');
+                if (typeof window !== 'undefined') {
+                  window.history.pushState({}, '', '/?mode=dashboard');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onBackToInvitation={() => {
+                setCurrentView('invitation');
+                setShowAdminDashboard(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              currentUser={currentUser}
+            />
+          )}
         </React.Suspense>
         <ToastContainer />
       </>
@@ -1391,6 +1553,18 @@ export default function App() {
             songTitle={settings.audioTitle}
             artistName={settings.coupleNames}
             eventTitle="Música de XV Años"
+            allowAutoplay={false}
+            isReadyToPlay={false}
+            showControls={false}
+            preloadAudio
+          />
+        ) : currentView === 'invitation' && settingsEventCategory === 'birthday' ? (
+          <BirthdayAudioPlayer
+            settings={settings}
+            audioUrl={settings.audioUrl}
+            songTitle={settings.audioTitle}
+            artistName={settings.coupleNames}
+            eventTitle="Música de Cumpleaños"
             allowAutoplay={false}
             isReadyToPlay={false}
             showControls={false}
@@ -1419,6 +1593,8 @@ export default function App() {
           >
             {settingsEventCategory === 'xv' ? (
               <Sparkles className="w-8 h-8 text-pink-500" />
+            ) : settingsEventCategory === 'birthday' ? (
+              <Cake className="w-8 h-8 text-amber-500" />
             ) : (
               <Heart className="w-8 h-8 fill-current text-[#7D8C7A]" />
             )}
@@ -1427,7 +1603,7 @@ export default function App() {
             Preparando tu invitación...
           </p>
           <p className="text-[10px] uppercase tracking-widest text-[#7D8C7A] mt-1 font-bold">
-            {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : 'Atelier Nupcial Digital'}
+            {settingsEventCategory === 'xv' ? 'Atelier XV Años Digital' : settingsEventCategory === 'birthday' ? 'Atelier Cumpleaños Digital' : 'Atelier Nupcial Digital'}
           </p>
         </div>
       </>
@@ -1435,9 +1611,23 @@ export default function App() {
   }
 
   if (currentView === 'invitation' && settings && settings.showInvitationLetter !== false && !hasOpenedInvitation) {
+    if (settings.entranceType === 'door') {
+      return (
+        <InvitationDoors
+          key={`${currentWeddingId}-${settings.id}-doors`}
+          settings={settings}
+          guest={activeGuest}
+          eventType={settingsEventCategory}
+          onOpen={() => {
+            setHasOpenedInvitation(true);
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
+        />
+      );
+    }
     return (
       <InvitationLetter
-        key={`${currentWeddingId}-${settings.id}`}
+        key={`${currentWeddingId}-${settings.id}-letter`}
         settings={settings}
         guest={activeGuest}
         eventType={settingsEventCategory}
@@ -1451,8 +1641,8 @@ export default function App() {
 
   const activeTheme = resolveInvitationTheme(
     settings,
-    settingsEventCategory === 'xv' ? XV_CARD_THEMES : CARD_THEMES,
-    settingsEventCategory === 'xv' ? 'romantic-floral' : 'classic-gold',
+    settingsEventCategory === 'xv' ? XV_CARD_THEMES : settingsEventCategory === 'birthday' ? BIRTHDAY_CARD_THEMES : CARD_THEMES,
+    (settingsEventCategory === 'xv' ? 'romantic-floral' : 'classic-gold') as CardStyleId,
   );
   const globalNumberFontFamily = resolveNumberFontFamily(
     settings.typographyNumberFont,
@@ -1507,6 +1697,16 @@ export default function App() {
         isAdmin={!isDemoMode && Boolean(currentUser)}
         settings={settings}
       />
+    ) : settingsEventCategory === 'birthday' ? (
+      <BirthdayPhotoGallery
+        key="gallery"
+        weddingId={settings.id}
+        guestName={activeGuest?.fullName}
+        guestCode={activeGuest?.accessCode}
+        cardStyle={settings.cardStyle}
+        isAdmin={!isDemoMode && Boolean(currentUser)}
+        settings={settings}
+      />
     ) : (
       <PhotoGallery
         key="gallery"
@@ -1523,14 +1723,18 @@ export default function App() {
   const inlineRsvp = isInlineRsvpOpen && settings.showRsvpSection !== false
     ? settingsEventCategory === 'xv'
       ? <XvRsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
-      : <RsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
+      : settingsEventCategory === 'birthday'
+        ? <BirthdayRsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
+        : <RsvpSection key="rsvp-inline" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} inline />
     : null;
 
   const landingSections: Record<LandingSectionId, React.ReactNode> = {
     invitation: (
-      <section id="seccion-invitacion" key="invitation" className="relative" style={{ backgroundColor: activeTheme.bgHex }}>
+      <section id="seccion-invitacion" key="invitation" className={`relative ${isStandaloneHero ? 'h-full max-h-[100svh] overflow-hidden' : ''}`} style={{ backgroundColor: activeTheme.bgHex }}>
         {settingsEventCategory === 'xv' ? (
           <XvEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
+        ) : settingsEventCategory === 'birthday' ? (
+          <BirthdayEnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         ) : (
           <EnvelopeCard settings={settings} guest={activeGuest} onOpenRsvp={openInlineRsvp} onToggleInlineRsvp={toggleInlineRsvp} isInlineRsvpOpen={isInlineRsvpOpen} inlineRsvp={inlineRsvp} inlineGallery={galleryInEventDetails ? gallerySection : undefined} />
         )}
@@ -1545,6 +1749,8 @@ export default function App() {
     video: settings.showVideoMemories === true ? (
       settingsEventCategory === 'xv' ? (
         <XvVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
+      ) : settingsEventCategory === 'birthday' ? (
+        <BirthdayVideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       ) : (
         <VideoSection key="video" weddingId={settings.id} isAdmin={!isDemoMode && Boolean(currentUser)} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       )
@@ -1553,6 +1759,8 @@ export default function App() {
     rsvp: settings.showRsvpSection !== false ? (
       settingsEventCategory === 'xv' ? (
         <XvRsvpSection key="rsvp" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} />
+      ) : settingsEventCategory === 'birthday' ? (
+        <BirthdayRsvpSection key="rsvp" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} />
       ) : (
         <RsvpSection key="rsvp" initialGuest={activeGuest} settings={settings} onRsvpSuccess={handleRsvpSuccess} />
       )
@@ -1560,6 +1768,8 @@ export default function App() {
     guestbook: settings.showGuestbook === true ? (
       settingsEventCategory === 'xv' ? (
         <XvGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
+      ) : settingsEventCategory === 'birthday' ? (
+        <BirthdayGuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       ) : (
         <GuestbookSection key="guestbook" weddingId={settings.id} defaultAuthor={activeGuest?.fullName} cardStyle={settings.cardStyle} dividerStyle={settings.dividerStyle} settings={settings} />
       )
@@ -1568,177 +1778,216 @@ export default function App() {
 
   return (
     <React.Suspense fallback={<PageModuleFallback message="Preparando tu invitación..." />}>
-    <NumberFontContext.Provider value={globalNumberFontFamily}>
-      <div
-        className={`public-invitation min-h-screen w-full max-w-full overflow-x-clip ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
-        style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
-      >
-      {settings.planAccess?.confirmationLimitReached && (
-        <div role="alert" className="relative z-[100] flex flex-col items-center justify-center gap-2 bg-amber-50 px-4 py-3 text-center text-amber-950 sm:flex-row sm:gap-4">
-          <p className="text-xs font-medium">Se alcanzó el límite de {settings.planAccess.maxConfirmations} confirmaciones de este plan. Los anfitriones pueden mejorar la suscripción para recibir más.</p>
-          <button type="button" onClick={openSubscriptionUpgrade} className="shrink-0 rounded-full bg-[#5A5A40] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#484833]">Mejorar suscripción</button>
-        </div>
-      )}
-      {/* Interactive Demo Style Selector Bar in Demo Mode */}
-      {isDemoMode && (
-        settingsEventCategory === 'xv' ? (
-          <XvDemoStyleBar
-            currentStyle={settings.cardStyle}
-            coupleNames={settings.coupleNames}
-            onSelectStyle={(newStyle) => {
-              setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
-              toast.info(`Diseño cambiado a ${XV_CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo XV Actualizado');
-            }}
-            onChooseDesign={(chosenStyle) => {
-              setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
-              openAuth('register', 'atelier');
-            }}
-            onOpenLogin={() => openAuth('login')}
-            onBackToLanding={() => {
-              setIsViewingDemo(false);
-              setCurrentView('landing');
-              if (typeof window !== 'undefined') {
-                window.history.pushState(null, '', '/xv');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        ) : (
-          <DemoStyleBar
-            currentStyle={settings.cardStyle}
-            coupleNames={settings.coupleNames}
-            onSelectStyle={(newStyle) => {
-              setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
-              toast.info(`Diseño cambiado a ${CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo Actualizado');
-            }}
-            onChooseDesign={(chosenStyle) => {
-              setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
-              openAuth('register', 'atelier');
-            }}
-            onOpenLogin={() => openAuth('login')}
-            onBackToLanding={() => {
-              setIsViewingDemo(false);
-              setCurrentView('landing');
-              if (typeof window !== 'undefined') {
-                window.history.pushState(null, '', '/boda');
-              }
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        )
-      )}
-
-      {/* Floating Single Clean Fullscreen Control (Top Right, away from audio player) */}
-      {!isPreviewEmbed && !isDemoMode && (
-        <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
-          {currentUser && (
-            <button
-              onClick={() => {
-                setCurrentView('admin');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="px-3 py-1.5 rounded-full bg-[#FAF9F0]/90 hover:bg-white text-[#5A5A40] border border-[#E5E2D0] shadow-md backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
-              title="Panel de Atelier & Gestión"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#7D8C7A] shrink-0" />
-              <span className="hidden sm:inline">Atelier</span>
-            </button>
+      <NumberFontContext.Provider value={globalNumberFontFamily}>
+        <div
+          className={`public-invitation ${isStandaloneHero ? 'h-[100svh] max-h-[100svh] overflow-hidden' : 'min-h-screen overflow-x-clip'} w-full max-w-full ${activeTheme.bgClass} text-[#3D3D3D] selection:bg-[#7D8C7A]/20 selection:text-[#5A5A40] relative font-sans`}
+          style={{ backgroundColor: activeTheme.bgHex, color: activeTheme.primaryColorHex, ...invitationFontStyle }}
+        >
+          {settings.planAccess?.confirmationLimitReached && (
+            <div role="alert" className="relative z-[100] flex flex-col items-center justify-center gap-2 bg-amber-50 px-4 py-3 text-center text-amber-950 sm:flex-row sm:gap-4">
+              <p className="text-xs font-medium">Se alcanzó el límite de {settings.planAccess.maxConfirmations} confirmaciones de este plan. Los anfitriones pueden mejorar la suscripción para recibir más.</p>
+              <button type="button" onClick={openSubscriptionUpgrade} className="shrink-0 rounded-full bg-[#5A5A40] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#484833]">Mejorar suscripción</button>
+            </div>
+          )}
+          {/* Interactive Demo Style Selector Bar in Demo Mode */}
+          {isDemoMode && (
+            settingsEventCategory === 'xv' ? (
+              <XvDemoStyleBar
+                currentStyle={settings.cardStyle}
+                coupleNames={settings.coupleNames}
+                onSelectStyle={(newStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
+                  toast.info(`Diseño cambiado a ${XV_CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo XV Actualizado');
+                }}
+                onChooseDesign={(chosenStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
+                  openAuth('register', 'atelier');
+                }}
+                onOpenLogin={() => openAuth('login')}
+                onBackToLanding={() => {
+                  setIsViewingDemo(false);
+                  setCurrentView('landing');
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState(null, '', '/xv');
+                  }
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            ) : settingsEventCategory === 'birthday' ? (
+              <BirthdayDemoStyleBar
+                currentStyle={settings.cardStyle}
+                coupleNames={settings.coupleNames}
+                onSelectStyle={(newStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
+                  toast.info(`Diseño cambiado a ${BIRTHDAY_CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo Cumpleaños');
+                }}
+                onChooseDesign={(chosenStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
+                  openAuth('register', 'atelier');
+                }}
+                onOpenLogin={() => openAuth('login')}
+                onBackToLanding={() => {
+                  setIsViewingDemo(false);
+                  setCurrentView('landing');
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState(null, '', '/birthday');
+                  }
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            ) : (
+              <DemoStyleBar
+                currentStyle={settings.cardStyle}
+                coupleNames={settings.coupleNames}
+                onSelectStyle={(newStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: newStyle }));
+                  toast.info(`Diseño cambiado a ${CARD_THEMES[newStyle]?.name || newStyle}`, 'Estilo Actualizado');
+                }}
+                onChooseDesign={(chosenStyle) => {
+                  setSettings((prev) => ({ ...prev, cardStyle: chosenStyle }));
+                  openAuth('register', 'atelier');
+                }}
+                onOpenLogin={() => openAuth('login')}
+                onBackToLanding={() => {
+                  setIsViewingDemo(false);
+                  setCurrentView('landing');
+                  if (typeof window !== 'undefined') {
+                    window.history.pushState(null, '', '/boda');
+                  }
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            )
           )}
 
-          <button
-            onClick={toggleFullscreen}
-            className="p-2.5 sm:px-3.5 sm:py-2 rounded-full bg-[#FAF9F0]/90 hover:bg-white text-[#5A5A40] border border-[#E5E2D0] shadow-md backdrop-blur-md text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
-            title={isFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
-            id="btn-single-fullscreen"
-          >
-            {isFullscreen ? (
-              <>
-                <Minimize2 className="w-4 h-4 text-[#5A5A40] shrink-0" />
-                <span className="hidden sm:inline font-serif text-[11px]">Salir Pantalla Completa</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-4 h-4 text-[#5A5A40] shrink-0" />
-                <span className="hidden sm:inline font-serif text-[11px]">Pantalla Completa</span>
-              </>
+          {/* Floating Single Clean Fullscreen Control (Top Right, away from audio player) */}
+          {!isPreviewEmbed && !isDemoMode && (
+            <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    setCurrentView('admin');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-[#FAF9F0]/90 hover:bg-white text-[#5A5A40] border border-[#E5E2D0] shadow-md backdrop-blur-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+                  title="Panel de Atelier & Gestión"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#7D8C7A] shrink-0" />
+                  <span className="hidden sm:inline">Atelier</span>
+                </button>
+              )}
+
+              <button
+                onClick={toggleFullscreen}
+                className="p-2.5 sm:px-3.5 sm:py-2 rounded-full bg-[#FAF9F0]/90 hover:bg-white text-[#5A5A40] border border-[#E5E2D0] shadow-md backdrop-blur-md text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+                title={isFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
+                id="btn-single-fullscreen"
+              >
+                {isFullscreen ? (
+                  <>
+                    <Minimize2 className="w-4 h-4 text-[#5A5A40] shrink-0" />
+                    <span className="hidden sm:inline font-serif text-[11px]">Salir Pantalla Completa</span>
+                  </>
+                ) : (
+                  <>
+                    <Maximize2 className="w-4 h-4 text-[#5A5A40] shrink-0" />
+                    <span className="hidden sm:inline font-serif text-[11px]">Pantalla Completa</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Floating Audio Player Widget (Bottom Left) */}
+          {settingsEventCategory === 'xv' ? (
+            <XvAudioPlayer
+              settings={settings}
+              audioUrl={settings?.audioUrl}
+              songTitle={settings?.audioTitle || 'Vals de Ensueño'}
+              artistName={settings?.coupleNames || 'Vals de Mis XV'}
+              eventTitle="Música de XV Años"
+              allowAutoplay={currentView === 'invitation'}
+              isAdmin={!isDemoMode && Boolean(currentUser)}
+              onUpdateSettings={handleUpdateSettings}
+              onAudioUpdated={(newUrl, newTitle) => {
+                handleUpdateSettings({
+                  audioUrl: newUrl,
+                  audioTitle: newTitle || settings?.audioTitle,
+                });
+              }}
+            />
+          ) : settingsEventCategory === 'birthday' ? (
+            <BirthdayAudioPlayer
+              settings={settings}
+              audioUrl={settings?.audioUrl}
+              songTitle={settings?.audioTitle || 'Party Celebration'}
+              artistName={settings?.coupleNames || 'Música de Cumpleaños'}
+              eventTitle="Música de Cumpleaños"
+              allowAutoplay={currentView === 'invitation'}
+              isAdmin={!isDemoMode && Boolean(currentUser)}
+              onUpdateSettings={handleUpdateSettings}
+              onAudioUpdated={(newUrl, newTitle) => {
+                handleUpdateSettings({
+                  audioUrl: newUrl,
+                  audioTitle: newTitle || settings?.audioTitle,
+                });
+              }}
+            />
+          ) : (
+            <AudioPlayer
+              settings={settings}
+              audioUrl={settings?.audioUrl}
+              songTitle={settings?.audioTitle || 'Nuestra Canción'}
+              artistName={settings?.coupleNames || 'Música de Boda'}
+              eventTitle="Música de Boda"
+              eventCategory={settingsEventCategory}
+              allowAutoplay={currentView === 'invitation'}
+              isAdmin={!isDemoMode && Boolean(currentUser)}
+              onUpdateSettings={handleUpdateSettings}
+              onAudioUpdated={(newUrl, newTitle) => {
+                handleUpdateSettings({
+                  audioUrl: newUrl,
+                  audioTitle: newTitle || settings?.audioTitle,
+                });
+              }}
+            />
+          )}
+
+          <main id="inicio" className={`w-full relative z-10 ${isStandaloneHero ? 'h-full max-h-[100svh] overflow-hidden' : ''}`} style={{ backgroundColor: activeTheme.bgHex }}>
+            {getLandingSectionOrder(settings.landingSectionOrder).map((sectionId) => (
+              <React.Fragment key={sectionId}>{landingSections[sectionId]}</React.Fragment>
+            ))}
+          </main>
+
+          {/* Scroll to top button */}
+          <AnimatePresence>
+            {showScrollTop && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-[#5A5A40] text-[#FDFCF0] shadow-xl hover:bg-[#484833] transition-colors cursor-pointer border border-[#E5E2D0]/40 flex items-center justify-center"
+                title="Volver arriba"
+              >
+                <ChevronUp className="w-5 h-5 shrink-0" />
+              </motion.button>
             )}
-          </button>
+          </AnimatePresence>
+
+          {/* Auth Modal for Choosing Design or Logging in */}
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={closeAuth}
+            initialMode={authModalMode}
+            selectedPlan={authSelectedPlan}
+            onAuthSuccess={handleAuthSuccess}
+          />
+
+          {/* Global Toast Notifications */}
+          <ToastContainer />
         </div>
-      )}
-
-      {/* Floating Audio Player Widget (Bottom Left) */}
-      {settingsEventCategory === 'xv' ? (
-        <XvAudioPlayer
-          settings={settings}
-          audioUrl={settings?.audioUrl}
-          songTitle={settings?.audioTitle || 'Vals de Ensueño'}
-          artistName={settings?.coupleNames || 'Vals de Mis XV'}
-          eventTitle="Música de XV Años"
-          allowAutoplay={currentView === 'invitation'}
-          isAdmin={!isDemoMode && Boolean(currentUser)}
-          onUpdateSettings={handleUpdateSettings}
-          onAudioUpdated={(newUrl, newTitle) => {
-            handleUpdateSettings({
-              audioUrl: newUrl,
-              audioTitle: newTitle || settings?.audioTitle,
-            });
-          }}
-        />
-      ) : (
-        <AudioPlayer
-          settings={settings}
-          audioUrl={settings?.audioUrl}
-          songTitle={settings?.audioTitle || 'Nuestra Canción'}
-          artistName={settings?.coupleNames || 'Música de Boda'}
-          eventTitle="Música de Boda"
-          eventCategory={settingsEventCategory}
-          allowAutoplay={currentView === 'invitation'}
-          isAdmin={!isDemoMode && Boolean(currentUser)}
-          onUpdateSettings={handleUpdateSettings}
-          onAudioUpdated={(newUrl, newTitle) => {
-            handleUpdateSettings({
-              audioUrl: newUrl,
-              audioTitle: newTitle || settings?.audioTitle,
-            });
-          }}
-        />
-      )}
-
-      <main id="inicio" className="w-full relative z-10" style={{ backgroundColor: activeTheme.bgHex }}>
-        {getLandingSectionOrder(settings.landingSectionOrder).map((sectionId) => (
-          <React.Fragment key={sectionId}>{landingSections[sectionId]}</React.Fragment>
-        ))}
-      </main>
-
-      {/* Scroll to top button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-6 right-6 z-30 w-12 h-12 rounded-full aspect-square shrink-0 circle-badge bg-[#5A5A40] text-[#FDFCF0] shadow-xl hover:bg-[#484833] transition-colors cursor-pointer border border-[#E5E2D0]/40 flex items-center justify-center"
-            title="Volver arriba"
-          >
-            <ChevronUp className="w-5 h-5 shrink-0" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Auth Modal for Choosing Design or Logging in */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuth}
-        initialMode={authModalMode}
-        selectedPlan={authSelectedPlan}
-        onAuthSuccess={handleAuthSuccess}
-      />
-
-      {/* Global Toast Notifications */}
-      <ToastContainer />
-      </div>
-    </NumberFontContext.Provider>
+      </NumberFontContext.Provider>
     </React.Suspense>
   );
 }

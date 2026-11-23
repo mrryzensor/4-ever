@@ -6,6 +6,7 @@ import { formatHeroDate } from './dateFormatters.ts';
 import { getDisplayedWaxSealText, getEventPresentation } from './eventUtils.ts';
 import { CARD_THEMES } from './themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
+import { BIRTHDAY_CARD_THEMES } from '../birthday/themes.ts';
 import { resolveInvitationTheme } from './invitationTheme.ts';
 import { getEnvelopeTintMatrix, normalizeLetterShadow } from './letterAppearance.ts';
 import { getWaxSealMotifPaths } from './waxSealAppearance.ts';
@@ -67,7 +68,7 @@ const renderLetterImage = (
 ) => {
   const presentation = getEventPresentation(settings.eventType, settings.slug);
   const eventType = presentation.type;
-  const themes: Record<CardStyleId, CardThemeConfig> = eventType === 'xv' ? XV_CARD_THEMES : CARD_THEMES;
+  const themes: Record<CardStyleId, CardThemeConfig> = eventType === 'xv' ? XV_CARD_THEMES : eventType === 'birthday' ? BIRTHDAY_CARD_THEMES : CARD_THEMES;
   const fallbackStyle = (eventType === 'xv' ? 'romantic-floral' : 'classic-gold') as CardStyleId;
   const baseStyle = settings.cardStyle && themes[settings.cardStyle as CardStyleId]
     ? settings.cardStyle
@@ -112,7 +113,7 @@ const renderLetterImage = (
     ? Math.max(1, Number(guest.allocatedPasses || guest.confirmedPasses || 1))
     : null;
   const sealText = getDisplayedWaxSealText(settings as Pick<WeddingSettings, 'coupleNames' | 'eventType' | 'waxSealText' | 'waxSealTextIsCustom'>);
-  const eventHeading = settings.letterHeadingText?.trim() || (eventType === 'xv' ? 'MIS XV AÑOS' : eventType === 'bodas' ? 'NUESTRA BODA' : 'NUESTRA CELEBRACIÓN');
+  const eventHeading = settings.letterHeadingText?.trim() || (eventType === 'xv' ? 'MIS XV AÑOS' : eventType === 'birthday' ? 'MI CUMPLEAÑOS' : eventType === 'bodas' ? 'NUESTRA BODA' : 'NUESTRA CELEBRACIÓN');
   const reservationHeading = settings.letterReservationHeadingText?.trim() || 'HEMOS RESERVADO';
   const reservationUnit = reservedSeats === 1
     ? settings.letterReservationSingleText?.trim() || 'LUGAR EN TU HONOR'

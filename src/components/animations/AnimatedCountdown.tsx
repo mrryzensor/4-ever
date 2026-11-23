@@ -1044,7 +1044,7 @@ export const CoastalBreezeCountdownSvg: React.FC<{ accentColor?: string }> = ({
 };
 
 // ----------------------------------------------------------------------
-// 12. Champagne Glam - Art Déco Sunburst Fan & Pearl Sparkles
+// 12. Champagne Glam - Art DÃ©co Sunburst Fan & Pearl Sparkles
 // ----------------------------------------------------------------------
 export const ChampagneGlamCountdownSvg: React.FC<{ accentColor?: string }> = ({
   accentColor = '#C39B60',
@@ -1091,7 +1091,7 @@ export const ChampagneGlamCountdownSvg: React.FC<{ accentColor?: string }> = ({
           <circle cx="30" cy="180" r="2" fill="#FFE8A3" />
         </g>
 
-        {/* 1920s Art Déco Fan Crest on Top */}
+        {/* 1920s Art DÃ©co Fan Crest on Top */}
         <g transform="translate(0, 0)">
           <path
             d="M155 35 L180 18 L205 35 L180 28 Z"
@@ -1109,6 +1109,31 @@ export const ChampagneGlamCountdownSvg: React.FC<{ accentColor?: string }> = ({
 /** Every card theme has a matching countdown surround. Keeping this registry
  * typed makes adding a new card style fail at compile time until its artwork
  * is implemented as well. */
+export const DiscoSilverCountdownSvg: React.FC<{ accentColor?: string }> = ({
+  accentColor = '#E2E8F0',
+}) => {
+  return (
+    <div className="absolute -inset-5 sm:-inset-8 pointer-events-none z-0 flex items-center justify-center">
+      <svg
+        viewBox="0 0 360 360"
+        className="w-full h-full overflow-visible"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="180" cy="180" r="160" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="4 6" opacity="0.8" />
+        <circle cx="180" cy="180" r="142" stroke={accentColor} strokeWidth="1" strokeDasharray="2 4" opacity="0.6" />
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 180 180" to="360 180 180" dur="25s" repeatCount="indefinite" />
+          <circle cx="340" cy="180" r="4" fill="#FFFFFF" />
+          <circle cx="20" cy="180" r="4" fill="#FFFFFF" />
+          <path d="M180 34 L182 40 L188 42 L182 44 L180 50 L178 44 L172 42 L178 40 Z" fill="#FFFFFF" />
+          <path d="M180 310 L182 316 L188 318 L182 320 L180 326 L178 320 L172 318 L178 316 Z" fill="#FFFFFF" />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
 export const COUNTDOWN_STYLE_IDS = [
   'classic-gold',
   'romantic-floral',
@@ -1122,6 +1147,7 @@ export const COUNTDOWN_STYLE_IDS = [
   'emerald-botanical',
   'coastal-breeze',
   'champagne-glam',
+  'disco-silver',
 ] as const satisfies readonly CardStyleId[];
 
 const COUNTDOWN_STYLE_RENDERERS: Record<CardStyleId, React.FC<{ accentColor?: string }>> = {
@@ -1137,6 +1163,7 @@ const COUNTDOWN_STYLE_RENDERERS: Record<CardStyleId, React.FC<{ accentColor?: st
   'emerald-botanical': EmeraldBotanicalCountdownSvg,
   'coastal-breeze': CoastalBreezeCountdownSvg,
   'champagne-glam': ChampagneGlamCountdownSvg,
+  'disco-silver': DiscoSilverCountdownSvg,
 };
 
 function resolveCountdownStyle(...candidates: Array<string | undefined>): CardStyleId {
@@ -1284,7 +1311,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
     return `${String(hour12).padStart(2, '0')}:${match[2]} ${period}`;
   }, [settings.eventTime]);
   const timeUnits = [
-    { key: 'days', value: timeLeft.days, label: 'días' },
+    { key: 'days', value: timeLeft.days, label: 'dÃ­as' },
     { key: 'hours', value: timeLeft.hours, label: 'horas' },
     { key: 'minutes', value: timeLeft.minutes, label: 'min' },
     { key: 'seconds', value: timeLeft.seconds, label: 'seg' },
@@ -1313,7 +1340,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
             initial={{ opacity: 0.75, y: -2 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className={`max-w-full whitespace-nowrap font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
+            className={`max-w-full whitespace-nowrap font-bold font-serif tabular-nums leading-none ${layout === 'hero' ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl md:text-5xl'} ${layout === 'hero' ? 'text-white' : unit.key === 'seconds' && !isDark ? 'text-stone-800' : isDark ? 'text-white' : 'text-stone-900'}`}
             data-countdown-numerals=""
             style={{
               ...numberFontStyle,
@@ -1383,13 +1410,13 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto w-full max-w-md rounded-2xl border border-white/30 bg-black/30 px-3 py-3 text-white shadow-lg backdrop-blur-md sm:px-5 sm:py-4"
+          className="mx-auto w-full max-w-md rounded-2xl border border-white/30 bg-black/30 px-3 py-2 sm:py-3 text-white shadow-lg backdrop-blur-md"
           style={{ borderColor: `${resolvedTheme.accentColorHex}AA` }}
         >
-          <div className="mb-2 text-center font-serif text-lg italic text-white sm:text-xl">{displayTitle}</div>
+          <div className="mb-1 text-center font-serif text-base italic text-white sm:text-lg">{displayTitle}</div>
           {formattedEventTime && (
-            <div className="mb-2 flex items-center justify-center gap-1.5 font-sans text-xs text-white/80">
-              <Clock3 className="h-3.5 w-3.5" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
+            <div className="mb-1 flex items-center justify-center gap-1.5 font-sans text-[11px] text-white/80 sm:text-xs">
+              <Clock3 className="h-3 w-3" style={{ color: resolvedTheme.accentColorHex }} aria-hidden="true" />
               <NumeralText scope="countdown" fontFamily={numberFontFamily}>{formattedEventTime}</NumeralText>
             </div>
           )}
@@ -1473,7 +1500,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
               >
                 {timeLeft.days}
               </motion.span>
-              <span className="mt-2 text-xs uppercase tracking-[0.22em] text-stone-500">días</span>
+              <span className="mt-2 text-xs uppercase tracking-[0.22em] text-stone-500">dÃ­as</span>
             </div>
             <div className="grid w-full grid-cols-3 items-center justify-items-center">
               {timeUnits.slice(1).map((unit, index) => (
@@ -1650,7 +1677,7 @@ export const AnimatedCountdown: React.FC<AnimatedCountdownProps> = ({
           {/* Subtitle with Companions Count */}
           {companionsCount > 0 && (
             <span className="text-[11px] sm:text-xs text-stone-500 font-serif italic">
-              (<NumeralText scope="countdown" fontFamily={numberFontFamily}>{companionsCount}</NumeralText> {companionsCount === 1 ? 'acompañante' : 'acompañantes'})
+              (<NumeralText scope="countdown" fontFamily={numberFontFamily}>{companionsCount}</NumeralText> {companionsCount === 1 ? 'acompaÃ±ante' : 'acompaÃ±antes'})
             </span>
           )}
 

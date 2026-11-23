@@ -24,9 +24,12 @@ import {
   DEMO_WEDDING_SLUG,
   DEMO_XV_ID,
   DEMO_XV_SLUG,
+  DEMO_BIRTHDAY_ID,
+  DEMO_BIRTHDAY_SLUG,
   isDemoWeddingRecord,
 } from '../lib/eventUtils.ts';
 import { DEFAULT_XV_SETTINGS } from '../xv/defaultSettings.ts';
+import { DEFAULT_BIRTHDAY_SETTINGS } from '../birthday/defaultSettings.ts';
 import { normalizeCompanionNames, parseGuestCompanionNames } from '../lib/guestCompanions.ts';
 import { assertRsvpActionAllowed } from '../lib/rsvpAvailability.ts';
 import { parseCustomRsvpDetails, resolveRsvpMaxCompanions } from '../lib/rsvpOptionalFields.ts';
@@ -80,6 +83,7 @@ const defaultMemoryState = {
       enableStoreRegistry: false,
       enableEnvelopeGift: false,
       envelopeGiftMessage: 'Lluvia de sobres: Si deseas hacernos un regalo en efectivo el día del evento, dispondremos de un cofre especial en la recepción.',
+      showWelcomeSection: true,
       showItinerary: true,
       showLocations: true,
       showDressCode: true,
@@ -120,6 +124,7 @@ const defaultMemoryState = {
       heroVersePosition: 'center',
       heroShowCountdown: false,
       heroShowRsvpButton: false,
+      heroShowLocation: false,
       heroShowIcon: false,
       heroShowGuestPill: false,
       heroShowPadrinos: false,
@@ -367,6 +372,56 @@ const defaultMemoryState = {
       status: 'active',
       clientEmail: 'xv.valeriamontserrat@gmail.com',
       createdAt: new Date('2026-03-15'),
+      updatedAt: new Date(),
+    },
+    {
+      id: 7,
+      eventType: 'birthday',
+      ownerUid: 'demo-user-birthday',
+      slug: 'cumpleanos-lucas-martin',
+      coupleNames: 'Lucas Martín',
+      hashtag: '#CumpleLucas2026',
+      eventDate: '2026-11-28',
+      eventTime: '19:30',
+      ceremonyVenue: 'Recepción & Bienvenida',
+      ceremonyAddress: 'Av. Las Palmeras 120, Terraza Mirador',
+      ceremonyMapsUrl: 'https://maps.google.com/?q=Terraza+Mirador',
+      ceremonyEmbedUrl: '',
+      ceremonyPlaceQuery: 'Terraza Mirador',
+      ceremonyTime: '19:30',
+      receptionVenue: 'Terraza & Salón Mirador',
+      receptionAddress: 'Av. Las Palmeras 120, Terraza Mirador',
+      receptionSameAsCeremony: true,
+      receptionMapsUrl: 'https://maps.google.com/?q=Terraza+Mirador',
+      receptionEmbedUrl: '',
+      receptionPlaceQuery: 'Terraza Mirador',
+      receptionTime: '20:30',
+      dressCode: 'Cóctel Elegante / Noche de Fiesta',
+      dressCodeDescription: '¡Ven con tu mejor atuendo festivo y calzado cómodo para bailar y festejar toda la noche!',
+      dressCodePalette: '["#F59E0B", "#1E293B", "#D97706", "#E2E8F0", "#0F172A"]',
+      cardStyle: 'classic-gold',
+      envelopeColor: '#2C1810',
+      envelopeShadowColor: '#1A0F0A',
+      envelopeShadowIntensity: 35,
+      waxSealText: 'LM',
+      waxSealColor: '#D4AF37',
+      waxSealDesign: 'auto',
+      waxSealShadowColor: '#211A14',
+      waxSealShadowIntensity: 50,
+      coverPhoto: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1600&q=80',
+      audioUrl: '/audio/vals-danubio-azul.mp3',
+      audioTitle: 'Celebration - Party Mix',
+      welcomeMessage: '¡Celebremos juntos mi cumpleaños!',
+      welcomeSubtitle: 'Una noche para brindar, bailar y crear recuerdos inolvidables.',
+      rsvpDeadline: '2026-11-15',
+      enablePhotoGallery: true,
+      enableVideos: true,
+      enableGuestbook: true,
+      enableGiftRegistry: true,
+      isPublished: true,
+      status: 'active',
+      clientEmail: 'cumpleanos.lucas@gmail.com',
+      createdAt: new Date('2026-03-20'),
       updatedAt: new Date(),
     }
   ] as any[],
@@ -794,12 +849,12 @@ const DEMO_XV_DB_FIELDS = [
   'heroIconStyle',
   'audioUrl', 'audioTitle', 'audioAutoplay', 'audioPlaylist', 'welcomeMessage', 'welcomeSubtitle',
   'heroDateFormat', 'heroCustomDateText', 'heroQuote', 'heroVerse', 'heroVersePosition',
-  'heroShowCountdown', 'heroShowRsvpButton', 'heroShowIcon', 'heroShowGuestPill',
+  'heroShowCountdown', 'heroShowRsvpButton', 'heroShowLocation', 'heroShowIcon', 'heroShowGuestPill',
   'countdownLayout',
   'heroShowPadrinos', 'heroPadrinosTitle', 'heroPadrinos', 'heroCourtPosition',
   'heroCourtPlacement',
   'heroCourtTitle', 'heroCourtPageHeading', 'showCountdown', 'countdownStyle', 'countdownTitle',
-  'countdownPlacement', 'showCountdownGuestsBadge', 'showItinerary', 'showLocations', 'showDressCode',
+  'countdownPlacement', 'showCountdownGuestsBadge', 'showWelcomeSection', 'showItinerary', 'showLocations', 'showDressCode',
   'showGiftRegistry', 'showPhotoGallery', 'galleryExternalAlbumUrl', 'galleryExternalAlbumTitle',
   'galleryExternalAlbumType', 'galleryDrivePhotoSelectionMode', 'galleryDrivePhotoIds', 'galleryDrivePhotoTitles',
   'showVideoMemories', 'showGuestbook',
@@ -816,7 +871,7 @@ const DEMO_XV_DB_FIELDS = [
   'letterGuestLabelText', 'letterCtaText', 'letterOpeningText', 'letterSignoffText',
   'letterDividerColor', 'letterArrowColor', 'letterDisplayFont', 'letterBodyFont',
   'letterFrameStyle', 'letterMotifStyle', 'letterDividerStyle',
-  'showRsvpSection', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
+  'showRsvpSection', 'rsvpActionType', 'rsvpWhatsappPhone', 'rsvpWhatsappMessage', 'rsvpDeadlineMessage', 'rsvpButtonText', 'rsvpButtonStyle', 'rsvpCompanionToggleText',
   'rsvpAllowRegistration', 'rsvpRegistrationCutoffMode', 'rsvpRegistrationCutoffAt',
   'rsvpAllowEdit', 'rsvpEditCutoffMode', 'rsvpEditCutoffAt', 'rsvpCutoffTimeZone', 'rsvpMaxCompanions', 'rsvpOptionalFields',
   'bankName', 'bankBeneficiary',
@@ -885,6 +940,67 @@ async function ensureDemoXvRecord() {
       .set({ ...payload, updatedAt: new Date() } as any)
       .where(eq(weddingSettings.id, current.id));
     console.log(`✅ XV demo invitation synchronized with its canonical template at /${DEMO_XV_SLUG}`);
+  }
+}
+
+function getDemoBirthdayDatabasePayload() {
+  const source = DEFAULT_BIRTHDAY_SETTINGS as Record<string, any>;
+  const payload = Object.fromEntries(
+    DEMO_XV_DB_FIELDS
+      .filter((field) => source[field] !== undefined)
+      .map((field) => [field, source[field]]),
+  ) as Record<string, any>;
+
+  payload.eventType = 'birthday';
+  payload.slug = DEMO_BIRTHDAY_SLUG;
+  payload.hashtag = generateEventHashtag(source.coupleNames, 'birthday', source.eventDate);
+  payload.hashtagIsCustom = false;
+  payload.waxSealText = generateDynamicInitials(source.coupleNames, 'birthday');
+  payload.waxSealTextIsCustom = false;
+  payload.heroPhotos = JSON.stringify([source.coverPhoto]);
+  payload.heroAutoplayInterval = source.heroAutoplayInterval ?? 5;
+  return payload;
+}
+
+async function ensureDemoBirthdayRecord() {
+  if (!sqlEnabled) return;
+
+  const existing = await db
+    .select()
+    .from(weddingSettings)
+    .where(eq(weddingSettings.slug, DEMO_BIRTHDAY_SLUG))
+    .limit(1);
+  const payload = getDemoBirthdayDatabasePayload();
+
+  if (existing.length === 0) {
+    const reservedId = await db
+      .select({ id: weddingSettings.id, slug: weddingSettings.slug })
+      .from(weddingSettings)
+      .where(eq(weddingSettings.id, DEMO_BIRTHDAY_ID))
+      .limit(1);
+    if (reservedId.length > 0) {
+      console.warn(`Birthday demo ID ${DEMO_BIRTHDAY_ID} is already assigned to ${reservedId[0].slug || 'another event'}.`);
+      return;
+    }
+    await db.insert(weddingSettings).values({ id: DEMO_BIRTHDAY_ID, ...payload } as any);
+    console.log(`✅ Birthday demo invitation created at /${DEMO_BIRTHDAY_SLUG}`);
+    return;
+  }
+
+  const current = existing[0] as any;
+  const hasTemplateDrift = DEMO_XV_DB_FIELDS.some((field) => {
+    const currentValue = current[field];
+    const expectedValue = payload[field];
+    if (currentValue == null && expectedValue == null) return false;
+    return String(currentValue ?? '') !== String(expectedValue ?? '');
+  });
+
+  if (hasTemplateDrift) {
+    await db
+      .update(weddingSettings)
+      .set({ ...payload, updatedAt: new Date() } as any)
+      .where(eq(weddingSettings.id, current.id));
+    console.log(`✅ Birthday demo invitation synchronized with its canonical template at /${DEMO_BIRTHDAY_SLUG}`);
   }
 }
 
@@ -1294,7 +1410,7 @@ export async function getUserWeddings(ownerUid: string, email = '', isCeoUser = 
       if (isCeo) {
         weddingList = await db.select().from(weddingSettings).orderBy(desc(weddingSettings.id));
       } else {
-        const isNotDemo = sql`${weddingSettings.id} NOT IN (${DEMO_WEDDING_ID}, ${DEMO_XV_ID}) AND lower(coalesce(${weddingSettings.slug}, '')) NOT IN (${DEMO_WEDDING_SLUG}, ${DEMO_XV_SLUG})`;
+        const isNotDemo = sql`${weddingSettings.id} NOT IN (${DEMO_WEDDING_ID}, ${DEMO_XV_ID}, ${DEMO_BIRTHDAY_ID}) AND lower(coalesce(${weddingSettings.slug}, '')) NOT IN (${DEMO_WEDDING_SLUG}, ${DEMO_XV_SLUG}, ${DEMO_BIRTHDAY_SLUG})`;
         weddingList = await db
           .select()
           .from(weddingSettings)
@@ -1845,7 +1961,7 @@ export async function transferWeddingOwnership(weddingId: number, newOwnerUid: s
 }
 
 export async function deleteWeddingByCeo(weddingId: number) {
-  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID) {
+  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID || weddingId === DEMO_BIRTHDAY_ID) {
     throw new Error('No se pueden eliminar las invitaciones de demostración.');
   }
   memoryState.weddings = memoryState.weddings.filter((w) => w.id !== weddingId);
@@ -1949,6 +2065,21 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
   // Explicitly re-apply generated values after the spread so omitted or stale
   // client defaults can never replace the event-specific values.
   payload.eventType = eventType;
+  if (eventType === 'birthday') {
+    if (!data.welcomeMessage || data.welcomeMessage.toLowerCase().includes('casam')) {
+      payload.welcomeMessage = '¡Celebremos mi Cumpleaños! Un año más de vida y grandes momentos';
+    }
+    if (!data.heroQuote || data.heroQuote.toLowerCase().includes('amor')) {
+      payload.heroQuote = 'Celebra cada instante, la vida es una fiesta digna de ser disfrutada al máximo.';
+    }
+  } else if (eventType === 'xv') {
+    if (!data.welcomeMessage || data.welcomeMessage.toLowerCase().includes('casam')) {
+      payload.welcomeMessage = 'Mis Quince Años son un sueño hecho realidad';
+    }
+    if (!data.heroQuote || data.heroQuote.toLowerCase().includes('amor')) {
+      payload.heroQuote = 'Hoy comienza una nueva etapa llena de sueños, ilusiones y felicidad.';
+    }
+  }
   payload.hashtagIsCustom = hashtagIsCustom;
   payload.hashtag = hashtagIsCustom && data.hashtag
     ? data.hashtag
@@ -1980,7 +2111,7 @@ export async function createWedding(data: typeof weddingSettings.$inferInsert) {
 }
 
 export async function deleteWedding(weddingId: number, ownerUid?: string) {
-  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID) {
+  if (weddingId === DEMO_WEDDING_ID || weddingId === DEMO_XV_ID || weddingId === DEMO_BIRTHDAY_ID) {
     throw new Error('No se pueden eliminar las plantillas de demostración.');
   }
 
@@ -3131,6 +3262,7 @@ export async function seedInitialData() {
   try {
     await testDbConnection();
     await ensureDemoXvRecord();
+    await ensureDemoBirthdayRecord();
   } catch (err) {
     console.warn('Database connection check complete. Using available storage engine.');
   }

@@ -168,7 +168,7 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
             <span className="hidden md:inline">Inicio</span>
           </button>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="hidden sm:flex items-center gap-1 shrink-0">
             <span className="px-2 py-0.5 sm:py-1 rounded-full bg-amber-400/20 border border-amber-400/30 text-amber-300 font-mono text-[9px] sm:text-[11px] uppercase font-bold tracking-wider flex items-center gap-1 shrink-0">
               <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300 animate-pulse" />
               <span className="truncate max-w-[80px] xs:max-w-[110px] sm:max-w-none">
@@ -182,11 +182,11 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
         </div>
 
         {/* Center: Interactive Elegant Dropdown Menu for Styles */}
-        <div className="relative flex-1 max-w-[160px] xs:max-w-[210px] sm:max-w-xs md:max-w-sm mx-auto flex justify-center">
+        <div className="relative flex-1 min-w-0 max-w-[160px] xs:max-w-[210px] sm:max-w-xs md:max-w-sm mx-auto flex justify-center">
           <button
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="w-full px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-amber-400/30 hover:border-amber-400/60 text-white transition-all flex items-center justify-between gap-1 sm:gap-2 shadow-inner cursor-pointer"
+            className="w-full px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-amber-400/30 hover:border-amber-400/60 text-white transition-all flex items-center justify-between gap-1 sm:gap-2 shadow-inner cursor-pointer min-w-0"
             title="Cambiar diseño de la invitación"
           >
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
@@ -212,13 +212,15 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
             <>
               {/* Backdrop */}
               <div
-                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
+                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
                 onClick={() => setIsMenuOpen(false)}
               />
 
-              {/* Menu Container */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 mt-2 z-50 w-72 sm:w-84 max-w-[92vw] bg-stone-900/95 backdrop-blur-2xl border border-amber-500/30 rounded-2xl shadow-2xl p-2 max-h-[70vh] overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1.5">
+              {/* Menu Outer Container: Rounded & Clip Boundaries */}
+              <div className="fixed inset-x-3 top-14 sm:inset-x-auto sm:absolute sm:top-full sm:left-1/2 sm:-translate-x-1/2 mt-2 z-50 sm:w-84 max-w-full bg-stone-900/98 backdrop-blur-2xl border border-amber-500/35 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[72vh] animate-in fade-in zoom-in-95 duration-150">
+                
+                {/* Pinned Header: NEVER scrolled, perfectly rounded top corners */}
+                <div className="px-3.5 py-2.5 border-b border-white/10 flex items-center justify-between shrink-0 bg-stone-950/60">
                   <span className="text-[11px] uppercase font-mono tracking-widest text-amber-400/90 font-bold flex items-center gap-1.5">
                     <Palette className="w-3.5 h-3.5" />
                     Elige un estilo ({STYLE_OPTIONS.length})
@@ -226,13 +228,15 @@ export const DemoStyleBar: React.FC<DemoStyleBarProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsMenuOpen(false)}
-                    className="text-stone-400 hover:text-white p-1 rounded-md cursor-pointer"
+                    className="text-stone-400 hover:text-white p-1 rounded-md cursor-pointer transition-colors"
+                    title="Cerrar"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="space-y-1">
+                {/* Scrollable Styles List: Scrollbar begins HERE, below header, never touching the rounded corners! */}
+                <div className="flex-1 min-h-0 overflow-y-auto custom-menu-scrollbar p-2 space-y-1">
                   {STYLE_OPTIONS.map((style) => {
                     const isSelected = currentStyle === style.id;
                     return (

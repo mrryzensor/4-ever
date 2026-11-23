@@ -33,6 +33,73 @@ export const RsvpFormOptionsSettings: React.FC<RsvpFormOptionsSettingsProps> = (
         <p className="mt-1 text-[11px] text-[#7D8C7A]">Estas opciones aplican al formulario de la portada y al apartado de confirmación.</p>
       </div>
 
+      {/* Direct WhatsApp RSVP selector in RsvpFormOptionsSettings */}
+      <div className="space-y-3 p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-50/50">
+        <div>
+          <span className="mb-1 block text-xs font-semibold text-emerald-950">Método de Confirmación</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => onChange({ rsvpActionType: 'form' })}
+              className={`px-3 py-2 rounded-xl border text-xs text-left cursor-pointer ${
+                (!settings.rsvpActionType || settings.rsvpActionType === 'form')
+                  ? 'bg-amber-500/20 border-amber-500 font-bold text-stone-900'
+                  : 'bg-white border-stone-200 text-stone-600'
+              }`}
+            >
+              Formulario Web
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ rsvpActionType: 'whatsapp' })}
+              className={`px-3 py-2 rounded-xl border text-xs text-left cursor-pointer ${
+                settings.rsvpActionType === 'whatsapp'
+                  ? 'bg-emerald-500/20 border-emerald-500 font-bold text-emerald-950'
+                  : 'bg-white border-stone-200 text-stone-600'
+              }`}
+            >
+              Directo a WhatsApp
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ rsvpActionType: 'both' })}
+              className={`px-3 py-2 rounded-xl border text-xs text-left cursor-pointer ${
+                settings.rsvpActionType === 'both'
+                  ? 'bg-emerald-500/20 border-emerald-500 font-bold text-emerald-950'
+                  : 'bg-white border-stone-200 text-stone-600'
+              }`}
+            >
+              Ambos Métodos
+            </button>
+          </div>
+        </div>
+
+        {(settings.rsvpActionType === 'whatsapp' || settings.rsvpActionType === 'both') && (
+          <div className="space-y-2 pt-2 border-t border-emerald-500/20">
+            <div>
+              <span className="mb-1 block text-[10px] font-semibold text-stone-600">Teléfono WhatsApp para Confirmar</span>
+              <input
+                type="tel"
+                value={settings.rsvpWhatsappPhone ?? settings.contactPhone ?? ''}
+                onChange={(e) => onChange({ rsvpWhatsappPhone: e.target.value })}
+                placeholder="+51 987 654 321"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <span className="mb-1 block text-[10px] font-semibold text-stone-600">Mensaje predeterminado de WhatsApp</span>
+              <textarea
+                value={settings.rsvpWhatsappMessage ?? ''}
+                onChange={(e) => onChange({ rsvpWhatsappMessage: e.target.value })}
+                placeholder="¡Hola! Confirmo mi asistencia al evento de {celebrant}. (Pases: {passes})."
+                rows={2}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       <label className="block max-w-sm">
         <span className="mb-1.5 block text-xs font-semibold text-[#5A5A40]">Máximo de acompañantes por invitación</span>
         <input

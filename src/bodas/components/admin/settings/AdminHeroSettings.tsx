@@ -13,6 +13,8 @@ import {
   Clipboard,
   Clock,
   Users,
+  Mail,
+  DoorOpen,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../../types.ts';
 import { WEDDING_HERO_PRESETS, HERO_FIT_OPTIONS, HERO_POSITION_OPTIONS } from '../adminConstants.ts';
@@ -155,10 +157,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
       // Don't intercept paste in text inputs or textareas unless it's an image
       const activeEl = document.activeElement;
       const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA';
-      
+
       const items = e.clipboardData?.items;
       if (!items) return;
-      
+
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.startsWith('image/')) {
           const file = items[i].getAsFile();
@@ -208,200 +210,198 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
 
         {/* A. SECCIÓN DE FOTOGRAFÍA DE PORTADA (CARGA & PRESETS) */}
         <div className="space-y-4 bg-[#FAF9F0] p-4 sm:p-5 rounded-2xl border border-[#E5E2D0]">
-        {!hidePhotoSourceControls && (
-        <>
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5">
-              <ImageIcon className="w-4 h-4 text-[#5A5A40]" />
-              <span>1. Foto de Portada del Hero:</span>
-            </label>
-            {settings.coverPhoto && (
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    coverPhoto:
-                      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=85',
-                  })
-                }
-                className="text-[11px] text-[#7D8C7A] hover:text-[#5A5A40] flex items-center gap-1 cursor-pointer transition-colors"
-                title="Restablecer foto original"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Restablecer por defecto</span>
-              </button>
-            )}
-          </div>
+          {!hidePhotoSourceControls && (
+            <>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#1a1a1a] flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-[#5A5A40]" />
+                  <span>1. Foto de Portada del Hero:</span>
+                </label>
+                {settings.coverPhoto && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onChange({
+                        coverPhoto:
+                          'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=85',
+                      })
+                    }
+                    className="text-[11px] text-[#7D8C7A] hover:text-[#5A5A40] flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Restablecer foto original"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Restablecer por defecto</span>
+                  </button>
+                )}
+              </div>
 
-          {/* Dropzone / Upload Box with Drag & Drop and Direct Paste (Ctrl+V) */}
-          <div
-            ref={heroDropZoneRef}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onPaste={handlePaste}
-            tabIndex={0}
-            className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-3 sm:p-4 rounded-3xl border-2 transition-all outline-none ${
-              isDraggingHero
-                ? 'border-[#5A5A40] bg-[#5A5A40]/10 scale-[1.01]'
-                : 'border-transparent bg-transparent'
-            }`}
-          >
-            {/* Photo Preview Thumbnail */}
-            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-[#E5E2D0] bg-stone-900 aspect-3/4 max-h-56 flex items-center justify-center shadow-xs">
-              {settings.coverPhoto ? (
-                <>
-                  <img
-                    src={settings.coverPhoto}
-                    alt="Hero cover preview"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2.5">
-                    <span className="text-[10px] font-semibold text-white truncate">
-                      Foto Actual
-                    </span>
-                    <span className="text-[9px] text-amber-200 uppercase font-mono">
-                      {settings.heroImageFit || 'cover'} • {settings.heroImagePosition || 'center'}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center p-4 text-stone-400">
-                  <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-60" />
-                  <span className="text-xs">Sin foto</span>
+              {/* Dropzone / Upload Box with Drag & Drop and Direct Paste (Ctrl+V) */}
+              <div
+                ref={heroDropZoneRef}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onPaste={handlePaste}
+                tabIndex={0}
+                className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-3 sm:p-4 rounded-3xl border-2 transition-all outline-none ${isDraggingHero
+                  ? 'border-[#5A5A40] bg-[#5A5A40]/10 scale-[1.01]'
+                  : 'border-transparent bg-transparent'
+                  }`}
+              >
+                {/* Photo Preview Thumbnail */}
+                <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-[#E5E2D0] bg-stone-900 aspect-3/4 max-h-56 flex items-center justify-center shadow-xs">
+                  {settings.coverPhoto ? (
+                    <>
+                      <img
+                        src={settings.coverPhoto}
+                        alt="Hero cover preview"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2.5">
+                        <span className="text-[10px] font-semibold text-white truncate">
+                          Foto Actual
+                        </span>
+                        <span className="text-[9px] text-amber-200 uppercase font-mono">
+                          {settings.heroImageFit || 'cover'} • {settings.heroImagePosition || 'center'}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4 text-stone-400">
+                      <ImageIcon className="w-8 h-8 mx-auto mb-1 opacity-60" />
+                      <span className="text-xs">Sin foto</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Upload Controls */}
-            <div className="md:col-span-8 space-y-3">
-              {/* Hidden file input */}
-              <input
-                type="file"
-                ref={heroFileInputRef}
-                onChange={handleHeroFileUpload}
-                accept="image/*"
-                className="hidden"
-              />
+                {/* Upload Controls */}
+                <div className="md:col-span-8 space-y-3">
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={heroFileInputRef}
+                    onChange={handleHeroFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
 
-              {/* Main upload button */}
-              <button
-                type="button"
-                onClick={() => heroFileInputRef.current?.click()}
-                disabled={uploadingHeroImage}
-                className="w-full py-4 px-4 rounded-2xl bg-white border-2 border-dashed border-[#7D8C7A]/60 hover:border-[#5A5A40] hover:bg-[#F0EEDC] text-[#5A5A40] font-semibold text-xs flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs group"
-              >
-                {uploadingHeroImage ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 text-[#5A5A40] animate-spin" />
-                    <span>Optimizando a formato AVIF & guardando...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <Upload className="w-4 h-4 text-[#5A5A40] shrink-0 group-hover:scale-110 transition-transform" />
-                      <span>Arrastra o selecciona foto desde tu dispositivo</span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <Zap className="w-2.5 h-2.5" /> AVIF 95%
+                  {/* Main upload button */}
+                  <button
+                    type="button"
+                    onClick={() => heroFileInputRef.current?.click()}
+                    disabled={uploadingHeroImage}
+                    className="w-full py-4 px-4 rounded-2xl bg-white border-2 border-dashed border-[#7D8C7A]/60 hover:border-[#5A5A40] hover:bg-[#F0EEDC] text-[#5A5A40] font-semibold text-xs flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all shadow-xs group"
+                  >
+                    {uploadingHeroImage ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 text-[#5A5A40] animate-spin" />
+                        <span>Optimizando a formato AVIF & guardando...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Upload className="w-4 h-4 text-[#5A5A40] shrink-0 group-hover:scale-110 transition-transform" />
+                          <span>Arrastra o selecciona foto desde tu dispositivo</span>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Zap className="w-2.5 h-2.5" /> AVIF 95%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#7D8C7A]">
+                          <Clipboard className="w-3 h-3 text-[#7D8C7A]" />
+                          <span>o pega una imagen copiada directamente presionando <strong>Ctrl+V</strong></span>
+                        </div>
+                      </>
+                    )}
+                  </button>
+
+                  {/* AVIF Optimization Info Badge */}
+                  {heroOptimizationStats && (
+                    <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between gap-2 text-xs text-emerald-900">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <p className="font-semibold text-[11px] leading-tight">
+                            Optimización AVIF completada
+                          </p>
+                          <p className="text-[10px] text-emerald-700">
+                            {formatBytes(heroOptimizationStats.originalSize)} ➔ {formatBytes(heroOptimizationStats.optimizedSize)} ({heroOptimizationStats.compressionRatio}% de ahorro)
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
+                        {heroOptimizationStats.format.replace('image/', '').toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#7D8C7A]">
-                      <Clipboard className="w-3 h-3 text-[#7D8C7A]" />
-                      <span>o pega una imagen copiada directamente presionando <strong>Ctrl+V</strong></span>
-                    </div>
-                  </>
-                )}
-              </button>
+                  )}
 
-              {/* AVIF Optimization Info Badge */}
-              {heroOptimizationStats && (
-                <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between gap-2 text-xs text-emerald-900">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <div>
-                      <p className="font-semibold text-[11px] leading-tight">
-                        Optimización AVIF completada
-                      </p>
-                      <p className="text-[10px] text-emerald-700">
-                        {formatBytes(heroOptimizationStats.originalSize)} ➔ {formatBytes(heroOptimizationStats.optimizedSize)} ({heroOptimizationStats.compressionRatio}% de ahorro)
-                      </p>
+                  {heroUploadMessage && (
+                    <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>{heroUploadMessage}</span>
+                    </p>
+                  )}
+
+                  {/* Direct URL input */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-[#5A5A40] block">
+                      O pega un enlace de imagen directo (URL):
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="https://mis-fotos.com/boda-portada.jpg"
+                        value={settings.coverPhoto || ''}
+                        onChange={(e) =>
+                          onChange({ coverPhoto: e.target.value })
+                        }
+                        className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+                      />
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono font-bold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-md">
-                    {heroOptimizationStats.format.replace('image/', '').toUpperCase()}
-                  </span>
-                </div>
-              )}
 
-              {heroUploadMessage && (
-                <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>{heroUploadMessage}</span>
-                </p>
-              )}
-
-              {/* Direct URL input */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-[#5A5A40] block">
-                  O pega un enlace de imagen directo (URL):
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="url"
-                    placeholder="https://mis-fotos.com/boda-portada.jpg"
-                    value={settings.coverPhoto || ''}
-                    onChange={(e) =>
-                      onChange({ coverPhoto: e.target.value })
-                    }
-                    className="w-full bg-white border border-[#E5E2D0] rounded-xl px-3 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
-                  />
-                </div>
-              </div>
-
-              {/* Preset photo picker */}
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[11px] font-semibold text-[#7D8C7A] block">
-                  Fotos de Boda Profesionales Preestablecidas (1 clic para probar):
-                </span>
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                  {WEDDING_HERO_PRESETS.map((preset) => {
-                    const isCurrent = settings.coverPhoto === preset.url;
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() =>
-                          onChange({ coverPhoto: preset.url })
-                        }
-                        className={`relative rounded-xl overflow-hidden aspect-square border transition-all cursor-pointer group ${
-                          isCurrent
-                            ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 shadow-xs'
-                            : 'border-[#E5E2D0] hover:border-[#7D8C7A]'
-                        }`}
-                        title={preset.name}
-                      >
-                        <img
-                          src={preset.thumbnail}
-                          alt={preset.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
-                        <span className="absolute bottom-0.5 inset-x-0.5 text-[8px] font-medium text-white bg-black/60 px-1 py-0.5 rounded text-center truncate">
-                          {preset.tag}
-                        </span>
-                        {isCurrent && (
-                          <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-[8px]">
-                            ✓
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                  {/* Preset photo picker */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[11px] font-semibold text-[#7D8C7A] block">
+                      Fotos de Boda Profesionales Preestablecidas (1 clic para probar):
+                    </span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                      {WEDDING_HERO_PRESETS.map((preset) => {
+                        const isCurrent = settings.coverPhoto === preset.url;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() =>
+                              onChange({ coverPhoto: preset.url })
+                            }
+                            className={`relative rounded-xl overflow-hidden aspect-square border transition-all cursor-pointer group ${isCurrent
+                              ? 'border-[#5A5A40] ring-2 ring-[#5A5A40]/30 shadow-xs'
+                              : 'border-[#E5E2D0] hover:border-[#7D8C7A]'
+                              }`}
+                            title={preset.name}
+                          >
+                            <img
+                              src={preset.thumbnail}
+                              alt={preset.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
+                            <span className="absolute bottom-0.5 inset-x-0.5 text-[8px] font-medium text-white bg-black/60 px-1 py-0.5 rounded text-center truncate">
+                              {preset.tag}
+                            </span>
+                            {isCurrent && (
+                              <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#5A5A40] text-white flex items-center justify-center text-[8px]">
+                                ✓
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </>)}
+            </>)}
 
           {/* B. ESTILOS DE AJUSTE A PANTALLA (DISPLAY FIT OPTIONS) */}
           <div className="pt-3 border-t border-[#E5E2D0]/80 space-y-2.5">
@@ -424,22 +424,20 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     onClick={() =>
                       onChange({ heroImageFit: fitOpt.id })
                     }
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? 'bg-white border-[#5A5A40] ring-2 ring-[#5A5A40]/20 shadow-xs'
-                        : 'bg-white/60 border-[#E5E2D0] hover:bg-white hover:border-[#7D8C7A]'
-                    }`}
+                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${isSelected
+                      ? 'bg-white border-[#5A5A40] ring-2 ring-[#5A5A40]/20 shadow-xs'
+                      : 'bg-white/60 border-[#E5E2D0] hover:bg-white hover:border-[#7D8C7A]'
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-serif font-bold text-xs text-[#1a1a1a]">
                         {fitOpt.title}
                       </span>
                       <span
-                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase ${
-                          isSelected
-                            ? 'bg-[#5A5A40] text-white'
-                            : 'bg-stone-100 text-stone-600'
-                        }`}
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold uppercase ${isSelected
+                          ? 'bg-[#5A5A40] text-white'
+                          : 'bg-stone-100 text-stone-600'
+                          }`}
                       >
                         {fitOpt.badge}
                       </span>
@@ -468,11 +466,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     onClick={() =>
                       onChange({ heroImagePosition: pos.id })
                     }
-                    className={`py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-xs'
-                        : 'bg-white border-[#E5E2D0] text-[#3D3D3D] hover:border-[#7D8C7A]'
-                    }`}
+                    className={`py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer ${isSelected
+                      ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-xs'
+                      : 'bg-white border-[#E5E2D0] text-[#3D3D3D] hover:border-[#7D8C7A]'
+                      }`}
                   >
                     <span className="text-xs font-semibold block">{pos.label}</span>
                   </button>
@@ -515,11 +512,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     onClick={() =>
                       onChange({ heroOverlayOpacity: val })
                     }
-                    className={`text-[10px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
-                      (settings.heroOverlayOpacity !== undefined ? settings.heroOverlayOpacity : 50) === val
-                        ? 'bg-[#5A5A40] text-white border-[#5A5A40]'
-                        : 'bg-white border-[#E5E2D0] text-[#7D8C7A]'
-                    }`}
+                    className={`text-[10px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${(settings.heroOverlayOpacity !== undefined ? settings.heroOverlayOpacity : 50) === val
+                      ? 'bg-[#5A5A40] text-white border-[#5A5A40]'
+                      : 'bg-white border-[#E5E2D0] text-[#7D8C7A]'
+                      }`}
                   >
                     {val}%
                   </button>
@@ -568,11 +564,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   onClick={() =>
                     onChange({ heroDateFormat: opt.id })
                   }
-                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-w-0 ${
-                    isSelected
-                      ? 'bg-[#FAF9F0] border-[#5A5A40] ring-2 ring-[#5A5A40]/20 shadow-xs'
-                      : 'bg-white border-[#E5E2D0] hover:border-[#7D8C7A]'
-                  }`}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-w-0 ${isSelected
+                    ? 'bg-[#FAF9F0] border-[#5A5A40] ring-2 ring-[#5A5A40]/20 shadow-xs'
+                    : 'bg-white border-[#E5E2D0] hover:border-[#7D8C7A]'
+                    }`}
                 >
                   <div className="flex items-center justify-between w-full mb-1">
                     <span className="font-serif font-bold text-xs text-[#1a1a1a] truncate">
@@ -673,6 +668,115 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
           </div>
         </div>
 
+        {/* Experiencia de Entrada: Carta vs Puerta */}
+        <div className="pt-3 border-t border-[#E5E2D0] space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <label className="text-xs font-bold text-[#1a1a1a]">
+              Experiencia de Entrada (Animación de Apertura):
+            </label>
+            <span className="text-[10px] text-[#7D8C7A]">
+              Elige entre carta con sobre tradicional o puertas 3D abriéndose
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => onChange({ entranceType: 'letter' })}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${(settings.entranceType || 'letter') === 'letter'
+                ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-sm'
+                : 'bg-[#FAF9F0] hover:bg-white text-stone-700 border-[#E5E2D0]'
+                }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${(settings.entranceType || 'letter') === 'letter' ? 'bg-white/20 text-white' : 'bg-white text-amber-800 border border-[#E5E2D0]'
+                }`}>
+                <Mail className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block text-xs font-bold">Carta con Sobre</span>
+                <span className="text-[10px] opacity-80 block">Sobre interactivo con sello de lacre</span>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange({ entranceType: 'door' })}
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${settings.entranceType === 'door'
+                ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-sm'
+                : 'bg-[#FAF9F0] hover:bg-white text-stone-700 border-[#E5E2D0]'
+                }`}
+            >
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${settings.entranceType === 'door' ? 'bg-white/20 text-white' : 'bg-white text-amber-800 border border-[#E5E2D0]'
+                }`}>
+                <DoorOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="block text-xs font-bold">Puertas Abriéndose</span>
+                <span className="text-[10px] opacity-80 block">Puertas dobles 3D abriéndose al evento</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Textos de la Portada (Hero): Encabezados e Invitación */}
+        <div className="pt-3 border-t border-[#E5E2D0] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <label className="text-xs font-bold text-[#1a1a1a]">
+              Textos Principales del Hero (Portada):
+            </label>
+            <span className="text-[10px] text-[#7D8C7A]">
+              Personaliza el encabezado caligráfico superior y la frase de invitación
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Campo 1: Intro / Prefijo caligráfico */}
+            <div>
+              <label className="text-[11px] font-semibold text-stone-700 block mb-1">
+                Prefijo Cursivo Superior:
+              </label>
+              <input
+                type="text"
+                value={settings.heroIntroText !== undefined ? settings.heroIntroText : ''}
+                onChange={(e) => onChange({ heroIntroText: e.target.value })}
+                placeholder="Nuestra"
+                className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+              />
+              <p className="text-[10px] text-stone-500 mt-1">Línea 1 en cursiva pequeña (opcional).</p>
+            </div>
+
+            {/* Campo 2: Encabezado Principal caligráfico */}
+            <div>
+              <label className="text-[11px] font-semibold text-stone-700 block mb-1">
+                Título Superior en Caligrafía:
+              </label>
+              <input
+                type="text"
+                value={settings.heroHeadingText !== undefined ? settings.heroHeadingText : ''}
+                onChange={(e) => onChange({ heroHeadingText: e.target.value })}
+                placeholder="Boda"
+                className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+              />
+              <p className="text-[10px] text-stone-500 mt-1">Línea 2 en caligrafía grande (opcional).</p>
+            </div>
+
+            {/* Campo 3: Frase de Invitación */}
+            <div>
+              <label className="text-[11px] font-semibold text-stone-700 block mb-1">
+                Frase de Invitación en Portada:
+              </label>
+              <input
+                type="text"
+                value={settings.heroInvitationText || ''}
+                onChange={(e) => onChange({ heroInvitationText: e.target.value })}
+                placeholder="Te invitamos a celebrar nuestra boda"
+                className="w-full bg-[#FAF9F0] border border-[#E5E2D0] rounded-2xl px-3.5 py-2 text-xs text-[#3D3D3D] focus:outline-none focus:border-[#5A5A40]"
+              />
+              <p className="text-[10px] text-stone-500 mt-1">Línea 3 en mayúsculas antes de los nombres de los novios.</p>
+            </div>
+          </div>
+        </div>
+
+
         {/* 4. Frase Especial del Hero & Texto Bíblico / Cita */}
         <div className="space-y-4 pt-2 border-t border-[#E5E2D0]">
           <div>
@@ -753,16 +857,16 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                 settings.heroImageFit === 'fill'
                   ? '100% 100%'
                   : settings.heroImageFit === 'contain'
-                  ? 'contain'
-                  : settings.heroImageFit === 'original'
-                  ? 'auto'
-                  : 'cover',
+                    ? 'contain'
+                    : settings.heroImageFit === 'original'
+                      ? 'auto'
+                      : 'cover',
               backgroundPosition:
                 settings.heroImagePosition === 'top'
                   ? 'center top'
                   : settings.heroImagePosition === 'bottom'
-                  ? 'center bottom'
-                  : 'center center',
+                    ? 'center bottom'
+                    : 'center center',
             }}
           />
 
@@ -807,7 +911,7 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                   ? { title: settings.heroWitnessesTitle?.trim() || 'Testigos', names: settings.heroWitnesses.trim() }
                   : null,
               ].filter(Boolean) as { title: string; names: string }[];
-              
+
               if (!activeCourtItems.length) return null;
 
               const cardTitle = settings.heroCourtTitle?.trim() || (settings.eventType === 'xv' ? 'Con la bendición de mi familia' : 'Con la bendición de Dios y de nuestras familias');
@@ -824,9 +928,8 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                       return (
                         <div
                           key={idx}
-                          className={`flex flex-col items-center text-center ${
-                            isAloneOnRow ? 'sm:col-span-2 max-w-xs mx-auto' : ''
-                          }`}
+                          className={`flex flex-col items-center text-center ${isAloneOnRow ? 'sm:col-span-2 max-w-xs mx-auto' : ''
+                            }`}
                         >
                           <span className="text-[7.5px] uppercase tracking-wider text-amber-200/70 font-semibold block">
                             {item.title}
@@ -944,6 +1047,26 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
             <label className="flex items-center gap-3 p-3 bg-[#FAF9F0] rounded-2xl border border-[#E5E2D0] cursor-pointer hover:bg-[#F0EEDC] transition-colors">
               <input
                 type="checkbox"
+                checked={Boolean(settings.heroShowLocation)}
+                onChange={(e) =>
+                  onChange({ heroShowLocation: e.target.checked })
+                }
+                className="w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer"
+              />
+              <div>
+                <span className="text-xs font-semibold text-[#1a1a1a] block">
+                  Mostrar Ubicación en Portada
+                </span>
+                <span className="text-[10px] text-[#7D8C7A]">
+                  Lugar, dirección completa y botón para abrir en Google Maps.
+                </span>
+              </div>
+            </label>
+
+
+            <label className="flex items-center gap-3 p-3 bg-[#FAF9F0] rounded-2xl border border-[#E5E2D0] cursor-pointer hover:bg-[#F0EEDC] transition-colors">
+              <input
+                type="checkbox"
                 checked={Boolean(settings.heroShowIcon)}
                 onChange={(e) =>
                   onChange({ heroShowIcon: e.target.checked })
@@ -1007,33 +1130,30 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     <button
                       type="button"
                       onClick={() => onChange({ heroCourtPosition: 'above-names' })}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
-                        settings.heroCourtPosition === 'above-names'
-                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                          : 'text-[#5A5A40] hover:bg-white/80'
-                      }`}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${settings.heroCourtPosition === 'above-names'
+                        ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                        : 'text-[#5A5A40] hover:bg-white/80'
+                        }`}
                     >
                       Arriba
                     </button>
                     <button
                       type="button"
                       onClick={() => onChange({ heroCourtPosition: 'below-names' })}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
-                        !settings.heroCourtPosition || settings.heroCourtPosition === 'below-names'
-                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                          : 'text-[#5A5A40] hover:bg-white/80'
-                      }`}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names'
+                        ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                        : 'text-[#5A5A40] hover:bg-white/80'
+                        }`}
                     >
                       Centro
                     </button>
                     <button
                       type="button"
                       onClick={() => onChange({ heroCourtPosition: 'below-quote' })}
-                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${
-                        settings.heroCourtPosition === 'below-quote'
-                          ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
-                          : 'text-[#5A5A40] hover:bg-white/80'
-                      }`}
+                      className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center ${settings.heroCourtPosition === 'below-quote'
+                        ? 'bg-[#5A5A40] text-white shadow-xs font-bold'
+                        : 'text-[#5A5A40] hover:bg-white/80'
+                        }`}
                     >
                       Abajo
                     </button>
@@ -1042,8 +1162,8 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                     {settings.heroCourtPosition === 'above-names'
                       ? 'Arriba de los novios (estilo protocolario clásico)'
                       : settings.heroCourtPosition === 'below-quote'
-                      ? 'Al pie del Hero (bajo la frase bíblica)'
-                      : 'Entre los novios y la frase (estándar recomendado)'}
+                        ? 'Al pie del Hero (bajo la frase bíblica)'
+                        : 'Entre los novios y la frase (estándar recomendado)'}
                   </span>
                 </div>
 
@@ -1387,11 +1507,10 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
                       key={st.id}
                       type="button"
                       onClick={() => onChange({ countdownStyle: st.id })}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                        isSelected
-                          ? 'border-[#5A5A40] bg-[#FAF9F0] shadow-sm ring-2 ring-[#5A5A40]/30'
-                          : 'border-[#E5E2D0] bg-white hover:bg-[#FAF9F0]/60'
-                      }`}
+                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${isSelected
+                        ? 'border-[#5A5A40] bg-[#FAF9F0] shadow-sm ring-2 ring-[#5A5A40]/30'
+                        : 'border-[#E5E2D0] bg-white hover:bg-[#FAF9F0]/60'
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-bold text-[#1a1a1a]">{st.name}</span>

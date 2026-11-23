@@ -1,21 +1,31 @@
 import { EventType, WeddingSettings } from '../types.ts';
 
 const EVENT_TYPE_ALIASES = new Set(['xv', 'quince', 'quinceanera', 'quinceañera', '15', '15anos', '15años']);
+const BIRTHDAY_ALIASES = new Set(['birthday', 'cumpleanos', 'cumpleaños', 'cumple', 'bday']);
 
-// Stable identifiers for the two built-in demo invitations. These are kept
+// Stable identifiers for the built-in demo invitations. These are kept
 // separate from user-created event IDs so a demo route can never select a
 // real customer event by accident.
 export const DEMO_WEDDING_ID = 1;
 export const DEMO_XV_ID = 6;
+export const DEMO_BIRTHDAY_ID = 7;
 export const DEMO_WEDDING_SLUG = 'boda-sofia-alejandro';
 export const DEMO_XV_SLUG = 'xv-valeria-montserrat';
+export const DEMO_BIRTHDAY_SLUG = 'cumpleanos-lucas-martin';
 
 /** Built-in templates have edit access managed by the CEO. */
 export function isDemoWeddingRecord(wedding: { id?: unknown; slug?: unknown } | null | undefined) {
   if (!wedding) return false;
   const id = Number(wedding.id);
   const slug = String(wedding.slug || '').trim().toLowerCase();
-  return id === DEMO_WEDDING_ID || id === DEMO_XV_ID || slug === DEMO_WEDDING_SLUG || slug === DEMO_XV_SLUG;
+  return (
+    id === DEMO_WEDDING_ID ||
+    id === DEMO_XV_ID ||
+    id === DEMO_BIRTHDAY_ID ||
+    slug === DEMO_WEDDING_SLUG ||
+    slug === DEMO_XV_SLUG ||
+    slug === DEMO_BIRTHDAY_SLUG
+  );
 }
 
 const stripAccents = (value: string) =>
@@ -32,15 +42,19 @@ const cleanNamePart = (value: string) =>
 const compactName = (value: string) => cleanNamePart(value).replace(/[^a-zA-Z0-9]/g, '');
 
 /**
- * The application currently supports weddings and XV celebrations. Unknown
+ * The application currently supports weddings, XV celebrations and birthdays. Unknown
  * values intentionally fall back to weddings instead of changing the visual
  * editor based on a slug or an event id.
  */
 export function normalizeEventType(value: unknown): EventType {
   const normalized = stripAccents(String(value ?? '')).trim().toLowerCase();
-  return EVENT_TYPE_ALIASES.has(normalized) || normalized.includes('quince') || normalized.includes('xv')
-    ? 'xv'
-    : 'bodas';
+  if (EVENT_TYPE_ALIASES.has(normalized) || normalized.includes('quince') || normalized.includes('xv')) {
+    return 'xv';
+  }
+  if (BIRTHDAY_ALIASES.has(normalized) || normalized.includes('cumple') || normalized.includes('birthday')) {
+    return 'birthday';
+  }
+  return 'bodas';
 }
 
 /**
@@ -53,9 +67,19 @@ export function resolveEventType(value: unknown, slug?: unknown): EventType {
   }
 
   const normalizedSlug = stripAccents(String(slug ?? '')).toLowerCase();
-  return normalizedSlug.startsWith('xv-') || normalizedSlug.startsWith('quince-') || normalizedSlug.includes('-xv-')
-    ? 'xv'
-    : 'bodas';
+  if (normalizedSlug.startsWith('xv-') || normalizedSlug.startsWith('quince-') || normalizedSlug.includes('-xv-')) {
+    return 'xv';
+  }
+  if (
+    normalizedSlug.startsWith('birthday-') ||
+    normalizedSlug.startsWith('cumple-') ||
+    normalizedSlug.startsWith('cumpleanos-') ||
+    normalizedSlug.includes('-birthday-') ||
+    normalizedSlug.includes('-cumple-')
+  ) {
+    return 'birthday';
+  }
+  return 'bodas';
 }
 
 export interface EventPresentation {
@@ -91,6 +115,17 @@ const EVENT_PRESENTATIONS: Record<EventType, Omit<EventPresentation, 'type'>> = 
       : `👑 XV Años de ${coupleNames} — Invitación Oficial`,
     siteName: (coupleNames) => `XV Años de ${coupleNames}`,
     imageAlt: (coupleNames, formattedDate) => `Invitación de XV Años de ${coupleNames} - ${formattedDate}`,
+  },
+  birthday: {
+    label: 'Cumpleaños',
+    defaultName: 'Lucas Martín',
+    landingTitle: 'Atelier Cumpleaños | Invitaciones Digitales de Cumpleaños & Fiestas Temáticas',
+    landingDescription: 'Crea y comparte una invitación digital de cumpleaños con cuenta regresiva, música, confirmación RSVP, mapa y galería colaborativa.',
+    invitationTitle: (coupleNames, guestName) => guestName
+      ? `🎂 ¡${guestName}, tienes una invitación al Cumpleaños de ${coupleNames}!`
+      : `🎂 Cumpleaños de ${coupleNames} — Invitación Oficial`,
+    siteName: (coupleNames) => `Cumpleaños de ${coupleNames}`,
+    imageAlt: (coupleNames, formattedDate) => `Invitación de Cumpleaños de ${coupleNames} - ${formattedDate}`,
   },
 };
 
@@ -141,6 +176,12 @@ export function generateEventHashtag(
     return `#MisXV${name}${year}`;
   }
 
+  if (type === 'birthday') {
+    const firstName = (parts[0] || coupleNames || 'Cumple').split(/\s+/)[0];
+    const name = compactName(firstName) || 'Cumple';
+    return `#Cumple${name}${year}`;
+  }
+
   const first = compactName(parts[0] || 'Boda') || 'Boda';
   const second = compactName(parts[1] || '')
     ? `Y${compactName(parts[1])}`
@@ -155,7 +196,7 @@ export function generateDynamicInitials(coupleNames?: string | null, eventType?:
     .replace(/[^a-zA-Z0-9\s&+/,|]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  if (!names) return type === 'xv' ? 'XV' : 'W';
+  if (!names) return type === 'xv' ? 'XV' : type === 'birthday' ? '🎂' : 'W';
 
   const explicitParts = names
     .split(/\s*(?:&|\+|\/|,|\||\by\b|\band\b|\be\b)\s*/i)
@@ -170,7 +211,7 @@ export function generateDynamicInitials(coupleNames?: string | null, eventType?:
   return words
     .slice(0, 2)
     .map((word) => word.charAt(0).toUpperCase())
-    .join('') || (type === 'xv' ? 'XV' : 'W');
+    .join('') || (type === 'xv' ? 'XV' : type === 'birthday' ? '🎂' : 'W');
 }
 
 export function getDisplayedWaxSealText(settings?: Pick<WeddingSettings, 'coupleNames' | 'eventType' | 'waxSealText' | 'waxSealTextIsCustom'> | null): string {

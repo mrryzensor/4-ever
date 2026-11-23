@@ -16,6 +16,8 @@ import {
   Minimize2,
   X,
   Edit3,
+  MapPin,
+  Gift,
 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
 import { LiveInvitationCanvas } from '../LiveInvitationCanvas.tsx';
@@ -76,12 +78,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   const canUseAdvancedEditor = settings.planAccess?.advancedEditor !== false;
 
-  const renderAdvancedGroups = () => (
+    const renderAdvancedGroups = () => (
     <AdvancedModeOrganizer groups={[
       {
-        id: 'evento',
-        title: 'Portada, lugares y regalos',
-        description: 'Fotos del Hero, ubicaciones, cuenta regresiva y mesa de regalos.',
+        id: 'portada',
+        title: 'Portada & Bienvenida',
+        description: 'Fotos del Hero, títulos, cuenta regresiva animada y elementos del Hero.',
         icon: <Settings className="w-4 h-4" />,
         content: (
           <AdminHeroSettings
@@ -89,14 +91,30 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             onChange={onChange}
             onOpenSimpleMode={() => setEditorMode('simple')}
             hidePhotoSourceControls
-            beforeCountdown={(
-              <>
-                {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
-                <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-              </>
-            )}
             afterWelcome={<AdminSimpleCoverageSettings settings={settings} onChange={onChange} />}
           />
+        ),
+      },
+      {
+        id: 'evento',
+        title: 'Evento',
+        description: 'Ubicaciones & Cómo Llegar (Google Maps), itinerario y detalles.',
+        icon: <MapPin className="w-4 h-4" />,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <AdminLocationsSettings settings={settings} onChange={onChange} />
+          </div>
+        ),
+      },
+      {
+        id: 'regalos',
+        title: 'Regalos & Cuentas',
+        description: 'Cuentas bancarias, CLABE, lluvia de sobres y mesa de regalos.',
+        icon: <Gift className="w-4 h-4" />,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+          </div>
         ),
       },
       {

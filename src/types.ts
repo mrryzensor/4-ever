@@ -1,4 +1,4 @@
-export type CardStyleId = 
+export type CardStyleId =
   | 'classic-gold'
   | 'romantic-floral'
   | 'boho-chic'
@@ -10,19 +10,20 @@ export type CardStyleId =
   | 'lavender-provence'
   | 'emerald-botanical'
   | 'coastal-breeze'
-  | 'champagne-glam';
+  | 'champagne-glam'
+  | 'disco-silver';
 
 export type CardStyle = CardStyleId;
 
 export type PlanCategory = 'couple' | 'planner' | 'ceo';
 
-export type PlanId = 
-  | 'free' 
-  | 'atelier' 
-  | 'elite' 
+export type PlanId =
+  | 'free'
+  | 'atelier'
+  | 'elite'
   | 'individual_permanent'
-  | 'planner_starter' 
-  | 'planner_pro' 
+  | 'planner_starter'
+  | 'planner_pro'
   | 'planner_permanent'
   | 'ceo_unlimited'
   | 'registered';
@@ -84,7 +85,7 @@ export interface UserProfile {
   createdAt?: string;
 }
 
-export type EventType = 'bodas' | 'xv';
+export type EventType = 'bodas' | 'xv' | 'birthday';
 
 export type LandingSectionId = 'invitation' | 'gallery' | 'video' | 'hotels' | 'guestbook' | 'rsvp';
 export type DetailSectionId = 'ceremony' | 'reception' | 'rsvp' | 'itinerary' | 'gifts' | 'dress-code' | 'tips';
@@ -106,7 +107,7 @@ export interface AudioTrack {
 
 export interface WeddingSettings {
   id: number;
-  eventType?: EventType; // 'bodas' | 'xv' (defaults to 'bodas')
+  eventType?: EventType; // 'bodas' | 'xv' | 'birthday' (defaults to 'bodas')
   userId?: number | null;
   ownerUid?: string | null;
   slug?: string | null;
@@ -170,7 +171,9 @@ export interface WeddingSettings {
   waxSealDesign?: 'auto' | 'heart' | 'round' | 'scalloped' | 'soft-round' | 'classic';
   waxSealShadowColor?: string;
   waxSealShadowIntensity?: number;
-  showInvitationLetter?: boolean; // Mostrar la carta con sobre antes del contenido de la invitación
+  showInvitationLetter?: boolean; // Mostrar la carta o puerta antes del contenido de la invitación
+  entranceType?: 'letter' | 'door'; // 'letter' (carta con sobre) o 'door' (puertas abriéndose)
+  doorStyle?: 'auto' | 'classic' | 'disco-silver' | 'luxury-wood' | 'arch-ornate'; // Estilo de las puertas de entrada
   audioUrl: string;
   audioTitle: string;
   audioAutoplay: boolean;
@@ -179,11 +182,15 @@ export interface WeddingSettings {
   welcomeSubtitle?: string;
   heroDateFormat?: string; // e.g. 'dd.mm.aaaa', 'dd / mm / aaaa', 'literal-full', 'custom'
   heroCustomDateText?: string; // custom date string if heroDateFormat === 'custom'
+  heroIntroText?: string; // e.g. "It's my"
+  heroInvitationText?: string; // e.g. "Te invito a celebrar mi cumpleaños"
+  heroHeadingText?: string; // e.g. "Birthday"
   heroQuote?: string; // e.g. 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'
   heroVerse?: string; // e.g. 'Eclesiastés 4:12'
   heroVersePosition?: 'left' | 'center' | 'right';
   heroShowCountdown?: boolean; // false by default for minimal hero
-  heroShowRsvpButton?: boolean; // false by default
+  heroShowRsvpButton?: boolean;
+  heroShowLocation?: boolean; // Mostrar lugar, dirección completa y botón Maps en portada // false by default
   heroShowIcon?: boolean; // false by default
   heroShowGuestPill?: boolean; // false by default
   heroShowPadrinos?: boolean; // false by default (opcional)
@@ -270,6 +277,7 @@ export interface WeddingSettings {
   letterMotifStyle?: string;
   letterDividerStyle?: string;
   // Section Visibility Toggles (Atelier / Design)
+  showWelcomeSection?: boolean;
   showItinerary?: boolean; // Cronograma del evento
   showLocations?: boolean; // Lugares & Cómo llegar (Google Maps)
   showDressCode?: boolean; // Código de vestimenta y paleta
@@ -313,6 +321,9 @@ export interface WeddingSettings {
   tipsTitle?: string; // Título de la sección de tips
   tipsList?: WeddingTipItem[] | string; // Lista de tips configurables
   showRsvpSection?: boolean; // Confirmación de asistencia
+  rsvpActionType?: 'form' | 'whatsapp' | 'both'; // Modo de confirmación: formulario, WhatsApp o ambos
+  rsvpWhatsappPhone?: string; // Teléfono específico para recibir confirmaciones por WhatsApp
+  rsvpWhatsappMessage?: string; // Mensaje predeterminado de confirmación por WhatsApp
   rsvpDeadlineMessage?: string; // Supports {date} placeholder
   shareMessageTemplate?: string; // WhatsApp / native share message with event placeholders
   rsvpButtonText?: string;
@@ -585,32 +596,33 @@ export interface CardThemeConfig {
   fontDisplay: string;
   fontBody: string;
   ornamentStyle: string;
-  transitionType?: 
-    | 'organic-wave' 
-    | 'floral-arch' 
-    | 'boho-pampas' 
-    | 'minimal-editorial' 
-    | 'celestial-night' 
-    | 'watercolor-garden'
-    | 'royal-crest'
-    | 'desert-sunset'
-    | 'lavender-field'
-    | 'emerald-palms'
-    | 'ocean-tide'
-    | 'champagne-sparkle';
+  transitionType?:
+  | 'organic-wave'
+  | 'floral-arch'
+  | 'boho-pampas'
+  | 'minimal-editorial'
+  | 'celestial-night'
+  | 'watercolor-garden'
+  | 'royal-crest'
+  | 'desert-sunset'
+  | 'lavender-field'
+  | 'emerald-palms'
+  | 'ocean-tide'
+  | 'champagne-sparkle'
+  | 'disco-lights';
   scrollbarTrackHex?: string;
   scrollbarThumbHex?: string;
   scrollbarThumbHoverHex?: string;
   cardShapeClass?: string; // e.g. rounded-3xl, rounded-t-[3rem] rounded-b-2xl, rounded-tl-3xl rounded-br-3xl
   cardHeaderShapeClass?: string;
   cardBorderDecoration?: string;
-  cardLayoutVariant?: 
-    | 'standard' 
-    | 'royal-crest' 
-    | 'desert-ticket' 
-    | 'provence-parchment' 
-    | 'emerald-luxury' 
-    | 'nautical-passport' 
-    | 'artdeco-plaque';
+  cardLayoutVariant?:
+  | 'standard'
+  | 'royal-crest'
+  | 'desert-ticket'
+  | 'provence-parchment'
+  | 'emerald-luxury'
+  | 'nautical-passport'
+  | 'artdeco-plaque';
   cardInnerOrnamentClass?: string;
 }

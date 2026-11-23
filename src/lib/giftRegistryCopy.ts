@@ -70,11 +70,14 @@ export const DEFAULT_WEDDING_GIFT_REGISTRY_MESSAGE =
 export const DEFAULT_XV_GIFT_REGISTRY_MESSAGE =
   'El mejor regalo es tu presencia y cariño. Si deseas hacerme un presente o detalle especial para mis quince años, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.';
 
+export const DEFAULT_BIRTHDAY_GIFT_REGISTRY_MESSAGE =
+  'El mejor regalo es tu presencia y celebrar juntos este día especial. Si deseas hacerme un presente o detalle de cumpleaños, pongo a tu disposición mi cuenta bancaria o sobre el día del evento.';
+
 export function getGiftRegistryMessage(value?: string | null, eventType?: string | null): string {
   if (typeof value === 'string' && value.trim()) return value;
-  return eventType === 'xv'
-    ? DEFAULT_XV_GIFT_REGISTRY_MESSAGE
-    : DEFAULT_WEDDING_GIFT_REGISTRY_MESSAGE;
+  if (eventType === 'xv') return DEFAULT_XV_GIFT_REGISTRY_MESSAGE;
+  if (eventType === 'birthday') return DEFAULT_BIRTHDAY_GIFT_REGISTRY_MESSAGE;
+  return DEFAULT_WEDDING_GIFT_REGISTRY_MESSAGE;
 }
 
 export function getGiftRegistryCopy(value?: string | null): GiftRegistryCopy {

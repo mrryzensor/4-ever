@@ -2349,6 +2349,87 @@ export const SimpleModeInline: React.FC<SimpleModeInlineProps> = ({
                 />
               </div>
             </div>
+            {/* Direct WhatsApp RSVP mode selector */}
+            <div className="space-y-3 p-4 rounded-xl border border-emerald-500/30 bg-emerald-50/50">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                  Método de Confirmación (RSVP)
+                </label>
+                <p className="text-[11px] text-stone-500 mb-2">
+                  Elige si los invitados deben completar el formulario web o si pueden confirmar directamente por WhatsApp.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onChange({ rsvpActionType: 'form' })}
+                    className={`px-3 py-2.5 rounded-xl border text-xs font-medium text-left transition-all cursor-pointer ${
+                      (!settings.rsvpActionType || settings.rsvpActionType === 'form')
+                        ? 'bg-amber-500/15 border-amber-500 text-stone-900 font-bold shadow-xs'
+                        : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                    }`}
+                  >
+                    <span className="block font-bold">Formulario Web</span>
+                    <span className="text-[10px] text-stone-500 block mt-0.5">Búsqueda de nombre y registro</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ rsvpActionType: 'whatsapp' })}
+                    className={`px-3 py-2.5 rounded-xl border text-xs font-medium text-left transition-all cursor-pointer ${
+                      settings.rsvpActionType === 'whatsapp'
+                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-950 font-bold shadow-xs'
+                        : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                    }`}
+                  >
+                    <span className="block font-bold text-emerald-800">Directo a WhatsApp</span>
+                    <span className="text-[10px] text-stone-500 block mt-0.5">1 clic abre chat con mensaje listo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ rsvpActionType: 'both' })}
+                    className={`px-3 py-2.5 rounded-xl border text-xs font-medium text-left transition-all cursor-pointer ${
+                      settings.rsvpActionType === 'both'
+                        ? 'bg-emerald-500/15 border-emerald-500 text-emerald-950 font-bold shadow-xs'
+                        : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                    }`}
+                  >
+                    <span className="block font-bold">Ambos Métodos</span>
+                    <span className="text-[10px] text-stone-500 block mt-0.5">WhatsApp rápido y formulario</span>
+                  </button>
+                </div>
+              </div>
+
+              {(settings.rsvpActionType === 'whatsapp' || settings.rsvpActionType === 'both') && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-emerald-500/20">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                      Teléfono de WhatsApp para Confirmaciones
+                    </label>
+                    <input
+                      type="tel"
+                      value={settings.rsvpWhatsappPhone ?? settings.contactPhone ?? ''}
+                      onChange={(e) => onChange({ rsvpWhatsappPhone: e.target.value })}
+                      placeholder="+51 987 654 321"
+                      className="w-full px-4 py-2 rounded-xl border border-emerald-300 bg-white text-xs text-stone-800 font-mono"
+                    />
+                    <span className="mt-1 block text-[10px] text-stone-500">Si lo dejas vacío, usa el teléfono de contacto general.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1">
+                      Mensaje Predeterminado de WhatsApp
+                    </label>
+                    <textarea
+                      value={settings.rsvpWhatsappMessage ?? ''}
+                      onChange={(e) => onChange({ rsvpWhatsappMessage: e.target.value })}
+                      placeholder="¡Hola! Confirmo con mucho gusto mi asistencia al evento de {celebrant}. (Pases: {passes}). ✨"
+                      rows={2}
+                      className="w-full resize-y px-4 py-2 rounded-xl border border-emerald-300 bg-white text-xs text-stone-800"
+                    />
+                    <span className="mt-1 block text-[10px] text-stone-500">Variables: {'{celebrant}'}, {'{guest}'}, {'{passes}'}</span>
+                  </div>
+                </div>
+              )}
+            </div>
             <RsvpAvailabilitySettings settings={settings} onChange={onChange} />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">

@@ -386,7 +386,8 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
     setRefreshKey((k) => k + 1);
   };
 
-  const iframeSrc = `?mode=preview_embed&w=${settings.id || 1}&t=${refreshKey}`;
+  const eventParam = settings.eventType ? `&event=${encodeURIComponent(settings.eventType)}` : '';
+  const iframeSrc = `?mode=preview_embed&w=${settings.id || 1}${eventParam}&t=${refreshKey}`;
 
   return (
     <div className="w-full flex flex-col items-center select-none">
@@ -754,7 +755,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
             )}
 
             {/* 100% Genuine Isolated Viewport: Real Mobile iframe */}
-            <div className="flex-1 w-full h-full relative overflow-hidden bg-[#FAF9F0]">
+            <div className="flex-1 w-full min-h-0 relative overflow-hidden bg-[#FAF9F0]">
               {isCanvasVisible ? (
                 <iframe
                   ref={iframeRef}

@@ -21,6 +21,7 @@ import { CARD_THEMES } from '../../../lib/themes.ts';
 import { TypographyNumberFontField } from './TypographyNumberFontField.tsx';
 import { TypographyHeroNumberFontField } from './TypographyHeroNumberFontField.tsx';
 import { TypographyCountdownNumberFontField } from './TypographyCountdownNumberFontField.tsx';
+import { getThemeDisplayFontFamily } from '../../../lib/rsvpButtonStyle.ts';
 import {
   StyleSpecificDivider,
   FixDateAnimatedTransitionDivider,
@@ -80,7 +81,7 @@ const EmblemColorPicker = React.memo(({ value, defaultColor, onCommit }: EmblemC
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <label htmlFor="hero-emblem-color" className="block text-xs font-semibold text-stone-800">Color del emblema</label>
-          <p className="mt-1 text-[10px] text-stone-500">Al dejarlo en automático, el tono se adapta al motivo y a la paleta.</p>
+          <p className="mt-1 text-[10px] text-stone-500">Al dejarlo en automÃ¡tico, el tono se adapta al motivo y a la paleta.</p>
         </div>
         <div className="flex items-center gap-2">
           <input id="hero-emblem-color" type="color" value={draftColor} onChange={(event) => handleChange(event.target.value)} onBlur={commitDraft} aria-label="Elegir color del emblema" className="h-10 w-12 cursor-pointer rounded-lg border border-stone-300 bg-white p-1" />
@@ -110,43 +111,44 @@ const STYLE_KEYS: CardStyleId[] = [
   'emerald-botanical',
   'coastal-breeze',
   'champagne-glam',
+  'disco-silver',
 ];
 
 const PARTICLE_OPTIONS = [
-  { id: 'auto', label: 'Automático', desc: 'Heredar según estilo base' },
-  { id: 'petals', label: 'Pétalos de Rosa', desc: 'Caída suave de pétalos románticos' },
+  { id: 'auto', label: 'AutomÃ¡tico', desc: 'Heredar segÃºn estilo base' },
+  { id: 'petals', label: 'PÃ©talos de Rosa', desc: 'CaÃ­da suave de pÃ©talos romÃ¡nticos' },
   { id: 'gold-sparkles', label: 'Chispas de Oro', desc: 'Polvo de diamantes dorados brillantes' },
-  { id: 'champagne-bubbles', label: 'Burbujas Champaña', desc: 'Efervescencia luminosa ascendente' },
-  { id: 'fireflies', label: 'Luciérnagas', desc: 'Orbes etéreos flotantes con destello' },
-  { id: 'stars', label: 'Estrellas Cósmicas', desc: 'Centelleo estelar celestial' },
-  { id: 'none', label: 'Desactivado', desc: 'Sin partículas en el fondo' },
+  { id: 'champagne-bubbles', label: 'Burbujas ChampaÃ±a', desc: 'Efervescencia luminosa ascendente' },
+  { id: 'fireflies', label: 'LuciÃ©rnagas', desc: 'Orbes etÃ©reos flotantes con destello' },
+  { id: 'stars', label: 'Estrellas CÃ³smicas', desc: 'Centelleo estelar celestial' },
+  { id: 'none', label: 'Desactivado', desc: 'Sin partÃ­culas en el fondo' },
 ];
 
 const TRANSITION_EFFECT_OPTIONS = [
-  { id: 'wave', label: 'Olas orgánicas', desc: 'Capas fluidas con silueta según la plantilla' },
-  { id: 'petals', label: 'Pétalos flotantes', desc: 'Pétalos animados sobre un borde suave' },
+  { id: 'wave', label: 'Olas orgÃ¡nicas', desc: 'Capas fluidas con silueta segÃºn la plantilla' },
+  { id: 'petals', label: 'PÃ©talos flotantes', desc: 'PÃ©talos animados sobre un borde suave' },
   { id: 'sparkles', label: 'Destellos', desc: 'Brillos que aparecen y se desplazan' },
   { id: 'drape', label: 'Cortinaje', desc: 'Pliegues elegantes que enmarcan el contenido' },
-  { id: 'orbit', label: 'Órbitas', desc: 'Arcos luminosos alrededor de un domo' },
-  { id: 'cascade', label: 'Lluvia botánica', desc: 'Hojas y pétalos caen sobre un borde escalonado' },
+  { id: 'orbit', label: 'Ã“rbitas', desc: 'Arcos luminosos alrededor de un domo' },
+  { id: 'cascade', label: 'Lluvia botÃ¡nica', desc: 'Hojas y pÃ©talos caen sobre un borde escalonado' },
   { id: 'ribbons', label: 'Listones fluidos', desc: 'Cintas cruzadas se mecen al pasar al contenido' },
-  { id: 'bloom', label: 'Jardín en flor', desc: 'Arcos florales con flores que se abren suavemente' },
-  { id: 'arch', label: 'Arcos de bienvenida', desc: 'Un pórtico ornamental se ilumina al entrar al contenido' },
+  { id: 'bloom', label: 'JardÃ­n en flor', desc: 'Arcos florales con flores que se abren suavemente' },
+  { id: 'arch', label: 'Arcos de bienvenida', desc: 'Un pÃ³rtico ornamental se ilumina al entrar al contenido' },
   { id: 'aurora', label: 'Aurora suave', desc: 'Velos luminosos se desplazan bajo el hero' },
-  { id: 'constellation', label: 'Constelación', desc: 'Estrellas conectadas con destellos sutiles' },
-  { id: 'confetti', label: 'Confeti delicado', desc: 'Pequeños acentos flotan sobre un borde orgánico' },
+  { id: 'constellation', label: 'ConstelaciÃ³n', desc: 'Estrellas conectadas con destellos sutiles' },
+  { id: 'confetti', label: 'Confeti delicado', desc: 'PequeÃ±os acentos flotan sobre un borde orgÃ¡nico' },
 ] as const;
 
 const TYPOGRAPHY_SCALE_CONTROLS = [
-  { key: 'typographyTitleScale', label: 'Títulos principales', help: 'Nombres y títulos grandes', cssVar: '--invitation-type-title' },
-  { key: 'typographyHeadingScale', label: 'Encabezados', help: 'Títulos de secciones y tarjetas', cssVar: '--invitation-type-heading' },
-  { key: 'typographyBodyScale', label: 'Párrafos', help: 'Descripciones y textos de lectura', cssVar: '--invitation-type-body' },
-  { key: 'typographySubtitleScale', label: 'Subtítulos', help: 'Texto de apoyo bajo la frase de bienvenida', cssVar: '--invitation-type-subtitle' },
+  { key: 'typographyTitleScale', label: 'TÃ­tulos principales', help: 'Nombres y tÃ­tulos grandes', cssVar: '--invitation-type-title' },
+  { key: 'typographyHeadingScale', label: 'Encabezados', help: 'TÃ­tulos de secciones y tarjetas', cssVar: '--invitation-type-heading' },
+  { key: 'typographyBodyScale', label: 'PÃ¡rrafos', help: 'Descripciones y textos de lectura', cssVar: '--invitation-type-body' },
+  { key: 'typographySubtitleScale', label: 'SubtÃ­tulos', help: 'Texto de apoyo bajo la frase de bienvenida', cssVar: '--invitation-type-subtitle' },
   { key: 'typographyDetailScale', label: 'Detalles', help: 'Fechas, etiquetas y datos secundarios', cssVar: '--invitation-type-detail' },
-  { key: 'typographyBadgeScale', label: 'Badges', help: 'Píldoras, categorías y etiquetas destacadas', cssVar: '--invitation-type-badge', max: 200 },
-  { key: 'typographyButtonScale', label: 'Botones', help: 'Acciones y llamados a la acción de la invitación', cssVar: '--invitation-type-button', max: 200 },
-  { key: 'typographyToggleScale', label: 'Interruptores', help: 'Tamaño del control ¿Llevas invitados? en la confirmación', cssVar: '--invitation-type-toggle', max: 200 },
-  { key: 'typographyGalleryFullscreenScale', label: 'Galería ampliada', help: 'Todos los textos dentro de la foto a pantalla completa', cssVar: '--invitation-type-gallery-fullscreen', max: 200 },
+  { key: 'typographyBadgeScale', label: 'Badges', help: 'PÃ­ldoras, categorÃ­as y etiquetas destacadas', cssVar: '--invitation-type-badge', max: 200 },
+  { key: 'typographyButtonScale', label: 'Botones', help: 'Acciones y llamados a la acciÃ³n de la invitaciÃ³n', cssVar: '--invitation-type-button', max: 200 },
+  { key: 'typographyToggleScale', label: 'Interruptores', help: 'TamaÃ±o del control Â¿Llevas invitados? en la confirmaciÃ³n', cssVar: '--invitation-type-toggle', max: 200 },
+  { key: 'typographyGalleryFullscreenScale', label: 'GalerÃ­a ampliada', help: 'Todos los textos dentro de la foto a pantalla completa', cssVar: '--invitation-type-gallery-fullscreen', max: 200 },
 ] as const;
 
 const TypographyScaleControls: React.FC<{
@@ -157,15 +159,15 @@ const TypographyScaleControls: React.FC<{
   <div className="rounded-xl border border-stone-200 bg-stone-50/70 p-3 sm:p-4">
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div>
-        <h4 className="text-sm font-bold text-stone-800">Tamaño de cada tipo de texto</h4>
-        <p className="mt-0.5 text-xs text-stone-600">Los cambios se reflejan al instante en el simulador y la invitación.</p>
+        <h4 className="text-sm font-bold text-stone-800">TamaÃ±o de cada tipo de texto</h4>
+        <p className="mt-0.5 text-xs text-stone-600">Los cambios se reflejan al instante en el simulador y la invitaciÃ³n.</p>
       </div>
       <button
         type="button"
         onClick={() => onChange({ typographyTitleScale: 100, typographyHeadingScale: 100, typographyBodyScale: 100, typographySubtitleScale: 100, typographyDetailScale: 100, typographyBadgeScale: 100, typographyButtonScale: 100, typographyToggleScale: 100, typographyGalleryFullscreenScale: 100 })}
         className="rounded-lg border border-stone-300 bg-white px-2.5 py-1.5 text-xs font-medium text-stone-700 hover:bg-stone-100"
       >
-        Restablecer tamaños
+        Restablecer tamaÃ±os
       </button>
     </div>
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -192,10 +194,10 @@ const TypographyScaleControls: React.FC<{
             >
               {key === 'typographyToggleScale' ? (
                 <span className="inline-flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-[10px] font-sans not-italic text-stone-700">
-                  <span>¿Llevas acompañantes?</span>
+                  <span>Â¿Llevas acompaÃ±antes?</span>
                   <span className="relative h-4 w-7 rounded-full bg-[#5A5A40]"><span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-white" /></span>
                 </span>
-              ) : key === 'typographyButtonScale' ? 'Ver invitación' : key === 'typographyBadgeScale' ? 'Puntualidad' : key === 'typographyGalleryFullscreenScale' ? 'Comentarios · Tu nombre y dedicatoria' : 'Sofía & Alejandro · Nos emociona compartir este día'}
+              ) : key === 'typographyButtonScale' ? 'Ver invitaciÃ³n' : key === 'typographyBadgeScale' ? 'Puntualidad' : key === 'typographyGalleryFullscreenScale' ? 'Comentarios Â· Tu nombre y dedicatoria' : 'SofÃ­a & Alejandro Â· Nos emociona compartir este dÃ­a'}
             </span>
             <input
               type="range"
@@ -205,7 +207,7 @@ const TypographyScaleControls: React.FC<{
               value={value}
               onChange={(event) => onChange({ [key]: Number(event.target.value) })}
               className={`mt-2 w-full ${accent === 'indigo' ? 'accent-indigo-700' : 'accent-purple-700'}`}
-              aria-label={`Tamaño de ${label.toLowerCase()}`}
+              aria-label={`TamaÃ±o de ${label.toLowerCase()}`}
             />
           </label>
         );
@@ -320,7 +322,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 1. SECCIÓN: PALETA DE COLORES & ACENTOS */}
+      {/* 1. SECCIÃ“N: PALETA DE COLORES & ACENTOS */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -331,12 +333,12 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Palette className="w-4 h-4 text-amber-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                1. Paleta Cromática & Acentos
+                1. Paleta CromÃ¡tica & Acentos
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.colorPaletteStyle && settings.colorPaletteStyle !== 'auto'
                   ? `Personalizada: ${CARD_THEMES[settings.colorPaletteStyle as CardStyleId]?.name || settings.colorPaletteStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -352,7 +354,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             {/* Base Palettes Grid */}
             <div>
               <label className="text-xs font-semibold text-stone-700 block mb-2">
-                Selecciona una Paleta de Inspiración:
+                Selecciona una Paleta de InspiraciÃ³n:
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {/* Auto Option */}
@@ -495,7 +497,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 2. SECCIÓN: TIPOGRAFÍA & PAREJAS DE FUENTES */}
+      {/* 2. SECCIÃ“N: TIPOGRAFÃA & PAREJAS DE FUENTES */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -506,12 +508,12 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Type className="w-4 h-4 text-indigo-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                2. Tipografía & Fuentes Editoriales
+                2. TipografÃ­a & Fuentes Editoriales
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.fontPairStyle && settings.fontPairStyle !== 'auto'
                   ? `Estilo: ${CARD_THEMES[settings.fontPairStyle as CardStyleId]?.name || settings.fontPairStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -541,7 +543,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                     <Check className="w-3.5 h-3.5 text-indigo-600" />
                   )}
                 </div>
-                <p className={`text-base italic text-stone-700 leading-snug ${activeTheme.fontDisplay}`}>
+                <p style={{ fontFamily: getThemeDisplayFontFamily(activeTheme.fontDisplay) }} className={`text-base italic text-stone-700 leading-snug ${activeTheme.fontDisplay}`}>
                   {settings.coupleNames || (isXv ? 'Valeria Montserrat' : 'Sofía & Alejandro')}
                 </p>
                 <p className={`text-[11px] text-stone-500 mt-0.5 ${activeTheme.fontBody}`}>
@@ -568,7 +570,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                       <span className="text-xs font-bold text-stone-800 truncate">{t.name}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
                     </div>
-                    <p className={`text-base italic text-stone-700 leading-snug ${t.fontDisplay}`}>
+                    <p style={{ fontFamily: getThemeDisplayFontFamily(t.fontDisplay) }} className={`text-base italic text-stone-700 leading-snug ${t.fontDisplay}`}>
                       {settings.coupleNames || (isXv ? 'Valeria Montserrat' : 'Sofía & Alejandro')}
                     </p>
                     <p className={`text-[10px] text-stone-500 mt-0.5 truncate ${t.fontBody}`}>
@@ -586,7 +588,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 3. SECCIÓN: CUENTA REGRESIVA SVG */}
+      {/* 3. SECCIÃ“N: CUENTA REGRESIVA SVG */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -602,7 +604,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.countdownStyle && settings.countdownStyle !== 'auto'
                   ? `Estilo: ${CARD_THEMES[settings.countdownStyle as CardStyleId]?.name || settings.countdownStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -662,7 +664,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 4. SECCIÓN: SEPARADORES & MOTIVOS SVG */}
+      {/* 4. SECCIÃ“N: SEPARADORES & MOTIVOS SVG */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -678,7 +680,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.dividerStyle && settings.dividerStyle !== 'auto'
                   ? `Estilo: ${CARD_THEMES[settings.dividerStyle as CardStyleId]?.name || settings.dividerStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -700,7 +702,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               />
               <span>
                 <span className="block text-xs font-semibold text-stone-800">Separadores SVG entre tarjetas</span>
-                <span className="mt-0.5 block text-[11px] text-stone-600">Horizontales al apilarse en móvil y verticales entre tarjetas de una misma fila en desktop.</span>
+                <span className="mt-0.5 block text-[11px] text-stone-600">Horizontales al apilarse en mÃ³vil y verticales entre tarjetas de una misma fila en desktop.</span>
               </span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
@@ -754,7 +756,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 5. SECCIÓN: MARCOS & ESQUINAS DE TARJETAS */}
+      {/* 5. SECCIÃ“N: MARCOS & ESQUINAS DE TARJETAS */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -770,7 +772,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.frameOrnamentStyle && settings.frameOrnamentStyle !== 'auto'
                   ? `Estilo: ${CARD_THEMES[settings.frameOrnamentStyle as CardStyleId]?.name || settings.frameOrnamentStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -804,7 +806,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               />
               <span>
                 <span className="block text-xs font-semibold text-stone-800">Fondo transparente</span>
-                <span className="mt-0.5 block text-[11px] text-stone-600">Quita el fondo y la sombra para integrar los motivos con el fondo. Combínalo con «sin borde» para eliminar la caja visual.</span>
+                <span className="mt-0.5 block text-[11px] text-stone-600">Quita el fondo y la sombra para integrar los motivos con el fondo. CombÃ­nalo con Â«sin bordeÂ» para eliminar la caja visual.</span>
               </span>
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -853,7 +855,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 6. SECCIÓN: OLAS DE TRANSICIÓN HERO */}
+      {/* 6. SECCIÃ“N: OLAS DE TRANSICIÃ“N HERO */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -864,12 +866,12 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Compass className="w-4 h-4 text-cyan-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                6. Transición Animada (Hero ➔ Contenido) · 12 diseños
+                6. TransiciÃ³n Animada (Hero âž” Contenido) Â· 12 diseÃ±os
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
-                {`${TRANSITION_EFFECT_OPTIONS.find((option) => option.id === (settings.transitionEffect || 'wave'))?.label || 'Olas orgánicas'} · ${settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
+                {`${TRANSITION_EFFECT_OPTIONS.find((option) => option.id === (settings.transitionEffect || 'wave'))?.label || 'Olas orgÃ¡nicas'} Â· ${settings.transitionWaveStyle && settings.transitionWaveStyle !== 'auto'
                   ? CARD_THEMES[settings.transitionWaveStyle as CardStyleId]?.name || settings.transitionWaveStyle
-                  : 'paleta automática'}`}
+                  : 'paleta automÃ¡tica'}`}
               </span>
             </div>
           </div>
@@ -907,7 +909,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               </div>
             </div>
             <div className="border-t border-stone-200 pt-3">
-              <span className="mb-2 block text-xs font-bold text-stone-800">Paleta y silueta según plantilla</span>
+              <span className="mb-2 block text-xs font-bold text-stone-800">Paleta y silueta segÃºn plantilla</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
@@ -955,7 +957,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 7. SECCIÓN: EMBLEMA HERO */}
+      {/* 7. SECCIÃ“N: EMBLEMA HERO */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -971,7 +973,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.heroIconStyle && settings.heroIconStyle !== 'auto'
                   ? `Emblema: ${CARD_THEMES[settings.heroIconStyle as CardStyleId]?.name || settings.heroIconStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>
@@ -1052,15 +1054,15 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                 <input type="range" min="0" max="100" value={settings.heroEmblemSparkle ?? 78} onChange={(event) => updateHeroEmblemSettings({ heroEmblemSparkle: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="Intensidad de destellos del emblema" />
               </label>
               <label className="rounded-xl border border-stone-200 p-3 sm:col-span-2">
-                <span className="flex justify-between gap-2 text-xs font-semibold text-stone-800"><span>Tamaño</span><span>{settings.heroEmblemScale ?? 100}%</span></span>
-                <input type="range" min="70" max="150" value={settings.heroEmblemScale ?? 100} onChange={(event) => updateHeroEmblemSettings({ heroEmblemScale: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="Tamaño del emblema" />
+                <span className="flex justify-between gap-2 text-xs font-semibold text-stone-800"><span>TamaÃ±o</span><span>{settings.heroEmblemScale ?? 100}%</span></span>
+                <input type="range" min="70" max="150" value={settings.heroEmblemScale ?? 100} onChange={(event) => updateHeroEmblemSettings({ heroEmblemScale: Number(event.target.value) })} className="mt-3 w-full accent-teal-700" aria-label="TamaÃ±o del emblema" />
               </label>
             </div>
           </div>
         )}
       </div>
 
-      {/* 8. SECCIÓN: PARTÍCULAS AMBIENTALES */}
+      {/* 8. SECCIÃ“N: PARTÃCULAS AMBIENTALES */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -1071,10 +1073,10 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Sparkles className="w-4 h-4 text-amber-500" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                8. Efectos de Partículas Ambientales en Pantalla
+                8. Efectos de PartÃ­culas Ambientales en Pantalla
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
-                {PARTICLE_OPTIONS.find((p) => p.id === (settings.ambientParticleStyle || 'auto'))?.label || 'Automático'}
+                {PARTICLE_OPTIONS.find((p) => p.id === (settings.ambientParticleStyle || 'auto'))?.label || 'AutomÃ¡tico'}
               </span>
             </div>
           </div>
@@ -1114,7 +1116,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 9. SECCIÓN: SELLO DE LACRE DIGITAL */}
+      {/* 9. SECCIÃ“N: SELLO DE LACRE DIGITAL */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -1130,7 +1132,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.sealStyle && settings.sealStyle !== 'auto'
                   ? `Acabado: ${CARD_THEMES[settings.sealStyle as CardStyleId]?.name || settings.sealStyle}`
-                  : 'Automático (del estilo base)'}
+                  : 'AutomÃ¡tico (del estilo base)'}
               </span>
             </div>
           </div>

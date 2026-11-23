@@ -26,7 +26,7 @@ export const subscriptionPlans = pgTable('subscription_plans', {
 // Wedding global configuration
 export const weddingSettings = pgTable('wedding_settings', {
   id: serial('id').primaryKey(),
-  eventType: text('event_type').default('bodas'), // 'bodas' | 'xv'
+  eventType: text('event_type').default('bodas'), // 'bodas' | 'xv' | 'birthday'
   userId: integer('user_id'),
   ownerUid: text('owner_uid'),
   accessEmails: text('access_emails').array().notNull().default([]),
@@ -100,6 +100,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   heroVersePosition: text('hero_verse_position').default('center'),
   heroShowCountdown: boolean('hero_show_countdown').default(false),
   heroShowRsvpButton: boolean('hero_show_rsvp_button').default(false),
+  heroShowLocation: boolean('hero_show_location').default(false),
   heroShowIcon: boolean('hero_show_icon').default(false),
   heroShowGuestPill: boolean('hero_show_guest_pill').default(false),
   heroShowPadrinos: boolean('hero_show_padrinos').default(false),
@@ -186,6 +187,7 @@ export const weddingSettings = pgTable('wedding_settings', {
   heroImagePosition: text('hero_image_position').default('center'),
   heroOverlayOpacity: integer('hero_overlay_opacity').default(40),
   heroEnableScrollBlur: boolean('hero_enable_scroll_blur').default(true),
+  showWelcomeSection: boolean('show_welcome_section').default(true),
   showItinerary: boolean('show_itinerary').default(true),
   showLocations: boolean('show_locations').default(true),
   showDressCode: boolean('show_dress_code').default(true),
@@ -229,6 +231,9 @@ export const weddingSettings = pgTable('wedding_settings', {
   tipsTitle: text('tips_title').default('Tips & Recomendaciones para Invitados'),
   tipsList: text('tips_list').default('[{"icon":"clock","title":"Puntualidad","desc":"Agradecemos llegar 15 minutos antes de la ceremonia para comenzar a tiempo."},{"icon":"car","title":"Estacionamiento & Valet","desc":"El recinto cuenta con servicio de Valet Parking y vigilancia privada."},{"icon":"camera","title":"Fotografías & Momentos","desc":"¡Comparte tus fotos en nuestra galería en vivo o usando nuestro hashtag oficial!"},{"icon":"heart","title":"Niños / Solo Adultos","desc":"Hemos preparado una celebración de gala para adultos. ¡Disfrutemos juntos la noche!"}]'),
   showRsvpSection: boolean('show_rsvp_section').default(true),
+  rsvpActionType: text('rsvp_action_type').default('form'),
+  rsvpWhatsappPhone: text('rsvp_whatsapp_phone').default(''),
+  rsvpWhatsappMessage: text('rsvp_whatsapp_message').default(''),
   rsvpDeadlineMessage: text('rsvp_deadline_message').default('Por favor confirma tu asistencia antes del {date}.'),
   shareMessageTemplate: text('share_message_template').default('💌 ¡Estás invitado/a!\n\n{coupleNames} te invita a celebrar este día tan especial. ✨\n📅 {eventDate}\n\nConfirma tu asistencia aquí:\n{url}\n\n¡Te esperamos! 💛'),
   rsvpButtonText: text('rsvp_button_text').default('Confirmar asistencia'),

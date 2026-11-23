@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { WeddingSettings, Guest, CardStyleId } from '../types.ts';
 import { CARD_THEMES } from '../lib/themes.ts';
 import { XV_CARD_THEMES } from '../xv/themes.ts';
+import { BIRTHDAY_CARD_THEMES } from '../birthday/themes.ts';
 import { resolveInvitationTheme } from '../lib/invitationTheme.ts';
 import { formatHeroDate } from '../lib/dateFormatters.ts';
 import { getDisplayedWaxSealText } from '../lib/eventUtils.ts';
@@ -23,12 +24,12 @@ import { CountdownStyleOrnament } from './animations/AnimatedCountdown.tsx';
 interface InvitationLetterProps {
   settings: WeddingSettings;
   guest?: Guest | null;
-  eventType: 'bodas' | 'xv';
+  eventType: 'bodas' | 'xv' | 'birthday';
   onOpen: () => void;
 }
 
 const LetterCornerOrnament: React.FC<{ styleId: string; color: string }> = ({ styleId, color }) => {
-  const celestial = ['dark-luxury', 'royal-navy', 'champagne-glam', 'minimal-editorial'].includes(styleId);
+  const celestial = ['dark-luxury', 'royal-navy', 'champagne-glam', 'minimal-editorial', 'disco-silver'].includes(styleId);
   const softFlorals = ['romantic-floral', 'watercolor-garden', 'lavender-provence'].includes(styleId);
   const washGradientId = `letter-corner-wash-${useId().replace(/:/g, '')}`;
   const leaves = [
@@ -180,11 +181,9 @@ const SealedEnvelope = ({
       aria-label="Abrir la invitación tocando el sobre"
       disabled={isOpening}
       onClick={onOpen}
-      whileHover={isOpening ? undefined : { y: -5, scale: 1.015 }}
-      whileTap={isOpening ? undefined : { scale: 0.985 }}
       animate={{ aspectRatio: isOpening ? 0.869 : 1.421 }}
       transition={{ duration: 0.48, ease: [0.2, 0.75, 0.2, 1] }}
-      className="relative block h-auto w-full cursor-pointer touch-manipulation border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-default"
+      className="group relative block h-auto w-full cursor-pointer touch-manipulation border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 disabled:cursor-default"
       style={{ aspectRatio: 1.421, outlineColor: sealColor }}
     >
       <motion.div
@@ -229,8 +228,10 @@ const SealedEnvelope = ({
             filter: getLetterShadowStyle(sealShadowColor, sealShadowIntensity),
           }}
         >
-          <WaxSealGraphic design={sealDesign} color={sealColor} />
-          <span className="absolute left-1/2 top-1/2 z-10 block w-[70%] -translate-x-1/2 -translate-y-1/2 truncate text-center text-[clamp(0.58rem,3.1vw,0.95rem)] font-bold leading-none tracking-wide text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,.42)' }}>{sealText}</span>
+          <div className="relative w-full h-full transition-transform duration-300 ease-out group-hover:scale-115 group-active:scale-95">
+            <WaxSealGraphic design={sealDesign} color={sealColor} />
+            <span className="absolute left-1/2 top-1/2 z-10 block w-[70%] -translate-x-1/2 -translate-y-1/2 truncate text-center text-[clamp(0.58rem,3.1vw,0.95rem)] font-bold leading-none tracking-wide text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,.42)' }}>{sealText}</span>
+          </div>
         </motion.span>
       </span>
     </motion.button>
@@ -238,7 +239,7 @@ const SealedEnvelope = ({
 };
 
 export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, guest, eventType, onOpen }) => {
-  const themes = eventType === 'xv' ? XV_CARD_THEMES : CARD_THEMES;
+  const themes = eventType === 'xv' ? XV_CARD_THEMES : eventType === 'birthday' ? BIRTHDAY_CARD_THEMES : CARD_THEMES;
   const fallbackStyle = (eventType === 'xv' ? 'romantic-floral' : 'classic-gold') as CardStyleId;
   const theme = resolveInvitationTheme(settings, themes, fallbackStyle);
   const sealStyle = settings.sealStyle && settings.sealStyle !== 'auto' ? settings.sealStyle : settings.cardStyle;
@@ -278,8 +279,8 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
   ), [settings.eventDate, settings.heroDateFormat, settings.heroCustomDateText]);
   const date = settings.letterDateText?.trim() || eventDateText;
   const reservedPasses = guest ? Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) : null;
-  const heading = settings.letterHeadingText?.trim() || (eventType === 'xv' ? 'MIS XV AÑOS' : 'NUESTRA BODA');
-  const displayNames = settings.letterNamesText?.trim() || settings.coupleNames?.trim() || (eventType === 'xv' ? 'Una celebración especial' : 'Nuestra celebración');
+  const heading = settings.letterHeadingText?.trim() || (eventType === 'xv' ? 'MIS XV AÑOS' : eventType === 'birthday' ? 'MI CUMPLEAÑOS' : 'NUESTRA BODA');
+  const displayNames = settings.letterNamesText?.trim() || settings.coupleNames?.trim() || (eventType === 'xv' ? 'Una celebración especial' : eventType === 'birthday' ? 'Festejo de Cumpleaños' : 'Nuestra celebración');
   const reservationHeading = settings.letterReservationHeadingText?.trim() || 'Hemos reservado';
   const reservationSingle = settings.letterReservationSingleText?.trim() || 'lugar en tu honor';
   const reservationPlural = settings.letterReservationPluralText?.trim() || 'lugares en tu honor';
@@ -325,7 +326,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
             />
           </div>
         </>}
-        <div className="pointer-events-none absolute right-0 top-0 z-[2] h-12 w-[58%] max-w-[300px] opacity-90 md:w-[35%] md:max-w-[380px]">
+        <div className="pointer-events-none absolute top-1 sm:top-2 left-1/2 -translate-x-1/2 z-[2] h-11 sm:h-12 w-full max-w-[340px] sm:max-w-[440px] md:max-w-[520px] overflow-hidden opacity-90 flex items-center justify-center">
           <StyleSpecificDivider
             cardStyle={dividerStyle}
             dividerStyle={dividerStyle}

@@ -16,6 +16,8 @@ import {
   Minimize2,
   X,
   Edit3,
+  MapPin,
+  Gift,
 } from 'lucide-react';
 import { WeddingSettings } from '../../../types.ts';
 import { LiveInvitationCanvas } from '../LiveInvitationCanvas.tsx';
@@ -75,12 +77,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
   }, [settings.planAccess?.advancedEditor]);
   const canUseAdvancedEditor = settings.planAccess?.advancedEditor !== false;
 
-  const renderAdvancedGroups = () => (
+    const renderAdvancedGroups = () => (
     <AdvancedModeOrganizer groups={[
       {
-        id: 'evento',
-        title: 'Portada, lugares y regalos',
-        description: 'Fotos del Hero, ubicaciones, cuenta regresiva y mesa de regalos.',
+        id: 'portada',
+        title: 'Portada & Bienvenida',
+        description: 'Fotos del Hero, títulos, cuenta regresiva animada y elementos del Hero.',
         icon: <Settings className="w-4 h-4" />,
         content: (
           <AdminHeroSettings
@@ -88,14 +90,30 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             onChange={onChange}
             onOpenSimpleMode={() => setEditorMode('simple')}
             hidePhotoSourceControls
-            beforeCountdown={(
-              <>
-                {settings.showLocations !== false && <AdminLocationsSettings settings={settings} onChange={onChange} />}
-                <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
-              </>
-            )}
             afterWelcome={<AdminSimpleCoverageSettings settings={settings} onChange={onChange} />}
           />
+        ),
+      },
+      {
+        id: 'evento',
+        title: 'Evento',
+        description: 'Ubicaciones & Cómo Llegar (Google Maps), itinerario y detalles.',
+        icon: <MapPin className="w-4 h-4" />,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <AdminLocationsSettings settings={settings} onChange={onChange} />
+          </div>
+        ),
+      },
+      {
+        id: 'regalos',
+        title: 'Regalos & Cuentas',
+        description: 'Cuentas bancarias, CLABE, lluvia de sobres y mesa de regalos.',
+        icon: <Gift className="w-4 h-4" />,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <AdminGiftRegistrySettings settings={settings} onChange={onChange} />
+          </div>
         ),
       },
       {
@@ -105,7 +123,14 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         icon: <Eye className="w-4 h-4" />,
         content: (
           <div className="space-y-5 min-w-0">
-            <SimpleModeInline settings={settings} onChange={onChange} onSaveAllSettings={onSaveAllSettings} savingSettings={savingSettings} settingsSavedToast={settingsSavedToast} advancedMediaOnly />
+            <SimpleModeInline
+              settings={settings}
+              onChange={onChange}
+              onSaveAllSettings={onSaveAllSettings}
+              savingSettings={savingSettings}
+              settingsSavedToast={settingsSavedToast}
+              advancedMediaOnly
+            />
             <AudioSettingsPanel settings={settings} onChange={onChange} />
             <VideoSection weddingId={settings.id || 1} isAdmin cardStyle={settings.cardStyle} />
           </div>
@@ -123,14 +148,20 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
         title: 'Vestimenta',
         description: 'Código, recomendaciones y paleta de colores.',
         icon: <CheckCircle className="w-4 h-4" />,
-        content: settings.showDressCode !== false ? <AdminDressCodeSettings settings={settings} onChange={onChange} /> : <div className="rounded-2xl border border-[#E5E2D0] bg-[#FAF9F0] p-4 text-sm text-stone-600">La sección está desactivada. Puedes volver a activarla en “Secciones y ajustes”.</div>,
+        content: settings.showDressCode !== false
+          ? <AdminDressCodeSettings settings={settings} onChange={onChange} />
+          : <div className="rounded-2xl border border-[#E5E2D0] bg-[#FAF9F0] p-4 text-sm text-stone-600">La sección está desactivada. Puedes volver a activarla en “Secciones y ajustes”.</div>,
       },
       {
         id: 'secciones',
         title: 'Secciones y ajustes',
         description: 'Visibilidad y orden de las secciones de la invitación.',
         icon: <SlidersHorizontal className="w-4 h-4" />,
-        content: <div className="space-y-5 min-w-0"><AdminSectionToggles settings={settings} onChange={onChange} /></div>,
+        content: (
+          <div className="space-y-5 min-w-0">
+            <AdminSectionToggles settings={settings} onChange={onChange} />
+          </div>
+        ),
       },
     ]} />
   );

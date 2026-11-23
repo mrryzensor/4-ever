@@ -21,6 +21,7 @@ import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { TypographyNumberFontField } from '../../../../components/admin/settings/TypographyNumberFontField.tsx';
 import { TypographyHeroNumberFontField } from '../../../../components/admin/settings/TypographyHeroNumberFontField.tsx';
 import { TypographyCountdownNumberFontField } from '../../../../components/admin/settings/TypographyCountdownNumberFontField.tsx';
+import { getThemeDisplayFontFamily } from '../../../../lib/rsvpButtonStyle.ts';
 import {
   StyleSpecificDivider,
   FixDateAnimatedTransitionDivider,
@@ -110,6 +111,7 @@ const STYLE_KEYS: CardStyleId[] = [
   'emerald-botanical',
   'coastal-breeze',
   'champagne-glam',
+  'disco-silver',
 ];
 
 const PARTICLE_OPTIONS = [
@@ -453,7 +455,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                     <Check className="w-3.5 h-3.5 text-indigo-600" />
                   )}
                 </div>
-                <p className={`text-base italic text-stone-700 leading-snug ${activeTheme.fontDisplay}`}>
+                <p style={{ fontFamily: getThemeDisplayFontFamily(activeTheme.fontDisplay) }} className={`text-base italic text-stone-700 leading-snug ${activeTheme.fontDisplay}`}>
                   {settings.coupleNames || (isXv ? 'Valeria Montserrat' : 'Sofía & Alejandro')}
                 </p>
                 <p className={`text-[11px] text-stone-500 mt-0.5 ${activeTheme.fontBody}`}>
@@ -479,7 +481,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
                       <span className="text-xs font-bold text-stone-800 truncate">{t.name}</span>
                       {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
                     </div>
-                    <p className={`text-base italic text-stone-700 leading-snug ${t.fontDisplay}`}>
+                    <p style={{ fontFamily: getThemeDisplayFontFamily(t.fontDisplay) }} className={`text-base italic text-stone-700 leading-snug ${t.fontDisplay}`}>
                       {settings.coupleNames || (isXv ? 'Valeria Montserrat' : 'Sofía & Alejandro')}
                     </p>
                     <p className={`text-[10px] text-stone-500 mt-0.5 truncate ${t.fontBody}`}>

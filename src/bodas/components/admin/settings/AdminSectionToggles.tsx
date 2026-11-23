@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ListChecks,
+  Quote,
   CheckCheck,
   Clock,
   MapPin,
@@ -25,6 +26,7 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
 }) => {
   const enableAll = () => {
     onChange({
+      showWelcomeSection: true,
       showItinerary: true,
       showLocations: true,
       showDressCode: true,
@@ -38,6 +40,7 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
 
   const setEssentialMode = () => {
     onChange({
+      showWelcomeSection: true,
       showItinerary: false,
       showLocations: true,
       showDressCode: false,
@@ -84,6 +87,33 @@ export const AdminSectionToggles: React.FC<AdminSectionTogglesProps> = ({
 
       {/* Grid of section toggles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-2 gap-3 min-w-0">
+        {/* 0. Mensaje de Bienvenida */}
+        <label
+          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+            settings.showWelcomeSection !== false
+              ? 'bg-[#FAF9F0] border-[#5A5A40]/40 ring-1 ring-[#5A5A40]/20 shadow-2xs'
+              : 'bg-white border-[#E5E2D0] opacity-60 hover:opacity-100'
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={settings.showWelcomeSection !== false}
+            onChange={(e) =>
+              onChange({ showWelcomeSection: e.target.checked })
+            }
+            className="mt-0.5 w-4 h-4 rounded text-[#5A5A40] accent-[#5A5A40] cursor-pointer shrink-0"
+          />
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Quote className="w-3.5 h-3.5 text-[#5A5A40]" />
+              <span className="text-xs font-bold text-[#1a1a1a]">Mensaje de Bienvenida</span>
+            </div>
+            <p className="text-[10px] text-[#7D8C7A] mt-0.5 leading-snug">
+              Frase principal, dedicatoria y saludo de bienvenida.
+            </p>
+          </div>
+        </label>
+
         {/* 1. Itinerario */}
         <label
           className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 select-none ${

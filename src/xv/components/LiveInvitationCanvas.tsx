@@ -755,7 +755,7 @@ export const LiveInvitationCanvas: React.FC<LiveInvitationCanvasProps> = ({
             )}
 
             {/* 100% Genuine Isolated Viewport: Real Mobile iframe */}
-            <div className="flex-1 w-full h-full relative overflow-hidden bg-[#FAF9F0]">
+            <div className="flex-1 w-full min-h-0 relative overflow-hidden bg-[#FAF9F0]">
               {isCanvasVisible ? (
                 <iframe
                   ref={iframeRef}

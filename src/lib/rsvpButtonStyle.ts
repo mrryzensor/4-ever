@@ -88,13 +88,24 @@ export function getThemeDisplayFontFamily(fontDisplayClass: string): string {
 }
 
 export function getThemeFontFamily(fontClass: string, fallback: string): string {
-  const match = fontClass.match(/font-\["([^\"]+)"\]/);
+  if (!fontClass) return fallback;
+  if (fontClass.includes('Great_Vibes') || fontClass.includes('great-vibes')) return '"Great Vibes", "Alex Brush", cursive';
+  if (fontClass.includes('Alex_Brush') || fontClass.includes('alex-brush')) return '"Alex Brush", "Great Vibes", cursive';
+  if (fontClass.includes('Allura') || fontClass.includes('allura')) return '"Allura", cursive';
+  if (fontClass.includes('Pinyon_Script') || fontClass.includes('pinyon')) return '"Pinyon Script", cursive';
+  if (fontClass.includes('Cinzel') || fontClass.includes('cinzel')) return '"Cinzel", serif';
+  if (fontClass.includes('Bodoni_Moda') || fontClass.includes('bodoni')) return '"Bodoni Moda", serif';
+  if (fontClass.includes('Playfair_Display') || fontClass.includes('playfair')) return '"Playfair Display", Georgia, serif';
+  if (fontClass.includes('Montserrat') || fontClass.includes('montserrat')) return '"Montserrat", system-ui, sans-serif';
+  if (fontClass.includes('Cormorant_Garamond') || fontClass.includes('cormorant')) return '"Cormorant Garamond", Georgia, serif';
+
+  const match = fontClass.match(/font-\["?([^"]+?)"?\]/);
   if (!match) return fallback;
 
   const family = match[1].replaceAll('_', ' ');
   const genericFallback = family === 'Montserrat'
     ? 'Arial, sans-serif'
-    : family === 'Alex Brush'
+    : (family === 'Alex Brush' || family === 'Great Vibes' || family === 'Allura' || family === 'Pinyon Script')
       ? 'cursive'
       : 'Georgia, serif';
   return `"${family}", ${genericFallback}`;

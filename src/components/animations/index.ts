@@ -12,6 +12,7 @@ export * from './emeraldBotanical.tsx';
 export * from './coastalBreeze.tsx';
 export * from './champagneGlam.tsx';
 export * from './FixDateTransitionDivider.tsx';
+export * from './discoSilver.tsx';
 export * from './StyleSpecificDivider.tsx';
 export * from './CardOrnamentFrame.tsx';
 export * from './AnimatedCountdown.tsx';

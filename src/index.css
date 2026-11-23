@@ -414,6 +414,27 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
   scrollbar-width: none;  /* Firefox */
 }
 
+/* Visible custom scrollbar for style selector dropdown & modals */
+.custom-menu-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.6) transparent;
+}
+.custom-menu-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  display: block !important;
+}
+.custom-menu-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+.custom-menu-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.6);
+  border-radius: 9999px;
+}
+.custom-menu-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.95);
+}
+
 /* Fullscreen photo galleries stay immediate and blur-free on mobile. */
 @media (max-width: 1023px) {
   [data-gallery-fullscreen],
@@ -429,4 +450,124 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     -webkit-backdrop-filter: none !important;
     filter: none !important;
   }
+}
+
+/* 3D Chrome Silver Inflatable Foil Balloon Typography */
+.silver-foil-balloon {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8fafc 15%,
+    #cbd5e1 32%,
+    #ffffff 48%,
+    #64748b 65%,
+    #e2e8f0 82%,
+    #334155 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 0 #1e293b)
+          drop-shadow(0 10px 18px rgba(0, 0, 0, 0.85))
+          drop-shadow(0 0 24px rgba(255, 255, 255, 0.5));
+  display: inline-block;
+  user-select: none;
+}
+
+@keyframes disco-glint {
+  0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.3) rotate(45deg); }
+}
+
+.animate-disco-glint {
+  animation: disco-glint 2.5s ease-in-out infinite;
+}
+
+/* Disco Glamour & Elegance Script / Eyebrow helpers */
+.disco-script-title {
+  font-family: 'Great Vibes', 'Allura', cursive;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.disco-serif-eyebrow {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+/* Explicit Google Font Utility Classes for themes & selectors */
+[class*="Great_Vibes"],
+[class*="great-vibes"],
+.font-great-vibes {
+  font-family: 'Great Vibes', 'Alex Brush', cursive !important;
+}
+[class*="Alex_Brush"],
+[class*="alex-brush"],
+.font-alex-brush {
+  font-family: 'Alex Brush', 'Great Vibes', cursive !important;
+}
+[class*="Playfair_Display"],
+[class*="playfair"],
+.font-playfair {
+  font-family: 'Playfair Display', Georgia, serif !important;
+}
+[class*="Cinzel"],
+[class*="cinzel"],
+.font-cinzel {
+  font-family: 'Cinzel', Georgia, serif !important;
+}
+[class*="Montserrat"],
+[class*="montserrat"],
+.font-montserrat {
+  font-family: 'Montserrat', system-ui, sans-serif !important;
+}
+[class*="Cormorant_Garamond"],
+[class*="cormorant"],
+.font-cormorant {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+[class*="Bodoni_Moda"],
+[class*="bodoni"],
+.font-bodoni {
+  font-family: 'Bodoni Moda', Georgia, serif !important;
+}
+[class*="Allura"],
+[class*="allura"],
+.font-allura {
+  font-family: 'Allura', cursive !important;
+}
+[class*="Pinyon_Script"],
+[class*="pinyon"],
+.font-pinyon {
+  font-family: 'Pinyon Script', cursive !important;
+}
+[class*="Italiana"],
+[class*="italiana"],
+.font-italiana {
+  font-family: 'Italiana', Georgia, serif !important;
+}
+[class*="Lora"],
+[class*="lora"],
+.font-lora {
+  font-family: 'Lora', Georgia, serif !important;
+}
+[class*="Marcellus"],
+[class*="marcellus"],
+.font-marcellus {
+  font-family: 'Marcellus', Georgia, serif !important;
+}
+[class*="Prata"],
+[class*="prata"],
+.font-prata {
+  font-family: 'Prata', Georgia, serif !important;
+}
+[class*="Plus_Jakarta_Sans"],
+[class*="jakarta"],
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
 }

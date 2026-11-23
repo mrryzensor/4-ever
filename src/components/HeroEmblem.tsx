@@ -6,6 +6,8 @@ interface HeroEmblemProps {
   accentColor?: string;
   sparse?: boolean;
   quinceanera?: boolean;
+  birthday?: boolean;
+  eventType?: 'wedding' | 'quinceanera' | 'birthday' | string;
   color?: string;
   glowIntensity?: number;
   sparkleIntensity?: number;
@@ -42,6 +44,7 @@ const HERO_MOTIF_COLORS: Record<string, string> = {
   'coastal-breeze': '#65B2D1',
   'champagne-glam': '#D8B66E',
   'minimal-editorial': '#9B916D',
+  'disco-silver': '#E2E8F0',
 };
 
 /** Shared, theme-reactive line-art emblem for wedding and quinceañera covers. */
@@ -50,6 +53,8 @@ export const HeroEmblem: React.FC<HeroEmblemProps> = ({
   accentColor = '#5A5A40',
   sparse = false,
   quinceanera = false,
+  birthday = false,
+  eventType,
   color = '',
   glowIntensity = 72,
   sparkleIntensity = 78,
@@ -86,14 +91,17 @@ export const HeroEmblem: React.FC<HeroEmblemProps> = ({
     filter: `url(#${accentGlowId})`,
   };
 
-  const usesWeddingRings = !quinceanera && (
+  const isBirthday = Boolean(birthday || eventType === 'birthday');
+  const isQuinceanera = Boolean(quinceanera || eventType === 'quinceanera');
+
+  const usesWeddingRings = !isQuinceanera && !isBirthday && (
     cardStyle === 'classic-gold'
     || cardStyle === 'wedding-rings'
     || ![
       'romantic-floral', 'boho-chic', 'dark-luxury', 'royal-navy',
       'terracotta-sunset', 'lavender-provence', 'emerald-botanical',
       'watercolor-garden', 'coastal-breeze', 'champagne-glam',
-      'minimal-editorial', 'none',
+      'minimal-editorial', 'disco-silver', 'birthday-cake', 'none',
     ].includes(cardStyle)
   );
   const centerX = usesWeddingRings ? 90 : 60;
@@ -143,13 +151,152 @@ export const HeroEmblem: React.FC<HeroEmblemProps> = ({
     </>
   );
 
+  const quinceaneraTiaraArtwork = (
+    <g {...common}>
+      <path d="m32 61 5-24 15 13 8-24 10 24 15-13 5 24H32Z" />
+      <path d="M38 68h44M45 74h30" />
+      <circle cx="60" cy="25" r="3" fill={`url(#${accentGradientId})`} />
+    </g>
+  );
+
+  const birthdayCakeArtwork = (
+    <g {...common}>
+      {/* Candle Flame with glowing inner gradient */}
+      <motion.path
+        d="M60 14c-2.5 4.5-4 7-4 10a4 4 0 0 0 8 0c0-3-1.5-5.5-4-10Z"
+        fill={hasCustomColor ? mixHex(color, '#FFF5C4', 0.8) : '#FFF1B3'}
+        stroke={`url(#${accentGradientId})`}
+        strokeWidth="1.2"
+        filter={`url(#${accentGlowId})`}
+        animate={{ scale: [0.9, 1.15, 0.9], y: [0, -1.5, 0] }}
+        style={{ transformOrigin: '60px 24px' }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      {/* Candle Wick and Body */}
+      <line x1="60" y1="24" x2="60" y2="28" strokeWidth="1.5" />
+      <rect x="58" y="28" width="4" height="12" rx="1" fill={motifTint} strokeWidth="1.5" />
+      <line x1="57.5" y1="33" x2="62.5" y2="33" strokeWidth="1" opacity="0.6" />
+      <line x1="57.5" y1="37" x2="62.5" y2="37" strokeWidth="1" opacity="0.6" />
+
+      {/* Top Tier */}
+      <path
+        d="M45 40h30a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H45a2 2 0 0 1-2-2V42a2 2 0 0 1 2-2Z"
+        fill={motifTint}
+        fillOpacity="0.75"
+        strokeWidth="2"
+      />
+      {/* Top Tier Frosting Drips */}
+      <path
+        d="M43 45c3 3 6 0 8.5 2.5s5-2.5 8.5 0 5.5-2.5 8.5 0 5-2.5 8.5 0"
+        strokeWidth="1.6"
+        opacity="0.85"
+      />
+      <circle cx="60" cy="49" r="1.5" fill={motifColor} stroke="none" />
+
+      {/* Base Tier */}
+      <path
+        d="M33 57h54a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H33a2 2 0 0 1-2-2V59a2 2 0 0 1 2-2Z"
+        fill={motifTint}
+        fillOpacity="0.85"
+        strokeWidth="2.2"
+      />
+      {/* Base Tier Frosting Scallops */}
+      <path
+        d="M31 63c4.5 3.5 9 0 13.5 3s9-3 13.5 0 9-3 13.5 0 9-3 13.5 0"
+        strokeWidth="1.8"
+        opacity="0.85"
+      />
+      <circle cx="44" cy="69" r="1.5" fill={motifColor} stroke="none" />
+      <circle cx="60" cy="69" r="1.8" fill={motifColor} stroke="none" />
+      <circle cx="76" cy="69" r="1.5" fill={motifColor} stroke="none" />
+
+      {/* Elegant Cake Stand / Platter */}
+      <path d="M26 76h68" strokeWidth="2.5" />
+      <path d="M46 76c2 4 4 6 7 6h14c3 0 5-2 7-6" strokeWidth="1.8" fill={motifTint} fillOpacity="0.5" />
+      <path d="M42 82h36" strokeWidth="2" />
+
+      {/* Celebration floating sparkles */}
+      <motion.path
+        d="m34 32 1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5L34 32Z"
+        fill="#FFFDF4"
+        stroke="none"
+        animate={{ opacity: [0.3 * sparkle, sparkle, 0.3 * sparkle], scale: [0.75, 1.1, 0.75] }}
+        style={{ transformOrigin: '34px 37px' }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+      />
+      <motion.path
+        d="m86 32 1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5L86 32Z"
+        fill="#FFFDF4"
+        stroke="none"
+        animate={{ opacity: [0.3 * sparkle, sparkle, 0.3 * sparkle], scale: [0.75, 1.1, 0.75] }}
+        style={{ transformOrigin: '86px 37px' }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut', delay: 0.9 }}
+      />
+    </g>
+  );
+
+  const discoBallArtwork = (
+    <g {...common}>
+      {/* Hanging string */}
+      <line x1="60" y1="6" x2="60" y2="24" strokeWidth="1.5" strokeDasharray="2 2" />
+      <circle cx="60" cy="24" r="2" fill={motifTint} strokeWidth="1.5" />
+
+      {/* Disco Sphere */}
+      <circle cx="60" cy="48" r="24" strokeWidth="2.4" fill={motifTint} fillOpacity="0.25" />
+
+      {/* Latitudinal mirror lines */}
+      <ellipse cx="60" cy="48" rx="24" ry="8" strokeWidth="1.2" opacity="0.65" />
+      <ellipse cx="60" cy="48" rx="24" ry="16" strokeWidth="1.2" opacity="0.65" />
+
+      {/* Longitudinal mirror lines */}
+      <ellipse cx="60" cy="48" rx="8" ry="24" strokeWidth="1.2" opacity="0.65" />
+      <ellipse cx="60" cy="48" rx="16" ry="24" strokeWidth="1.2" opacity="0.65" />
+      <line x1="60" y1="24" x2="60" y2="72" strokeWidth="1.4" opacity="0.75" />
+      <line x1="36" y1="48" x2="84" y2="48" strokeWidth="1.4" opacity="0.75" />
+
+      {/* Facet reflections */}
+      <rect x="54" y="38" width="5" height="4" fill="#FFFDF4" fillOpacity="0.85" stroke="none" />
+      <rect x="63" y="44" width="5" height="4" fill="#FFFDF4" fillOpacity="0.65" stroke="none" />
+      <rect x="52" y="52" width="4" height="4" fill="#FFFDF4" fillOpacity="0.5" stroke="none" />
+
+      {/* Brilliant starburst sparkles */}
+      <motion.path
+        d="m30 30 2 4.5 4.5 2-4.5 2-2 4.5-2-4.5-4.5-2 4.5-2L30 30Z"
+        fill="#FFFFFF"
+        stroke="none"
+        animate={{ opacity: [0.3 * sparkle, sparkle, 0.3 * sparkle], scale: [0.7, 1.2, 0.7] }}
+        style={{ transformOrigin: '30px 36.5px' }}
+        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.path
+        d="m90 40 2 4.5 4.5 2-4.5 2-2 4.5-2-4.5-4.5-2 4.5-2L90 40Z"
+        fill="#FFFFFF"
+        stroke="none"
+        animate={{ opacity: [0.3 * sparkle, sparkle, 0.3 * sparkle], scale: [0.7, 1.2, 0.7] }}
+        style={{ transformOrigin: '90px 46.5px' }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+      />
+      <motion.path
+        d="m60 76 1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5L60 76Z"
+        fill="#FFFFFF"
+        stroke="none"
+        animate={{ opacity: [0.2 * sparkle, 0.9 * sparkle, 0.2 * sparkle], scale: [0.8, 1.15, 0.8] }}
+        style={{ transformOrigin: '60px 80.5px' }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1.1 }}
+      />
+    </g>
+  );
+
   const artwork = (() => {
     switch (cardStyle) {
       case 'classic-gold':
       case 'wedding-rings':
-        return quinceanera
-          ? <g {...common}><path d="m32 61 5-24 15 13 8-24 10 24 15-13 5 24H32Z"/><path d="M38 68h44M45 74h30"/><circle cx="60" cy="25" r="3" fill={`url(#${accentGradientId})`}/></g>
-          : weddingRingsArtwork;
+      case 'birthday-cake':
+        if (isBirthday) return birthdayCakeArtwork;
+        if (isQuinceanera) return quinceaneraTiaraArtwork;
+        return weddingRingsArtwork;
+      case 'disco-silver':
+        return discoBallArtwork;
       case 'romantic-floral':
         return <g {...common}>
           <path d="M60 74V42" />
@@ -187,9 +334,9 @@ export const HeroEmblem: React.FC<HeroEmblemProps> = ({
       case 'none':
         return null;
       default:
-        return quinceanera
-          ? <g {...common}><path d="m32 61 5-24 15 13 8-24 10 24 15-13 5 24H32Z"/><path d="M38 68h44M45 74h30"/><circle cx="60" cy="25" r="3" fill={`url(#${accentGradientId})`}/></g>
-          : weddingRingsArtwork;
+        if (isBirthday) return birthdayCakeArtwork;
+        if (isQuinceanera) return quinceaneraTiaraArtwork;
+        return weddingRingsArtwork;
     }
   })();
 

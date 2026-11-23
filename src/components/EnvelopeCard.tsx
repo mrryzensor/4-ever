@@ -396,10 +396,31 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     && !settings.heroShowGuestPill
     && (settings.heroQuote || '').trim().length < 110;
   const heroCountdownEnabled = settings.showCountdown !== false && Boolean(settings.heroShowCountdown);
+  const hasVisibleContentSections = Boolean(
+    settings.showWelcomeSection !== false ||
+    settings.showItinerary !== false ||
+    settings.showLocations !== false ||
+    settings.showDressCode !== false ||
+    settings.showGiftRegistry !== false ||
+    settings.showPhotoGallery !== false ||
+    Boolean(settings.showVideoMemories) ||
+    Boolean(settings.showGuestbook) ||
+    Boolean(settings.showHotels) ||
+    Boolean(settings.showTips) ||
+    settings.showRsvpSection !== false
+  );
+  const isStandaloneHero = !hasVisibleContentSections && (settings.showCountdown === false || heroCountdownEnabled);
   const heroGuestPillEnabled = Boolean(settings.heroShowGuestPill && guest?.fullName?.trim());
+  const heroHasManyElements = Boolean(
+    settings.heroShowLocation ||
+    settings.heroShowRsvpButton ||
+    heroCountdownEnabled ||
+    heroGuestPillEnabled ||
+    heroHasFamilyContent
+  );
   const heroNameFontSize = coupleNamesSafe.length > 18
-    ? (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2.25rem, 6vw, 5.5rem)')
-    : (heroIsSparse ? 'clamp(3rem, 10vw, 7.5rem)' : 'clamp(2.5rem, 7vw, 6rem)');
+    ? (heroHasManyElements ? 'clamp(1.75rem, 5vw, 4rem)' : (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2rem, 6vw, 5rem)'))
+    : (heroHasManyElements ? 'clamp(2rem, 6vw, 4.5rem)' : (heroIsSparse ? 'clamp(2.75rem, 9vw, 7rem)' : 'clamp(2.25rem, 7vw, 5.5rem)'));
   const targetDateObj = useMemo(() => {
     return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
   }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
@@ -532,14 +553,21 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
   );
 
   return (
-    <div className="w-full relative transition-colors duration-500" style={{ backgroundColor: theme.bgHex }}>
+    <div className={`w-full relative transition-colors duration-500 ${isStandaloneHero ? 'h-full max-h-[100svh] overflow-hidden' : ''}`} style={{ backgroundColor: theme.bgHex }}>
       <div
         ref={heroContainerRef}
         data-invitation-hero=""
         style={{ '--invitation-font-hero-numbers': heroNumberFontFamily } as React.CSSProperties}
-        className="sticky top-0 h-[100svh] min-h-[560px] w-full overflow-hidden flex flex-col justify-between items-center text-center px-4 py-6 sm:py-10 select-none z-0"
+        className={`w-full text-center px-3 sm:px-6 select-none z-0 flex flex-col justify-between items-center ${
+          isStandaloneHero
+            ? 'relative h-[100svh] max-h-[100svh] overflow-hidden py-1 sm:py-2'
+            : 'sticky top-0 h-[100svh] min-h-[560px] overflow-hidden py-2 sm:py-4'
+        }`}
       >
-        <motion.div style={{ opacity: heroBgOpacity }} className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity]">
+        <motion.div
+          style={{ opacity: isStandaloneHero ? 1 : heroBgOpacity }}
+          className="absolute inset-0 w-full h-full pointer-events-none will-change-[opacity]"
+        >
           {settings.heroImageFit === 'contain' && (
             <div className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 opacity-60" style={{ backgroundImage: `url(${displayedCoverImage})` }} />
           )}
@@ -595,16 +623,26 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           <AnimatedAmbientParticles variant={settings.ambientParticleStyle} cardStyle={settings.cardStyle} count={8} />
         </motion.div>
 
-        <motion.div style={{ opacity: heroContentOpacity, y: heroContentY }} className="relative z-10 w-full h-full flex flex-col justify-between items-center will-change-[opacity,transform] pt-4 sm:pt-10 pb-14 sm:pb-16">
-          <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : 'gap-1 sm:gap-2'}`}>
+        <motion.div style={{ opacity: isStandaloneHero ? 1 : heroContentOpacity, y: isStandaloneHero ? 0 : heroContentY }} className={`relative z-10 w-full flex flex-col justify-between items-center will-change-[opacity,transform] ${isStandaloneHero ? 'h-full max-h-full overflow-hidden pt-1 pb-2 sm:pb-3' : 'h-full pt-1 sm:pt-4 pb-2 sm:pb-3'}`}>
+          <div className={`mx-auto my-auto flex w-full max-w-5xl flex-col items-center justify-center px-3 text-center text-white ${heroIsSparse ? 'gap-3 sm:gap-5' : heroHasManyElements ? 'gap-0.5 sm:gap-1.5' : 'gap-1 sm:gap-2'}`}>
             {settings.heroShowIcon && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="mb-1 sm:mb-2">
                 {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex, settings.heroEmblemColor, settings.heroEmblemGlow, settings.heroEmblemSparkle, settings.heroEmblemScale)}
               </motion.div>
             )}
             <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}><NumeralText>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</NumeralText></motion.p>
+            {settings.heroInvitationText?.trim() && (
+              <motion.p
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7 }}
+                className="text-xs sm:text-sm font-sans tracking-[0.22em] uppercase text-stone-200 drop-shadow-md font-medium mb-1"
+              >
+                {settings.heroInvitationText.trim()}
+              </motion.p>
+            )}
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
-            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize }} className={`max-w-full text-balance break-words italic leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}><NumeralText>{coupleNamesSafe}</NumeralText></motion.h1>
+            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily }} className={`max-w-full text-balance break-words leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}><NumeralText>{coupleNamesSafe}</NumeralText></motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             {heroGuestPillEnabled && guest && (
               <motion.div
@@ -651,10 +689,12 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
               </motion.div>
             )}
           </div>
-          <motion.div animate={{ y: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 2 }} onClick={scrollToContent} className="cursor-pointer flex flex-col items-center text-stone-300 hover:text-white transition-colors pb-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] font-medium">Ver Invitación</span>
-            <ChevronDown className="w-4 h-4 text-amber-200/90" />
-          </motion.div>
+          {(hasVisibleContentSections || (settings.showCountdown !== false && !heroCountdownEnabled)) && (
+            <motion.div animate={{ y: [0, 4, 0] }} transition={{ repeat: Infinity, duration: 2 }} onClick={scrollToContent} className="cursor-pointer flex flex-col items-center text-stone-300 hover:text-white transition-colors pt-1 pb-1 sm:pb-2 shrink-0 z-20">
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] font-medium drop-shadow-sm">Ver Invitación</span>
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200/90" />
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
@@ -663,6 +703,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
       {familyPlacement === 'after-countdown' && settings.countdownPlacement === 'after-hero' && settings.showCountdown !== false && !settings.heroShowCountdown && renderFamilyPage()}
 
       {/* 2. INVITATION DETAILS SECTION - FUSED INTERACTIVE SECTION WITH INLINE EXPANSIONS */}
+      {(hasVisibleContentSections || (settings.showCountdown !== false && !heroCountdownEnabled)) && (
       <section
         id="detalles-boda"
         className="relative z-10 w-full pt-16 sm:pt-20 md:pt-28 lg:pt-32 pb-14 sm:pb-20 px-4 sm:px-8 md:px-12 lg:px-16"
@@ -1639,6 +1680,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           </CardGroupDecorations>
         </div>
       </section>
+      )}
     </div>
   );
 };

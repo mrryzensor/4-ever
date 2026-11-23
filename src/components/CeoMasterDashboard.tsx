@@ -158,7 +158,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
   // New Event Form by CEO
   const [createForUid, setCreateForUid] = useState(currentUser.uid);
-  const [newEventCategory, setNewEventCategory] = useState<'bodas' | 'xv'>('bodas');
+  const [newEventCategory, setNewEventCategory] = useState<'bodas' | 'xv' | 'birthday'>('bodas');
   const [newCoupleNames, setNewCoupleNames] = useState('');
   const [newEventDate, setNewEventDate] = useState('2026-11-28');
   const [newCardStyle, setNewCardStyle] = useState<CardStyle>('classic-gold');
@@ -418,8 +418,9 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
       if (res.ok) {
         setIsCreatingWeddingModal(false);
         setNewCoupleNames('');
+        const catLabel = newEventCategory === 'xv' ? 'XV Años' : newEventCategory === 'birthday' ? 'Cumpleaños' : 'Boda';
         toast.success(
-          `Evento "${newCoupleNames}" (${newEventCategory === 'xv' ? 'XV Años' : 'Boda'}) creado exitosamente.`,
+          `Evento "${newCoupleNames}" (${catLabel}) creado exitosamente.`,
           'Evento Creado'
         );
         await fetchCeoData();
@@ -432,24 +433,27 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
     }
   };
 
-  // Event Counts (Bodas vs XV Años vs Total)
+  // Event Counts (Bodas vs XV Años vs Cumpleaños vs Total)
   const eventCounts = useMemo(() => {
     let bodas = 0;
     let xv = 0;
+    let birthday = 0;
     weddings.forEach((w) => {
-      const isXv = resolveEventType(w.eventType, w.slug) === 'xv';
-      if (isXv) xv++;
+      const type = resolveEventType(w.eventType, w.slug);
+      if (type === 'xv') xv++;
+      else if (type === 'birthday') birthday++;
       else bodas++;
     });
-    return { bodas, xv, total: weddings.length };
+    return { bodas, xv, birthday, total: weddings.length };
   }, [weddings]);
 
   // Filtered & Sorted Events / Weddings
   const filteredWeddings = useMemo(() => {
     const search = (weddingSearchTerm || globalSearchTerm).toLowerCase().trim();
     return weddings.filter((w) => {
-      const isXv = resolveEventType(w.eventType, w.slug) === 'xv';
-      const eventType = isXv ? 'xv' : 'bodas';
+      const eventType = resolveEventType(w.eventType, w.slug);
+      const isXv = eventType === 'xv';
+      const isBirthday = eventType === 'birthday';
 
       const matchesSearch =
         !search ||
@@ -458,7 +462,8 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
         w.ownerEmail?.toLowerCase().includes(search) ||
         w.slug?.toLowerCase().includes(search) ||
         (isXv && ('xv' === search || 'quinceañera'.includes(search) || '15 años'.includes(search))) ||
-        (!isXv && ('boda'.includes(search) || 'matrimonio'.includes(search) || 'novios'.includes(search)));
+        (isBirthday && ('birthday'.includes(search) || 'cumpleaños'.includes(search) || 'cumple'.includes(search))) ||
+        (!isXv && !isBirthday && ('boda'.includes(search) || 'matrimonio'.includes(search) || 'novios'.includes(search)));
 
       const matchesStatus =
         weddingFilterStatus === 'all' ||
@@ -926,6 +931,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     <option value="all">Todos los Tipos ({eventCounts.total})</option>
                     <option value="bodas">💍 Bodas ({eventCounts.bodas})</option>
                     <option value="xv">👑 XV Años ({eventCounts.xv})</option>
+                    <option value="birthday">🎂 Cumpleaños ({eventCounts.birthday})</option>
                   </select>
                 </div>
 
@@ -972,9 +978,13 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                         <tr key={wedding.id} className="hover:bg-stone-800/50 transition-colors">
                           <td className="py-4 px-5">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              {isXv ? (
+                              {resolvedCat === 'xv' ? (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
                                   <span>👑</span> XV Años
+                                </span>
+                              ) : resolvedCat === 'birthday' ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                  <span>🎂</span> Cumpleaños
                                 </span>
                               ) : (
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
@@ -1875,28 +1885,39 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                   <label className="block text-xs font-medium text-stone-300 mb-1.5">
                     Tipo de Evento:
                   </label>
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-stone-950 rounded-xl border border-stone-800">
+                  <div className="grid grid-cols-3 gap-2 p-1 bg-stone-950 rounded-xl border border-stone-800">
                     <button
                       type="button"
                       onClick={() => setNewEventCategory('bodas')}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         newEventCategory === 'bodas'
                           ? 'bg-amber-500 text-stone-950 shadow-md'
                           : 'text-stone-400 hover:text-stone-200'
                       }`}
                     >
-                      <span>💍 Boda Nupcial</span>
+                      <span>💍 Boda</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewEventCategory('xv')}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         newEventCategory === 'xv'
                           ? 'bg-amber-500 text-stone-950 shadow-md'
                           : 'text-stone-400 hover:text-stone-200'
                       }`}
                     >
-                      <span>👑 Fiesta de XV Años</span>
+                      <span>👑 XV Años</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewEventCategory('birthday')}
+                      className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        newEventCategory === 'birthday'
+                          ? 'bg-amber-500 text-stone-950 shadow-md'
+                          : 'text-stone-400 hover:text-stone-200'
+                      }`}
+                    >
+                      <span>🎂 Cumpleaños</span>
                     </button>
                   </div>
                 </div>
@@ -1920,12 +1941,12 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    {newEventCategory === 'xv' ? 'Nombre de la Quinceañera:' : 'Nombres de los Novios:'}
+                    {newEventCategory === 'xv' ? 'Nombre de la Quinceañera:' : newEventCategory === 'birthday' ? 'Nombre del Cumpleañero(a):' : 'Nombres de los Novios:'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder={newEventCategory === 'xv' ? 'Ej. Valentina Morales' : 'Ej. Isabella & Mateo'}
+                    placeholder={newEventCategory === 'xv' ? 'Ej. Valentina Morales' : newEventCategory === 'birthday' ? 'Ej. Lucas Martín' : 'Ej. Isabella & Mateo'}
                     value={newCoupleNames}
                     onChange={(e) => setNewCoupleNames(e.target.value)}
                     className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
@@ -1955,32 +1976,45 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                       onChange={(e) => setNewCardStyle(e.target.value as CardStyle)}
                       className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
                     >
-                      <option value="classic-gold">Classic Gold</option>
-                      <option value="romantic-floral">Romantic Floral Rosé</option>
-                      <option value="boho-chic">Boho Terracotta</option>
-                      <option value="minimal-editorial">Minimalist Editorial</option>
-                      <option value="dark-luxury">Dark Velvet Luxury</option>
-                      <option value="watercolor-garden">Watercolor Garden</option>
+                      {newEventCategory === 'birthday' ? (
+                        <>
+                          <option value="classic-gold">Festive Gold</option>
+                          <option value="minimal-editorial">Fiesta Neón & Glow</option>
+                          <option value="dark-luxury">Midnight Party Deluxe</option>
+                          <option value="romantic-floral">Sweet Confetti Pastel</option>
+                          <option value="boho-chic">Tropical Sunset Bash</option>
+                          <option value="watercolor-garden">Garden Party Botanic</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="classic-gold">Classic Gold</option>
+                          <option value="romantic-floral">Romantic Floral Rosé</option>
+                          <option value="boho-chic">Boho Terracotta</option>
+                          <option value="minimal-editorial">Minimalist Editorial</option>
+                          <option value="dark-luxury">Dark Velvet Luxury</option>
+                          <option value="watercolor-garden">Watercolor Garden</option>
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    {newEventCategory === 'xv' ? 'Lugar de Misa / Ceremonia de Acción de Gracias:' : 'Lugar de Ceremonia:'}
+                    {newEventCategory === 'xv' ? 'Lugar de Misa / Ceremonia de Acción de Gracias:' : newEventCategory === 'birthday' ? 'Lugar de Encuentro / Ceremonia:' : 'Lugar de Ceremonia:'}
                   </label>
                   <input
                     type="text"
                     value={newCeremonyVenue}
                     onChange={(e) => setNewCeremonyVenue(e.target.value)}
-                    placeholder={newEventCategory === 'xv' ? 'Ej. Parroquia San José' : 'Ej. Parroquia Nuestra Señora del Pilar'}
+                    placeholder={newEventCategory === 'xv' ? 'Ej. Parroquia San José' : newEventCategory === 'birthday' ? 'Ej. Salón o Jardín de Eventos' : 'Ej. Parroquia Nuestra Señora del Pilar'}
                     className="w-full text-xs bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-200 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-stone-300 mb-1">
-                    {newEventCategory === 'xv' ? 'Lugar de Recepción / Salón de Fiesta:' : 'Lugar de Recepción / Banquete:'}
+                    {newEventCategory === 'xv' ? 'Lugar de Recepción / Salón de Fiesta:' : newEventCategory === 'birthday' ? 'Lugar de la Fiesta / Celebración:' : 'Lugar de Recepción / Banquete:'}
                   </label>
                   <input
                     type="text"
@@ -2004,7 +2038,7 @@ export const CeoMasterDashboard: React.FC<CeoMasterDashboardProps> = ({
                     disabled={submittingAction}
                     className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>{submittingAction ? 'Creando...' : newEventCategory === 'xv' ? 'Crear Evento de XV Años' : 'Crear Boda'}</span>
+                    <span>{submittingAction ? 'Creando...' : newEventCategory === 'xv' ? 'Crear Evento de XV Años' : newEventCategory === 'birthday' ? 'Crear Cumpleaños' : 'Crear Boda'}</span>
                   </button>
                 </div>
               </form>
