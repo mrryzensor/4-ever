@@ -715,6 +715,25 @@ export const AdminHeroSettings: React.FC<AdminHeroSettingsProps> = ({
               </div>
             </button>
           </div>
+
+          {settings.entranceType === 'door' && (
+            <div className="pt-2 border-t border-[#E5E2D0]/80">
+              <label className="block text-[11px] font-semibold text-[#5A5A40] mb-1">
+                Estilo visual de las Puertas 3D:
+              </label>
+              <select
+                value={settings.doorStyle || 'auto'}
+                onChange={(e) => onChange({ doorStyle: e.target.value as WeddingSettings['doorStyle'] })}
+                className="w-full h-10 px-3 rounded-xl border border-[#E5E2D0] bg-white text-xs text-stone-800 outline-none focus:border-[#7D8C7A]"
+              >
+                <option value="auto">Automático · según tema de la invitación</option>
+                <option value="disco-silver">Disco After-Party & Silver Glam (Acero y Plata)</option>
+                <option value="luxury-wood">Madera Noble & Caoba (Lujo Clásico)</option>
+                <option value="classic">Clásico Editorial Noir & Oro</option>
+                <option value="arch-ornate">Portal Real Ornamentado (Navy & Gold)</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Textos de la Portada (Hero): Encabezados e Invitación */}
