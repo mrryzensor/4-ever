@@ -278,6 +278,23 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
           </p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="sm:col-span-2 space-y-1.5">
+            <TextControl
+              label={isDoor ? 'Insignia o frase superior (Badge sobre el nombre)' : 'Insignia o frase superior (Badge sobre el nombre)'}
+              value={settings.letterBadgeText}
+              fallback={isXv ? 'TE INVITO A CELEBRAR MIS XV' : isBirthday ? 'TE INVITO A CELEBRAR MI CUMPLEAÑOS' : 'TE INVITAMOS A CELEBRAR NUESTRA BODA'}
+              onChange={(letterBadgeText) => onChange({ letterBadgeText })}
+            />
+            <label className="flex cursor-pointer items-center gap-2 text-[11px] text-stone-600">
+              <input
+                type="checkbox"
+                checked={settings.letterShowBadge !== false}
+                onChange={(e) => onChange({ letterShowBadge: e.target.checked })}
+                className="h-3.5 w-3.5 rounded accent-[#5A5A40]"
+              />
+              <span>Mostrar insignia superior con destellos sobre el nombre</span>
+            </label>
+          </div>
           <TextControl
             label={isDoor ? 'Encabezado del evento (Arquitrabe del portal)' : 'Encabezado del evento'}
             value={settings.letterHeadingText}
@@ -297,7 +314,7 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
             onChange={(letterDateText) => onChange({ letterDateText })}
           />
           <TextControl
-            label={isDoor ? 'Mensaje inferior de bienvenida' : 'Mensaje de bienvenida'}
+            label={isDoor ? 'Mensaje inferior de bienvenida (bajo el botón)' : 'Mensaje de bienvenida'}
             value={settings.letterMessageText}
             fallback={isDoor ? 'Una celebración inolvidable te espera' : 'Nos encantará compartir este día tan especial contigo.'}
             onChange={(letterMessageText) => onChange({ letterMessageText })}

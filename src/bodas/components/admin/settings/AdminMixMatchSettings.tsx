@@ -21,6 +21,7 @@ import { CARD_THEMES } from '../../../../lib/themes.ts';
 import { TypographyNumberFontField } from '../../../../components/admin/settings/TypographyNumberFontField.tsx';
 import { TypographyHeroNumberFontField } from '../../../../components/admin/settings/TypographyHeroNumberFontField.tsx';
 import { TypographyCountdownNumberFontField } from '../../../../components/admin/settings/TypographyCountdownNumberFontField.tsx';
+import { HeroTypographyScaleControls } from '../../../../components/admin/settings/HeroTypographyScaleControls.tsx';
 import { getThemeDisplayFontFamily } from '../../../../lib/rsvpButtonStyle.ts';
 import {
   StyleSpecificDivider,
@@ -172,6 +173,13 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
       heroEmblemScale: 100,
       ambientParticleStyle: 'auto',
       sealStyle: 'auto',
+      typographyHeroNamesScale: 100,
+      typographyHeroHeadingScale: 100,
+      typographyHeroInvitationScale: 100,
+      typographyHeroDateScale: 100,
+      typographyHeroQuoteScale: 100,
+      typographyHeroBadgeScale: 100,
+      typographyHeroLocationScale: 100,
     });
   };
 
@@ -206,7 +214,14 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
     (settings.heroEmblemSparkle !== undefined && settings.heroEmblemSparkle !== 78) ||
     (settings.heroEmblemScale !== undefined && settings.heroEmblemScale !== 100) ||
     (settings.ambientParticleStyle && settings.ambientParticleStyle !== 'auto') ||
-    (settings.sealStyle && settings.sealStyle !== 'auto');
+    (settings.sealStyle && settings.sealStyle !== 'auto') ||
+    (settings.typographyHeroNamesScale !== undefined && settings.typographyHeroNamesScale !== 100) ||
+    (settings.typographyHeroHeadingScale !== undefined && settings.typographyHeroHeadingScale !== 100) ||
+    (settings.typographyHeroInvitationScale !== undefined && settings.typographyHeroInvitationScale !== 100) ||
+    (settings.typographyHeroDateScale !== undefined && settings.typographyHeroDateScale !== 100) ||
+    (settings.typographyHeroQuoteScale !== undefined && settings.typographyHeroQuoteScale !== 100) ||
+    (settings.typographyHeroBadgeScale !== undefined && settings.typographyHeroBadgeScale !== 100) ||
+    (settings.typographyHeroLocationScale !== undefined && settings.typographyHeroLocationScale !== 100);
 
   return (
     <div className="bg-gradient-to-br from-amber-50/40 via-white to-stone-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-amber-200/80 shadow-sm space-y-4">
@@ -498,7 +513,45 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
         )}
       </div>
 
-      {/* 3. SECCIÓN: CUENTA REGRESIVA SVG */}
+      {/* 3. SECCIÓN: TAMAÑO DE TEXTOS DEL HERO (PORTADA) */}
+      <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
+        <button
+          type="button"
+          onClick={() => toggleSection('heroTextSizes')}
+          className="w-full px-4 py-3 bg-stone-50/80 hover:bg-stone-100/80 flex items-center justify-between text-left transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <Sliders className="w-4 h-4 text-purple-600" />
+            <div>
+              <span className="text-xs sm:text-sm font-bold text-stone-800">
+                3. Tamaño de Textos del Hero (Portada)
+              </span>
+              <span className="block text-[11px] text-stone-500 font-normal">
+                {(settings.typographyHeroNamesScale && settings.typographyHeroNamesScale !== 100) ||
+                (settings.typographyHeroHeadingScale && settings.typographyHeroHeadingScale !== 100) ||
+                (settings.typographyHeroInvitationScale && settings.typographyHeroInvitationScale !== 100) ||
+                (settings.typographyHeroDateScale && settings.typographyHeroDateScale !== 100) ||
+                (settings.typographyHeroQuoteScale && settings.typographyHeroQuoteScale !== 100) ||
+                (settings.typographyHeroBadgeScale && settings.typographyHeroBadgeScale !== 100) ||
+                (settings.typographyHeroLocationScale && settings.typographyHeroLocationScale !== 100)
+                  ? 'Escalas personalizadas activas'
+                  : 'Automático (100% de escala base)'}
+              </span>
+            </div>
+          </div>
+          {openSection === 'heroTextSizes' ? (
+            <ChevronUp className="w-4 h-4 text-stone-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-stone-400" />
+          )}
+        </button>
+
+        {openSection === 'heroTextSizes' && (
+          <HeroTypographyScaleControls settings={settings} onChange={onChange} />
+        )}
+      </div>
+
+      {/* 4. SECCIÓN: CUENTA REGRESIVA SVG */}
       <div className="border border-stone-200 rounded-2xl overflow-hidden bg-white">
         <button
           type="button"
@@ -509,7 +562,7 @@ export const AdminMixMatchSettings: React.FC<AdminMixMatchSettingsProps> = ({
             <Clock className="w-4 h-4 text-emerald-600" />
             <div>
               <span className="text-xs sm:text-sm font-bold text-stone-800">
-                3. Estilo de Cuenta Regresiva SVG Animada
+                4. Estilo de Cuenta Regresiva SVG Animada
               </span>
               <span className="block text-[11px] text-stone-500 font-normal">
                 {settings.countdownStyle && settings.countdownStyle !== 'auto'

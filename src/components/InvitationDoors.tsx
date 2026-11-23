@@ -83,10 +83,27 @@ export const InvitationDoors: React.FC<InvitationDoorsProps> = ({
     return intro ? `${intro} ${heading}` : heading;
   }, [settings.letterHeadingText, settings.heroHeadingText, settings.heroIntroText, eventType]);
 
-  const invitationPhrase = (
-    settings.heroInvitationText?.trim() ||
-    (eventType === 'birthday' ? 'TE INVITO A CELEBRAR MI CUMPLEAÑOS' : eventType === 'xv' ? 'TE INVITO A CELEBRAR MIS XV' : 'TE INVITAMOS A CELEBRAR NUESTRA BODA')
+  const defaultBadgeText = (
+    eventType === 'birthday'
+      ? 'TE INVITO A CELEBRAR MI CUMPLEAÑOS'
+      : eventType === 'xv'
+        ? 'TE INVITO A CELEBRAR MIS XV'
+        : 'TE INVITAMOS A CELEBRAR NUESTRA BODA'
   );
+
+  const badgeText = useMemo(() => {
+    if (settings.letterShowBadge === false) return '';
+    if (settings.letterBadgeText !== undefined && settings.letterBadgeText !== null) {
+      const val = settings.letterBadgeText.trim();
+      if (val === '.' || val.toLowerCase() === 'ocultar' || val.toLowerCase() === 'none') return '';
+      return val;
+    }
+    const heroPhrase = settings.heroInvitationText?.trim();
+    if (heroPhrase && heroPhrase !== '.' && heroPhrase.toLowerCase() !== 'ocultar') {
+      return heroPhrase;
+    }
+    return defaultBadgeText;
+  }, [settings.letterShowBadge, settings.letterBadgeText, settings.heroInvitationText, defaultBadgeText]);
 
   const guestLabel = settings.letterGuestLabelText?.trim() || 'Pase de invitado para:';
   const reservationHeading = settings.letterReservationHeadingText?.trim() || 'Hemos reservado';
@@ -244,10 +261,12 @@ export const InvitationDoors: React.FC<InvitationDoorsProps> = ({
         className="relative z-20 flex flex-col items-center text-center max-w-lg mx-auto pt-1 sm:pt-2 px-2"
       >
         {/* Eyebrow badge */}
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase text-stone-200 shadow-sm mb-1 sm:mb-2">
-          <Sparkles className="w-3 h-3 text-amber-300" style={{ color: settings.letterAccentColor || undefined }} />
-          <span>{invitationPhrase}</span>
-        </div>
+        {badgeText ? (
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full border border-white/20 bg-white/10 backdrop-blur-md text-[10px] sm:text-xs font-semibold tracking-[0.22em] uppercase text-stone-200 shadow-sm mb-1 sm:mb-2">
+            <Sparkles className="w-3 h-3 text-amber-300" style={{ color: settings.letterAccentColor || undefined }} />
+            <span>{badgeText}</span>
+          </div>
+        ) : null}
 
         {/* Celebrant Name */}
         <h1

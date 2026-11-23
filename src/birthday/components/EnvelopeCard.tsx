@@ -740,6 +740,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
+                        style={{ zoom: (settings.typographyHeroHeadingScale ?? 100) / 100 }}
                         className={`font-great-vibes text-stone-300 drop-shadow-md italic leading-tight ${
                           heroHasManyElements ? 'text-lg sm:text-2xl mb-0' : 'text-xl sm:text-2xl md:text-3xl'
                         }`}
@@ -751,6 +752,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.8, delay: 0.15 }}
+                      style={{ zoom: (settings.typographyHeroHeadingScale ?? 100) / 100 }}
                       className={`font-great-vibes text-white leading-tight font-normal drop-shadow-[0_4px_20px_rgba(255,255,255,0.4)] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] ${
                         heroHasManyElements ? 'text-3xl sm:text-5xl md:text-6xl my-0' : 'text-4xl sm:text-6xl md:text-7xl my-0 sm:my-0.5'
                       }`}
@@ -766,6 +768,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
+                style={{ zoom: (settings.typographyHeroInvitationScale ?? 100) / 100 }}
                 className={`font-cinzel tracking-[0.2em] sm:tracking-[0.25em] uppercase text-stone-300 drop-shadow-md font-semibold ${
                   heroHasManyElements ? 'text-[9px] sm:text-xs my-0.5' : 'text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-1.5 mb-0.5 sm:mb-1'
                 }`}
@@ -778,7 +781,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.9, delay: 0.28 }}
-                style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily }}
+                style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily, zoom: (settings.typographyHeroNamesScale ?? 100) / 100 }}
                 className={`max-w-full text-balance break-words text-white leading-tight tracking-tight drop-shadow-[0_4px_24px_rgba(255,255,255,0.45)] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] ${theme.fontDisplay} ${
                   heroHasManyElements ? 'my-0.5 sm:my-1' : 'my-1 sm:my-1.5'
                 }`}
@@ -792,6 +795,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, delay: 0.28 }}
+                  style={{ zoom: (settings.typographyHeroBadgeScale ?? 100) / 100 }}
                   className={`inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-white/30 bg-black/40 px-3 sm:px-4 py-0.5 sm:py-1 text-xs text-white shadow-sm backdrop-blur-md ${
                     heroHasManyElements ? 'my-0.5' : 'my-1'
                   }`}
@@ -806,6 +810,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.35 }}
+                style={{ zoom: (settings.typographyHeroDateScale ?? 100) / 100 }}
                 className={`w-full max-w-xs sm:max-w-sm mx-auto ${heroHasManyElements ? 'my-0.5 sm:my-1' : 'my-1 sm:my-2'}`}
               >
                 <div className="flex items-center justify-center gap-2 sm:gap-3 text-white">
@@ -857,6 +862,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.45 }}
+                  style={{ zoom: (settings.typographyHeroLocationScale ?? 100) / 100 }}
                   className={`flex flex-col items-center justify-center text-center text-stone-200 max-w-md mx-auto px-2 ${
                     heroHasManyElements ? 'text-[11px] sm:text-xs mt-0.5 mb-0.5' : 'text-xs mt-1 mb-1'
                   }`}
@@ -986,28 +992,29 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex, settings.heroEmblemColor, settings.heroEmblemGlow, settings.heroEmblemSparkle, heroHasManyElements ? Math.min(settings.heroEmblemScale || 0.85, 0.85) : settings.heroEmblemScale)}
               </motion.div>
             )}
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : heroHasManyElements ? 'text-sm sm:text-lg md:text-xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} style={{ zoom: (settings.typographyHeroDateScale ?? 100) / 100 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : heroHasManyElements ? 'text-sm sm:text-lg md:text-xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             {(settings.heroInvitationText?.trim() || settings.eventType === 'birthday' || settings.eventType === 'xv') && (
               <motion.p
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
+                style={{ zoom: (settings.typographyHeroInvitationScale ?? 100) / 100 }}
                 className={`font-sans tracking-[0.22em] uppercase text-stone-200 drop-shadow-md font-medium ${heroHasManyElements ? 'text-[11px] sm:text-xs mb-0.5' : 'text-xs sm:text-sm mb-1'}`}
               >
                 {settings.heroInvitationText?.trim() || (settings.eventType === 'xv' ? 'TE INVITO A CELEBRAR MIS XV' : 'TE INVITO A CELEBRAR MI CUMPLEAÑOS')}
               </motion.p>
             )}
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
-            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily }} className={`max-w-full text-balance break-words leading-tight tracking-tight text-white font-normal ${theme.fontDisplay} ${heroHasManyElements ? 'my-0.5 sm:my-1' : 'my-1 sm:my-2'}`}>{coupleNamesSafe}</motion.h1>
+            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily, zoom: (settings.typographyHeroNamesScale ?? 100) / 100 }} className={`max-w-full text-balance break-words leading-tight tracking-tight text-white font-normal ${theme.fontDisplay} ${heroHasManyElements ? 'my-0.5 sm:my-1' : 'my-1 sm:my-2'}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             {heroGuestPillEnabled && guest && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.28 }} className={`inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border bg-black/30 px-3 sm:px-4 py-1 text-xs text-white shadow-sm backdrop-blur-md sm:text-sm ${heroHasManyElements ? 'my-0.5' : 'mt-1'}`} style={{ borderColor: `${theme.accentColorHex}CC` }}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.28 }} style={{ zoom: (settings.typographyHeroBadgeScale ?? 100) / 100, borderColor: `${theme.accentColorHex}CC` }} className={`inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border bg-black/30 px-3 sm:px-4 py-1 text-xs text-white shadow-sm backdrop-blur-md sm:text-sm ${heroHasManyElements ? 'my-0.5' : 'mt-1'}`}>
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" style={{ color: theme.accentColorHex }} aria-hidden="true" />
                 <span className="max-w-full break-words font-semibold">{guest.fullName}</span>
                 <span className="text-white/80">· {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)} {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
               </motion.div>
             )}
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className={`w-full max-w-2xl mx-auto ${heroHasManyElements ? 'mt-1' : 'mt-2'}`}>
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} style={{ zoom: (settings.typographyHeroQuoteScale ?? 100) / 100 }} className={`w-full max-w-2xl mx-auto ${heroHasManyElements ? 'mt-1' : 'mt-2'}`}>
               <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : heroHasManyElements ? 'text-sm sm:text-base md:text-lg' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'}</p>
 
               {(settings.heroVerse ?? '1 Corintios 13:7').trim() && (
@@ -1028,6 +1035,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.5 }}
+                style={{ zoom: (settings.typographyHeroLocationScale ?? 100) / 100 }}
                 className={`flex flex-col items-center justify-center text-center text-xs sm:text-sm text-stone-200 max-w-md mx-auto px-4 ${heroHasManyElements ? 'mt-1 mb-0.5' : 'mt-3'}`}
               >
                 {heroVenueName && (

@@ -627,28 +627,29 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 {renderHeroEmblem(settings.heroIconStyle, settings.cardStyle, heroIsSparse, theme.accentColorHex, settings.heroEmblemColor, settings.heroEmblemGlow, settings.heroEmblemSparkle, settings.heroEmblemScale)}
               </motion.div>
             )}
-            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
+            <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.1 }} style={{ zoom: (settings.typographyHeroDateScale ?? 100) / 100 }} className={`max-w-full text-balance tracking-[0.18em] sm:tracking-[0.25em] uppercase text-stone-200 drop-shadow-md font-serif font-medium ${heroIsSparse ? 'text-xl sm:text-2xl md:text-3xl' : 'text-base sm:text-xl md:text-2xl'}`}>{formatHeroDate(settings.eventDate, settings.heroDateFormat || 'dd.mm.aaaa', settings.heroCustomDateText)}</motion.p>
             {settings.heroInvitationText?.trim() && (
               <motion.p
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
+                style={{ zoom: (settings.typographyHeroInvitationScale ?? 100) / 100 }}
                 className="text-xs sm:text-sm font-sans tracking-[0.22em] uppercase text-stone-200 drop-shadow-md font-medium mb-1"
               >
                 {settings.heroInvitationText.trim()}
               </motion.p>
             )}
             {settings.heroCourtPosition === 'above-names' && renderCourtCard()}
-            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily }} className={`max-w-full text-balance break-words leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
+            <motion.h1 initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9, delay: 0.2 }} style={{ fontSize: heroNameFontSize, fontFamily: themeDisplayFontFamily, zoom: (settings.typographyHeroNamesScale ?? 100) / 100 }} className={`max-w-full text-balance break-words leading-tight tracking-tight text-white my-1 sm:my-2 font-normal ${theme.fontDisplay}`}>{coupleNamesSafe}</motion.h1>
             {(!settings.heroCourtPosition || settings.heroCourtPosition === 'below-names') && renderCourtCard()}
             {heroGuestPillEnabled && guest && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.28 }} className="mt-1 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border bg-black/30 px-4 py-2 text-xs text-white shadow-sm backdrop-blur-md sm:text-sm" style={{ borderColor: `${theme.accentColorHex}CC` }}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.28 }} style={{ zoom: (settings.typographyHeroBadgeScale ?? 100) / 100, borderColor: `${theme.accentColorHex}CC` }} className="mt-1 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border bg-black/30 px-4 py-2 text-xs text-white shadow-sm backdrop-blur-md sm:text-sm">
                 <Users className="h-4 w-4 shrink-0" style={{ color: theme.accentColorHex }} aria-hidden="true" />
                 <span className="max-w-full break-words font-semibold">{guest.fullName}</span>
                 <span className="text-white/80">· {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1)} {Math.max(1, guest.allocatedPasses || guest.confirmedPasses || 1) === 1 ? 'pase' : 'pases'}</span>
               </motion.div>
             )}
-            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} className="w-full max-w-2xl mx-auto mt-2">
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.35 }} style={{ zoom: (settings.typographyHeroQuoteScale ?? 100) / 100 }} className="w-full max-w-2xl mx-auto mt-2">
               <p className={`font-serif italic text-white/95 leading-relaxed drop-shadow-md ${heroIsSparse ? 'text-lg sm:text-xl md:text-2xl' : 'text-base sm:text-lg md:text-xl'}`}>{settings.heroQuote || 'El amor todo lo sufre, todo lo cree, todo lo espera, todo lo soporta.'}</p>
 
               {(settings.heroVerse ?? '1 Corintios 13:7').trim() && (

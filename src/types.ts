@@ -235,6 +235,14 @@ export interface WeddingSettings {
   typographyButtonScale?: number; // Porcentaje, 80-200
   typographyToggleScale?: number; // Porcentaje, 80-200
   typographyGalleryFullscreenScale?: number; // Porcentaje, escala de todos los textos dentro de la galería ampliada
+  // Escalas específicas para cada elemento de texto del Hero (Portada) (50-200%)
+  typographyHeroNamesScale?: number;
+  typographyHeroHeadingScale?: number;
+  typographyHeroInvitationScale?: number;
+  typographyHeroDateScale?: number;
+  typographyHeroQuoteScale?: number;
+  typographyHeroBadgeScale?: number;
+  typographyHeroLocationScale?: number;
   dividerStyle?: string; // 'auto' | CardStyleId - Motivos vectoriales y separadores SVG
   showCardDividers?: boolean; // Separadores SVG entre tarjetas en móvil y en filas de escritorio
   borderlessCards?: boolean; // Oculta el borde exterior de las tarjetas principales
@@ -258,6 +266,8 @@ export interface WeddingSettings {
   letterFrameColor?: string;
   letterShowCardBorder?: boolean;
   letterShowCornerMotifs?: boolean;
+  letterShowBadge?: boolean; // Mostrar u ocultar la insignia/badge superior sobre el nombre
+  letterBadgeText?: string; // Frase de la insignia superior sobre los nombres (e.g. "TE INVITO A CELEBRAR MI CUMPLEAÑOS")
   letterHeadingText?: string;
   letterNamesText?: string;
   letterDateText?: string;
