@@ -864,7 +864,7 @@ const DEMO_XV_DB_FIELDS = [
   'typographyHeroNamesScale', 'typographyHeroHeadingScale', 'typographyHeroInvitationScale', 'typographyHeroDateScale', 'typographyHeroQuoteScale', 'typographyHeroBadgeScale', 'typographyHeroLocationScale',
   'transitionWaveStyle', 'transitionEffect', 'heroIconStyle', 'heroEmblemColor', 'heroEmblemGlow',
   'heroEmblemSparkle', 'heroEmblemScale',
-  'sealStyle', 'showInvitationLetter', 'letterBackgroundColor', 'letterPaperColor',
+  'sealStyle', 'showInvitationLetter', 'entranceType', 'letterDoorStyle', 'heroHeadingText', 'heroIntroText', 'heroInvitationText', 'letterBackgroundColor', 'letterPaperColor',
   'letterTextColor', 'letterAccentColor', 'letterHeroColor', 'letterMotifColor', 'letterFrameColor',
   'letterShowCardBorder', 'letterShowCornerMotifs', 'letterShowBadge', 'letterBadgeText',
   'letterHeadingText', 'letterNamesText', 'letterDateText', 'letterMessageText',

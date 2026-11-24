@@ -379,6 +379,25 @@ export async function autoMigrateDatabase() {
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_edit_cutoff_mode TEXT DEFAULT 'event';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_edit_cutoff_at TEXT DEFAULT '';
         ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_cutoff_time_zone TEXT DEFAULT 'America/Lima';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_show_location BOOLEAN DEFAULT false;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS show_welcome_section BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_action_type TEXT DEFAULT 'form';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_whatsapp_phone TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS rsvp_whatsapp_message TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS entrance_type TEXT DEFAULT 'letter';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS letter_door_style TEXT DEFAULT 'royal-navy';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_heading_text TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_intro_text TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS hero_invitation_text TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS letter_show_badge BOOLEAN DEFAULT true;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS letter_badge_text TEXT DEFAULT '';
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_names_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_heading_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_invitation_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_date_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_quote_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_badge_scale INTEGER DEFAULT 100;
+        ALTER TABLE wedding_settings ADD COLUMN IF NOT EXISTS typography_hero_location_scale INTEGER DEFAULT 100;
 
         -- 3. Guests Table
         CREATE TABLE IF NOT EXISTS guests (
