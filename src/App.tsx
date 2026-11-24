@@ -1910,7 +1910,7 @@ export default function App() {
             <XvAudioPlayer
               settings={settings}
               audioUrl={settings?.audioUrl}
-              songTitle={settings?.audioTitle || 'Vals de Ensueño'}
+              songTitle={settings?.audioTitle}
               artistName={settings?.coupleNames || 'Vals de Mis XV'}
               eventTitle="Música de XV Años"
               allowAutoplay={currentView === 'invitation'}
@@ -1927,7 +1927,7 @@ export default function App() {
             <BirthdayAudioPlayer
               settings={settings}
               audioUrl={settings?.audioUrl}
-              songTitle={settings?.audioTitle || 'Party Celebration'}
+              songTitle={settings?.audioTitle}
               artistName={settings?.coupleNames || 'Música de Cumpleaños'}
               eventTitle="Música de Cumpleaños"
               allowAutoplay={currentView === 'invitation'}
@@ -1944,7 +1944,7 @@ export default function App() {
             <AudioPlayer
               settings={settings}
               audioUrl={settings?.audioUrl}
-              songTitle={settings?.audioTitle || 'Nuestra Canción'}
+              songTitle={settings?.audioTitle}
               artistName={settings?.coupleNames || 'Música de Boda'}
               eventTitle="Música de Boda"
               eventCategory={settingsEventCategory}

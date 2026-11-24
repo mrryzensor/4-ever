@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, Play, Pause, Music, Upload, Check, Disc3, Zap, Loader2, FileAudio } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, Music, Upload, Check, Disc3, Loader2 } from 'lucide-react';
 import { WeddingSettings } from '../../types.ts';
 import { getAudioPlaylist } from '../../lib/audioPlaylist.ts';
-import { optimizeAudioClient, formatBytes, AudioOptimizationResult } from '../../lib/mediaOptimizer.ts';
 import { getStreamAudioUrl } from '../../lib/audioStream.ts';
 
 interface AudioPlayerProps {
@@ -57,8 +56,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [audioOptimization, setAudioOptimization] = useState<AudioOptimizationResult | null>(null);
   const [customTitle, setCustomTitle] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -67,14 +64,19 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   const effectiveEventLabel = eventTitle || 'Música de XV Años';
 
+  const playlist = getAudioPlaylist(settings);
+
   const effectiveAudioUrl =
-    audioUrl ||
-    settings?.audioUrl ||
+    (audioUrl && audioUrl.trim()) ||
+    (settings?.audioUrl && settings.audioUrl.trim()) ||
+    playlist[0]?.url ||
     '/audio/vals-danubio-azul.mp3';
 
   const effectiveTitle =
+    (settings?.audioTitle && settings.audioTitle.trim()) ||
+    (songTitle && songTitle.trim() && !['Vals de Ensueño - Mis XV', 'Vals de Ensueño'].includes(songTitle.trim()) ? songTitle.trim() : '') ||
+    playlist[0]?.title ||
     songTitle ||
-    settings?.audioTitle ||
     'Vals de Ensueño - Mis XV';
 
   const effectiveArtist =
@@ -90,7 +92,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }
   const autoplayOnLoad = autoplayOnLoadRef.current ?? false;
   const initialAutoplayAttemptedRef = useRef(false);
-  const playlist = getAudioPlaylist(settings);
 
   useEffect(() => () => {
     playbackRequestRef.current = null;
@@ -243,16 +244,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     if (!file) return;
 
     try {
-      setIsOptimizing(true);
-      // Perform client-side audio optimization to reduce weight
-      const result = await optimizeAudioClient(file, {
-        targetBitrate: 128000, // 128 kbps optimal lightweight stereo
-      });
-      setAudioOptimization(result);
-
       setUploading(true);
       const formData = new FormData();
-      formData.append('file', result.file);
+      formData.append('file', file);
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -266,13 +260,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         setTimeout(() => {
           setUploadSuccess(false);
           setShowModal(false);
-          setAudioOptimization(null);
-        }, 2200);
+        }, 1500);
       }
     } catch (err) {
       console.error('Error uploading audio:', err);
     } finally {
-      setIsOptimizing(false);
       setUploading(false);
     }
   };
@@ -436,58 +428,34 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 />
 
                 <label className="flex flex-col items-center justify-center border-2 border-dashed border-[#E5E2D0] hover:border-[#5A5A40] rounded-[24px] p-5 cursor-pointer bg-[#FAF9F0] hover:bg-white transition-all">
-                  {isOptimizing ? (
+                  {uploading ? (
                     <div className="flex flex-col items-center gap-2 py-2">
                       <Loader2 className="w-6 h-6 text-[#5A5A40] animate-spin" />
                       <span className="text-xs text-[#5A5A40] font-semibold">
-                        Optimizando audio en navegador...
+                        Subiendo audio original al servidor...
                       </span>
-                      <span className="text-[10px] text-[#7D8C7A]">Transcodificando con Web Audio API</span>
                     </div>
                   ) : (
                     <>
                       <Upload className="w-6 h-6 text-[#7D8C7A] mb-1.5" />
                       <span className="text-xs text-[#5A5A40] font-medium text-center">
-                        {uploading ? 'Subiendo archivo ligero al servidor...' : 'Haz clic para seleccionar archivo de audio'}
+                        Haz clic para seleccionar archivo de audio
                       </span>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <span className="text-[10px] bg-[#EAE8D5] text-[#5A5A40] font-bold px-2 py-0.5 rounded-full border border-[#D5D2BD]">
-                          ⚡ Auto-optimización en Frontend
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-[#7D8C7A] mt-1 font-mono">Máx. 25 MB · la reproducción depende del navegador</span>
+                      <span className="text-[10px] text-[#7D8C7A] mt-1 font-mono">Calidad original (sin compresión)</span>
                     </>
                   )}
                   <input
                     type="file"
                     accept="audio/*,.mp3,.m4a,.mp4,.aac,.wav,.wave,.ogg,.oga,.opus,.webm,.weba,.flac"
                     onChange={handleFileUpload}
-                    disabled={uploading || isOptimizing}
+                    disabled={uploading}
                     className="hidden"
                   />
                 </label>
 
-                {audioOptimization && audioOptimization.compressionRatio > 0 && (
-                  <div className="p-2.5 mt-3 bg-[#FAF9F0] rounded-xl border border-[#7D8C7A]/40 text-[#5A5A40] text-xs space-y-1">
-                    <div className="flex items-center justify-between font-semibold">
-                      <span className="flex items-center gap-1.5">
-                        <Zap className="w-4 h-4 text-[#5A5A40] shrink-0" /> Compresión de Audio Completada
-                      </span>
-                      <span className="bg-[#5A5A40] text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
-                        -{audioOptimization.compressionRatio}% peso
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-[#7D8C7A] flex items-center justify-between font-mono">
-                      <span>Original: {formatBytes(audioOptimization.originalSize)}</span>
-                      <span>➔</span>
-                      <span className="font-bold text-[#5A5A40]">Optimizado: {formatBytes(audioOptimization.optimizedSize)}</span>
-                    </div>
-                  </div>
-                )}
-
                 {uploadSuccess && (
                   <p className="text-[#5A5A40] bg-[#FAF9F0] border border-[#7D8C7A]/40 p-2.5 rounded-xl text-xs mt-3 text-center flex items-center justify-center gap-2">
-                    <Check className="w-4 h-4 text-[#7D8C7A] shrink-0" /> ¡Audio optimizado y guardado con éxito!
+                    <Check className="w-4 h-4 text-[#7D8C7A] shrink-0" /> ¡Audio subido y guardado con éxito!
                   </p>
                 )}
               </div>

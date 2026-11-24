@@ -3,7 +3,6 @@ import { Check, ChevronDown, ChevronUp, Loader2, Music2, Pause, Play, Trash2, Up
 import { AudioTrack, WeddingSettings } from '../../../types.ts';
 import { getAudioPlaylist } from '../../../lib/audioPlaylist.ts';
 import { getStreamAudioUrl } from '../../../lib/audioStream.ts';
-import { optimizeAudioClient } from '../../../lib/mediaOptimizer.ts';
 
 interface AudioSettingsPanelProps {
   settings: WeddingSettings;
@@ -49,11 +48,10 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ settings
     try {
       for (let index = 0; index < files.length; index += 1) {
         const file = files[index];
-        setProgress(`Preparando ${index + 1} de ${files.length}: ${file.name}`);
+        setProgress(`Subiendo ${index + 1} de ${files.length}: ${file.name}`);
         try {
-          const optimized = await optimizeAudioClient(file, { targetBitrate: 128000 });
           const body = new FormData();
-          body.append('file', optimized.file);
+          body.append('file', file);
           const response = await fetch('/api/upload', { method: 'POST', body });
           const result = await response.json();
           if (!response.ok || !result.url) throw new Error(result.error || 'No se pudo guardar el archivo.');
@@ -69,7 +67,13 @@ export const AudioSettingsPanel: React.FC<AudioSettingsPanelProps> = ({ settings
       }
 
       if (uploadedTracks.length) {
-        persistTracks([...getAudioPlaylist(settings), ...uploadedTracks]);
+        const nextPlaylist = [...getAudioPlaylist(settings), ...uploadedTracks];
+        const update: Partial<WeddingSettings> = { audioPlaylist: JSON.stringify(nextPlaylist) };
+        if (!settings.audioUrl || !nextPlaylist.some((item) => item.url === settings.audioUrl)) {
+          update.audioUrl = uploadedTracks[0].url;
+          update.audioTitle = uploadedTracks[0].title;
+        }
+        onChange(update);
         setNotice(`${uploadedTracks.length} ${uploadedTracks.length === 1 ? 'pista agregada' : 'pistas agregadas'} a la lista.${failedFiles ? ` ${failedFiles} no se pudieron subir.` : ''}`);
       } else {
         setNotice('No se pudo agregar ninguna pista. Revisa el formato y vuelve a intentarlo.');
