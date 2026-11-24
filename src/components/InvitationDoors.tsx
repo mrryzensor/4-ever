@@ -42,10 +42,7 @@ export const InvitationDoors: React.FC<InvitationDoorsProps> = ({
     return 'luxury-wood';
   }, [settings.doorStyle, settings.cardStyle]);
 
-  const namesFont = resolveLetterFontFamily(
-    settings.letterDisplayFont,
-    getThemeFontFamily(theme.fontDisplay, 'Cinzel, Georgia, serif'),
-  );
+  const namesFont = getThemeFontFamily(theme.fontDisplay, 'Cinzel, Georgia, serif');
   const bodyFont = resolveLetterFontFamily(
     settings.letterBodyFont,
     getThemeFontFamily(theme.fontBody, 'Montserrat, sans-serif'),

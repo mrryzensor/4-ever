@@ -372,17 +372,20 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
       <div className="space-y-3 rounded-xl border border-[#E5E2D0] bg-white/65 p-3 sm:p-4">
         <div>
           <h4 className="text-xs font-bold text-[#3D3D3D]">
-            {isDoor ? 'Tipografía de la pantalla de entrada' : 'Tipografía heredada del evento'}
+            {isDoor ? 'Tipografía de la puerta' : 'Tipografía heredada del evento'}
           </h4>
           <p className="mt-0.5 text-[11px] text-stone-500">
             {isDoor
-              ? 'Elige una fuente para los nombres en el portal y otra para fechas y mensajes.'
+              ? 'Los nombres usan la misma tipografía de títulos que el Hero. Puedes elegir otra para fechas y mensajes.'
               : 'La carta, el sello y sus textos usan la combinación seleccionada en Paleta y tipografías.'}
           </p>
         </div>
         {isDoor ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <SelectControl label="Tipografía de nombres y títulos" value={settings.letterDisplayFont} options={fontOptions} onChange={(letterDisplayFont) => onChange({ letterDisplayFont })} />
+            <div className="rounded-xl border border-[#E5E2D0] bg-white px-3 py-2.5">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-500">Nombres y títulos · como el Hero</span>
+              <span className="mt-1 block truncate text-lg" style={{ fontFamily: getThemeFontFamily(theme.fontDisplay, 'Georgia, serif') }}>Nombre del evento</span>
+            </div>
             <SelectControl label="Tipografía de textos y fechas" value={settings.letterBodyFont} options={fontOptions} onChange={(letterBodyFont) => onChange({ letterBodyFont })} />
           </div>
         ) : (
