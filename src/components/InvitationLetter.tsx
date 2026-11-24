@@ -13,7 +13,6 @@ import {
   getLetterShadowStyle,
   getWaxSealTintMatrix,
   normalizeLetterShadow,
-  resolveLetterFontFamily,
 } from '../lib/letterAppearance.ts';
 import { resolveWaxSealDesign, WAX_SEAL_DESIGNS, type WaxSealDesignId } from '../lib/waxSealAppearance.ts';
 import { getThemeFontFamily } from '../lib/rsvpButtonStyle.ts';
@@ -261,8 +260,8 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
       : settings.cardStyle || fallbackStyle;
   const [isOpening, setIsOpening] = useState(false);
   const arrowMarkerId = `letter-arrow-${useId().replace(/:/g, '')}`;
-  const namesFont = resolveLetterFontFamily(settings.letterDisplayFont, getThemeFontFamily(theme.fontDisplay, 'Georgia, serif'));
-  const bodyFont = resolveLetterFontFamily(settings.letterBodyFont, getThemeFontFamily(theme.fontBody, 'Georgia, serif'));
+  const namesFont = getThemeFontFamily(theme.fontDisplay, 'Georgia, serif');
+  const bodyFont = getThemeFontFamily(theme.fontBody, 'Georgia, serif');
   const backgroundColor = settings.letterBackgroundColor || theme.bgHex;
   const paperColor = settings.letterPaperColor || theme.secondaryBgHex || '#fff';
   const textColor = settings.letterTextColor || theme.primaryColorHex;
@@ -346,7 +345,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
         </div>
 
         <section className="relative z-10 flex min-h-0 shrink-0 flex-col items-center justify-center overflow-hidden px-4 py-0 text-center sm:px-10 md:items-start md:px-12 md:py-12 md:text-left lg:px-16">
-          <p className="mb-[clamp(0.15rem,0.8svh,0.5rem)] text-[clamp(0.68rem,1.8svh,1.05rem)] font-medium uppercase tracking-[0.2em] md:mb-4 md:text-lg" style={{ color: accentColor }}>{heading}</p>
+          <p className="mb-[clamp(0.15rem,0.8svh,0.5rem)] text-[clamp(0.68rem,1.8svh,1.05rem)] font-medium uppercase tracking-[0.2em] md:mb-4 md:text-lg" style={{ color: accentColor, fontFamily: namesFont }}>{heading}</p>
           <div className="mb-[clamp(0.15rem,0.8svh,0.5rem)] h-px w-20 md:mb-4 md:w-24" style={{ backgroundColor: `${dividerColor}80` }} />
           <h1 className="max-w-full break-words text-[clamp(2rem,6.2svh,3.5rem)] leading-[1.02] tracking-tight md:text-[clamp(3.75rem,5vw,6.5rem)] md:leading-[1.04]" style={{ color: heroColor, fontFamily: namesFont }}>
             {displayNames}
@@ -360,7 +359,7 @@ export const InvitationLetter: React.FC<InvitationLetterProps> = ({ settings, gu
           <div className="mt-[clamp(0.25rem,1svh,0.65rem)] min-h-0 text-center md:mt-5 md:min-h-[86px] md:text-left">
             {reservedPasses ? (
               <>
-                <p className="text-[clamp(0.68rem,2.1svh,1.1rem)] uppercase tracking-[0.16em] opacity-75 md:text-lg">{reservationHeading}</p>
+                <p className="text-[clamp(0.68rem,2.1svh,1.1rem)] uppercase tracking-[0.16em] opacity-75 md:text-lg" style={{ fontFamily: namesFont }}>{reservationHeading}</p>
                 <p className="mt-[clamp(0.15rem,0.6svh,0.45rem)] flex items-center justify-center gap-2 md:mt-2 md:gap-3 md:justify-start">
                   <span className="inline-flex h-[clamp(2.4rem,7.5svh,4rem)] min-w-[clamp(2.4rem,7.5svh,4rem)] items-center justify-center rounded-xl border px-2 text-[clamp(1.8rem,5.5svh,3rem)] md:h-16 md:min-w-16 md:px-3 md:text-5xl" style={{ color: accentColor, borderColor: `${accentColor}70`, fontFamily: namesFont }}>{reservedPasses}</span>
                   <span className="text-[clamp(0.62rem,1.8svh,1.1rem)] uppercase tracking-[0.12em] md:text-lg">{reservedPasses === 1 ? reservationSingle : reservationPlural}</span>

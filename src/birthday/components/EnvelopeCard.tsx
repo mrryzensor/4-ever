@@ -438,9 +438,13 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
     heroGuestPillEnabled ||
     heroHasFamilyContent
   );
-  const heroNameFontSize = coupleNamesSafe.length > 18
-    ? (heroHasManyElements ? 'clamp(1.75rem, 5vw, 4rem)' : (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2rem, 6vw, 5rem)'))
-    : (heroHasManyElements ? 'clamp(2rem, 6vw, 4.5rem)' : (heroIsSparse ? 'clamp(2.75rem, 9vw, 7rem)' : 'clamp(2.25rem, 7vw, 5.5rem)'));
+  const heroNameFontSize = settings.cardStyle === 'disco-silver'
+    ? coupleNamesSafe.length > 18
+      ? 'clamp(1.75rem, min(4.2vw, 5.4svh), 3.4rem)'
+      : 'clamp(2rem, min(5vw, 6.5svh), 4rem)'
+    : coupleNamesSafe.length > 18
+      ? (heroHasManyElements ? 'clamp(1.75rem, 5vw, 4rem)' : (heroIsSparse ? 'clamp(2.5rem, 8vw, 6.5rem)' : 'clamp(2rem, 6vw, 5rem)'))
+      : (heroHasManyElements ? 'clamp(2rem, 6vw, 4.5rem)' : (heroIsSparse ? 'clamp(2.75rem, 9vw, 7rem)' : 'clamp(2.25rem, 7vw, 5.5rem)'));
   const targetDateObj = useMemo(() => {
     return parseEventTargetDate(settings.eventDate, settings.eventTime, settings.heroCustomDateText);
   }, [settings.eventDate, settings.eventTime, settings.heroCustomDateText]);
@@ -692,7 +696,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
           }`}
         >
           {settings.cardStyle === 'disco-silver' ? (
-            <div className={`w-full max-w-xl mx-auto flex flex-col items-center justify-center my-auto px-2 sm:px-3 text-center text-white z-20 ${heroHasManyElements ? 'py-0.5 sm:py-1' : 'py-1 sm:py-2'}`}>
+            <div className={`w-full max-w-xl md:max-w-4xl mx-auto flex flex-col items-center justify-center my-auto px-2 sm:px-3 text-center text-white z-20 ${heroHasManyElements ? 'py-0.5 sm:py-1' : 'py-1 sm:py-2'}`}>
               {/* 1. Motivo Vectorial Animado en Portada (heroShowIcon) */}
               {settings.heroShowIcon && (
                 <motion.div
@@ -742,7 +746,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                         transition={{ duration: 0.8 }}
                         style={{ zoom: (settings.typographyHeroHeadingScale ?? 100) / 100 }}
                         className={`font-great-vibes text-stone-300 drop-shadow-md italic leading-tight ${
-                          heroHasManyElements ? 'text-lg sm:text-2xl mb-0' : 'text-xl sm:text-2xl md:text-3xl'
+                          heroHasManyElements ? 'text-lg sm:text-2xl md:text-[clamp(1.05rem,2.8svh,1.5rem)] mb-0' : 'text-xl sm:text-2xl md:text-3xl'
                         }`}
                       >
                         {introText}
@@ -754,7 +758,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                       transition={{ duration: 0.8, delay: 0.15 }}
                       style={{ zoom: (settings.typographyHeroHeadingScale ?? 100) / 100 }}
                       className={`font-great-vibes text-white leading-tight font-normal drop-shadow-[0_4px_20px_rgba(255,255,255,0.4)] drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] ${
-                        heroHasManyElements ? 'text-3xl sm:text-5xl md:text-6xl my-0' : 'text-4xl sm:text-6xl md:text-7xl my-0 sm:my-0.5'
+                          heroHasManyElements ? 'text-3xl sm:text-5xl md:text-[clamp(2.4rem,6.5svh,3.7rem)] my-0' : 'text-4xl sm:text-6xl md:text-7xl my-0 sm:my-0.5'
                       }`}
                     >
                       {effectiveHeading}
@@ -770,7 +774,7 @@ export const EnvelopeCard: React.FC<EnvelopeCardProps> = ({
                 transition={{ duration: 0.8, delay: 0.2 }}
                 style={{ zoom: (settings.typographyHeroInvitationScale ?? 100) / 100 }}
                 className={`font-cinzel tracking-[0.2em] sm:tracking-[0.25em] uppercase text-stone-300 drop-shadow-md font-semibold ${
-                  heroHasManyElements ? 'text-[9px] sm:text-xs my-0.5' : 'text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-1.5 mb-0.5 sm:mb-1'
+                  heroHasManyElements ? 'text-[9px] sm:text-xs md:text-[clamp(0.6rem,1.35svh,0.9rem)] my-0.5' : 'text-[10px] sm:text-xs md:text-sm mt-1 sm:mt-1.5 mb-0.5 sm:mb-1'
                 }`}
               >
                 {settings.heroInvitationText?.trim() || (settings.eventType === 'xv' ? 'TE INVITO A CELEBRAR MIS XV' : settings.eventType === 'boda' || settings.eventType === 'wedding' ? 'TE INVITAMOS A CELEBRAR NUESTRA BODA' : 'TE INVITO A CELEBRAR MI CUMPLEAÑOS')}

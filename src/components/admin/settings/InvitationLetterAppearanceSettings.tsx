@@ -6,6 +6,7 @@ import { XV_CARD_THEMES } from '../../../xv/themes.ts';
 import { BIRTHDAY_CARD_THEMES } from '../../../birthday/themes.ts';
 import { resolveInvitationTheme } from '../../../lib/invitationTheme.ts';
 import { formatHeroDate } from '../../../lib/dateFormatters.ts';
+import { getThemeFontFamily } from '../../../lib/rsvpButtonStyle.ts';
 import { WAX_SEAL_DESIGNS } from '../../../lib/waxSealAppearance.ts';
 import { generateDynamicInitials } from '../../../lib/eventUtils.ts';
 
@@ -371,18 +372,31 @@ export const InvitationLetterAppearanceSettings: React.FC<InvitationLetterAppear
       <div className="space-y-3 rounded-xl border border-[#E5E2D0] bg-white/65 p-3 sm:p-4">
         <div>
           <h4 className="text-xs font-bold text-[#3D3D3D]">
-            {isDoor ? 'Tipografía de la pantalla de entrada' : 'Tipografía independiente'}
+            {isDoor ? 'Tipografía de la pantalla de entrada' : 'Tipografía heredada del evento'}
           </h4>
           <p className="mt-0.5 text-[11px] text-stone-500">
             {isDoor
               ? 'Elige una fuente para los nombres en el portal y otra para fechas y mensajes.'
-              : 'Elige una fuente distinta para los nombres y para el resto de los textos.'}
+              : 'La carta, el sello y sus textos usan la combinación seleccionada en Paleta y tipografías.'}
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <SelectControl label="Tipografía de nombres y títulos" value={settings.letterDisplayFont} options={fontOptions} onChange={(letterDisplayFont) => onChange({ letterDisplayFont })} />
-          <SelectControl label="Tipografía de textos y fechas" value={settings.letterBodyFont} options={fontOptions} onChange={(letterBodyFont) => onChange({ letterBodyFont })} />
-        </div>
+        {isDoor ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <SelectControl label="Tipografía de nombres y títulos" value={settings.letterDisplayFont} options={fontOptions} onChange={(letterDisplayFont) => onChange({ letterDisplayFont })} />
+            <SelectControl label="Tipografía de textos y fechas" value={settings.letterBodyFont} options={fontOptions} onChange={(letterBodyFont) => onChange({ letterBodyFont })} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-[#E5E2D0] bg-white px-3 py-2.5">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-500">Nombres y títulos</span>
+              <span className="mt-1 block truncate text-lg" style={{ fontFamily: getThemeFontFamily(theme.fontDisplay, 'Georgia, serif') }}>Nombre del evento</span>
+            </div>
+            <div className="rounded-xl border border-[#E5E2D0] bg-white px-3 py-2.5">
+              <span className="block text-[10px] font-semibold uppercase tracking-wide text-stone-500">Textos, sello y RSVP</span>
+              <span className="mt-1 block truncate text-sm" style={{ fontFamily: getThemeFontFamily(theme.fontBody, 'Georgia, serif') }}>Nos encantará celebrar contigo</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Colores */}

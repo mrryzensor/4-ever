@@ -98,13 +98,35 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     audioRef.current?.pause();
   }, []);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const syncPlaybackState = () => {
+      setIsPlaying(!audio.paused && !audio.ended);
+      setIsMuted(audio.muted);
+    };
+    const syncMutedState = () => setIsMuted(audio.muted);
+    const playbackEvents = ['play', 'playing', 'pause', 'ended', 'emptied'] as const;
+    playbackEvents.forEach((eventName) => audio.addEventListener(eventName, syncPlaybackState));
+    audio.addEventListener('volumechange', syncMutedState);
+    syncPlaybackState();
+
+    return () => {
+      playbackEvents.forEach((eventName) => audio.removeEventListener(eventName, syncPlaybackState));
+      audio.removeEventListener('volumechange', syncMutedState);
+    };
+  }, []);
+
   // Share a single in-flight request for autoplay, user gestures and the play
   // control so all playback remains on this one audio element.
   const requestPlayback = (allowMutedAutoplayFallback = false) => {
     const audio = audioRef.current;
     if (!audio) return Promise.reject(new Error('El reproductor de audio no está listo.'));
     if (!audio.paused && !audio.ended) {
-      if (allowMutedAutoplayFallback && audio.muted && !isMuted) audio.muted = false;
+      if (allowMutedAutoplayFallback && audio.muted) audio.muted = false;
+      setIsPlaying(true);
+      setIsMuted(audio.muted);
       return Promise.resolve();
     }
     if (playbackRequestRef.current) return playbackRequestRef.current;
@@ -114,7 +136,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       const wasMuted = audio.muted;
       const shouldBootstrapMuted = allowMutedAutoplayFallback && !wasMuted;
       if (shouldBootstrapMuted) audio.muted = true;
-      if (!allowMutedAutoplayFallback && !isMuted) audio.muted = false;
       const playResult = (async () => {
         try {
           await audio.play();
@@ -136,11 +157,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       request = Promise.resolve(playResult)
         .then(() => {
           if (shouldBootstrapMuted) audio.muted = wasMuted;
-          setIsPlaying(true);
+          setIsPlaying(!audio.paused && !audio.ended);
+          setIsMuted(audio.muted);
         })
         .catch((error) => {
           if (shouldBootstrapMuted) audio.muted = wasMuted;
-          setIsPlaying(false);
+          setIsPlaying(!audio.paused && !audio.ended);
+          setIsMuted(audio.muted);
           throw error;
         })
         .finally(() => {
@@ -197,9 +220,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }, [effectiveAudioUrl, autoplayOnLoad, isReadyToPlay]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (!audioRef.current.paused || isPlaying) {
-      audioRef.current.pause();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.paused && !audio.ended) {
+      audio.pause();
       playbackRequestRef.current = null;
       setIsPlaying(false);
     } else {
@@ -208,9 +232,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const toggleMute = () => {
-    if (!audioRef.current) return;
-    audioRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = !audio.muted;
+    setIsMuted(audio.muted);
   };
 
   const triggerUpdate = (newUrl: string, newTitle: string) => {
@@ -281,12 +306,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <audio
         ref={audioRef}
         src={getStreamAudioUrl(effectiveAudioUrl)}
-        autoPlay={autoplayOnLoad}
         loop={playlist.length <= 1}
         preload={preloadAudio || autoplayOnLoad ? 'auto' : 'metadata'}
         controlsList="nodownload"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
         onEnded={handleTrackEnded}
         className={showControls ? undefined : 'hidden'}
       />
